@@ -1,8 +1,6 @@
-It is possible to use the driver with an ALPS Glidepoint device, if
-you are using a 2.6 linux kernel and the ALPS kernel patch. (The
-alps.patch file.)
-
-One user reported success with the following parameter settings:
+It is possible to use the driver with an ALPS Glidepoint device, but
+you probably have to change some parameter values. One user reported
+success with the following settings:
 
     LeftEdge             = 60
     RightEdge            = 830
@@ -22,11 +20,13 @@ One user reported success with the following parameter settings:
     UpDownScrolling      = 1
     TouchpadOff          = 0
 
-Note though that the auto-dev protocol option doesn't work for ALPS
-devices, so you have to use the "event" protocol instead and set the
-device option to the correct event device. (Look for a mouse device in
-/proc/bus/input/devices and see which event device it is connected
-to.) Here is an example InputDevice section for the XF86Config file.
+If you use a 2.6 linux kernel, you need to apply the ALPS kernel patch
+in the alps.patch file. Note also that the auto-dev protocol option
+doesn't work for ALPS devices, so you have to use the "event" protocol
+instead and set the device option to the correct event device. (Look
+for a mouse device in /proc/bus/input/devices and see which event
+device it is connected to.) Here is an example InputDevice section for
+the XF86Config file.
 
 Section "InputDevice"
   Driver  	"synaptics"
@@ -51,6 +51,13 @@ Section "InputDevice"
   Option	"UpDownScrolling"	"1"
   Option	"TouchpadOff"		"0"
 EndSection
+
+If you use a 2.4 linux kernel, you don't need to patch the kernel, but
+you should instead set "Device" and "Protocol" like this:
+
+  Option	"Device"  		"/dev/psaux"
+  Option	"Protocol"		"alps"
+
 
 On some (all?) ALPS hardware, it is not possible to disable tapping
 unless you apply the patch below. However, some users have reported

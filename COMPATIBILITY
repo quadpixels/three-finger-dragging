@@ -74,19 +74,19 @@ DELL Inspiron 7000
 DELL Inspiron 7500
 DELL Inspiron 8000
 DELL Inspiron 8100
-DELL Inspiron 8600		(Requires 2.6 kernel and the ALPS patch)
+DELL Inspiron 8600		(ALPS touchpad)
 DELL Latitude C610
 DELL Latitude C640
 DELL Latitude C800
 DELL Latitude CPi
-Dell Latitude D800		(Requires 2.6 kernel and the ALPS patch)
+Dell Latitude D800		(ALPS touchpad)
 DELL Latitude L400
 DELL Latitude LS400
 DELL Latitude X300
 Desknote A928
 ECS A-530 Transmeta 5600
 ECS Desknote i-Buddie A900
-Fujitsu-Siemens AMILO A 7600	(Requires 2.6 kernel and the ALPS patch)
+Fujitsu-Siemens AMILO A 7600	(ALPS touchpad)
 Fujitsu-Siemens AMILO D P4 (FH2)
 Fujitsu-Siemens AMILO D 6800
 Fujitsu-Siemens AMILO D 7830
@@ -144,15 +144,15 @@ Sharp Actius MM10
 Sharp Muramasa PC-MV1-5CA
 Sharp PC-FS2518
 Siemens Nixdorf Scenic Mobile 710
-Sony PCG-TR1A			(Requires 2.6 kernel and the ALPS patch)
-SONY VAIO FX405			(Requires 2.6 kernel and the ALPS patch)
+Sony PCG-TR1A			(ALPS touchpad)
+SONY VAIO FX405			(ALPS touchpad)
 SONY VAIO GR7/K
 SONY VAIO GRX570
-SONY VAIO Z1			(Requires 2.6 kernel and the ALPS patch)
+SONY VAIO Z1			(ALPS touchpad)
 Sotec 3120X
-Toshiba 1410-303		(Requires 2.6 kernel and the ALPS patch)
-Toshiba A20			(Requires 2.6 kernel and the ALPS patch)
-Toshiba EX1/524CDET		(Requires 2.6 kernel and the ALPS patch)
+Toshiba 1410-303		(ALPS touchpad)
+Toshiba A20			(ALPS touchpad)
+Toshiba EX1/524CDET		(ALPS touchpad)
 Toshiba Portege A100
 Toshiba Satellite M30
-Toshiba Satellite Pro 2100	(Requires 2.6 kernel and the ALPS patch)
+Toshiba Satellite Pro 2100	(ALPS touchpad)

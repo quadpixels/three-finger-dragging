@@ -276,8 +276,7 @@ FAQ
 
 * Can I use this driver with an ALPS Glidepoint device?
 
-    Hopefully, if you use a 2.6.x linux kernel and apply the alps
-    patch. See the README.alps file for more information.
+    Yes, see the README.alps file for more information.
 
 * Does it work on a Dell Inspiron 8200?
 
