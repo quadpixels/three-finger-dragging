@@ -1128,7 +1128,16 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     return delay;
 }
 
-#define HIST(a) (priv->move_hist[((priv->count_packet_finger-(a))%SYNAPTICS_MOVE_HISTORY)])
+#define HIST(a) (priv->move_hist[((priv->hist_index - (a) + SYNAPTICS_MOVE_HISTORY) % SYNAPTICS_MOVE_HISTORY)])
+
+static void store_history(SynapticsPrivate *priv, int x, int y, unsigned int millis)
+{
+    int idx = (priv->hist_index + 1) % SYNAPTICS_MOVE_HISTORY;
+    priv->move_hist[idx].x = x;
+    priv->move_hist[idx].y = y;
+    priv->move_hist[idx].millis = millis;
+    priv->hist_index = idx;
+}
 
 /*
  * Estimate the slope for the data sequence [x3, x2, x1, x0] by using
@@ -1247,9 +1256,7 @@ static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     *dyP = dy;
 
     /* generate a history of the absolute positions */
-    HIST(0).x = hw->x;
-    HIST(0).y = hw->y;
-    HIST(0).millis = hw->millis;
+    store_history(priv, hw->x, hw->y, hw->millis);
 
     return delay;
 }

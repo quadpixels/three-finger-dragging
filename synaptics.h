@@ -160,6 +160,7 @@ typedef struct _SynapticsPrivateRec
     int fifofd;		 		/* fd for fifo */
 
     SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY]; /* movement history */
+    int hist_index;			/* Last added entry in move_hist[] */
     int largest_valid_x;		/* Largest valid X coordinate seen so far */
     int scroll_y;			/* last y-scroll position */
     int scroll_x;			/* last x-scroll position */
