@@ -55,7 +55,6 @@ enum SynapticsProtocol {
 };
 
 struct synapticshw;
-struct _SynapticsPrivateRec;
 struct CommData;
 
 struct SynapticsProtocolOperations {
