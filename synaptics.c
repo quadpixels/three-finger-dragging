@@ -452,6 +452,7 @@ ReadInput(LocalDevicePtr local)
 	Bool left, mid, right, up, down;
 	double speed, integral;
 	int change;
+	int scroll_up, scroll_down;
 
 	/* 
 	 * set blocking to -1 on the first call because we know there is data to
@@ -643,14 +644,16 @@ ReadInput(LocalDevicePtr local)
 		}
 
 		/* scroll processing */
+		scroll_up = 0;
+		scroll_down = 0;
 		if(priv->vert_scroll_on) {
-			dist = y - priv->scroll_y; /* + = up, - = down */
-			if(dist > para->scroll_dist_vert) {
-				up = TRUE;
+			/* + = up, - = down */
+			while(y - priv->scroll_y > para->scroll_dist_vert) {
+				scroll_up++;
 				priv->scroll_y += para->scroll_dist_vert;
 			}
-			else if(dist < (-1 * para->scroll_dist_vert)) {
-				down = TRUE;
+			while(y - priv->scroll_y < -para->scroll_dist_vert) {
+				scroll_down++;
 				priv->scroll_y -= para->scroll_dist_vert;
 			}
 		}
@@ -725,6 +728,15 @@ ReadInput(LocalDevicePtr local)
 			xf86PostButtonEvent(local->dev, FALSE, id, (buttons & (1 << (id - 1))), 0, 0);
 		}
 		priv->lastButtons = buttons;
+
+		while(scroll_up-- > 0) {
+			xf86PostButtonEvent(local->dev, FALSE, 4, !up, 0, 0);
+			xf86PostButtonEvent(local->dev, FALSE, 4, up, 0, 0);
+		}
+		while(scroll_down-- > 0) {
+			xf86PostButtonEvent(local->dev, FALSE, 5, !down, 0, 0);
+			xf86PostButtonEvent(local->dev, FALSE, 5, down, 0, 0);
+		}
 	}
 }
 
