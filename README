@@ -94,6 +94,12 @@ LockedDrags		Bool	If off, a tap and drag gesture ends when you release
 				the finger. If on, the gesture is active until you
 				tap a second time.
 
+A tap event happens when the finger is touched and released in a time
+interval shorter than MaxTapTime, and the touch and release
+coordinates are less than MaxTapMove units apart. A "touch" event
+happens when the Z value goes above FingerHigh, and an "untouch" event
+happens when the Z value goes below FingerLow.
+
 
 FAQ
 ---
