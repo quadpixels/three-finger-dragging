@@ -125,6 +125,32 @@ CircularPad	        Bool	Instead of being a rectangle, the edge is the ellipse
 				enclosed by the Left/Right/Top/BottomEdge parameters.
 				For circular touchpads.
 
+The LeftEdge, RightEdge, TopEdge and BottomEdge parameters are used to
+define the edge and corner areas of the touchpad. The parameters split
+the touchpad area in 9 pieces, like this:
+
+        LeftEdge  RightEdge
+            v         v
+            |         |       Physical top edge
+          1 |    2    | 3
+        -------------------   TopEdge
+            |         |
+         4  |    5    | 6
+            |         |
+        -------------------   BottomEdge
+         7  |    8    | 9
+            |         |       Physical bottom edge
+        ^                 ^
+     Physical          Physical
+     left edge        right edge
+
+Coordinates to the left of LeftEdge are part of the left edge (areas
+1, 4 and 7), coordinates to the left of LeftEdge and above TopEdge
+(area 1) are part of the upper left corner, etc. A good way to find
+appropriate edge parameters is to enable the SHMConfig option and run
+"synclient -m 1" to see the x/y coordinates corresponding to different
+positions on the touchpad.
+
 A tap event happens when the finger is touched and released in a time
 interval shorter than MaxTapTime, and the touch and release
 coordinates are less than MaxTapMove units apart. A "touch" event
