@@ -19,7 +19,7 @@ static void usage()
 {
     fprintf(stderr, "Usage: syndaemon [-i idle-time]\n");
     fprintf(stderr, "  -i How many seconds to wait after the last key press before\n");
-    fprintf(stderr, "     enabling the touchpad.\n");
+    fprintf(stderr, "     enabling the touchpad. (default is 2s)\n");
     exit(1);
 }
 
