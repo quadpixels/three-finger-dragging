@@ -154,9 +154,12 @@ static void monitor(SynapticsSHM* synshm, int delay)
     while(1) {
 	SynapticsSHM cur = *synshm;
 	if (!is_equal(&old, &cur)) {
-	    printf("x:%4d y:%4d z:%3d f:%1d w:%2d left:%d right:%d up:%d down:%d\n",
+	    printf("x:%4d y:%4d z:%3d f:%1d w:%2d left:%d right:%d up:%d down:%d "
+		   "multi:%d %d %d %d %d %d %d %d\n",
 		   cur.x, cur.y, cur.z, cur.numFingers, cur.fingerWidth,
-		   cur.left, cur.right, cur.up, cur.down);
+		   cur.left, cur.right, cur.up, cur.down,
+		   cur.multi[0], cur.multi[1], cur.multi[2], cur.multi[3],
+		   cur.multi[4], cur.multi[5], cur.multi[6], cur.multi[7]);
 	    old = cur;
 	}
 	usleep(delay * 1000);

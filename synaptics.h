@@ -16,6 +16,7 @@ typedef struct _SynapticsSHM
     int numFingers;			    /* number of fingers */
     int fingerWidth;			    /* finger width value */
     int left, right, up, down;		    /* left/right/up/down buttons */
+    Bool multi[8];
 
     /* Probed hardware properties */
     unsigned long int model_id;		    /* Model-ID */
@@ -65,8 +66,8 @@ struct SynapticsHwState {
     Bool right;
     Bool up;
     Bool down;
-    Bool cbLeft;
-    Bool cbRight;
+
+    Bool multi[8];
 };
 
 typedef struct _SynapticsTapRec

@@ -782,6 +782,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     int double_click;
     long delay = 1000000000;
     long timeleft;
+    int i;
 
     /* If touchpad is switched off, we skip the whole thing and return delay */
     if (para->touchpad_off == TRUE)
@@ -808,6 +809,12 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     para->right = hw->right;
     para->up = hw->up;
     para->down = hw->down;
+    for (i = 0; i < 8; i++)
+	para->multi[i] = hw->multi[i];
+
+    /* Treat the first two multi buttons as up/down for now. */
+    hw->up |= hw->multi[0];
+    hw->down |= hw->multi[1];
 
     /* 3rd button emulation */
     mid = HandleMidButtonEmulation(priv, hw, &delay);
@@ -1046,13 +1053,13 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     }
 
 
-    buttons = ((hw->left  ? 0x01 : 0) |
-	       (mid       ? 0x02 : 0) |
-	       (hw->right ? 0x04 : 0) |
-	       (hw->up    ? 0x08 : 0) |
-	       (hw->down  ? 0x10 : 0) |
-	       (hw->cbLeft  ? 0x20 : 0) |
-	       (hw->cbRight ? 0x40 : 0));
+    buttons = ((hw->left     ? 0x01 : 0) |
+	       (mid          ? 0x02 : 0) |
+	       (hw->right    ? 0x04 : 0) |
+	       (hw->up       ? 0x08 : 0) |
+	       (hw->down     ? 0x10 : 0) |
+	       (hw->multi[2] ? 0x20 : 0) |
+	       (hw->multi[3] ? 0x40 : 0));
 
     /* Flags */
     priv->finger_flag = finger;
@@ -1101,7 +1108,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     /*
      * Handle auto repeat buttons
      */
-    if ((hw->up || hw->down || hw->cbLeft || hw->cbRight) &&
+    if ((hw->up || hw->down || hw->multi[2] || hw->multi[3]) &&
 	para->updown_button_scrolling) {
 	priv->repeatButtons = buttons & 0x78;
 	if (!priv->nextRepeat) {
@@ -1262,6 +1269,7 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
 			struct SynapticsHwState *hw)
 {
     struct input_event ev;
+    Bool v;
 
     while (SynapticsReadEvent(priv, &ev) == Success) {
 	switch (ev.type) {
@@ -1272,39 +1280,52 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
 		return Success;
 	    }
 	case EV_KEY:
+	    v = (ev.value ? TRUE : FALSE);
 	    switch (ev.code) {
 	    case BTN_LEFT:
-		priv->hwState.left = (ev.value ? TRUE : FALSE);
+		priv->hwState.left = v;
 		break;
 	    case BTN_RIGHT:
-		priv->hwState.right = (ev.value ? TRUE : FALSE);
+		priv->hwState.right = v;
 		break;
 	    case BTN_FORWARD:
-		priv->hwState.up = (ev.value ? TRUE : FALSE);
+		priv->hwState.up = v;
 		break;
 	    case BTN_BACK:
-		priv->hwState.down = (ev.value ? TRUE : FALSE);
+		priv->hwState.down = v;
 		break;
-	    case BTN_0:						/* multi-btn-0 */
-		priv->hwState.up = (ev.value ? TRUE : FALSE);
+	    case BTN_0:
+		priv->hwState.multi[0] = v;
 		break;
-	    case BTN_1:						/* multi-btn-1 */
-		priv->hwState.down = (ev.value ? TRUE : FALSE);
+	    case BTN_1:
+		priv->hwState.multi[1] = v;
 		break;
-	    case BTN_2:						/* multi-btn-2 */
-		priv->hwState.cbLeft = (ev.value ? TRUE : FALSE);
+	    case BTN_2:
+		priv->hwState.multi[2] = v;
 		break;
-	    case BTN_3:						/* multi-btn-3 */
-		priv->hwState.cbRight = (ev.value ? TRUE : FALSE);
+	    case BTN_3:
+		priv->hwState.multi[3] = v;
+		break;
+	    case BTN_4:
+		priv->hwState.multi[4] = v;
+		break;
+	    case BTN_5:
+		priv->hwState.multi[5] = v;
+		break;
+	    case BTN_6:
+		priv->hwState.multi[6] = v;
+		break;
+	    case BTN_7:
+		priv->hwState.multi[7] = v;
 		break;
 	    case BTN_TOOL_FINGER:
-		priv->hwState.oneFinger = (ev.value ? TRUE : FALSE);
+		priv->hwState.oneFinger = v;
 		break;
 	    case BTN_TOOL_DOUBLETAP:
-		priv->hwState.twoFingers = (ev.value ? TRUE : FALSE);
+		priv->hwState.twoFingers = v;
 		break;
 	    case BTN_TOOL_TRIPLETAP:
-		priv->hwState.threeFingers = (ev.value ? TRUE : FALSE);
+		priv->hwState.threeFingers = v;
 		break;
 	    }
 	    break;
@@ -1388,6 +1409,8 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
     if (ret != Success)
 	return ret;
 
+    memset(hw, 0, sizeof(hw));
+
     buf = priv->protoBuf;
     if (newabs) {			    /* newer protos...*/
 	DBG(7, ErrorF("using new protocols\n"));
@@ -1405,8 +1428,6 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 
 	hw->left  = (buf[0] & 0x01) ? 1 : 0;
 	hw->right = (buf[0] & 0x02) ? 1 : 0;
-	hw->up    = 0;
-	hw->down  = 0;
 
 	if (SYN_CAP_EXTENDED(priv->capabilities)) {
 	    if (SYN_CAP_FOUR_BUTTON(priv->capabilities)) {
@@ -1418,16 +1439,23 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 		    hw->down = !hw->down;
 	    }
 	    if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap)) {
-		/* aka. type with 6 buttons */
-		if ((buf[3]&2) ? !hw->right : hw->right) {
-		    if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap) > 2) {
-			hw->cbLeft  = (buf[4] & 0x02) ? TRUE : FALSE;
-			hw->cbRight = (buf[5] & 0x02) ? TRUE : FALSE;
+		if ((buf[3] & 2) ? !hw->right : hw->right) {
+		    switch (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap) & ~0x01) {
+		    default:
+			break;
+		    case 8:
+			hw->multi[7] = ((buf[5] & 0x08)) ? 1 : 0;
+			hw->multi[6] = ((buf[4] & 0x08)) ? 1 : 0;
+		    case 6:
+			hw->multi[5] = ((buf[5] & 0x04)) ? 1 : 0;
+			hw->multi[4] = ((buf[4] & 0x04)) ? 1 : 0;
+		    case 4:
+			hw->multi[3] = ((buf[5] & 0x02)) ? 1 : 0;
+			hw->multi[2] = ((buf[4] & 0x02)) ? 1 : 0;
+		    case 2:
+			hw->multi[1] = ((buf[5] & 0x01)) ? 1 : 0;
+			hw->multi[0] = ((buf[4] & 0x01)) ? 1 : 0;
 		    }
-		    hw->up      = (buf[4] & 0x01) ? TRUE : FALSE;
-		    hw->down    = (buf[5] & 0x01) ? TRUE : FALSE;
-		} else {
-		    hw->cbLeft = hw->cbRight = hw->up = hw->down = FALSE;
 		}
 	    }
 	}
@@ -1445,9 +1473,6 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 
 	hw->left  = (buf[0] & 0x01) ? 1 : 0;
 	hw->right = (buf[0] & 0x02) ? 1 : 0;
-	hw->up    = 0;
-	hw->down  = 0;
-	hw->cbLeft = hw->cbRight = hw->up = hw->down = FALSE;
     }
 
     hw->y = YMAX_NOMINAL + YMIN_NOMINAL - hw->y;
