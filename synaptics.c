@@ -1180,7 +1180,6 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     Bool finger;
     int dx, dy, buttons, id;
     edge_type edge;
-    Bool mid;
     int change;
     struct ScrollData scroll;
     int double_click;
@@ -1216,14 +1215,13 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     hw->down |= hw->multi[1];
 
     /* 3rd button emulation */
-    mid = HandleMidButtonEmulation(priv, hw, &delay);
-    mid |= hw->middle;
+    hw->middle |= HandleMidButtonEmulation(priv, hw, &delay);
 
     /* Up/Down button scrolling or middle/double click */
     double_click = FALSE;
     if (!para->updown_button_scrolling) {
 	if (hw->down) {		/* map down button to middle button */
-	    mid = TRUE;
+	    hw->middle = TRUE;
 	}
 
 	if (hw->up) {		/* up button generates double click */
@@ -1263,16 +1261,13 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     delay = MIN(delay, timeleft);
 
 
-    buttons = ((hw->left     ? 0x01 : 0) |
-	       (mid          ? 0x02 : 0) |
-	       (hw->right    ? 0x04 : 0) |
-	       (hw->guest_left  ? 0x01 : 0) |
-	       (hw->guest_mid   ? 0x02 : 0) |
-	       (hw->guest_right ? 0x04 : 0) |
-	       (hw->up       ? 0x08 : 0) |
-	       (hw->down     ? 0x10 : 0) |
-	       (hw->multi[2] ? 0x20 : 0) |
-	       (hw->multi[3] ? 0x40 : 0));
+    buttons = (((hw->left || hw->guest_left)   ? 0x01 : 0) |
+	       ((hw->middle || hw->guest_mid)  ? 0x02 : 0) |
+	       ((hw->right || hw->guest_right) ? 0x04 : 0) |
+	       (hw->up                         ? 0x08 : 0) |
+	       (hw->down                       ? 0x10 : 0) |
+	       (hw->multi[2]                   ? 0x20 : 0) |
+	       (hw->multi[3]                   ? 0x40 : 0));
 
     if (priv->tap_button > 0) {
 	int tap_mask = 1 << (priv->tap_button - 1);
