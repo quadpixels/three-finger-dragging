@@ -245,7 +245,10 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 				event_device=NULL;
 				s=strstr(line+sizeof(INP_DEV_H)-1, "event"); /* there might also be some other devices f.e. js0... */
 				if(s != NULL) {
-					s[sizeof("event")]='\0'; /* terminate the string after event2 */
+					char *p = s + sizeof("event");
+					while (*p && (*p >= '0') && (*p <= '9'))
+						p++;
+					*p = 0; /* terminate the string after event2 */
 					event_device = malloc(strlen(s) + sizeof(DEV_INPUT_EVENT) + 1);
 				}
 				if(s == NULL || event_device == NULL) {
