@@ -1,3 +1,13 @@
+0.12.3 (2004-01-11)
+- Added more models to the compatibility list.
+- Updated the documentation.
+- Added French translation of the INSTALL file. Contributed by Rigot
+  Michel.
+- Removed deprecated use of psmouse_noext in the alps patch. This
+  makes the patch work also for recent -mm kernels. (This breaks alps
+  support for kernels older than 2.6.1-rc1, but those kernels should
+  not be used anyway.)
+
 0.12.2 (2003-12-17)
 - Added more models to the compatibility list.
 - Updated the documentation.
