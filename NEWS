@@ -1,3 +1,11 @@
+0.13.5 (2004-08-07)
+- FreeBSD psm driver update. From Arne Schwabe.
+- Support for ALPS dualpoint touchpads (DELL Latitude CPx, DELL
+  Inspiron 8200, DELL Latitude D600). From Alastair M. Robinson.
+- Documentation updates, including a trouble shooting guide.
+- Makefile fix to auto-detect x86_64 systems. From Mattia Dongili.
+- Updated the compatibility list.
+
 0.13.4 (2004-07-27)
 - Fixed X server crash caused by forgetting to remove the timer
   callback in the DeviceOff() function.
