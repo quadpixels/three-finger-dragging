@@ -654,36 +654,34 @@ ReadInput(LocalDevicePtr local)
 		          ((hw.z > para->finger_low)  &&  priv->finger_flag));
 
  		/* palm detection */
- 		if(SYN_CAP_EXTENDED(priv->capabilities) && SYN_CAP_PALMDETECT(priv->capabilities)) {
- 			if(finger) {
- 				if((hw.z > 200) && (hw.w > 10))
- 					priv->palm = TRUE;
- 			} else {
- 				priv->palm = FALSE;
- 			}
- 			if(hw.x == 0)
- 				priv->avg_w = 0;
- 			else
- 				priv->avg_w += (hw.w - priv->avg_w + 1) / 2;
- 			if(finger && !priv->finger_flag) {
- 				int safe_w = MAX(hw.w, priv->avg_w);
- 				if(hw.w < 2)
- 					finger = TRUE;				/* more than one finger -> not a palm */
- 				else if((safe_w < 6) && (priv->prev_z < para->finger_high))
- 					finger = TRUE;				/* thin finger, distinct touch -> not a palm */
- 				else if((safe_w < 7) && (priv->prev_z < para->finger_high / 2))
- 					finger = TRUE;				/* thin finger, distinct touch -> not a palm */
- 				else if(hw.z > priv->prev_z + 1) /* z not stable, may be a palm */
- 					finger = FALSE;
- 				else if(hw.z < priv->prev_z - 5) /* z not stable, may be a palm */
- 					finger = FALSE;
- 				else if(hw.z > 200)				/* z too large -> probably palm */
- 					finger = FALSE;
- 				else if(hw.w > 10)				/* w too large -> probably palm */
- 					finger = FALSE;
- 			}
- 			priv->prev_z = hw.z;
- 		}
+		if(finger) {
+			if((hw.z > 200) && (hw.w > 10))
+				priv->palm = TRUE;
+		} else {
+			priv->palm = FALSE;
+		}
+		if(hw.x == 0)
+			priv->avg_w = 0;
+		else
+			priv->avg_w += (hw.w - priv->avg_w + 1) / 2;
+		if(finger && !priv->finger_flag) {
+			int safe_w = MAX(hw.w, priv->avg_w);
+			if(hw.w < 2)
+				finger = TRUE;				/* more than one finger -> not a palm */
+			else if((safe_w < 6) && (priv->prev_z < para->finger_high))
+				finger = TRUE;				/* thin finger, distinct touch -> not a palm */
+			else if((safe_w < 7) && (priv->prev_z < para->finger_high / 2))
+				finger = TRUE;				/* thin finger, distinct touch -> not a palm */
+			else if(hw.z > priv->prev_z + 1) /* z not stable, may be a palm */
+				finger = FALSE;
+			else if(hw.z < priv->prev_z - 5) /* z not stable, may be a palm */
+				finger = FALSE;
+			else if(hw.z > 200)				/* z too large -> probably palm */
+				finger = FALSE;
+			else if(hw.w > 10)				/* w too large -> probably palm */
+				finger = FALSE;
+		}
+		priv->prev_z = hw.z;
  
   		/* tap and drag detection */
  		if(priv->palm) {
@@ -770,8 +768,7 @@ ReadInput(LocalDevicePtr local)
 
 		/* detecting 2 and 3 fingers */
 		if(finger && /* finger is on the surface */
-		   (DIFF_TIME(priv->count_packet, priv->touch_on.packet) < para->tap_time) && /* tap time is not succeeded */
-		   SYN_CAP_MULTIFINGER(priv->capabilities)) /* touchpad has multifinger capabilities */
+		   (DIFF_TIME(priv->count_packet, priv->touch_on.packet) < para->tap_time)) /* tap time is not succeeded */
 		{ /* count fingers when reported */
 			if((hw.w == 0) && (priv->finger_count == 0))
 				priv->finger_count = 2;
@@ -1159,6 +1156,26 @@ SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivatePtr priv,
 		} else {
 			hw->cbLeft = hw->cbRight = hw->up = hw->down = FALSE;
 		}
+	}
+
+	if (hw->z > 0) {
+		int w_ok = 0;
+		/*
+		 * Use capability bits to decide if the w value is valid.
+		 * If not, set it to 5, which corresponds to a finger of
+		 * normal width.
+		 */
+		if (SYN_CAP_EXTENDED(priv->capabilities)) {
+			if ((hw->w >= 0) && (hw->w <= 1)) {
+				w_ok = SYN_CAP_MULTIFINGER(priv->capabilities);
+			} else if (hw->w == 2) {
+				w_ok = SYN_MODEL_PEN(priv->model_id);
+			} else if ((hw->w >= 4) && (hw->w <= 15)) {
+				w_ok = SYN_CAP_PALMDETECT(priv->capabilities);
+			}
+		}
+		if (!w_ok)
+			hw->w = 5;
 	}
 
 	return Success;
