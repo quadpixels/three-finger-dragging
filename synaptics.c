@@ -1269,6 +1269,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		(para->circular_trigger == 7 && edge & LEFT_EDGE) ||
 		(para->circular_trigger == 8 && edge & LEFT_EDGE && edge & TOP_EDGE)) {
 		priv->circ_scroll_on = TRUE;
+		priv->circ_scroll_vert = TRUE;
 		priv->scroll_a = angle(priv, hw->x, hw->y);
 		DBG(7, ErrorF("circular scroll detected on edge\n"));
 	    }
@@ -1300,12 +1301,23 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	priv->horiz_scroll_on = FALSE;
     }
 
-    /* if hitting a corner (top right or bottom right) while vertical scrolling is active,
-       switch over to circular scrolling smoothly */
+    /* if hitting a corner (top right or bottom right) while vertical scrolling
+       is active, switch over to circular scrolling smoothly */
     if (priv->vert_scroll_on && !priv->horiz_scroll_on && para->circular_scrolling) {
 	if ((edge & RIGHT_EDGE) && (edge & (TOP_EDGE | BOTTOM_EDGE))) {
 	    priv->vert_scroll_on = FALSE;
 	    priv->circ_scroll_on = TRUE;
+	    priv->circ_scroll_vert = TRUE;
+	    priv->scroll_a = angle(priv, hw->x, hw->y);
+	    DBG(7, ErrorF("switching to circular scrolling\n"));
+	}
+    }
+    /* Same treatment for horizontal scrolling */
+    if (priv->horiz_scroll_on && !priv->vert_scroll_on && para->circular_scrolling) {
+	if ((edge & BOTTOM_EDGE) && (edge & (LEFT_EDGE | RIGHT_EDGE))) {
+	    priv->horiz_scroll_on = FALSE;
+	    priv->circ_scroll_on = TRUE;
+	    priv->circ_scroll_vert = FALSE;
 	    priv->scroll_a = angle(priv, hw->x, hw->y);
 	    DBG(7, ErrorF("switching to circular scrolling\n"));
 	}
@@ -1325,17 +1337,19 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     if (priv->circ_scroll_on) {
 	/* + = counter clockwise, - = clockwise */
 	while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) > para->scroll_dist_circ) {
-	    sd->up++;
-	    if (sd->up > 1000)
-		break; /* safety */
+	    if (priv->circ_scroll_vert)
+		sd->up++;
+	    else
+		sd->right++;
 	    priv->scroll_a += para->scroll_dist_circ;
 	    if (priv->scroll_a > M_PI)
 		priv->scroll_a -= 2 * M_PI;
 	}
 	while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) < -para->scroll_dist_circ) {
-	    sd->down++;
-	    if (sd->down > 1000)
-		break; /* safety */
+	    if (priv->circ_scroll_vert)
+		sd->down++;
+	    else
+		sd->left++;
 	    priv->scroll_a -= para->scroll_dist_circ;
 	    if (priv->scroll_a < -M_PI)
 		priv->scroll_a += 2 * M_PI;

@@ -178,6 +178,8 @@ typedef struct _SynapticsPrivateRec
     Bool vert_scroll_on;		/* scrolling flag */
     Bool horiz_scroll_on;		/* scrolling flag */
     Bool circ_scroll_on;		/* scrolling flag */
+    Bool circ_scroll_vert;		/* True: Generate vertical scroll events
+					   False: Generate horizontal events */
     double frac_x, frac_y;		/* absolute -> relative fraction */
     enum MidButtonEmulation mid_emu_state;	/* emulated 3rd button */
     int repeatButtons;			/* buttons for repeat */
