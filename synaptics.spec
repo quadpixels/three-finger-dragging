@@ -4,8 +4,7 @@ Version: 0.12.3
 Release: 1
 License: GPL
 Group: User Interface/X
-Source: %{name}-%{version}-%{release}.src.tar.bz2
-Patch0: Makefile.diff
+Source: %{name}-%{version}.tar.bz2
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 BuildPreReq: XFree86-devel
 
@@ -18,8 +17,7 @@ advance features of the touchpad becomes available.
 
 %prep
 
-%setup -q -n %{name}
-%patch0 
+%setup
 
 %build
 make
@@ -43,4 +41,3 @@ make DESTDIR=$RPM_BUILD_ROOT install
 %changelog
 * Tue Feb 03 2004 Giorgio Bellussi <bunga@libero.it>
 - Created RedHat compatible .spec file
-- Created Makefile.patch.
