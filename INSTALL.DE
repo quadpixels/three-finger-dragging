@@ -51,7 +51,7 @@ der Treiber später einaml online konfigurierbar werden.
 6. Der X-Server ist neu zu starten. Sollte das Touchpad nicht
 funktionieren, siehe Schritt 7.
 
-7. a) Die Ausgaben des XFree-Logfiles anschauen. 
+7. a) Die Ausgaben des XFree-Logfiles anschauen.
    b) Den XServer mit "startx -- -logverbose 8" starten um mehr
       Ausgaben zu erzeugen.
 

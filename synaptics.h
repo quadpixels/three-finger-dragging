@@ -91,7 +91,7 @@ enum SynapticsProtocol {
 typedef struct _SynapticsPrivateRec
 {
 	/* shared memory pointer */
-	SynapticsSHMPtr synpara;	
+	SynapticsSHMPtr synpara;
 
 	enum SynapticsProtocol proto;
 

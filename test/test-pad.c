@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
 
 	fd = open("/dev/psaux", O_RDWR);
 	if(fd == -1)
-	{ 
+	{
 		fprintf(stderr, "error open: %s\n", strerror(errno));
 		exit(0);
 	}
