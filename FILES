@@ -1,0 +1,7 @@
+pc_keyb.c.diff.2.4.3              Patch for the reconnect message handling
+ps2comm.c                         Synaptics communication routines
+ps2comm.h                         see above
+synaptics.c                       Synaptics driver-module for xfree
+synaptics.h                       see above
+synclient.c                       Program for testing the shared-memory
+                                   shows the x, y-coordinates of the finger

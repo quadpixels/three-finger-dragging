@@ -1,0 +1,58 @@
+Installation of the Synaptics-Touchpad-Driver for XFree 4.x
+===========================================================
+
+Author: Stefan Gmeiner <riddlebox@freesurf.ch>
+Date: 17.02.02
+
+needs: - XFree 4.x
+       - Using with Kernel 2.4.x for x < 10 needs a kernel-patch (see
+         source-code)
+
+1. If you installing the driver by binary (recommended) you can go to
+step 3.
+
+2. Change in the "Makefile" the path to the xfree-sourcecode tree by
+changig the Variable TOP. Then type "make" to build the driver
+"synaptics_drv.o".
+
+3. Copy the driver-modul "snyaptics_drv.o" into the XFree-module path
+"ex. /usr/X11R6/lib/modules/input/".
+
+4. Load the driver by changig the XFree configuration file through
+adding the line 'Load "synaptics"' in the modul-section.
+
+5. Add/Replace in the InputDevice-section for the touchpad the
+following lines:
+
+Section "InputDevice"
+  Driver  	"synaptics"
+  Identifier  	"Mouse[1]"
+  Option 	"Device"  	"/dev/psaux"
+  Option	"Edges"		"1900 5400 1800 3900"
+  Option	"Finger"	"25 30"
+  Option	"MaxTapTime" "20"
+  Option	"MaxTapMove" "220"
+  Option	"VertScrollDelta" "100"
+  Option	"MinSpeed"	"0.02"
+  Option	"MaxSpeed"	"0.18"
+  Option	"AccelFactor" "0.0010"
+#  Option	"Repeater"	"/dev/ps2mouse"
+#  Option	"SHMConfig"	"on"
+EndSection
+
+Change the Identifier to the same name as in the ServerLayout-section.
+The Option "Repeater" und "SHMConfig" are at the moment for testing.
+
+6. Start/Restart the X-Server. If the touchpad doesn't work go to
+step 7.
+
+7. a) Check the XFree-Logfiles
+   b) Try to start the XServer with 'startx -- -logverbose 8' for more
+      Output
+If you can't get the driver working, mail the logfiles and the
+configuration file to me.
+
+
+
+
+

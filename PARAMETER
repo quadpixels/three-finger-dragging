@@ -1,0 +1,15 @@
+Device			String	Synaptics device
+SHMConfig		Bool	switch on/off shared-memory for configuration
+LeftEdge		Int	coordinates for left edge
+RightEdge		Int	coordinates for right edge
+TopEdge			Int	coordinates for top edge
+BottomEdge		Int	coordinates for bottom edge
+FingerLow		Int	min. finger pressure after ending with movement
+FingerHigh		Int	max. finger pressure before beginning with movement
+MaxTapTime		Int	max. time (time of 1/80s) for detecting a tap
+MaxTapMove		Int	max. movement of the finger for detecting a tap
+VertScrollDelta		Int	move-distance of the finger for a scroll event
+Repeater		String	repeater device
+MinSpeed		Float	min. Speed-factor
+MaxSpeed		Float	max. Speed-factor
+AccelFactor		Float	acceleration-factor

@@ -1,0 +1,58 @@
+Installation des Synaptics-Touchpad-Treibers für XFree 4.x
+==========================================================
+
+Autor: Stefan Gmeiner <riddlebox@freesurf.ch>
+Datum: 17.02.02
+
+Vorraussetzungen für die Installation:
+- XFree 4.x
+- Bei Kernel 2.4.x für x < 10 muss ein Kernel-Patch installiert
+  werden (siehe Source-Tree des Treibers)
+
+1. Wenn du den Treiber als Binary installierst (empfohlen), kannst du direkt
+zum Schritt 2 übergehen.
+
+2. Nach dem im "Makefile" der Pfad zum XFree Sourcetree angepasst
+wurde (TOP=<Pfad zum XFree-Quellcode , kann der Treiber mit
+"make" übersetzt werden.
+
+3. Der Treiber "synaptics_drv.o" muss in das Modul-Verzeichnis
+der XFree Installation kopiert werden.
+
+4. In der Konfigurationsdatei ist der Treiber über "Load
+"synaptics"" in der Modul-Section zu laden.
+
+5. In der InputDevice-Section für das Touchpad sind folgende
+Optionen einzufügen/ersetzen:
+
+Section "InputDevice"
+  Driver  	"synaptics"
+  Identifier  	"Mouse[1]"
+  Option 	"Device"  	"/dev/psaux"
+  Option	"Edges"		"1900 5400 1800 3900"
+  Option	"Finger"	"25 30"
+  Option	"MaxTapTime" "20"
+  Option	"MaxTapMove" "220"
+  Option	"VertScrollDelta" "100"
+  Option	"MinSpeed"	"0.02"
+  Option	"MaxSpeed"	"0.18"
+  Option	"AccelFactor" "0.0010"
+#  Option	"Repeater"	"/dev/ps2mouse"
+#  Option	"SHMConfig"	"on"
+EndSection
+
+Als Identifier muss der gleiche Name wie in der
+ServerLayout-Section verwendet werden.
+Die Optionen "Repeater" und "SHMConfig" sind noch in der
+Testphase. Über die "Repeater"-Option kann eine ext. Maus auf ein
+Repeater-FiFo umgeleitet werden. Über die Option "SHMConfig" soll
+der Treiber später einaml online konfigurierbar werden.
+
+6. Der X-Server ist neu zu starten. Sollte das Touchpad nicht
+funktionieren, siehe Schritt 7.
+
+7. a) Die Ausgaben des XFree-Logfiles anschauen. 
+   b) Den XServer mit "startx -- -logverbose 8" starten um mehr
+      Ausgaben zu erzeugen.
+
+
