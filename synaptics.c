@@ -1055,8 +1055,9 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		((abs(hw->x - priv->touch_on.x) >= para->tap_move) ||
 		 (abs(hw->y - priv->touch_on.y) >= para->tap_move)));
     }
-    if (priv->tap_max_fingers < hw->numFingers)
-	priv->tap_max_fingers = hw->numFingers;
+    if (hw->z > para->finger_high)
+	if (priv->tap_max_fingers < hw->numFingers)
+	    priv->tap_max_fingers = hw->numFingers;
     timeout = GetTimeOut(priv);
     timeleft = TIME_DIFF(priv->touch_on.millis + timeout, hw->millis);
     is_timeout = timeleft <= 0;
