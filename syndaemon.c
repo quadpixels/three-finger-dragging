@@ -34,6 +34,7 @@ static SynapticsSHM *synshm;
 static int pad_disabled;
 static int disable_taps_only;
 static int background = 0;
+const char *pid_file;
 
 
 static void
@@ -43,6 +44,7 @@ usage()
     fprintf(stderr, "  -i How many seconds to wait after the last key press before\n");
     fprintf(stderr, "     enabling the touchpad. (default is 2.0s)\n");
     fprintf(stderr, "  -d Start as a daemon, ie in the background.\n");
+    fprintf(stderr, "  -p Specify the file name for the pid file.\n");
     fprintf(stderr, "  -t Only disable tapping, not mouse movements.\n");
     exit(1);
 }
@@ -54,6 +56,8 @@ signal_handler(int signum)
 	synshm->touchpad_off = 0;
 	pad_disabled = 0;
     }
+    if (pid_file)
+	unlink(pid_file);
     kill(getpid(), signum);
 }
 
@@ -180,7 +184,7 @@ main(int argc, char *argv[])
     int shmid;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "i:dt?")) != EOF) {
+    while ((c = getopt(argc, argv, "i:dtp:?")) != EOF) {
 	switch(c) {
 	case 'i':
 	    idle_time = atof(optarg);
@@ -190,6 +194,9 @@ main(int argc, char *argv[])
 	    break;
 	case 't':
 	    disable_taps_only = 1;
+	    break;
+	case 'p':
+	    pid_file = optarg;
 	    break;
 	default:
 	    usage();
@@ -236,6 +243,15 @@ main(int argc, char *argv[])
 	setsid();	/* Become session leader */
 	chdir("/");	/* In case the file system gets unmounted */
 	umask(0);	/* We don't want any surprises */
+	if (pid_file) {
+	    FILE *fd = fopen(pid_file, "w");
+	    if (!fd) {
+		perror("Can't create pid file");
+		exit(2);
+	    }
+	    fprintf(fd, "%d\n", getpid());
+	    fclose(fd);
+	}
     }
 
     /* Run the main loop */
