@@ -231,7 +231,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     unsigned long now;
 
     /* allocate memory for SynaticsPrivateRec */
-    priv = xcalloc (1, sizeof (SynapticsPrivate));
+    priv = xcalloc(1, sizeof(SynapticsPrivate));
     if (!priv)
 	return NULL;
 
@@ -270,9 +270,9 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     SetDeviceAndProtocol(local);
 
     /* open the touchpad device */
-    local->fd = xf86OpenSerial (local->options);
+    local->fd = xf86OpenSerial(local->options);
     if (local->fd == -1) {
-	ErrorF ("Synaptics driver unable to open device\n");
+	ErrorF("Synaptics driver unable to open device\n");
 	goto SetupProc_fail;
     }
     xf86ErrorFVerb( 6, "port opened successfully\n" );
@@ -304,7 +304,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	}
 	priv->shm_config = TRUE;
     } else {
-	priv->synpara = xcalloc (1, sizeof (SynapticsSHM));
+	priv->synpara = xcalloc(1, sizeof(SynapticsSHM));
 	if (!priv->synpara)
 	    goto SetupProc_fail;
     }
@@ -348,7 +348,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     }
 
     priv->buffer = XisbNew(local->fd, 200);
-    DBG(9, XisbTrace (priv->buffer, 1));
+    DBG(9, XisbTrace(priv->buffer, 1));
 
     if (priv->synpara->repeater) {
 	/* create repeater fifo */
@@ -381,7 +381,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     local->flags |= XI86_CONFIGURED;
 
     if (local->fd != -1) {
-	xf86RemoveEnabledDevice (local);
+	xf86RemoveEnabledDevice(local);
 	if (priv->buffer) {
 	    XisbFree(priv->buffer);
 	    priv->buffer = NULL;
@@ -393,23 +393,23 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
  SetupProc_fail:
     if (local->fd >= 0) {
-	RemoveEnabledDevice (local->fd);
-	xf86CloseSerial (local->fd);
+	RemoveEnabledDevice(local->fd);
+	xf86CloseSerial(local->fd);
 	local->fd = -1;
     }
 
     if (priv->buffer)
-	XisbFree (priv->buffer);
+	XisbFree(priv->buffer);
     if (priv->synpara) {
 	if (priv->shm_config) {
 	    if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
 		xf86shmctl(shmid, XF86IPC_RMID, NULL);
 	} else {
-	    xfree (priv->synpara);
+	    xfree(priv->synpara);
 	}
     }
     /* Freeing priv makes the X server crash. Don't know why.
-       xfree (priv);
+       xfree(priv);
     */
     return local;
 }
@@ -433,7 +433,7 @@ SynapticsCtrl(DeviceIntPtr device, PtrCtrl *ctrl)
 }
 
 static Bool
-DeviceControl (DeviceIntPtr dev, int mode)
+DeviceControl(DeviceIntPtr dev, int mode)
 {
     Bool RetValue;
 
@@ -467,7 +467,7 @@ DeviceControl (DeviceIntPtr dev, int mode)
 }
 
 static Bool
-DeviceOn (DeviceIntPtr dev)
+DeviceOn(DeviceIntPtr dev)
 {
     LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
     SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
@@ -501,7 +501,7 @@ DeviceOn (DeviceIntPtr dev)
 
     /* reinit the pad */
     QueryHardware(local);
-    xf86AddEnabledDevice (local);
+    xf86AddEnabledDevice(local);
     dev->public.on = TRUE;
 
     return Success;
@@ -516,7 +516,7 @@ DeviceOff(DeviceIntPtr dev)
     DBG(3, ErrorF("Synaptics DeviceOff called\n"));
 
     if (local->fd != -1) {
-	xf86RemoveEnabledDevice (local);
+	xf86RemoveEnabledDevice(local);
 	if (priv->proto == SYN_PROTO_PSAUX)
 	    synaptics_set_mode(local->fd, 0);
 	if (priv->buffer) {
@@ -590,7 +590,7 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
     int sigstate;
     CARD32 wakeUpTime;
 
-    sigstate = xf86BlockSIGIO ();
+    sigstate = xf86BlockSIGIO();
 
     hw = priv->hwState;
     hw.millis = now;
@@ -607,7 +607,7 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 
     priv->timer = TimerSet(priv->timer, TimerAbsolute, wakeUpTime, timerFunc, local);
 
-    xf86UnblockSIGIO (sigstate);
+    xf86UnblockSIGIO(sigstate);
 
     return 0;
 }
@@ -1156,30 +1156,30 @@ ControlProc(LocalDevicePtr local, xDeviceCtl * control)
 
 
 static void
-CloseProc (LocalDevicePtr local)
+CloseProc(LocalDevicePtr local)
 {
     DBG(3, ErrorF("Close Proc called\n"));
 }
 
 static int
-SwitchMode (ClientPtr client, DeviceIntPtr dev, int mode)
+SwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
 {
     ErrorF("SwitchMode called\n");
     return Success;
 }
 
 static Bool
-ConvertProc (LocalDevicePtr local,
-	     int first,
-	     int num,
-	     int v0,
-	     int v1,
-	     int v2,
-	     int v3,
-	     int v4,
-	     int v5,
-	     int *x,
-	     int *y)
+ConvertProc(LocalDevicePtr local,
+	    int first,
+	    int num,
+	    int v0,
+	    int v1,
+	    int v2,
+	    int v3,
+	    int v4,
+	    int v5,
+	    int *x,
+	    int *y)
 {
     if (first != 0 || num != 2)
 	return FALSE;
@@ -1192,7 +1192,7 @@ ConvertProc (LocalDevicePtr local,
 
 
 static Bool
-QueryHardware (LocalDevicePtr local)
+QueryHardware(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
     SynapticsSHM *para = priv->synpara;
