@@ -49,8 +49,30 @@ EventDeviceOffHook(LocalDevicePtr local)
 }
 
 static Bool
+event_query_is_synaptics(int fd)
+{
+    struct input_id id;
+    int ret;
+
+    SYSCALL(ret = ioctl(fd, EVIOCGID, &id));
+    if (ret >= 0) {
+	if ((id.bustype == BUS_I8042) &&
+	    (id.vendor == 0x0002) &&
+	    (id.product == PSMOUSE_SYNAPTICS)) {
+	    return TRUE;
+	}
+    }
+    return FALSE;
+}
+
+static Bool
 EventQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 {
+    /* is the synaptics touchpad active? */
+    if (!event_query_is_synaptics(local->fd))
+	return FALSE;
+
+    xf86Msg(X_PROBED, "%s synaptics touchpad found\n", local->name);
     return TRUE;
 }
 
@@ -174,12 +196,12 @@ EventAutoDevProbe(LocalDevicePtr local)
 {
     /* We are trying to find the right eventX device or fall back to
        the psaux protocol and the given device from XF86Config */
-    int fd = -1;
     int i;
+
     for (i = 0; ; i++) {
 	char fname[64];
-	struct input_id id;
-	int ret;
+	int fd = -1;
+	Bool is_synaptics;
 
 	sprintf(fname, "%s/%s%d", DEV_INPUT_EVENT, EVENT_DEV_NAME, i);
 	SYSCALL(fd = open(fname, O_RDONLY));
@@ -190,17 +212,13 @@ EventAutoDevProbe(LocalDevicePtr local)
 		continue;
 	    }
 	}
-	SYSCALL(ret = ioctl(fd, EVIOCGID, &id));
+	is_synaptics = event_query_is_synaptics(fd);
 	SYSCALL(close(fd));
-	if (ret >= 0) {
-	    if ((id.bustype == BUS_I8042) &&
-		(id.vendor == 0x0002) &&
-		(id.product == PSMOUSE_SYNAPTICS)) {
-		xf86Msg(X_PROBED, "%s auto-dev sets Synaptics Device to %s\n",
-			local->name, fname);
-		xf86ReplaceStrOption(local->options, "Device", fname);
-		return TRUE;
-	    }
+	if (is_synaptics) {
+	    xf86Msg(X_PROBED, "%s auto-dev sets Synaptics Device to %s\n",
+		    local->name, fname);
+	    xf86ReplaceStrOption(local->options, "Device", fname);
+	    return TRUE;
 	}
     }
     ErrorF("%s no synaptics event device found (checked %d nodes)\n",
