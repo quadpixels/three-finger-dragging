@@ -36,6 +36,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 /usr/local
 /usr/X11R6
 %doc COMPATIBILITY FILES INSTALL INSTALL.DE INSTALL.FR LICENSE README README.alps TODO
+%doc trouble-shooting.txt
 
 
 %changelog
