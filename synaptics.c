@@ -443,6 +443,8 @@ DeviceOff(DeviceIntPtr dev)
 
 	if (local->fd != -1) {
 		xf86RemoveEnabledDevice (local);
+		if (priv->proto == SYN_PROTO_PSAUX)
+			synaptics_set_mode(local->fd, 0);
 		if (priv->buffer) {
 			XisbFree(priv->buffer);
 			priv->buffer = NULL;
