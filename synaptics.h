@@ -19,6 +19,7 @@ typedef struct _SynapticsSHM
 	/* Probed hardware properties */
 	unsigned long int model_id;			/* Model-ID */
 	unsigned long int capabilities; 	/* Capabilities */
+	unsigned long int ext_cap;			/* Extended Capabilities */
 	unsigned long int identity;			/* Identification */
 	Bool isSynaptics;					/* Synaptics touchpad active */
 
@@ -99,10 +100,9 @@ typedef struct _SynapticsPrivateRec
 	/* Data read from the touchpad */
 	unsigned long int model_id;			/* Model-ID */
 	unsigned long int capabilities; 	/* Capabilities */
+	unsigned long int ext_cap;			/* Extended Capabilities */
 	unsigned long int identity;			/* Identification */
 	Bool isSynaptics;					/* Synaptics touchpad active */
-	Bool six_buttons;					/* Use six button protocol */
-										/*  only of interest if in raw mode */
 	Bool shm_config;					/* True when shared memory area allocated */
 
 	OsTimerPtr timer;				   /* for up/down-button repeat, tap processing, etc */

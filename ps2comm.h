@@ -25,6 +25,8 @@
 #define SYN_CAP_MULTIFINGER(c) (c&(1<<1))
 #define SYN_CAP_PALMDETECT(c) (c&(1<<0))
 #define SYN_CAP_VALID(c) (((c&0x00ff00)>>8)==0x47)
+#define SYN_EXT_CAP_REQUESTS(c) ((c&0x700000) == 0x100000)
+#define SYN_CAP_MULTI_BUTTON_NO(ec) ((ec&0x00f000)>>12)
 
 /* synaptics modes query bits */
 #define SYN_MODE_ABSOLUTE(m) (m&(1<<7)) 
@@ -50,7 +52,7 @@ Bool
 synaptics_model_id(int fd, unsigned long int *model_id);
 
 Bool
-synaptics_capability(int fd, unsigned long int *capability);
+synaptics_capability(int fd, unsigned long int *capability, unsigned long int *ext_capab);
 
 Bool
 synaptics_identify(int fd, unsigned long int *ident);

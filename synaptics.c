@@ -1158,23 +1158,16 @@ QueryHardware (LocalDevicePtr local)
 		return !Success;
 	para->model_id = priv->model_id;
 
-	if(synaptics_capability(local->fd, &priv->capabilities) != Success)
+	if(synaptics_capability(local->fd, &priv->capabilities, &priv->ext_cap) != Success)
 		return !Success;
 	para->capabilities = priv->capabilities;
+	para->ext_cap = priv->ext_cap;
 
 	if(synaptics_set_mode(local->fd, SYN_BIT_ABSOLUTE_MODE |
 	                                 SYN_BIT_HIGH_RATE |
 	                                 SYN_BIT_DISABLE_GESTURE |
 	                                 SYN_BIT_W_MODE) != Success)
 		return !Success;
-
-	priv->six_buttons = FALSE;
-	if ((SYN_ID_MAJOR(priv->identity) > 5) ||
-		((SYN_ID_MAJOR(priv->identity) == 5) && (SYN_ID_MINOR(priv->identity) >= 8)))
-	{
-		xf86Msg(X_PROBED, "Using 6 button protocol\n");
-		priv->six_buttons = TRUE;
-	}
 
 	SynapticsEnableDevice(local->fd);
 
@@ -1308,9 +1301,8 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 	hw->up    = 0;
 	hw->down  = 0;
 
-	if (!priv->six_buttons) {
-		if (SYN_CAP_EXTENDED(priv->capabilities) &&
-			(SYN_CAP_FOUR_BUTTON(priv->capabilities))) {
+	if (SYN_CAP_EXTENDED(priv->capabilities)) {
+		if (SYN_CAP_FOUR_BUTTON(priv->capabilities)) {
 			hw->up = ((buf[3] & 0x01)) ? 1 : 0;
 			if (hw->left)
 				hw->up = !hw->up;
@@ -1318,15 +1310,18 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 			if (hw->right)
 				hw->down = !hw->down;
 		}
-	} else {
-		/* type with 6 buttons */
-		if (priv->protoBuf[3] == 0xC2) {
-			hw->cbLeft  = (priv->protoBuf[4] & 0x02) ? TRUE : FALSE;
-			hw->cbRight = (priv->protoBuf[5] & 0x02) ? TRUE : FALSE;
-			hw->up      = (priv->protoBuf[4] & 0x01) ? TRUE : FALSE;
-			hw->down    = (priv->protoBuf[5] & 0x01) ? TRUE : FALSE;
-		} else {
-			hw->cbLeft = hw->cbRight = hw->up = hw->down = FALSE;
+		if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap)) {
+			/* aka. type with 6 buttons */
+			if (priv->protoBuf[3] == 0xC2) {
+				if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap) > 2) {
+					hw->cbLeft  = (priv->protoBuf[4] & 0x02) ? TRUE : FALSE;
+					hw->cbRight = (priv->protoBuf[5] & 0x02) ? TRUE : FALSE;
+				}
+				hw->up      = (priv->protoBuf[4] & 0x01) ? TRUE : FALSE;
+				hw->down    = (priv->protoBuf[5] & 0x01) ? TRUE : FALSE;
+			} else {
+				hw->cbLeft = hw->cbRight = hw->up = hw->down = FALSE;
+			}
 		}
 	}
 
@@ -1447,7 +1442,9 @@ PrintIdent(SynapticsPrivatePtr priv)
 
 	if(SYN_CAP_EXTENDED(priv->capabilities)) {
 		xf86Msg(X_PROBED, " Touchpad has extended capability bits\n");
-		if(SYN_CAP_FOUR_BUTTON(priv->capabilities))
+		if(SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap))
+			xf86Msg(X_PROBED, " -> %d mulit-buttons, i.e. besides standard buttons\n" ,(int)(SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap)));
+		else if(SYN_CAP_FOUR_BUTTON(priv->capabilities))
 			xf86Msg(X_PROBED, " -> four buttons\n");
 		if(SYN_CAP_MULTIFINGER(priv->capabilities))
 			xf86Msg(X_PROBED, " -> multifinger detection\n");

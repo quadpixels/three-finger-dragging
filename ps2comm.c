@@ -54,6 +54,7 @@
 #define SYN_QUE_SERIAL_NUMBER_PREFIX 0x06
 #define SYN_QUE_SERIAL_NUMBER_SUFFIX 0x07
 #define SYN_QUE_RESOLUTION 0x08
+#define SYN_QUE_EXT_CAPAB 0x09
 
 /* status request response bits (PS2_CMD_STATUS_REQUEST) */
 #define PS2_RES_REMOTE(r) (r&(1<<22))
@@ -257,7 +258,7 @@ synaptics_model_id(int fd, unsigned long int *model_id)
  * see also the SYN_CAP_* macros
  */
 Bool
-synaptics_capability(int fd, unsigned long int *capability)
+synaptics_capability(int fd, unsigned long int *capability, unsigned long int *ext_capab)
 {
 	byte cap[3];
 
@@ -265,6 +266,7 @@ synaptics_capability(int fd, unsigned long int *capability)
 	ErrorF("Read capabilites...\n");
 #endif
 
+	*ext_capab = 0;
 	if((ps2_send_cmd(fd, SYN_QUE_CAPABILITIES) == Success) &&
 	   (ps2_getbyte(fd, &cap[0]) == Success) &&
 	   (ps2_getbyte(fd, &cap[1]) == Success) &&
@@ -274,6 +276,19 @@ synaptics_capability(int fd, unsigned long int *capability)
 		ErrorF("capability %06X\n", *capability);
 #endif
 		if(SYN_CAP_VALID(*capability)) {
+			if(SYN_EXT_CAP_REQUESTS(*capability)) {
+				if((ps2_send_cmd(fd, SYN_QUE_EXT_CAPAB) == Success) &&
+				   (ps2_getbyte(fd, &cap[0]) == Success) &&
+				   (ps2_getbyte(fd, &cap[1]) == Success) &&
+				   (ps2_getbyte(fd, &cap[2]) == Success)) {
+				  *ext_capab = (cap[0]<<16) | (cap[1]<<8) | cap[2];
+#ifdef DEBUG
+					ErrorF("ext-capability %06X\n", *ext_capab);
+#endif
+				} else {
+					ErrorF("synaptics says, that it has extended-capabilities, but I cannot read them.");
+				}
+			}
 #ifdef DEBUG
 			ErrorF("...done.\n");
 #endif
