@@ -201,7 +201,7 @@ static Bool SynapticsReadEvent(SynapticsPrivate *, struct input_event *);
 static Bool SynapticsParseRawPacket(LocalDevicePtr, SynapticsPrivate *,
 				    struct SynapticsHwState *);
 static Bool SynapticsGetPacket(LocalDevicePtr, SynapticsPrivate *);
-static void PrintIdent(SynapticsPrivate *);
+static void PrintIdent(const synapticshw_t *);
 
 #endif /* SYNAPTICS_PRIVATE */
 

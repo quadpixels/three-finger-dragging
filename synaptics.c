@@ -1482,7 +1482,7 @@ QueryHardware(LocalDevicePtr local)
 
     SynapticsEnableDevice(local->fd);
 
-    PrintIdent(priv);
+    PrintIdent(&priv->synhw);
 
     return Success;
 }
@@ -1856,34 +1856,34 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivate *priv)
 }
 
 static void
-PrintIdent(SynapticsPrivate *priv)
+PrintIdent(const synapticshw_t *synhw)
 {
-    xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(priv->synhw));
-    xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(priv->synhw),
-	    SYN_ID_MINOR(priv->synhw));
+    xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(*synhw));
+    xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(*synhw),
+	    SYN_ID_MINOR(*synhw));
 
-    if (SYN_MODEL_ROT180(priv->synhw))
+    if (SYN_MODEL_ROT180(*synhw))
 	xf86Msg(X_PROBED, " 180 degree mounted touchpad\n");
-    if (SYN_MODEL_PORTRAIT(priv->synhw))
+    if (SYN_MODEL_PORTRAIT(*synhw))
 	xf86Msg(X_PROBED, " portrait touchpad\n");
-    xf86Msg(X_PROBED, " Sensor: %d\n", SYN_MODEL_SENSOR(priv->synhw));
-    if (SYN_MODEL_NEWABS(priv->synhw))
+    xf86Msg(X_PROBED, " Sensor: %d\n", SYN_MODEL_SENSOR(*synhw));
+    if (SYN_MODEL_NEWABS(*synhw))
 	xf86Msg(X_PROBED, " new absolute packet format\n");
-    if (SYN_MODEL_PEN(priv->synhw))
+    if (SYN_MODEL_PEN(*synhw))
 	xf86Msg(X_PROBED, " pen detection\n");
 
-    if (SYN_CAP_EXTENDED(priv->synhw)) {
+    if (SYN_CAP_EXTENDED(*synhw)) {
 	xf86Msg(X_PROBED, " Touchpad has extended capability bits\n");
-	if (SYN_CAP_MULTI_BUTTON_NO(priv->synhw))
+	if (SYN_CAP_MULTI_BUTTON_NO(*synhw))
 	    xf86Msg(X_PROBED, " -> %d multi buttons, i.e. besides standard buttons\n",
-		    (int)(SYN_CAP_MULTI_BUTTON_NO(priv->synhw)));
-	else if (SYN_CAP_FOUR_BUTTON(priv->synhw))
+		    (int)(SYN_CAP_MULTI_BUTTON_NO(*synhw)));
+	else if (SYN_CAP_FOUR_BUTTON(*synhw))
 	    xf86Msg(X_PROBED, " -> four buttons\n");
-	if (SYN_CAP_MULTIFINGER(priv->synhw))
+	if (SYN_CAP_MULTIFINGER(*synhw))
 	    xf86Msg(X_PROBED, " -> multifinger detection\n");
-	if (SYN_CAP_PALMDETECT(priv->synhw))
+	if (SYN_CAP_PALMDETECT(*synhw))
 	    xf86Msg(X_PROBED, " -> palm detection\n");
-	if (SYN_CAP_PASSTHROUGH(priv->synhw))
+	if (SYN_CAP_PASSTHROUGH(*synhw))
 	    xf86Msg(X_PROBED, " -> pass-through port\n");
     }
 }
