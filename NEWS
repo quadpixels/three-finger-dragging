@@ -63,6 +63,37 @@
 0.11.3p3: (2003-06-19)
 - Added support for linux kernel 2.5.x.
 
+0.11.?
+- Updated the synclient program to make it possible to read and write
+  the variables in the shared memory area. This means you can change
+  parameter settings without restarting the X server.
+- More reliable implementation of double click simulation using the up
+  button. The old implementation incorrectly generated a single click
+  instead of a double click for very short clicks of the up button.
+- Configurable timeout (option EmulateMidButtonTime) for middle button
+  emulation.
+- Better state machine for handling middle mouse button emulation.
+  * Clicks shorter than EmulateMidButtonTime are no longer lost.
+  * The middle button event is generated as soon as both the left and
+    the right buttons are pressed. The old code waited until the
+    timeout had passed before even checking if both buttons were
+    pressed.
+- Makefile improvements:
+  * Made it possible to build synclient even if an X source tree is
+    not available.
+  * Added Makefile dependencies so that things get recompiled when a
+    header file is changed.
+  * synclient.c now includes synaptics.h instead of duplicating the
+    shared memory structure definition.
+- The shared memory segment is properly removed when the X server
+  exits, so that synclient isn't fooled by a stale segment if the X
+  server is later restarted without SHMConfig activated.
+- The code that tried to remove any old shared memory segment at
+  startup before creating the new segment didn't work. Therefore, X
+  server startup failed if the size of the shared segment had changed.
+  (Which was very annoying during development.)
+- Updated the TODO, PARAMETERS and FEATURES files.
+
 
 09.06.02 - Version 0.11.1
 - new packet format for Firmware 5.8 and others; solves problems with some
