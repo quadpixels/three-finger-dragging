@@ -11,6 +11,9 @@ MANDIR = $(DESTDIR)/usr/local/man/man1
 ifeq ($(ARCH),)
   ARCH = $(shell /bin/arch)
 endif
+ifeq ($(ARCH),amd64)
+  ARCH = x86_64
+endif
 ifeq ($(ARCH),x86_64)
   ARCH_DEFINES = -D__x86_64__ -D_XSERVER64
   LIBDIR = lib64
