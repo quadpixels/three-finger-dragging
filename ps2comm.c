@@ -376,10 +376,24 @@ SynapticsEnableDevice(int fd)
 }
 
 Bool
+SynapticsDisableDevice(int fd)
+{
+	xf86FlushInput(fd);
+	return ps2_putbyte(fd, PS2_CMD_DISABLE);
+}
+
+Bool
 QueryIsSynaptics(int fd)
 {
 	unsigned long id;
+	int i;
 
+	for (i = 0; i < 3; i++) {
+		if (SynapticsDisableDevice(fd) == Success)
+			break;
+	}
+
+	xf86WaitForInput(fd, 20000);
 	xf86FlushInput(fd);
 	if(synaptics_identify(fd, &id) == Success) {
 		return TRUE;
