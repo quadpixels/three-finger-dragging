@@ -98,7 +98,7 @@ static void set_variables(SynapticsSHM* synshm, int argc, char* argv[], int firs
 	    int found = 0;
 	    *eqp = 0;
 	    for (j = 0; params[j].name; j++) {
-		if (strcmp(cmd, params[j].name) == 0) {
+		if (strcasecmp(cmd, params[j].name) == 0) {
 		    found = 1;
 		    break;
 		}
