@@ -56,13 +56,14 @@ enum SynapticsProtocol {
 
 struct synapticshw;
 struct _SynapticsPrivateRec;
+struct CommData;
 
 struct SynapticsProtocolOperations {
     void (*DeviceOnHook)(LocalDevicePtr local);
     void (*DeviceOffHook)(LocalDevicePtr local);
-    Bool (*QueryHardware)(LocalDevicePtr local, struct synapticshw *synhw, Bool *hasGuest);
-    Bool (*ReadHwState)(LocalDevicePtr local, struct _SynapticsPrivateRec *priv,
-			struct SynapticsHwState *hwRet);
+    Bool (*QueryHardware)(LocalDevicePtr local, struct synapticshw *synhw);
+    Bool (*ReadHwState)(LocalDevicePtr local, struct synapticshw *synhw,
+			struct CommData *comm, struct SynapticsHwState *hwRet);
 };
 
 extern struct SynapticsProtocolOperations psaux_proto_operations;

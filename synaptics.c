@@ -305,7 +305,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->tap_button = 0;
     priv->tap_button_state = TBS_BUTTON_UP;
     priv->touch_on.millis = now;
-    priv->hasGuest = FALSE;
 
     /* install shared memory or normal memory for parameters */
     priv->shm_config = FALSE;
@@ -390,9 +389,10 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     priv->largest_valid_x = MIN(pars->right_edge, XMAX_NOMINAL);
 
-    priv->buffer = XisbNew(local->fd, 200);
-    DBG(9, XisbTrace(priv->buffer, 1));
+    priv->comm.buffer = XisbNew(local->fd, 200);
+    DBG(9, XisbTrace(priv->comm.buffer, 1));
 
+    priv->fifofd = -1;
     if (pars->repeater) {
 	/* create repeater fifo */
 	if ((xf86mknod(pars->repeater, 666, XF86_S_IFIFO) != 0) &&
@@ -400,7 +400,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	    xf86Msg(X_ERROR, "%s can't create repeater fifo\n", local->name);
 	    xf86free(pars->repeater);
 	    pars->repeater = NULL;
-	    priv->fifofd = -1;
 	} else {
 	    /* open the repeater fifo */
 	    optList = xf86NewOption("Device", pars->repeater);
@@ -408,7 +407,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		xf86Msg(X_ERROR, "%s repeater device open failed\n", local->name);
 		xf86free(pars->repeater);
 		pars->repeater = NULL;
-		priv->fifofd = -1;
 	    }
 	}
     }
@@ -425,9 +423,9 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     if (local->fd != -1) {
 	xf86RemoveEnabledDevice(local);
-	if (priv->buffer) {
-	    XisbFree(priv->buffer);
-	    priv->buffer = NULL;
+	if (priv->comm.buffer) {
+	    XisbFree(priv->comm.buffer);
+	    priv->comm.buffer = NULL;
 	}
 	xf86CloseSerial(local->fd);
     }
@@ -441,8 +439,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	local->fd = -1;
     }
 
-    if (priv->buffer)
-	XisbFree(priv->buffer);
+    if (priv->comm.buffer)
+	XisbFree(priv->comm.buffer);
     if (priv->synpara) {
 	if (priv->shm_config) {
 	    if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
@@ -525,8 +523,8 @@ DeviceOn(DeviceIntPtr dev)
 
     priv->proto_ops->DeviceOnHook(local);
 
-    priv->buffer = XisbNew(local->fd, 64);
-    if (!priv->buffer) {
+    priv->comm.buffer = XisbNew(local->fd, 64);
+    if (!priv->comm.buffer) {
 	xf86CloseSerial(local->fd);
 	local->fd = -1;
 	return !Success;
@@ -553,9 +551,9 @@ DeviceOff(DeviceIntPtr dev)
     if (local->fd != -1) {
 	xf86RemoveEnabledDevice(local);
 	priv->proto_ops->DeviceOffHook(local);
-	if (priv->buffer) {
-	    XisbFree(priv->buffer);
-	    priv->buffer = NULL;
+	if (priv->comm.buffer) {
+	    XisbFree(priv->comm.buffer);
+	    priv->comm.buffer = NULL;
 	}
 	xf86CloseSerial(local->fd);
     }
@@ -683,7 +681,19 @@ static Bool
 SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivate *priv,
 		    struct SynapticsHwState *hw)
 {
-    return priv->proto_ops->ReadHwState(local, priv, hw);
+    if (priv->fifofd >= 0) {
+	/* when there is no synaptics touchpad pipe the data to the repeater fifo */
+	int count = 0;
+	int c;
+	while ((c = XisbRead(priv->comm.buffer)) >= 0) {
+	    unsigned char u = (unsigned char)c;
+	    xf86write(priv->fifofd, &u, 1);
+	    if (++count >= 3)
+		break;
+	}
+	return FALSE;
+    }
+    return priv->proto_ops->ReadHwState(local, &priv->synhw, &priv->comm, hw);
 }
 
 /*
@@ -693,13 +703,13 @@ static void
 ReadInput(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
-    struct SynapticsHwState hw;
+    struct SynapticsHwState *hw = &priv->hwState;
     int delay = 0;
     Bool newDelay = FALSE;
 
-    while (SynapticsGetHwState(local, priv, &hw)) {
-	hw.millis = GetTimeInMillis();
-	delay = HandleState(local, &hw);
+    while (SynapticsGetHwState(local, priv, hw)) {
+	hw->millis = GetTimeInMillis();
+	delay = HandleState(local, hw);
 	newDelay = TRUE;
     }
 
@@ -1427,24 +1437,20 @@ QueryHardware(LocalDevicePtr local)
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
     SynapticsSHM *para = priv->synpara;
 
-    priv->protoBufTail = 0;
+    priv->comm.protoBufTail = 0;
 
-    priv->isSynaptics = priv->proto_ops->QueryHardware(local, &priv->synhw, &priv->hasGuest);
-
-    if (!priv->isSynaptics) {
-	if (!para->repeater || (priv->fifofd == -1)) {
-	    xf86Msg(X_ERROR, "%s no synaptics touchpad detected and no repeater device\n",
-		    local->name);
-	    priv->isSynaptics = TRUE;
-	    return FALSE;
-	}
-	xf86Msg(X_PROBED, "%s no synaptics touchpad, data piped to repeater fifo\n", local->name);
-	synaptics_reset(local->fd);
-	SynapticsEnableDevice(local->fd);
+    if (priv->proto_ops->QueryHardware(local, &priv->synhw)) {
+	para->synhw = priv->synhw;
 	return TRUE;
     }
 
-    para->synhw = priv->synhw;
-
+    if (priv->fifofd == -1) {
+	xf86Msg(X_ERROR, "%s no synaptics touchpad detected and no repeater device\n",
+		local->name);
+	return FALSE;
+    }
+    xf86Msg(X_PROBED, "%s no synaptics touchpad, data piped to repeater fifo\n", local->name);
+    synaptics_reset(local->fd);
+    SynapticsEnableDevice(local->fd);
     return TRUE;
 }

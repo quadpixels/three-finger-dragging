@@ -51,19 +51,19 @@ EventDeviceOffHook(LocalDevicePtr local)
 }
 
 static Bool
-EventQueryHardware(LocalDevicePtr local, struct synapticshw *synhw, Bool *hasGuest)
+EventQueryHardware(LocalDevicePtr local, struct synapticshw *synhw)
 {
     return TRUE;
 }
 
 static Bool
-SynapticsReadEvent(SynapticsPrivate *priv, struct input_event *ev)
+SynapticsReadEvent(struct CommData *comm, struct input_event *ev)
 {
     int i, c;
     unsigned char *pBuf, u;
 
     for (i = 0; i < sizeof(struct input_event); i++) {
-	if ((c = XisbRead(priv->buffer)) < 0)
+	if ((c = XisbRead(comm->buffer)) < 0)
 	    return FALSE;
 	u = (unsigned char)c;
 	pBuf = (unsigned char *)ev;
@@ -73,23 +73,23 @@ SynapticsReadEvent(SynapticsPrivate *priv, struct input_event *ev)
 }
 
 static Bool
-EventReadHwState(LocalDevicePtr local, SynapticsPrivate *priv,
-		 struct SynapticsHwState *hwRet)
+EventReadHwState(LocalDevicePtr local, struct synapticshw *synhw,
+		 struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     struct input_event ev;
     Bool v;
-    struct SynapticsHwState *hw = &(priv->hwState);
+    struct SynapticsHwState *hw = &(comm->hwState);
 
-    while (SynapticsReadEvent(priv, &ev)) {
+    while (SynapticsReadEvent(comm, &ev)) {
 	switch (ev.type) {
 	case EV_SYN:
 	    switch (ev.code) {
 	    case SYN_REPORT:
-		if (priv->oneFinger)
+		if (comm->oneFinger)
 		    hw->numFingers = 1;
-		else if (priv->twoFingers)
+		else if (comm->twoFingers)
 		    hw->numFingers = 2;
-		else if (priv->threeFingers)
+		else if (comm->threeFingers)
 		    hw->numFingers = 3;
 		else
 		    hw->numFingers = 0;
@@ -139,13 +139,13 @@ EventReadHwState(LocalDevicePtr local, SynapticsPrivate *priv,
 		hw->multi[7] = v;
 		break;
 	    case BTN_TOOL_FINGER:
-		priv->oneFinger = v;
+		comm->oneFinger = v;
 		break;
 	    case BTN_TOOL_DOUBLETAP:
-		priv->twoFingers = v;
+		comm->twoFingers = v;
 		break;
 	    case BTN_TOOL_TRIPLETAP:
-		priv->threeFingers = v;
+		comm->threeFingers = v;
 		break;
 	    }
 	    break;

@@ -462,7 +462,7 @@ PS2DeviceOffHook(LocalDevicePtr local)
 }
 
 static Bool
-PS2QueryHardware(LocalDevicePtr local, synapticshw_t *synhw, Bool *hasGuest)
+PS2QueryHardware(LocalDevicePtr local, synapticshw_t *synhw)
 {
     int mode;
 
@@ -493,8 +493,9 @@ PS2QueryHardware(LocalDevicePtr local, synapticshw_t *synhw, Bool *hasGuest)
 	return FALSE;
 
     /* Check to see if the host mouse supports a guest */
+    synhw->hasGuest = FALSE;
     if (SYN_CAP_PASSTHROUGH(*synhw)) {
-        *hasGuest = TRUE;
+        synhw->hasGuest = TRUE;
 
 	/* Enable the guest mouse.  Set it to relative mode, three byte
 	 * packets */
@@ -503,7 +504,7 @@ PS2QueryHardware(LocalDevicePtr local, synapticshw_t *synhw, Bool *hasGuest)
 	SynapticsDisableDevice(local->fd);
 	/* Reset it, set defaults, streaming and enable it */
 	if (!SynapticsResetPassthrough(local->fd)) {
-	    *hasGuest = FALSE;
+	    synhw->hasGuest = FALSE;
 	}
     }
 
@@ -518,10 +519,10 @@ PS2QueryHardware(LocalDevicePtr local, synapticshw_t *synhw, Bool *hasGuest)
  * Decide if the current packet stored in priv->protoBuf is valid.
  */
 static Bool
-PacketOk(SynapticsPrivate *priv)
+PacketOk(synapticshw_t *synhw, struct CommData *comm)
 {
-    unsigned char *buf = priv->protoBuf;
-    int newabs = SYN_MODEL_NEWABS(priv->synhw);
+    unsigned char *buf = comm->protoBuf;
+    int newabs = SYN_MODEL_NEWABS(*synhw);
 
     if (newabs ? ((buf[0] & 0xC0) != 0x80) : ((buf[0] & 0xC0) != 0xC0)) {
 	DBG(4, ErrorF("Synaptics driver lost sync at 1st byte\n"));
@@ -547,32 +548,25 @@ PacketOk(SynapticsPrivate *priv)
 }
 
 static Bool
-SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivate *priv)
+SynapticsGetPacket(LocalDevicePtr local, synapticshw_t *synhw,
+		   struct CommData *comm)
 {
     int count = 0;
     int c;
     unsigned char u;
 
-    while ((c = XisbRead(priv->buffer)) >= 0) {
+    while ((c = XisbRead(comm->buffer)) >= 0) {
 	u = (unsigned char)c;
 
 	/* test if there is a reset sequence received */
-	if ((c == 0x00) && (priv->lastByte == 0xAA)) {
+	if ((c == 0x00) && (comm->lastByte == 0xAA)) {
 	    if (xf86WaitForInput(local->fd, 50000) == 0) {
 		DBG(7, ErrorF("Reset received\n"));
 		QueryHardware(local);
 	    } else
 		DBG(3, ErrorF("faked reset received\n"));
 	}
-	priv->lastByte = u;
-
-	/* when there is no synaptics touchpad pipe the data to the repeater fifo */
-	if (!priv->isSynaptics) {
-	    xf86write(priv->fifofd, &u, 1);
-	    if (++count >= 3)
-		return FALSE;
-	    continue;
-	}
+	comm->lastByte = u;
 
 	/* to avoid endless loops */
 	if (count++ > 30) {
@@ -580,19 +574,19 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivate *priv)
 	    return FALSE;
 	}
 
-	priv->protoBuf[priv->protoBufTail++] = u;
+	comm->protoBuf[comm->protoBufTail++] = u;
 
 	/* Check that we have a valid packet. If not, we are out of sync,
 	   so we throw away the first byte in the packet.*/
-	if (priv->protoBufTail >= 6) {
-	    if (!PacketOk(priv)) {
+	if (comm->protoBufTail >= 6) {
+	    if (!PacketOk(synhw, comm)) {
 		int i;
-		for (i = 0; i < priv->protoBufTail - 1; i++)
-		    priv->protoBuf[i] = priv->protoBuf[i + 1];
-		priv->protoBufTail--;
-		priv->outOfSync++;
-		if (priv->outOfSync > MAX_UNSYNC_PACKETS) {
-		    priv->outOfSync = 0;
+		for (i = 0; i < comm->protoBufTail - 1; i++)
+		    comm->protoBuf[i] = comm->protoBuf[i + 1];
+		comm->protoBufTail--;
+		comm->outOfSync++;
+		if (comm->outOfSync > MAX_UNSYNC_PACKETS) {
+		    comm->outOfSync = 0;
 		    DBG(3, ErrorF("Synaptics synchronization lost too long -> reset touchpad.\n"));
 		    QueryHardware(local); /* including a reset */
 		    continue;
@@ -600,12 +594,12 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivate *priv)
 	    }
 	}
 
-	if (priv->protoBufTail >= 6) { /* Full packet received */
-	    if (priv->outOfSync > 0) {
-		priv->outOfSync = 0;
+	if (comm->protoBufTail >= 6) { /* Full packet received */
+	    if (comm->outOfSync > 0) {
+		comm->outOfSync = 0;
 		DBG(4, ErrorF("Synaptics driver resynced.\n"));
 	    }
-	    priv->protoBufTail = 0;
+	    comm->protoBufTail = 0;
 	    return TRUE;
 	}
     }
@@ -614,20 +608,20 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivate *priv)
 }
 
 static Bool
-PS2ReadHwState(LocalDevicePtr local, SynapticsPrivate *priv,
-	       struct SynapticsHwState *hwRet)
+PS2ReadHwState(LocalDevicePtr local, synapticshw_t *synhw,
+	       struct CommData *comm, struct SynapticsHwState *hwRet)
 {
-    int newabs = SYN_MODEL_NEWABS(priv->synhw);
-    unsigned char *buf = priv->protoBuf;
-    struct SynapticsHwState *hw = &(priv->hwState);
+    int newabs = SYN_MODEL_NEWABS(*synhw);
+    unsigned char *buf = comm->protoBuf;
+    struct SynapticsHwState *hw = &(comm->hwState);
     int w, i;
 
-    if (!SynapticsGetPacket(local, priv))
+    if (!SynapticsGetPacket(local, synhw, comm))
 	return FALSE;
 
     /* Handle guest packets */
     hw->guest_dx = hw->guest_dy = 0;
-    if (newabs && priv->hasGuest) {
+    if (newabs && synhw->hasGuest) {
 	w = (((buf[0] & 0x30) >> 2) |
 	     ((buf[0] & 0x04) >> 1) |
 	     ((buf[3] & 0x04) >> 2));
@@ -667,8 +661,8 @@ PS2ReadHwState(LocalDevicePtr local, SynapticsPrivate *priv,
 	hw->left  = (buf[0] & 0x01) ? 1 : 0;
 	hw->right = (buf[0] & 0x02) ? 1 : 0;
 
-	if (SYN_CAP_EXTENDED(priv->synhw)) {
-	    if (SYN_CAP_FOUR_BUTTON(priv->synhw)) {
+	if (SYN_CAP_EXTENDED(*synhw)) {
+	    if (SYN_CAP_FOUR_BUTTON(*synhw)) {
 		hw->up = ((buf[3] & 0x01)) ? 1 : 0;
 		if (hw->left)
 		    hw->up = !hw->up;
@@ -676,9 +670,9 @@ PS2ReadHwState(LocalDevicePtr local, SynapticsPrivate *priv,
 		if (hw->right)
 		    hw->down = !hw->down;
 	    }
-	    if (SYN_CAP_MULTI_BUTTON_NO(priv->synhw)) {
+	    if (SYN_CAP_MULTI_BUTTON_NO(*synhw)) {
 		if ((buf[3] & 2) ? !hw->right : hw->right) {
-		    switch (SYN_CAP_MULTI_BUTTON_NO(priv->synhw) & ~0x01) {
+		    switch (SYN_CAP_MULTI_BUTTON_NO(*synhw) & ~0x01) {
 		    default:
 			break;
 		    case 8:
@@ -722,13 +716,13 @@ PS2ReadHwState(LocalDevicePtr local, SynapticsPrivate *priv,
 	 * If not, set it to 5, which corresponds to a finger of
 	 * normal width.
 	 */
-	if (SYN_CAP_EXTENDED(priv->synhw)) {
+	if (SYN_CAP_EXTENDED(*synhw)) {
 	    if ((w >= 0) && (w <= 1)) {
-		w_ok = SYN_CAP_MULTIFINGER(priv->synhw);
+		w_ok = SYN_CAP_MULTIFINGER(*synhw);
 	    } else if (w == 2) {
-		w_ok = SYN_MODEL_PEN(priv->synhw);
+		w_ok = SYN_MODEL_PEN(*synhw);
 	    } else if ((w >= 4) && (w <= 15)) {
-		w_ok = SYN_CAP_PALMDETECT(priv->synhw);
+		w_ok = SYN_CAP_PALMDETECT(*synhw);
 	    }
 	}
 	if (!w_ok)

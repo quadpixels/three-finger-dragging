@@ -23,6 +23,7 @@ typedef struct synapticshw {
     unsigned long int capabilities;	    /* Capabilities */
     unsigned long int ext_cap;		    /* Extended Capabilities */
     unsigned long int identity;		    /* Identification */
+    Bool hasGuest;			    /* Has a guest mouse */
 } synapticshw_t;
 
 
@@ -130,6 +131,21 @@ enum TapButtonState {
     TBS_BUTTON_UP_DOWN		/* Send button up event + set down state */
 };
 
+struct CommData {
+    XISBuffer *buffer;
+    unsigned char protoBuf[6];		/* Buffer for Packet */
+    unsigned char lastByte;		/* Last read byte. Use for reset sequence detection. */
+    int outOfSync;			/* How many consecutive incorrect packets we
+					   have received */
+    int protoBufTail;
+
+    /* Used for keeping track of partial HwState updates. */
+    struct SynapticsHwState hwState;
+    Bool oneFinger;
+    Bool twoFingers;
+    Bool threeFingers;
+};
+
 typedef struct _SynapticsPrivateRec
 {
     /* shared memory pointer */
@@ -141,19 +157,11 @@ typedef struct _SynapticsPrivateRec
 
     /* Data read from the touchpad */
     synapticshw_t synhw;
-    Bool isSynaptics;			/* Synaptics touchpad active */
-    Bool hasGuest;			/* Has a guest mouse */
     Bool shm_config;			/* True when shared memory area allocated */
 
     OsTimerPtr timer;			/* for up/down-button repeat, tap processing, etc */
 
-    /* Data for normal processing */
-    XISBuffer *buffer;
-    unsigned char protoBuf[6];		/* Buffer for Packet */
-    unsigned char lastByte;		/* Last read byte. Use for reset sequence detection. */
-    int outOfSync;			/* How many consecutive incorrect packets we
-					   have received */
-    int protoBufTail;
+    struct CommData comm;
     int fifofd;		 		/* fd for fifo */
 
     SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY]; /* movement history */
@@ -185,9 +193,6 @@ typedef struct _SynapticsPrivateRec
     int prev_z;				/* previous z value, for palm detection */
     int avg_width;			/* weighted average of previous fingerWidth values */
 
-    Bool oneFinger;			/* Used by EventReadHwState to */
-    Bool twoFingers;			/* keep track of the number of fingers */
-    Bool threeFingers;			/* on the touchpad. */
 } SynapticsPrivate;
 
 
