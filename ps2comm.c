@@ -98,13 +98,13 @@ ps2_getbyte(int fd, byte *b)
     if (xf86WaitForInput(fd, 50000) > 0) {
 	if (xf86ReadSerial(fd, b, 1) != 1) {
 	    PS2DBG(ErrorF("ps2_getbyte: No byte read\n"));
-	    return !Success;
+	    return FALSE;
 	}
 	PS2DBG(ErrorF("ps2_getbyte: byte %02X read\n", *b));
-	return Success;
+	return TRUE;
     }
     PS2DBG(ErrorF("ps2_getbyte: timeout xf86WaitForInput\n"));
-    return !Success;
+    return FALSE;
 }
 
 /*
@@ -117,18 +117,18 @@ ps2_putbyte(int fd, byte b)
 
     if (xf86WriteSerial(fd, &b, 1) != 1) {
 	PS2DBG(ErrorF("ps2_putbyte: error xf86WriteSerial\n"));
-	return !Success;
+	return FALSE;
     }
     PS2DBG(ErrorF("ps2_putbyte: byte %02X send\n", b));
     /* wait for an ACK */
-    if (ps2_getbyte(fd, &ack) != Success) {
-	return !Success;
+    if (!ps2_getbyte(fd, &ack)) {
+	return FALSE;
     }
     if (ack != PS2_ACK) {
 	PS2DBG(ErrorF("ps2_putbyte: wrong acknowledge 0x%02x\n", ack));
-	return !Success;
+	return FALSE;
     }
-    return Success;
+    return TRUE;
 }
 
 /*
@@ -143,17 +143,17 @@ ps2_special_cmd(int fd, byte cmd)
     int i;
 
     /* initialize with 'inert' command */
-    if (ps2_putbyte(fd, PS2_CMD_SET_SCALING_1_1) == Success)
-	/* send 4x 2-bits with set resolution command */
-	for (i = 0; i < 4; i++) {
-	    if (((ps2_putbyte(fd, PS2_CMD_SET_RESOLUTION)) != Success) ||
-		((ps2_putbyte(fd, (cmd >> 6) & 0x3) != Success)))
-		return !Success;
-	    cmd <<= 2;
-	}
-    else
-	return !Success;
-    return Success;
+    if (!ps2_putbyte(fd, PS2_CMD_SET_SCALING_1_1))
+	return FALSE;
+
+    /* send 4x 2-bits with set resolution command */
+    for (i = 0; i < 4; i++) {
+	if (!ps2_putbyte(fd, PS2_CMD_SET_RESOLUTION) ||
+	    !ps2_putbyte(fd, (cmd >> 6) & 0x3))
+	    return FALSE;
+	cmd <<= 2;
+    }
+    return TRUE;
 }
 
 /*
@@ -163,7 +163,8 @@ static Bool
 ps2_send_cmd(int fd, byte c)
 {
     PS2DBG(ErrorF("send command: 0x%02X\n", c));
-    return ps2_special_cmd(fd, c) || ps2_putbyte(fd, PS2_CMD_STATUS_REQUEST);
+    return (ps2_special_cmd(fd, c) &&
+	    ps2_putbyte(fd, PS2_CMD_STATUS_REQUEST));
 }
 
 /*****************************************************************************
@@ -180,14 +181,14 @@ ps2_getbyte_passthrough(int fd, byte *response)
     /* Getting a response back through the passthrough could take some time.
      * Spin a little for the first byte */
     for (timeout_count = 0;
-	 (ps2_getbyte(fd, &ack) != Success) && timeout_count <= MAX_RETRY_COUNT;
+	 !ps2_getbyte(fd, &ack) && (timeout_count <= MAX_RETRY_COUNT);
 	 timeout_count++)
 	;
     /* Do some sanity checking */
     if ((ack & 0xfc) != 0x84) {
 	PS2DBG(ErrorF("ps2_getbyte_passthrough: expected 0x84 and got: %02x\n",
 		      ack & 0xfc));
-	return !Success;
+	return FALSE;
     }
 
     ps2_getbyte(fd, response);
@@ -196,12 +197,12 @@ ps2_getbyte_passthrough(int fd, byte *response)
     if ((ack & 0xcc) != 0xc4) {
 	PS2DBG(ErrorF("ps2_getbyte_passthrough: expected 0xc4 and got: %02x\n",
 		      ack & 0xcc));
-	return !Success;
+	return FALSE;
     }
     ps2_getbyte(fd, &ack);
     ps2_getbyte(fd, &ack);
 
-    return Success;
+    return TRUE;
 }
 
 static Bool
@@ -216,9 +217,9 @@ ps2_putbyte_passthrough(int fd, byte c)
     ps2_getbyte_passthrough(fd, &ack);
     if (ack != PS2_ACK) {
 	PS2DBG(ErrorF("ps2_putbyte_passthrough: wrong acknowledge 0x%02x\n", ack));
-	return !Success;
+	return FALSE;
     }
-    return Success;
+    return TRUE;
 }
 
 /*****************************************************************************
@@ -232,8 +233,8 @@ static Bool
 synaptics_set_mode(int fd, byte mode)
 {
     PS2DBG(ErrorF("set mode byte to: 0x%02X\n", mode));
-    return (ps2_special_cmd(fd, mode) ||
-	    ps2_putbyte(fd, PS2_CMD_SET_SAMPLE_RATE) ||
+    return (ps2_special_cmd(fd, mode) &&
+	    ps2_putbyte(fd, PS2_CMD_SET_SAMPLE_RATE) &&
 	    ps2_putbyte(fd, 0x14));
 }
 
@@ -247,23 +248,22 @@ synaptics_reset(int fd)
 
     xf86FlushInput(fd);
     PS2DBG(ErrorF("Reset the Touchpad...\n"));
-    if (ps2_putbyte(fd, PS2_CMD_RESET) != Success) {
+    if (!ps2_putbyte(fd, PS2_CMD_RESET)) {
 	PS2DBG(ErrorF("...failed\n"));
-	return !Success;
+	return FALSE;
     }
     xf86WaitForInput(fd, 4000000);
-    if ((ps2_getbyte(fd, &r[0]) == Success) &&
-	(ps2_getbyte(fd, &r[1]) == Success)) {
+    if (ps2_getbyte(fd, &r[0]) && ps2_getbyte(fd, &r[1])) {
 	if (r[0] == 0xAA && r[1] == 0x00) {
 	    PS2DBG(ErrorF("...done\n"));
-	    return Success;
+	    return TRUE;
 	} else {
 	    PS2DBG(ErrorF("...failed. Wrong reset ack 0x%02x, 0x%02x\n", r[0], r[1]));
-	    return !Success;
+	    return FALSE;
 	}
     }
     PS2DBG(ErrorF("...failed\n"));
-    return !Success;
+    return FALSE;
 }
 
 static Bool
@@ -276,17 +276,17 @@ SynapticsResetPassthrough(int fd)
     ps2_getbyte_passthrough(fd, &ack);
     if (ack != 0xaa) {
 	PS2DBG(ErrorF("SynapticsResetPassthrough: ack was %02x not 0xaa\n", ack));
-	return !Success;
+	return FALSE;
     }
     ps2_getbyte_passthrough(fd, &ack);
     if (ack != 0x00) {
 	PS2DBG(ErrorF("SynapticsResetPassthrough: ack was %02x not 0x00\n", ack));
-	return !Success;
+	return FALSE;
     }
 
     /* set defaults, turn on streaming, and enable the mouse */
-    return (ps2_putbyte_passthrough(fd, 0xf6) ||
-	    ps2_putbyte_passthrough(fd, 0xea) ||
+    return (ps2_putbyte_passthrough(fd, 0xf6) &&
+	    ps2_putbyte_passthrough(fd, 0xea) &&
 	    ps2_putbyte_passthrough(fd, 0xf4));
 }
 
@@ -301,17 +301,18 @@ synaptics_model_id(int fd, struct synapticshw *synhw)
 
     PS2DBG(ErrorF("Read mode id...\n"));
 
-    if ((ps2_send_cmd(fd, SYN_QUE_MODEL) == Success) &&
-	(ps2_getbyte(fd, &mi[0]) == Success) &&
-	(ps2_getbyte(fd, &mi[1]) == Success) &&
-	(ps2_getbyte(fd, &mi[2]) == Success)) {
+    synhw->model_id = 0;
+    if (ps2_send_cmd(fd, SYN_QUE_MODEL) &&
+	ps2_getbyte(fd, &mi[0]) &&
+	ps2_getbyte(fd, &mi[1]) &&
+	ps2_getbyte(fd, &mi[2])) {
 	synhw->model_id = (mi[0] << 16) | (mi[1] << 8) | mi[2];
 	PS2DBG(ErrorF("mode-id %06X\n", synhw->model_id));
 	PS2DBG(ErrorF("...done.\n"));
-	return Success;
+	return TRUE;
     }
     PS2DBG(ErrorF("...failed.\n"));
-    return !Success;
+    return FALSE;
 }
 
 /*
@@ -325,19 +326,20 @@ synaptics_capability(int fd, struct synapticshw *synhw)
 
     PS2DBG(ErrorF("Read capabilites...\n"));
 
+    synhw->capabilities = 0;
     synhw->ext_cap = 0;
-    if ((ps2_send_cmd(fd, SYN_QUE_CAPABILITIES) == Success) &&
-	(ps2_getbyte(fd, &cap[0]) == Success) &&
-	(ps2_getbyte(fd, &cap[1]) == Success) &&
-	(ps2_getbyte(fd, &cap[2]) == Success)) {
+    if (ps2_send_cmd(fd, SYN_QUE_CAPABILITIES) &&
+	ps2_getbyte(fd, &cap[0]) &&
+	ps2_getbyte(fd, &cap[1]) &&
+	ps2_getbyte(fd, &cap[2])) {
 	synhw->capabilities = (cap[0] << 16) | (cap[1] << 8) | cap[2];
 	PS2DBG(ErrorF("capabilities %06X\n", synhw->capabilities));
 	if (SYN_CAP_VALID(*synhw)) {
 	    if (SYN_EXT_CAP_REQUESTS(*synhw)) {
-		if ((ps2_send_cmd(fd, SYN_QUE_EXT_CAPAB) == Success) &&
-		    (ps2_getbyte(fd, &cap[0]) == Success) &&
-		    (ps2_getbyte(fd, &cap[1]) == Success) &&
-		    (ps2_getbyte(fd, &cap[2]) == Success)) {
+		if (ps2_send_cmd(fd, SYN_QUE_EXT_CAPAB) &&
+		    ps2_getbyte(fd, &cap[0]) &&
+		    ps2_getbyte(fd, &cap[1]) &&
+		    ps2_getbyte(fd, &cap[2])) {
 		    synhw->ext_cap = (cap[0] << 16) | (cap[1] << 8) | cap[2];
 		    PS2DBG(ErrorF("ext-capability %06X\n", synhw->ext_cap));
 		} else {
@@ -346,11 +348,11 @@ synaptics_capability(int fd, struct synapticshw *synhw)
 		}
 	    }
 	    PS2DBG(ErrorF("...done.\n"));
-	    return Success;
+	    return TRUE;
 	}
     }
     PS2DBG(ErrorF("...failed.\n"));
-    return !Success;
+    return FALSE;
 }
 
 /*
@@ -365,34 +367,19 @@ synaptics_identify(int fd, struct synapticshw *synhw)
     PS2DBG(ErrorF("Identify Touchpad...\n"));
 
     synhw->identity = 0;
-    if ((ps2_send_cmd(fd, SYN_QUE_IDENTIFY) == Success) &&
-	(ps2_getbyte(fd, &id[0]) == Success) &&
-	(ps2_getbyte(fd, &id[1]) == Success) &&
-	(ps2_getbyte(fd, &id[2]) == Success)) {
+    if (ps2_send_cmd(fd, SYN_QUE_IDENTIFY) &&
+	ps2_getbyte(fd, &id[0]) &&
+	ps2_getbyte(fd, &id[1]) &&
+	ps2_getbyte(fd, &id[2])) {
 	synhw->identity = (id[0] << 16) | (id[1] << 8) | id[2];
 	PS2DBG(ErrorF("ident %06X\n", synhw->identity));
 	if (SYN_ID_IS_SYNAPTICS(*synhw)) {
 	    PS2DBG(ErrorF("...done.\n"));
-	    return Success;
+	    return TRUE;
 	}
     }
     PS2DBG(ErrorF("...failed.\n"));
-    return !Success;
-}
-
-static Bool
-synaptics_get_hwinfo(int fd, struct synapticshw *synhw)
-{
-    if (synaptics_identify(fd, synhw) != Success)
-	return !Success;
-
-    if (synaptics_model_id(fd, synhw) != Success)
-	return !Success;
-
-    if (synaptics_capability(fd, synhw) != Success)
-	return !Success;
-
-    return Success;
+    return FALSE;
 }
 
 Bool
@@ -415,13 +402,13 @@ QueryIsSynaptics(int fd)
     int i;
 
     for (i = 0; i < 3; i++) {
-	if (SynapticsDisableDevice(fd) == Success)
+	if (SynapticsDisableDevice(fd))
 	    break;
     }
 
     xf86WaitForInput(fd, 20000);
     xf86FlushInput(fd);
-    if (synaptics_identify(fd, &synhw) == Success) {
+    if (synaptics_identify(fd, &synhw)) {
 	return TRUE;
     } else {
 	ErrorF("Query no Synaptics: %06X\n", synhw.identity);
@@ -485,10 +472,16 @@ PS2QueryHardware(LocalDevicePtr local, synapticshw_t *synhw, Bool *hasGuest)
 
     xf86Msg(X_PROBED, "%s synaptics touchpad found\n", local->name);
 
-    if (synaptics_reset(local->fd) != Success)
+    if (!synaptics_reset(local->fd))
 	xf86Msg(X_ERROR, "%s reset failed\n", local->name);
 
-    if (synaptics_get_hwinfo(local->fd, synhw) != Success)
+    if (!synaptics_identify(local->fd, synhw))
+	return FALSE;
+
+    if (!synaptics_model_id(local->fd, synhw))
+	return FALSE;
+
+    if (!synaptics_capability(local->fd, synhw))
 	return FALSE;
 
     mode = SYN_BIT_ABSOLUTE_MODE | SYN_BIT_HIGH_RATE;
@@ -496,7 +489,7 @@ PS2QueryHardware(LocalDevicePtr local, synapticshw_t *synhw, Bool *hasGuest)
 	mode |= SYN_BIT_DISABLE_GESTURE;
     if (SYN_CAP_EXTENDED(*synhw))
 	mode |= SYN_BIT_W_MODE;
-    if (synaptics_set_mode(local->fd, mode) != Success)
+    if (!synaptics_set_mode(local->fd, mode))
 	return FALSE;
 
     /* Check to see if the host mouse supports a guest */
@@ -509,7 +502,7 @@ PS2QueryHardware(LocalDevicePtr local, synapticshw_t *synhw, Bool *hasGuest)
 	/* Disable the host to talk to the guest */
 	SynapticsDisableDevice(local->fd);
 	/* Reset it, set defaults, streaming and enable it */
-	if ((SynapticsResetPassthrough(local->fd)) != Success) {
+	if (!SynapticsResetPassthrough(local->fd)) {
 	    *hasGuest = FALSE;
 	}
     }
