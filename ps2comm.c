@@ -79,22 +79,22 @@
 static Bool
 ps2_getbyte(int fd, byte *b)
 {
-	if(xf86WaitForInput(fd, 50000) > 0) {
-		if(xf86ReadSerial(fd, b, 1) != 1) {
+    if(xf86WaitForInput(fd, 50000) > 0) {
+	if(xf86ReadSerial(fd, b, 1) != 1) {
 #ifdef DEBUG
-			ErrorF("ps2_getbyte: No byte read\n");
+	    ErrorF("ps2_getbyte: No byte read\n");
 #endif
-			return !Success;
-		}
-#ifdef DEBUG
-		ErrorF("ps2_getbyte: byte %02X read\n", *b);
-#endif
-		return Success;
+	    return !Success;
 	}
 #ifdef DEBUG
-	ErrorF("ps2_getbyte: timeout xf86WaitForInput\n");
+	ErrorF("ps2_getbyte: byte %02X read\n", *b);
 #endif
-	return !Success;
+	return Success;
+    }
+#ifdef DEBUG
+    ErrorF("ps2_getbyte: timeout xf86WaitForInput\n");
+#endif
+    return !Success;
 }
 
 /*
@@ -103,28 +103,28 @@ ps2_getbyte(int fd, byte *b)
 static Bool
 ps2_putbyte(int fd, byte b)
 {
-	byte ack;
+    byte ack;
 
-	if(xf86WriteSerial(fd, &b, 1) != 1) {
+    if(xf86WriteSerial(fd, &b, 1) != 1) {
 #ifdef DEBUG
-		ErrorF("ps2_putbyte: error xf86WriteSerial\n");
+	ErrorF("ps2_putbyte: error xf86WriteSerial\n");
 #endif
-		return !Success;
-	}
+	return !Success;
+    }
 #ifdef DEBUG
-	ErrorF("ps2_putbyte: byte %02X send\n", b);
+    ErrorF("ps2_putbyte: byte %02X send\n", b);
 #endif
-	/* wait for an ACK */
-	if(ps2_getbyte(fd, &ack) != Success) {
-		return !Success;
-	}
-	if(ack != PS2_ACK) {
+    /* wait for an ACK */
+    if(ps2_getbyte(fd, &ack) != Success) {
+	return !Success;
+    }
+    if(ack != PS2_ACK) {
 #ifdef DEBUG
-		ErrorF("ps2_putbyte: wrong acknowledge 0x%02x\n", ack);
+	ErrorF("ps2_putbyte: wrong acknowledge 0x%02x\n", ack);
 #endif
-		return !Success;
-	}
-	return Success;
+	return !Success;
+    }
+    return Success;
 }
 
 /*
@@ -136,20 +136,20 @@ ps2_putbyte(int fd, byte b)
 static Bool
 ps2_special_cmd(int fd, byte cmd)
 {
-	int i;
+    int i;
 
-	/* initialize with 'inert' command */
-	if(ps2_putbyte(fd, PS2_CMD_SET_SCALING_1_1) == Success)
-		/* send 4x 2-bits with set resolution command */
-		for (i=0; i<4; i++) {
-			if(((ps2_putbyte(fd, PS2_CMD_SET_RESOLUTION)) != Success) ||
-			   ((ps2_putbyte(fd, (cmd>>6)&0x3) != Success)))
-				return !Success;
-			cmd<<=2;
-		}
-	else
+    /* initialize with 'inert' command */
+    if(ps2_putbyte(fd, PS2_CMD_SET_SCALING_1_1) == Success)
+	/* send 4x 2-bits with set resolution command */
+	for (i=0; i<4; i++) {
+	    if(((ps2_putbyte(fd, PS2_CMD_SET_RESOLUTION)) != Success) ||
+	       ((ps2_putbyte(fd, (cmd>>6)&0x3) != Success)))
 		return !Success;
-	return Success;
+	    cmd<<=2;
+	}
+    else
+	return !Success;
+    return Success;
 }
 
 /*
@@ -159,9 +159,9 @@ static Bool
 ps2_send_cmd(int fd, byte c)
 {
 #ifdef DEBUG
-	ErrorF("send command: 0x%02X\n", c);
+    ErrorF("send command: 0x%02X\n", c);
 #endif
-	return(ps2_special_cmd(fd, c) || ps2_putbyte(fd, PS2_CMD_STATUS_REQUEST));
+    return(ps2_special_cmd(fd, c) || ps2_putbyte(fd, PS2_CMD_STATUS_REQUEST));
 }
 
 /*****************************************************************************
@@ -175,11 +175,11 @@ Bool
 synaptics_set_mode(int fd, byte mode)
 {
 #ifdef DEBUG
-	ErrorF("set mode byte to: 0x%02X\n", mode);
+    ErrorF("set mode byte to: 0x%02X\n", mode);
 #endif
-	return(ps2_special_cmd(fd, mode) ||
-	       ps2_putbyte(fd, PS2_CMD_SET_SAMPLE_RATE) ||
-	       ps2_putbyte(fd, 0x14));
+    return(ps2_special_cmd(fd, mode) ||
+	   ps2_putbyte(fd, PS2_CMD_SET_SAMPLE_RATE) ||
+	   ps2_putbyte(fd, 0x14));
 }
 
 /*
@@ -188,37 +188,37 @@ synaptics_set_mode(int fd, byte mode)
 Bool
 synaptics_reset(int fd)
 {
-	byte r[2];
+    byte r[2];
 
-	xf86FlushInput(fd);
+    xf86FlushInput(fd);
 #ifdef DEBUG
-	ErrorF("Reset the Touchpad...\n");
+    ErrorF("Reset the Touchpad...\n");
 #endif
-	if(ps2_putbyte(fd, PS2_CMD_RESET) != Success) {
+    if(ps2_putbyte(fd, PS2_CMD_RESET) != Success) {
 #ifdef DEBUG
-		ErrorF("...failed\n");
-#endif
-		return !Success;
-	}
-	xf86WaitForInput(fd, 4000000);
-	if((ps2_getbyte(fd, &r[0]) == Success) &&
-	   (ps2_getbyte(fd, &r[1]) == Success)) {
-		if(r[0] == 0xAA && r[1] == 0x00) {
-#ifdef DEBUG
-			ErrorF("...done\n");
-#endif
-			return Success;
-		} else {
-#ifdef DEBUG
-			ErrorF("...failed. Wrong reset ack 0x%02x, 0x%02x\n", r[0], r[1]);
-#endif
-			return !Success;
-		}
-	}
-#ifdef DEBUG
-		ErrorF("...failed\n");
+	ErrorF("...failed\n");
 #endif
 	return !Success;
+    }
+    xf86WaitForInput(fd, 4000000);
+    if((ps2_getbyte(fd, &r[0]) == Success) &&
+       (ps2_getbyte(fd, &r[1]) == Success)) {
+	if(r[0] == 0xAA && r[1] == 0x00) {
+#ifdef DEBUG
+	    ErrorF("...done\n");
+#endif
+	    return Success;
+	} else {
+#ifdef DEBUG
+	    ErrorF("...failed. Wrong reset ack 0x%02x, 0x%02x\n", r[0], r[1]);
+#endif
+	    return !Success;
+	}
+    }
+#ifdef DEBUG
+    ErrorF("...failed\n");
+#endif
+    return !Success;
 }
 
 /*
@@ -228,29 +228,29 @@ synaptics_reset(int fd)
 Bool
 synaptics_model_id(int fd, unsigned long int *model_id)
 {
-	byte mi[3];
+    byte mi[3];
 
 #ifdef DEBUG
-	ErrorF("Read mode id...\n");
+    ErrorF("Read mode id...\n");
 #endif
 
-	if((ps2_send_cmd(fd, SYN_QUE_MODEL) == Success) &&
-	   (ps2_getbyte(fd, &mi[0]) == Success) &&
-	   (ps2_getbyte(fd, &mi[1]) == Success) &&
-   	   (ps2_getbyte(fd, &mi[2]) == Success)) {
-		*model_id = (mi[0]<<16) | (mi[1]<<8) | mi[2];
+    if((ps2_send_cmd(fd, SYN_QUE_MODEL) == Success) &&
+       (ps2_getbyte(fd, &mi[0]) == Success) &&
+       (ps2_getbyte(fd, &mi[1]) == Success) &&
+       (ps2_getbyte(fd, &mi[2]) == Success)) {
+	*model_id = (mi[0]<<16) | (mi[1]<<8) | mi[2];
 #ifdef DEBUG
-		ErrorF("mode-id %06X\n", *model_id);
+	ErrorF("mode-id %06X\n", *model_id);
 #endif
 #ifdef DEBUG
-		ErrorF("...done.\n");
+	ErrorF("...done.\n");
 #endif
-		return Success;
-	}
+	return Success;
+    }
 #ifdef DEBUG
-		ErrorF("...failed.\n");
+    ErrorF("...failed.\n");
 #endif
-	return !Success;
+    return !Success;
 }
 
 /*
@@ -260,45 +260,45 @@ synaptics_model_id(int fd, unsigned long int *model_id)
 Bool
 synaptics_capability(int fd, unsigned long int *capability, unsigned long int *ext_capab)
 {
-	byte cap[3];
+    byte cap[3];
 
 #ifdef DEBUG
-	ErrorF("Read capabilites...\n");
+    ErrorF("Read capabilites...\n");
 #endif
 
-	*ext_capab = 0;
-	if((ps2_send_cmd(fd, SYN_QUE_CAPABILITIES) == Success) &&
-	   (ps2_getbyte(fd, &cap[0]) == Success) &&
-	   (ps2_getbyte(fd, &cap[1]) == Success) &&
-	   (ps2_getbyte(fd, &cap[2]) == Success)) {
-		*capability = (cap[0]<<16) | (cap[1]<<8) | cap[2];
+    *ext_capab = 0;
+    if((ps2_send_cmd(fd, SYN_QUE_CAPABILITIES) == Success) &&
+       (ps2_getbyte(fd, &cap[0]) == Success) &&
+       (ps2_getbyte(fd, &cap[1]) == Success) &&
+       (ps2_getbyte(fd, &cap[2]) == Success)) {
+	*capability = (cap[0]<<16) | (cap[1]<<8) | cap[2];
 #ifdef DEBUG
-		ErrorF("capability %06X\n", *capability);
+	ErrorF("capability %06X\n", *capability);
 #endif
-		if(SYN_CAP_VALID(*capability)) {
-			if(SYN_EXT_CAP_REQUESTS(*capability)) {
-				if((ps2_send_cmd(fd, SYN_QUE_EXT_CAPAB) == Success) &&
-				   (ps2_getbyte(fd, &cap[0]) == Success) &&
-				   (ps2_getbyte(fd, &cap[1]) == Success) &&
-				   (ps2_getbyte(fd, &cap[2]) == Success)) {
-				  *ext_capab = (cap[0]<<16) | (cap[1]<<8) | cap[2];
+	if(SYN_CAP_VALID(*capability)) {
+	    if(SYN_EXT_CAP_REQUESTS(*capability)) {
+		if((ps2_send_cmd(fd, SYN_QUE_EXT_CAPAB) == Success) &&
+		   (ps2_getbyte(fd, &cap[0]) == Success) &&
+		   (ps2_getbyte(fd, &cap[1]) == Success) &&
+		   (ps2_getbyte(fd, &cap[2]) == Success)) {
+		    *ext_capab = (cap[0]<<16) | (cap[1]<<8) | cap[2];
 #ifdef DEBUG
-					ErrorF("ext-capability %06X\n", *ext_capab);
+		    ErrorF("ext-capability %06X\n", *ext_capab);
 #endif
-				} else {
-					ErrorF("synaptics says, that it has extended-capabilities, but I cannot read them.");
-				}
-			}
-#ifdef DEBUG
-			ErrorF("...done.\n");
-#endif
-			return Success;
+		} else {
+		    ErrorF("synaptics says, that it has extended-capabilities, but I cannot read them.");
 		}
-	}
+	    }
 #ifdef DEBUG
-	ErrorF("...failed.\n");
+	    ErrorF("...done.\n");
 #endif
-	return !Success;
+	    return Success;
+	}
+    }
+#ifdef DEBUG
+    ErrorF("...failed.\n");
+#endif
+    return !Success;
 }
 
 /*
@@ -308,31 +308,31 @@ synaptics_capability(int fd, unsigned long int *capability, unsigned long int *e
 Bool
 synaptics_identify(int fd, unsigned long int *ident)
 {
-	byte id[3];
+    byte id[3];
 
 #ifdef DEBUG
-	ErrorF("Identify Touchpad...\n");
+    ErrorF("Identify Touchpad...\n");
 #endif
 
-	if((ps2_send_cmd(fd, SYN_QUE_IDENTIFY) == Success) &&
-	   (ps2_getbyte(fd, &id[0]) == Success) &&
-	   (ps2_getbyte(fd, &id[1]) == Success) &&
-	   (ps2_getbyte(fd, &id[2]) == Success)) {
-		*ident = (id[0]<<16) | (id[1]<<8) | id[2];
+    if((ps2_send_cmd(fd, SYN_QUE_IDENTIFY) == Success) &&
+       (ps2_getbyte(fd, &id[0]) == Success) &&
+       (ps2_getbyte(fd, &id[1]) == Success) &&
+       (ps2_getbyte(fd, &id[2]) == Success)) {
+	*ident = (id[0]<<16) | (id[1]<<8) | id[2];
 #ifdef DEBUG
-		ErrorF("ident %06X\n", *ident);
+	ErrorF("ident %06X\n", *ident);
 #endif
-		if(SYN_ID_IS_SYNAPTICS(*ident)) {
+	if(SYN_ID_IS_SYNAPTICS(*ident)) {
 #ifdef DEBUG
-			ErrorF("...done.\n");
+	    ErrorF("...done.\n");
 #endif
-			return Success;
-		}
+	    return Success;
 	}
+    }
 #ifdef DEBUG
-	ErrorF("...failed.\n");
+    ErrorF("...failed.\n");
 #endif
-	return !Success;
+    return !Success;
 }
 
 /*
@@ -341,71 +341,64 @@ synaptics_identify(int fd, unsigned long int *ident)
 Bool
 synaptics_read_mode(int fd, unsigned char *mode)
 {
-	byte modes[3];
+    byte modes[3];
 
 #ifdef DEBUG
-	ErrorF("Read mode byte...\n");
+    ErrorF("Read mode byte...\n");
 #endif
 
-	if((ps2_send_cmd(fd, SYN_QUE_MODES) == Success) &&
-	   (ps2_getbyte(fd, &modes[0]) == Success) &&
-	   (ps2_getbyte(fd, &modes[1]) == Success) &&
-	   (ps2_getbyte(fd, &modes[2]) == Success)) {
+    if((ps2_send_cmd(fd, SYN_QUE_MODES) == Success) &&
+       (ps2_getbyte(fd, &modes[0]) == Success) &&
+       (ps2_getbyte(fd, &modes[1]) == Success) &&
+       (ps2_getbyte(fd, &modes[2]) == Success)) {
 
-		*mode = modes[2];
+	*mode = modes[2];
 #ifdef DEBUG
-		ErrorF("modes byte %02X%02X%02X\n", modes[0], modes[1], modes[2]);
+	ErrorF("modes byte %02X%02X%02X\n", modes[0], modes[1], modes[2]);
 #endif
-		if((modes[0] == 0x3B) && (modes[1] == 0x47)) {
+	if((modes[0] == 0x3B) && (modes[1] == 0x47)) {
 #ifdef DEBUG
-			ErrorF("...done.\n");
+	    ErrorF("...done.\n");
 #endif
-			return Success;
-		}
+	    return Success;
 	}
+    }
 #ifdef DEBUG
-	ErrorF("...failed.\n");
+    ErrorF("...failed.\n");
 #endif
-	return !Success;
+    return !Success;
 }
 
 Bool
 SynapticsEnableDevice(int fd)
 {
-	return(ps2_putbyte(fd, PS2_CMD_ENABLE));
+    return(ps2_putbyte(fd, PS2_CMD_ENABLE));
 }
 
 Bool
 SynapticsDisableDevice(int fd)
 {
-	xf86FlushInput(fd);
-	return ps2_putbyte(fd, PS2_CMD_DISABLE);
+    xf86FlushInput(fd);
+    return ps2_putbyte(fd, PS2_CMD_DISABLE);
 }
 
 Bool
 QueryIsSynaptics(int fd)
 {
-	unsigned long id;
-	int i;
+    unsigned long id;
+    int i;
 
-	for (i = 0; i < 3; i++) {
-		if (SynapticsDisableDevice(fd) == Success)
-			break;
-	}
+    for (i = 0; i < 3; i++) {
+	if (SynapticsDisableDevice(fd) == Success)
+	    break;
+    }
 
-	xf86WaitForInput(fd, 20000);
-	xf86FlushInput(fd);
-	if(synaptics_identify(fd, &id) == Success) {
-		return TRUE;
-	} else {
-		ErrorF("Query no Synaptics: %06X\n", id);
-		return FALSE;
-	}
+    xf86WaitForInput(fd, 20000);
+    xf86FlushInput(fd);
+    if(synaptics_identify(fd, &id) == Success) {
+	return TRUE;
+    } else {
+	ErrorF("Query no Synaptics: %06X\n", id);
+	return FALSE;
+    }
 }
-
-/* Local Variables: */
-/* tab-width: 4 */
-/* End: */
-/*
- * vim: ts=4 sw=4 cindent
- */
