@@ -76,7 +76,6 @@
 #define SYNAPTICS_PRIVATE
 #include "synaptics.h"
 #include "ps2comm.h"
-#include "linux_input.h"
 
 /*****************************************************************************
  *	Variables without includable headers
@@ -105,10 +104,6 @@ typedef enum {
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-
-/* for auto-dev: */
-#define DEV_INPUT_EVENT "/dev/input"
-#define EVENT_DEV_NAME "event"
 
 /*****************************************************************************
  * Forward declaration
@@ -183,40 +178,8 @@ SetDeviceAndProtocol(LocalDevicePtr local)
     } else if (str_par && !strcmp(str_par, "psaux")) {
 	/* Already set up */
     } else { /* default to auto-dev */
-	/* We are trying to find the right eventX device or fall back to
-	   the psaux protocol and the given device from XF86Config */
-	int fd = -1;
-	int i;
-	for (i = 0; ; i++) {
-	    char fname[64];
-	    struct input_id id;
-	    int ret;
-
-	    sprintf(fname, "%s/%s%d", DEV_INPUT_EVENT, EVENT_DEV_NAME, i);
-	    SYSCALL(fd = open(fname, O_RDONLY));
-	    if (fd < 0) {
-		if (errno == ENOENT) {
-		    ErrorF("%s no synaptics event device found (checked %d nodes)\n",
-			   local->name, i + 1);
-		    break;
-		} else {
-		    continue;
-		}
-	    }
-	    SYSCALL(ret = ioctl(fd, EVIOCGID, &id));
-	    SYSCALL(close(fd));
-	    if (ret >= 0) {
-		if ((id.bustype == BUS_I8042) &&
-		    (id.vendor == 0x0002) &&
-		    (id.product == PSMOUSE_SYNAPTICS)) {
-		    proto = SYN_PROTO_EVENT;
-		    xf86Msg(X_PROBED, "%s auto-dev sets Synaptics Device to %s\n",
-			    local->name, fname);
-		    xf86ReplaceStrOption(local->options, "Device", fname);
-		    break;
-		}
-	    }
-	}
+	if (event_proto_operations.autoDevProbe(local))
+	    proto = SYN_PROTO_EVENT;
     }
     switch (proto) {
     case SYN_PROTO_PSAUX:

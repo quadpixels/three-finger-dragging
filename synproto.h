@@ -63,6 +63,7 @@ struct SynapticsProtocolOperations {
     Bool (*QueryHardware)(LocalDevicePtr local, struct synapticshw *synhw);
     Bool (*ReadHwState)(LocalDevicePtr local, struct synapticshw *synhw,
 			struct CommData *comm, struct SynapticsHwState *hwRet);
+    Bool (*autoDevProbe)(LocalDevicePtr local);
 };
 
 extern struct SynapticsProtocolOperations psaux_proto_operations;

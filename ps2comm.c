@@ -753,9 +753,15 @@ PS2ReadHwState(LocalDevicePtr local, synapticshw_t *synhw,
     return TRUE;
 }
 
+static Bool PS2AutoDevProbe(LocalDevicePtr local)
+{
+    return FALSE;
+}
+
 struct SynapticsProtocolOperations psaux_proto_operations = {
     PS2DeviceOnHook,
     PS2DeviceOffHook,
     PS2QueryHardware,
-    PS2ReadHwState
+    PS2ReadHwState,
+    PS2AutoDevProbe
 };

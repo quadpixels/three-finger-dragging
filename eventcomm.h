@@ -21,6 +21,8 @@
 
 #include "linux_input.h"
 
-
+/* for auto-dev: */
+#define DEV_INPUT_EVENT "/dev/input"
+#define EVENT_DEV_NAME "event"
 
 #endif /* _EVENTCOMM_H_ */
