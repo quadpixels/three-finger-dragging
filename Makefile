@@ -1,26 +1,21 @@
-TOP = Xincludes/xc
-XTOP = $(TOP)
-BUILDINCROOT = $(TOP)/exports
-EXTINCSRC = $(XTOP)/include/extensions
-INCLUDESRC = $(BUILDINCROOT)/include
-XINCLUDESRC = $(INCLUDESRC)/X11
-SERVERSRC = $(XTOP)/programs/Xserver
-XF86PCIINCLUDE = $(TOP)/programs/Xserver/hw/xfree86/os-support/bus
-TOP_X_INCLUDES = -I$(TOP)/exports/include
-TOP_INCLUDES = -I$(TOP) $(TOP_X_INCLUDES)
-
 INSTALLED_X = $(DESTDIR)/usr/X11R6
+LOCAL_X = Xincludes/usr/X11R6
 BINDIR = $(DESTDIR)/usr/local/bin
 MANDIR = $(DESTDIR)/usr/local/man/man1
 
-XF86SRC = $(SERVERSRC)/hw/xfree86
-XF86COMSRC = $(XF86SRC)/common
-XF86OSSRC = $(XF86SRC)/os-support
+# This hack attempts to check if the needed XFree86 header files are installed.
+# It checks for a needed XFree86 4.3.00 SDK header file that is not installed by
+# default. If it is present, then it assumes that all header files are present.
+# If it is not present, then it assumes that all header files are not present
+# and uses the local copy of the XFree86 4.2.0 header files.
+X_INCLUDES_ROOT = $(shell \
+  if [ -f $(INSTALLED_X)/lib/Server/include/xisb.h ] ; then \
+    echo -n $(INSTALLED_X) ; \
+  else \
+    echo -n $(LOCAL_X) ; \
+  fi )
 
-
-INCLUDES = -I. -I$(XF86COMSRC) -I$(SERVERSRC)/hw/xfree86/loader -I$(XF86OSSRC) -I$(SERVERSRC)/mi -I$(SERVERSRC)/include -I$(XINCLUDESRC) -I$(EXTINCSRC) -I$(TOP)/include -I$(SERVERSRC)/hw/xfree86 -I$(SERVERSRC)/hw/xfree86/parser -I$(XF86PCIINCLUDE)
-
-ALLINCLUDES = $(INCLUDES) $(TOP_INCLUDES)
+ALLINCLUDES = -I. -I$(X_INCLUDES_ROOT)/include/X11 -I$(X_INCLUDES_ROOT)/include/X11/extensions -I$(X_INCLUDES_ROOT)/lib/Server/include
 
 MODULE_DEFINES = -DIN_MODULE -DXFree86Module
 PROTO_DEFINES = -DFUNCPROTO=15 -DNARROWPROTO
@@ -34,7 +29,7 @@ CCOPTIONS = -pedantic -Wall -Wpointer-arith
 CCOPTIONS += $(call check_gcc,-fno-merge-constants,)
 CDEBUGFLAGS = -O2
 CFLAGS = $(CDEBUGFLAGS) $(CCOPTIONS) $(ALLDEFINES)
-CFLAGSCLIENT = $(CDEBUGFLAGS) $(CCOPTIONS) -I$(INSTALLED_X)/include
+CFLAGSCLIENT = $(CDEBUGFLAGS) $(CCOPTIONS) -I$(X_INCLUDES_ROOT)/include
 
 CC = gcc
 
