@@ -622,7 +622,7 @@ move_distance(int dx, int dy)
  * right/lower edge.
  */
 static void relative_coords(SynapticsPrivate *priv, int x, int y,
-			    double* relX, double* relY)
+			    double *relX, double *relY)
 {
     int minX = priv->synpara->left_edge;
     int maxX = priv->synpara->right_edge;
