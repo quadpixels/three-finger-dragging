@@ -1524,7 +1524,7 @@ PacketOk(SynapticsPrivate *priv)
     unsigned char *buf = priv->protoBuf;
     int newabs = SYN_MODEL_NEWABS(priv->model_id);
 
-    if (newabs ? ((buf[0] & 0xC8) != 0x80) : ((buf[0] & 0xC0) != 0xC0)) {
+    if (newabs ? ((buf[0] & 0xC0) != 0x80) : ((buf[0] & 0xC0) != 0xC0)) {
 	DBG(4, ErrorF("Synaptics driver lost sync at 1st byte\n"));
 	return FALSE;
     }
@@ -1534,7 +1534,7 @@ PacketOk(SynapticsPrivate *priv)
 	return FALSE;
     }
 
-    if ((newabs ? ((buf[3] & 0xc8) != 0xc0) : ((buf[3] & 0xc0) != 0x80))) {
+    if ((newabs ? ((buf[3] & 0xC0) != 0xC0) : ((buf[3] & 0xC0) != 0x80))) {
 	DBG(4, ErrorF("Synaptics driver lost sync at 4th byte\n"));
 	return FALSE;
     }
