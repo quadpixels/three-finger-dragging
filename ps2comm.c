@@ -137,7 +137,7 @@ ps2_special_cmd(int fd, byte cmd)
 	/* send 4x 2-bits with set resolution command */
 	for (i=0; i<4; i++) {
 	    if (((ps2_putbyte(fd, PS2_CMD_SET_RESOLUTION)) != Success) ||
-	       ((ps2_putbyte(fd, (cmd>>6)&0x3) != Success)))
+		((ps2_putbyte(fd, (cmd>>6)&0x3) != Success)))
 		return !Success;
 	    cmd<<=2;
 	}
@@ -188,7 +188,7 @@ synaptics_reset(int fd)
     }
     xf86WaitForInput(fd, 4000000);
     if ((ps2_getbyte(fd, &r[0]) == Success) &&
-       (ps2_getbyte(fd, &r[1]) == Success)) {
+	(ps2_getbyte(fd, &r[1]) == Success)) {
 	if (r[0] == 0xAA && r[1] == 0x00) {
 	    DBG(ErrorF("...done\n"));
 	    return Success;
@@ -213,9 +213,9 @@ synaptics_model_id(int fd, unsigned long int *model_id)
     DBG(ErrorF("Read mode id...\n"));
 
     if ((ps2_send_cmd(fd, SYN_QUE_MODEL) == Success) &&
-       (ps2_getbyte(fd, &mi[0]) == Success) &&
-       (ps2_getbyte(fd, &mi[1]) == Success) &&
-       (ps2_getbyte(fd, &mi[2]) == Success)) {
+	(ps2_getbyte(fd, &mi[0]) == Success) &&
+	(ps2_getbyte(fd, &mi[1]) == Success) &&
+	(ps2_getbyte(fd, &mi[2]) == Success)) {
 	*model_id = (mi[0]<<16) | (mi[1]<<8) | mi[2];
 	DBG(ErrorF("mode-id %06X\n", *model_id));
 	DBG(ErrorF("...done.\n"));
@@ -238,17 +238,17 @@ synaptics_capability(int fd, unsigned long int *capability, unsigned long int *e
 
     *ext_capab = 0;
     if ((ps2_send_cmd(fd, SYN_QUE_CAPABILITIES) == Success) &&
-       (ps2_getbyte(fd, &cap[0]) == Success) &&
-       (ps2_getbyte(fd, &cap[1]) == Success) &&
-       (ps2_getbyte(fd, &cap[2]) == Success)) {
+	(ps2_getbyte(fd, &cap[0]) == Success) &&
+	(ps2_getbyte(fd, &cap[1]) == Success) &&
+	(ps2_getbyte(fd, &cap[2]) == Success)) {
 	*capability = (cap[0]<<16) | (cap[1]<<8) | cap[2];
 	DBG(ErrorF("capability %06X\n", *capability));
 	if (SYN_CAP_VALID(*capability)) {
 	    if (SYN_EXT_CAP_REQUESTS(*capability)) {
 		if ((ps2_send_cmd(fd, SYN_QUE_EXT_CAPAB) == Success) &&
-		   (ps2_getbyte(fd, &cap[0]) == Success) &&
-		   (ps2_getbyte(fd, &cap[1]) == Success) &&
-		   (ps2_getbyte(fd, &cap[2]) == Success)) {
+		    (ps2_getbyte(fd, &cap[0]) == Success) &&
+		    (ps2_getbyte(fd, &cap[1]) == Success) &&
+		    (ps2_getbyte(fd, &cap[2]) == Success)) {
 		    *ext_capab = (cap[0]<<16) | (cap[1]<<8) | cap[2];
 		    DBG(ErrorF("ext-capability %06X\n", *ext_capab));
 		} else {
@@ -276,9 +276,9 @@ synaptics_identify(int fd, unsigned long int *ident)
     DBG(ErrorF("Identify Touchpad...\n"));
 
     if ((ps2_send_cmd(fd, SYN_QUE_IDENTIFY) == Success) &&
-       (ps2_getbyte(fd, &id[0]) == Success) &&
-       (ps2_getbyte(fd, &id[1]) == Success) &&
-       (ps2_getbyte(fd, &id[2]) == Success)) {
+	(ps2_getbyte(fd, &id[0]) == Success) &&
+	(ps2_getbyte(fd, &id[1]) == Success) &&
+	(ps2_getbyte(fd, &id[2]) == Success)) {
 	*ident = (id[0]<<16) | (id[1]<<8) | id[2];
 	DBG(ErrorF("ident %06X\n", *ident));
 	if (SYN_ID_IS_SYNAPTICS(*ident)) {
@@ -301,9 +301,9 @@ synaptics_read_mode(int fd, unsigned char *mode)
     DBG(ErrorF("Read mode byte...\n"));
 
     if ((ps2_send_cmd(fd, SYN_QUE_MODES) == Success) &&
-       (ps2_getbyte(fd, &modes[0]) == Success) &&
-       (ps2_getbyte(fd, &modes[1]) == Success) &&
-       (ps2_getbyte(fd, &modes[2]) == Success)) {
+	(ps2_getbyte(fd, &modes[0]) == Success) &&
+	(ps2_getbyte(fd, &modes[1]) == Success) &&
+	(ps2_getbyte(fd, &modes[2]) == Success)) {
 
 	*mode = modes[2];
 	DBG(ErrorF("modes byte %02X%02X%02X\n", modes[0], modes[1], modes[2]));
