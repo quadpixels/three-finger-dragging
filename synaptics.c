@@ -979,6 +979,116 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     return delay;
 }
 
+struct ScrollData {
+    int left, right, up, down;
+};
+
+static void
+HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
+		edge_type edge, Bool finger, struct ScrollData *sd)
+{
+    SynapticsSHM *para = priv->synpara;
+
+    sd->left = sd->right = sd->up = sd->down = 0;
+
+    /* scroll detection */
+    if (finger && !priv->finger_flag) {
+	if (para->circular_scrolling) {
+	    if ((para->circular_trigger == 0 && edge) ||
+		(para->circular_trigger == 1 && edge & TOP_EDGE) ||
+		(para->circular_trigger == 2 && edge & TOP_EDGE && edge & RIGHT_EDGE) ||
+		(para->circular_trigger == 3 && edge & RIGHT_EDGE) ||
+		(para->circular_trigger == 4 && edge & RIGHT_EDGE && edge & BOTTOM_EDGE) ||
+		(para->circular_trigger == 5 && edge & BOTTOM_EDGE) ||
+		(para->circular_trigger == 6 && edge & BOTTOM_EDGE && edge & LEFT_EDGE) ||
+		(para->circular_trigger == 7 && edge & LEFT_EDGE) ||
+		(para->circular_trigger == 8 && edge & LEFT_EDGE && edge & TOP_EDGE)) {
+		priv->circ_scroll_on = TRUE;
+		priv->scroll_a = angle(priv, hw->x, hw->y);
+		DBG(7, ErrorF("circular scroll detected on edge\n"));
+	    }
+	}
+	if (!priv->circ_scroll_on) {
+	    if ((para->scroll_dist_vert != 0) && (edge & RIGHT_EDGE)) {
+		priv->vert_scroll_on = TRUE;
+		priv->scroll_y = hw->y;
+		DBG(7, ErrorF("vert edge scroll detected on right edge\n"));
+	    }
+	    if ((para->scroll_dist_horiz != 0) && (edge & BOTTOM_EDGE)) {
+		priv->horiz_scroll_on = TRUE;
+		priv->scroll_x = hw->x;
+		DBG(7, ErrorF("horiz edge scroll detected on bottom edge\n"));
+	    }
+	}
+    }
+    if (priv->circ_scroll_on && !finger) {
+	/* circular scroll locks in until finger is raised */
+	DBG(7, ErrorF("cicular scroll off\n"));
+	priv->circ_scroll_on = FALSE;
+    }
+    if (priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger)) {
+	DBG(7, ErrorF("vert edge scroll off\n"));
+	priv->vert_scroll_on = FALSE;
+    }
+    if (priv->horiz_scroll_on && (!(edge & BOTTOM_EDGE) || !finger)) {
+	DBG(7, ErrorF("horiz edge scroll off\n"));
+	priv->horiz_scroll_on = FALSE;
+    }
+
+    /* if hitting a corner (top right or bottom right) while vertical scrolling is active,
+       switch over to circular scrolling smoothly */
+    if (priv->vert_scroll_on && !priv->horiz_scroll_on && para->circular_scrolling) {
+	if ((edge & RIGHT_EDGE) && (edge & (TOP_EDGE | BOTTOM_EDGE))) {
+	    priv->vert_scroll_on = FALSE;
+	    priv->circ_scroll_on = TRUE;
+	    priv->scroll_a = angle(priv, hw->x, hw->y);
+	    DBG(7, ErrorF("switching to circular scrolling\n"));
+	}
+    }
+
+    if (priv->vert_scroll_on) {
+	/* + = down, - = up */
+	while (hw->y - priv->scroll_y > para->scroll_dist_vert) {
+	    sd->down++;
+	    priv->scroll_y += para->scroll_dist_vert;
+	}
+	while (hw->y - priv->scroll_y < -para->scroll_dist_vert) {
+	    sd->up++;
+	    priv->scroll_y -= para->scroll_dist_vert;
+	}
+    }
+    if (priv->circ_scroll_on) {
+	/* + = counter clockwise, - = clockwise */
+	while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) > para->scroll_dist_circ) {
+	    sd->up++;
+	    if (sd->up > 1000)
+		break; /* safety */
+	    priv->scroll_a += para->scroll_dist_circ;
+	    if (priv->scroll_a > M_PI)
+		priv->scroll_a -= 2 * M_PI;
+	}
+	while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) < -para->scroll_dist_circ) {
+	    sd->down++;
+	    if (sd->down > 1000)
+		break; /* safety */
+	    priv->scroll_a -= para->scroll_dist_circ;
+	    if (priv->scroll_a < -M_PI)
+		priv->scroll_a += 2 * M_PI;
+	}
+    }
+    if (priv->horiz_scroll_on) {
+	/* + = right, - = left */
+	while (hw->x - priv->scroll_x > para->scroll_dist_horiz) {
+	    sd->right++;
+	    priv->scroll_x += para->scroll_dist_horiz;
+	}
+	while (hw->x - priv->scroll_x < -para->scroll_dist_horiz) {
+	    sd->left++;
+	    priv->scroll_x -= para->scroll_dist_horiz;
+	}
+    }
+}
+
 /*
  * React on changes in the hardware state. This function is called every time
  * the hardware state changes. The return value is used to specify how many
@@ -996,7 +1106,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     Bool mid;
     double speed, integral;
     int change;
-    int scroll_up, scroll_down, scroll_left, scroll_right;
+    struct ScrollData scroll;
     int double_click;
     long delay = 1000000000;
     long timeleft;
@@ -1073,106 +1183,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     if (timeleft > 0)
 	delay = MIN(delay, timeleft);
 
-    /* scroll detection */
-    if (finger && !priv->finger_flag) {
-	if (para->circular_scrolling) {
-	    if ((para->circular_trigger == 0 && edge) ||
-		(para->circular_trigger == 1 && edge & TOP_EDGE) ||
-		(para->circular_trigger == 2 && edge & TOP_EDGE && edge & RIGHT_EDGE) ||
-		(para->circular_trigger == 3 && edge & RIGHT_EDGE) ||
-		(para->circular_trigger == 4 && edge & RIGHT_EDGE && edge & BOTTOM_EDGE) ||
-		(para->circular_trigger == 5 && edge & BOTTOM_EDGE) ||
-		(para->circular_trigger == 6 && edge & BOTTOM_EDGE && edge & LEFT_EDGE) ||
-		(para->circular_trigger == 7 && edge & LEFT_EDGE) ||
-		(para->circular_trigger == 8 && edge & LEFT_EDGE && edge & TOP_EDGE)) {
-		priv->circ_scroll_on = TRUE;
-		priv->scroll_a = angle(priv, hw->x, hw->y);
-		DBG(7, ErrorF("circular scroll detected on edge\n"));
-	    }
-	}
-	if (!priv->circ_scroll_on) {
-	    if ((para->scroll_dist_vert != 0) && (edge & RIGHT_EDGE)) {
-		priv->vert_scroll_on = TRUE;
-		priv->scroll_y = hw->y;
-		DBG(7, ErrorF("vert edge scroll detected on right edge\n"));
-	    }
-	    if ((para->scroll_dist_horiz != 0) && (edge & BOTTOM_EDGE)) {
-		priv->horiz_scroll_on = TRUE;
-		priv->scroll_x = hw->x;
-		DBG(7, ErrorF("horiz edge scroll detected on bottom edge\n"));
-	    }
-	}
-    }
-    if (priv->circ_scroll_on && !finger) {
-	/* circular scroll locks in until finger is raised */
-	DBG(7, ErrorF("cicular scroll off\n"));
-	priv->circ_scroll_on = FALSE;
-    }
-    if (priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger)) {
-	DBG(7, ErrorF("vert edge scroll off\n"));
-	priv->vert_scroll_on = FALSE;
-    }
-    if (priv->horiz_scroll_on && (!(edge & BOTTOM_EDGE) || !finger)) {
-	DBG(7, ErrorF("horiz edge scroll off\n"));
-	priv->horiz_scroll_on = FALSE;
-    }
-
-    /* if hitting a corner (top right or bottom right) while vertical scrolling is active,
-       switch over to circular scrolling smoothly */
-    if (priv->vert_scroll_on && !priv->horiz_scroll_on && para->circular_scrolling) {
-	if ((edge & RIGHT_EDGE) && (edge & (TOP_EDGE | BOTTOM_EDGE))) {
-	    priv->vert_scroll_on = FALSE;
-	    priv->circ_scroll_on = TRUE;
-	    priv->scroll_a = angle(priv, hw->x, hw->y);
-	    DBG(7, ErrorF("switching to circular scrolling\n"));
-	}
-    }
-
-    scroll_up = 0;
-    scroll_down = 0;
-    if (priv->vert_scroll_on) {
-	/* + = down, - = up */
-	while (hw->y - priv->scroll_y > para->scroll_dist_vert) {
-	    scroll_down++;
-	    priv->scroll_y += para->scroll_dist_vert;
-	}
-	while (hw->y - priv->scroll_y < -para->scroll_dist_vert) {
-	    scroll_up++;
-	    priv->scroll_y -= para->scroll_dist_vert;
-	}
-    }
-    if (priv->circ_scroll_on) {
-	/* + = counter clockwise, - = clockwise */
-	while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) > para->scroll_dist_circ) {
-	    scroll_up++;
-	    if (scroll_up > 1000)
-		break; /* safety */
-	    priv->scroll_a += para->scroll_dist_circ;
-	    if (priv->scroll_a > M_PI)
-		priv->scroll_a -= 2 * M_PI;
-	}
-	while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) < -para->scroll_dist_circ) {
-	    scroll_down++;
-	    if (scroll_down > 1000)
-		break; /* safety */
-	    priv->scroll_a -= para->scroll_dist_circ;
-	    if (priv->scroll_a < -M_PI)
-		priv->scroll_a += 2 * M_PI;
-	}
-    }
-    scroll_left = 0;
-    scroll_right = 0;
-    if (priv->horiz_scroll_on) {
-	/* + = right, - = left */
-	while (hw->x - priv->scroll_x > para->scroll_dist_horiz) {
-	    scroll_right++;
-	    priv->scroll_x += para->scroll_dist_horiz;
-	}
-	while (hw->x - priv->scroll_x < -para->scroll_dist_horiz) {
-	    scroll_left++;
-	    priv->scroll_x -= para->scroll_dist_horiz;
-	}
-    }
+    HandleScrolling(priv, hw, edge, finger, &scroll);
 
     moving_state = FALSE;
     switch (priv->tap_state) {
@@ -1287,19 +1298,19 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 	xf86PostButtonEvent(local->dev, FALSE, id, (buttons & (1 << (id - 1))), 0, 0);
     }
 
-    while (scroll_up-- > 0) {
+    while (scroll.up-- > 0) {
 	xf86PostButtonEvent(local->dev, FALSE, 4, !hw->up, 0, 0);
 	xf86PostButtonEvent(local->dev, FALSE, 4, hw->up, 0, 0);
     }
-    while (scroll_down-- > 0) {
+    while (scroll.down-- > 0) {
 	xf86PostButtonEvent(local->dev, FALSE, 5, !hw->down, 0, 0);
 	xf86PostButtonEvent(local->dev, FALSE, 5, hw->down, 0, 0);
     }
-    while (scroll_left-- > 0) {
+    while (scroll.left-- > 0) {
 	xf86PostButtonEvent(local->dev, FALSE, 6, TRUE, 0, 0);
 	xf86PostButtonEvent(local->dev, FALSE, 6, FALSE, 0, 0);
     }
-    while (scroll_right-- > 0) {
+    while (scroll.right-- > 0) {
 	xf86PostButtonEvent(local->dev, FALSE, 7, TRUE, 0, 0);
 	xf86PostButtonEvent(local->dev, FALSE, 7, FALSE, 0, 0);
     }
