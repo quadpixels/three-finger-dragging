@@ -21,6 +21,7 @@
 
 #include <sys/ioctl.h>
 #include <xf86Xinput.h>
+#include <xisb.h>
 
 /*
  * A structure to describe the state of the touchpad hardware (buttons and pad)
@@ -48,6 +49,20 @@ struct SynapticsHwState {
     int  guest_dy;
 };
 
+struct CommData {
+    XISBuffer *buffer;
+    unsigned char protoBuf[6];		/* Buffer for Packet */
+    unsigned char lastByte;		/* Last read byte. Use for reset sequence detection. */
+    int outOfSync;			/* How many consecutive incorrect packets we
+					   have received */
+    int protoBufTail;
+
+    /* Used for keeping track of partial HwState updates. */
+    struct SynapticsHwState hwState;
+    Bool oneFinger;
+    Bool twoFingers;
+    Bool threeFingers;
+};
 
 enum SynapticsProtocol {
     SYN_PROTO_PSAUX,		/* Raw psaux device */

@@ -20,7 +20,6 @@
 #include "eventcomm.h"
 #include "synproto.h"
 #include <xisb.h>
-#define SYNAPTICS_PRIVATE
 #include "synaptics.h"
 #include <xf86.h>
 

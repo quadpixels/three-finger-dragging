@@ -28,7 +28,6 @@
 #include "ps2comm.h"
 #include "synproto.h"
 #include <xisb.h>
-#define SYNAPTICS_PRIVATE
 #include "synaptics.h"
 #include <xf86.h>
 
@@ -565,7 +564,7 @@ SynapticsGetPacket(LocalDevicePtr local, synapticshw_t *synhw,
 	if ((c == 0x00) && (comm->lastByte == 0xAA)) {
 	    if (xf86WaitForInput(local->fd, 50000) == 0) {
 		DBG(7, ErrorF("Reset received\n"));
-		QueryHardware(local);
+		PS2QueryHardware(local, synhw);
 	    } else
 		DBG(3, ErrorF("faked reset received\n"));
 	}
@@ -591,7 +590,7 @@ SynapticsGetPacket(LocalDevicePtr local, synapticshw_t *synhw,
 		if (comm->outOfSync > MAX_UNSYNC_PACKETS) {
 		    comm->outOfSync = 0;
 		    DBG(3, ErrorF("Synaptics synchronization lost too long -> reset touchpad.\n"));
-		    QueryHardware(local); /* including a reset */
+		    PS2QueryHardware(local, synhw); /* including a reset */
 		    continue;
 		}
 	    }

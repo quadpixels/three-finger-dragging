@@ -131,21 +131,6 @@ enum TapButtonState {
     TBS_BUTTON_UP_DOWN		/* Send button up event + set down state */
 };
 
-struct CommData {
-    XISBuffer *buffer;
-    unsigned char protoBuf[6];		/* Buffer for Packet */
-    unsigned char lastByte;		/* Last read byte. Use for reset sequence detection. */
-    int outOfSync;			/* How many consecutive incorrect packets we
-					   have received */
-    int protoBufTail;
-
-    /* Used for keeping track of partial HwState updates. */
-    struct SynapticsHwState hwState;
-    Bool oneFinger;
-    Bool twoFingers;
-    Bool threeFingers;
-};
-
 typedef struct _SynapticsPrivateRec
 {
     /* shared memory pointer */

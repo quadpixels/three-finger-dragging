@@ -63,7 +63,6 @@
 #include <xf86_ansic.h>
 #include <xf86_OSproc.h>
 #include <xf86Xinput.h>
-#include <xisb.h>
 #include "mipointer.h"
 #ifdef XFREE_4_0_3
 #include <xf86Optrec.h>  		/* needed for Options */
