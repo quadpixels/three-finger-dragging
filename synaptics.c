@@ -199,7 +199,8 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 	    SYSCALL(fd = open(fname, O_RDONLY));
 	    if (fd < 0) {
 		if (errno == ENOENT) {
-		    ErrorF("%s no synaptics event device found\n", local->name);
+		    ErrorF("%s no synaptics event device found (checked %d nodes)\n",
+			   local->name, i + 1);
 		    break;
 		} else {
 		    continue;
