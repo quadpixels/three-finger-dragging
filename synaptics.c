@@ -1334,6 +1334,17 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    priv->scroll_y -= para->scroll_dist_vert;
 	}
     }
+    if (priv->horiz_scroll_on) {
+	/* + = right, - = left */
+	while (hw->x - priv->scroll_x > para->scroll_dist_horiz) {
+	    sd->right++;
+	    priv->scroll_x += para->scroll_dist_horiz;
+	}
+	while (hw->x - priv->scroll_x < -para->scroll_dist_horiz) {
+	    sd->left++;
+	    priv->scroll_x -= para->scroll_dist_horiz;
+	}
+    }
     if (priv->circ_scroll_on) {
 	/* + = counter clockwise, - = clockwise */
 	while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) > para->scroll_dist_circ) {
@@ -1353,17 +1364,6 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    priv->scroll_a -= para->scroll_dist_circ;
 	    if (priv->scroll_a < -M_PI)
 		priv->scroll_a += 2 * M_PI;
-	}
-    }
-    if (priv->horiz_scroll_on) {
-	/* + = right, - = left */
-	while (hw->x - priv->scroll_x > para->scroll_dist_horiz) {
-	    sd->right++;
-	    priv->scroll_x += para->scroll_dist_horiz;
-	}
-	while (hw->x - priv->scroll_x < -para->scroll_dist_horiz) {
-	    sd->left++;
-	    priv->scroll_x -= para->scroll_dist_horiz;
 	}
     }
 }
