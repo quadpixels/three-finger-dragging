@@ -1,14 +1,6 @@
-* horz. Scrolling möglich (Button 6,7 mit imwheel?)
-* edge draging - bewegung geht am Rand bei dragging weiter
 * Resetsequenz für repeater treiber
 * feartures über optionen abschalten
-* schnelleres scrolling (buttonrelease events)
 * shared-memory für online konfiguration
 * ftok benutzen um Shared-Memory ID zu erzeugen
 * scrollen geschwindigkeitsabhängig machen
-* scrollen (tasten und rand) sollte auch bei gedrückten Tasten funktionieren
 * linke Ecken gleiche Funktion wie rechte Ecken bzw. Konfigurierbar
-
-
-
-
