@@ -514,7 +514,8 @@ ReadInput(LocalDevicePtr local)
 	double speed, integral;
 	int change;
 	int scroll_up, scroll_down, scroll_left, scroll_right;
-	int double_click, done;
+	int double_click;
+	Bool done;
 
 	/* 
 	 * set blocking to -1 on the first call because we know there is data to
