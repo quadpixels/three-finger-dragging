@@ -59,6 +59,9 @@ Bool
 synaptics_set_mode(int fd, byte cmd); 
 
 Bool
+synaptics_read_mode(int fd, unsigned char *mode);
+
+Bool
 SynapticsEnableDevice(int fd);
 
 Bool

@@ -2,7 +2,7 @@ Installation of the Synaptics-Touchpad-Driver for XFree 4.x
 ===========================================================
 
 Author: Stefan Gmeiner <riddlebox@freesurf.ch>
-Date: 17.02.02
+Date: 20.04.02
 
 needs: - XFree 4.x
        - Using with Kernel 2.4.x for x < 10 needs a kernel-patch (see
@@ -43,10 +43,17 @@ EndSection
 Change the Identifier to the same name as in the ServerLayout-section.
 The Option "Repeater" und "SHMConfig" are at the moment for testing.
 
-6. Start/Restart the X-Server. If the touchpad doesn't work go to
-step 7.
+6. Add the "CorePointer" option to the InputDevice line at the ServerLayout section:
 
-7. a) Check the XFree-Logfiles
+Section "ServerLayout"
+...
+  InputDevice "Mouse[1]"  "CorePointer"
+...
+
+7. Start/Restart the X-Server. If the touchpad doesn't work go to
+step 8.
+
+8. a) Check the XFree-Logfiles
    b) Try to start the XServer with 'startx -- -logverbose 8' for more
       Output
 If you can't get the driver working, mail the logfiles and the

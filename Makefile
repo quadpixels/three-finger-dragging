@@ -14,7 +14,7 @@ XF86COMSRC = $(XF86SRC)/common
 XF86OSSRC = $(XF86SRC)/os-support
 
 
-INCLUDES = -I. -I$(XF86COMSRC) -I$(SERVERSRC)/hw/xfree86/loader -I$(XF86OSSRC) -I$(SERVERSRC)/mi -I$(SERVERSRC)/include -I$(XINCLUDESRC) -I$(EXTINCSRC)
+INCLUDES = -I. -I$(XF86COMSRC) -I$(SERVERSRC)/hw/xfree86/loader -I$(XF86OSSRC) -I$(SERVERSRC)/mi -I$(SERVERSRC)/include -I$(XINCLUDESRC) -I$(EXTINCSRC) -I$(TOP)/include -I$(SERVERSRC)/hw/xfree86 -I$(SERVERSRC)/hw/xfree86/parser
 
 ALLINCLUDES = $(INCLUDES) $(TOP_INCLUDES)
 
@@ -50,6 +50,9 @@ $(DRIVER)_drv.o:  $(OBJS) $(EXTRALIBRARYDEPS)
 
 test:
 	$(CC) $(CFLAGS) -o synclient synclient.c
+
+testprotokoll: testprotokoll.c
+	$(CC) -o testprotokoll testprotokoll.c
 
 clean::
 	$(RM) *.CKP *.ln *.BAK *.bak *.o core errs ,* *~ *.a .emacs_* tags TAGS make.log MakeOut synclient "#"*

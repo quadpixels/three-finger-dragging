@@ -76,7 +76,7 @@ typedef enum {
 #define MAX(a, b) (((a)>(b))?(a):(b))
 #define DIFF_TIME(a, b) (((a)>(b))?(a)-(b):(b)-(a))
 
-#define VERSION "0.10p1"
+#define VERSION "0.11.3p1"
 
 /*****************************************************************************
  * Forward declaration

@@ -320,6 +320,40 @@ synaptics_identify(int fd, unsigned long int *ident)
 	return !Success;
 }
 
+/*
+ * read mode byte
+ */
+Bool
+synaptics_read_mode(int fd, unsigned char *mode)
+{
+	byte modes[3];
+
+#ifdef DEBUG
+	ErrorF("Read mode byte...\n");
+#endif
+
+	if((ps2_send_cmd(fd, SYN_QUE_MODES) == Success) &&
+	   (ps2_getbyte(fd, &modes[0]) == Success) &&
+	   (ps2_getbyte(fd, &modes[1]) == Success) &&
+	   (ps2_getbyte(fd, &modes[2]) == Success)) {
+	   
+		*mode = modes[2];
+#ifdef DEBUG
+		ErrorF("modes byte %02X%02X%02X\n", modes[0], modes[1], modes[2]);
+#endif
+		if((modes[0] == 0x3B) && (modes[1] == 0x47)) {
+#ifdef DEBUG
+			ErrorF("...done.\n");
+#endif
+			return Success;
+		}
+	}
+#ifdef DEBUG
+	ErrorF("...failed.\n");
+#endif
+	return !Success;
+}
+
 Bool
 SynapticsEnableDevice(int fd)
 {
