@@ -53,7 +53,7 @@ synclient.o	: synclient.c
 	$(CC) $(CFLAGSCLIENT) -c -o $@ $<
 
 synclient	: synclient.o
-	$(CC) -o $@ $<
+	$(CC) -o $@ $< -lm
 
 testprotokoll: testprotokoll.c
 	$(CC) -o testprotokoll testprotokoll.c
