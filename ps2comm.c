@@ -98,7 +98,7 @@ ps2_getbyte(int fd, byte *b)
 }
 
 /*
- * Write a byte to the ps/2 port, wair for ACK
+ * Write a byte to the ps/2 port, wait for ACK
  */
 static Bool
 ps2_putbyte(int fd, byte b)
