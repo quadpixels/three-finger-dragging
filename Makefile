@@ -1,4 +1,4 @@
-TOP = /usr/src/packages/BUILD/xc
+TOP = /usr/src/redhat/BUILD/XFree86-4.2.0/xc
 XTOP = $(TOP)
 BUILDINCROOT = $(TOP)/exports
 EXTINCSRC = $(XTOP)/include/extensions
@@ -29,7 +29,7 @@ CDEBUGFLAGS = -O2
 CFLAGS = $(CDEBUGFLAGS) $(CCOPTIONS) $(ALLDEFINES)
 
 CC = gcc
-CCOPTIONS = -ansi -pedantic -Wall -Wpointer-arith
+CCOPTIONS = -ansi -pedantic -Wall -Wpointer-arith -fno-merge-constants
 
 LDCOMBINEFLAGS = -r
 
