@@ -3,6 +3,9 @@ you use a 2.6 linux kernel, you need to apply the ALPS kernel patch
 in the alps.patch file. See http://www.kernelnewbies.org/faq/ for
 information about how to apply kernel patches and compile kernels.
 
+Note! If you use kernel 2.6.11 or later, the alps patch is already
+included, so you don't have to patch your kernel.
+
 Since ALPS touchpads don't have the same resolution as Synaptics
 touchpads, you probably have to change some parameter values. Here is
 an example InputDevice section for the X configuration file.
