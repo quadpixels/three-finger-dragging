@@ -125,7 +125,7 @@ ALLFILES = COMPATIBILITY FILES INSTALL INSTALL.DE INSTALL.FR LICENSE Makefile \
 
 DST=synaptics-$(VERSION)
 
-synaptics-$(VERSION).tar.bz2 : $(ALLFILES)
+synaptics-$(VERSION).tar.bz2 : FORCE
 	rm -f $(DST).tar.bz2
 	rm -rf $(DST)
 	mkdir $(DST) $(DST)/manpages $(DST)/script $(DST)/test $(DST)/docs
@@ -138,3 +138,5 @@ synaptics-$(VERSION).tar.bz2 : $(ALLFILES)
 	tar cf $(DST).tar $(DST)
 	rm -rf $(DST)
 	bzip2 $(DST).tar
+
+.PHONY: FORCE
