@@ -148,15 +148,15 @@ enum TapButtonState {
 
 typedef struct _SynapticsPrivateRec
 {
-    /* shared memory pointer */
-    SynapticsSHM *synpara;
-
+    SynapticsSHM synpara_default;	/* Default parameter settings, read from
+					   the X config file */
+    SynapticsSHM *synpara;		/* Current parameter settings. Will point to
+					   shared memory if shm_config is true */
     struct SynapticsProtocolOperations* proto_ops;
 
     struct SynapticsHwState hwState;
 
-    /* Data read from the touchpad */
-    struct SynapticsHwInfo synhw;
+    struct SynapticsHwInfo synhw;	/* Data read from the touchpad */
     Bool shm_config;			/* True when shared memory area allocated */
 
     OsTimerPtr timer;			/* for up/down-button repeat, tap processing, etc */

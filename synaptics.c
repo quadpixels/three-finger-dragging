@@ -121,6 +121,7 @@ static Bool ConvertProc(LocalDevicePtr, int, int, int, int, int, int, int, int, 
 static Bool DeviceInit(DeviceIntPtr);
 static Bool DeviceOn(DeviceIntPtr);
 static Bool DeviceOff(DeviceIntPtr);
+static Bool DeviceClose(DeviceIntPtr);
 
 
 InputDriverRec SYNAPTICS = {
@@ -203,6 +204,62 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 }
 
 /*
+ * Allocate and initialize memory for the SynapticsSHM data to hold driver
+ * parameter settings.
+ * The function will allocate shared memory if priv->shm_config is TRUE.
+ * The allocated data is initialized from priv->synpara_default.
+ */
+static Bool alloc_param_data(LocalDevicePtr local)
+{
+    int shmid;
+    SynapticsPrivate *priv = local->private;
+
+    if (priv->synpara)
+	return TRUE;			    /* Already allocated */
+
+    if (priv->shm_config) {
+	if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
+	    xf86shmctl(shmid, XF86IPC_RMID, NULL);
+	if ((shmid = xf86shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM),
+				0777 | XF86IPC_CREAT)) == -1) {
+	    xf86Msg(X_ERROR, "%s error shmget\n", local->name);
+	    return FALSE;
+	}
+	if ((priv->synpara = (SynapticsSHM*)xf86shmat(shmid, NULL, 0)) == NULL) {
+	    xf86Msg(X_ERROR, "%s error shmat\n", local->name);
+	    return FALSE;
+	}
+    } else {
+	priv->synpara = xcalloc(1, sizeof(SynapticsSHM));
+	if (!priv->synpara)
+	    return FALSE;
+    }
+
+    *(priv->synpara) = priv->synpara_default;
+    return TRUE;
+}
+
+/*
+ * Free SynapticsSHM data previously allocated by alloc_param_data().
+ */
+static void free_param_data(SynapticsPrivate *priv)
+{
+    int shmid;
+
+    if (!priv->synpara)
+	return;
+
+    if (priv->shm_config) {
+	if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
+	    xf86shmctl(shmid, XF86IPC_RMID, NULL);
+    } else {
+	xfree(priv->synpara);
+    }
+
+    priv->synpara = NULL;
+}
+
+/*
  *  called by the module loader for initialization
  */
 static InputInfoPtr
@@ -216,7 +273,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pointer optList;
 #endif
     char *str_par;
-    int shmid;
     unsigned long now;
     SynapticsSHM *pars;
     char *repeater;
@@ -280,28 +336,10 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->touch_on.millis = now;
 
     /* install shared memory or normal memory for parameters */
-    priv->shm_config = FALSE;
-    if (xf86SetBoolOption(local->options, "SHMConfig", FALSE)) {
-	if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
-	    xf86shmctl(shmid, XF86IPC_RMID, NULL);
-	if ((shmid = xf86shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM),
-				0777 | XF86IPC_CREAT)) == -1) {
-	    xf86Msg(X_ERROR, "%s error shmget\n", local->name);
-	    goto SetupProc_fail;
-	}
-	else if ((priv->synpara = (SynapticsSHM*) xf86shmat(shmid, NULL, 0)) == NULL) {
-	    xf86Msg(X_ERROR, "%s error shmat\n", local->name);
-	    goto SetupProc_fail;
-	}
-	priv->shm_config = TRUE;
-    } else {
-	priv->synpara = xcalloc(1, sizeof(SynapticsSHM));
-	if (!priv->synpara)
-	    goto SetupProc_fail;
-    }
+    priv->shm_config = xf86SetBoolOption(local->options, "SHMConfig", FALSE);
 
     /* read the parameters */
-    pars = priv->synpara;
+    pars = &priv->synpara_default;
     pars->left_edge = xf86SetIntOption(local->options, "LeftEdge", 1900);
     pars->right_edge = xf86SetIntOption(local->options, "RightEdge", 5400);
     pars->top_edge = xf86SetIntOption(local->options, "TopEdge", 1900);
@@ -370,6 +408,9 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     priv->largest_valid_x = MIN(pars->right_edge, XMAX_NOMINAL);
 
+    if (!alloc_param_data(local))
+	goto SetupProc_fail;
+
     priv->comm.buffer = XisbNew(local->fd, 200);
     DBG(9, XisbTrace(priv->comm.buffer, 1));
 
@@ -417,14 +458,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     if (priv->comm.buffer)
 	XisbFree(priv->comm.buffer);
-    if (priv->synpara) {
-	if (priv->shm_config) {
-	    if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
-		xf86shmctl(shmid, XF86IPC_RMID, NULL);
-	} else {
-	    xfree(priv->synpara);
-	}
-    }
+    free_param_data(priv);
     /* Freeing priv makes the X server crash. Don't know why.
        xfree(priv);
     */
@@ -456,17 +490,16 @@ DeviceControl(DeviceIntPtr dev, int mode)
 
     switch (mode) {
     case DEVICE_INIT:
-	DeviceInit(dev);
-	RetValue = Success;
+	RetValue = DeviceInit(dev);
 	break;
     case DEVICE_ON:
-	RetValue = DeviceOn( dev );
+	RetValue = DeviceOn(dev);
 	break;
     case DEVICE_OFF:
-	RetValue = DeviceOff( dev );
+	RetValue = DeviceOff(dev);
 	break;
     case DEVICE_CLOSE:
-	RetValue = DeviceOff( dev );
+	RetValue = DeviceClose(dev);
 	break;
     default:
 	RetValue = BadValue;
@@ -532,6 +565,18 @@ DeviceOff(DeviceIntPtr dev)
 }
 
 static Bool
+DeviceClose(DeviceIntPtr dev)
+{
+    Bool RetValue;
+    LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
+    SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
+
+    RetValue = DeviceOff(dev);
+    free_param_data(priv);
+    return RetValue;
+}
+
+static Bool
 DeviceInit(DeviceIntPtr dev)
 {
     LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
@@ -558,6 +603,9 @@ DeviceInit(DeviceIntPtr dev)
     xf86InitValuatorDefaults(dev, 1);
 
     xf86MotionHistoryAllocate(local);
+
+    if (!alloc_param_data(local))
+	return !Success;
 
     return Success;
 }
