@@ -82,7 +82,7 @@ typedef enum {
 #define MIN(a, b) (((a)<(b))?(a):(b))
 #define TIME_DIFF(a, b) ((long)((a)-(b)))
 
-#define VERSION "0.11.3p3"
+#define VERSION "0.11.3p4"
 
 /*****************************************************************************
  * Forward declaration
@@ -512,17 +512,27 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 	SynapticsPrivatePtr priv = (SynapticsPrivatePtr) (local->private);
 	struct SynapticsHwState hw;
 	int delay;
-    int sigstate;
+	int sigstate;
+	CARD32 wakeUpTime;
 
     sigstate = xf86BlockSIGIO ();
 	
 	hw = priv->hwState;
-	hw.millis = GetTimeInMillis();
+	hw.millis = now;
 	delay = HandleState(local, &hw);
 
     xf86UnblockSIGIO (sigstate);
 
-	priv->timer = TimerSet(priv->timer, 0, delay, timerFunc, local);
+	/*
+	 * Workaround for wraparound bug in the TimerSet function. This bug is already
+	 * fixed in CVS, but this driver needs to work with XFree86 versions 4.2.x and
+	 * 4.3.x too.
+	 */
+	wakeUpTime = now + delay;
+	if (wakeUpTime <= now)
+		wakeUpTime = 0xffffffffL;
+
+	priv->timer = TimerSet(priv->timer, TimerAbsolute, wakeUpTime, timerFunc, local);
 
     return 0;
 }
@@ -583,7 +593,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	int scroll_up, scroll_down, scroll_left, scroll_right;
 	int double_click;
 	Bool done;
-	int delay = 3600000;
+	int delay = 1000000000;
 	long timeleft;
 
 	mid   = FALSE;
