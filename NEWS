@@ -1,3 +1,13 @@
+0.12.0 (2003-10-26)
+- Initial support for ALPS touchpads.
+- Implemented "locked drags" after a suggestion from Karl Kashofer.
+- In the synclient program, use case insensitive string matching for
+  parameter names.
+- Report all eight multi buttons in the synclient program.
+- Print the driver version string before other driver messages.
+- Added more models to the compatibility list.
+- Some documentation updates.
+
 0.11.8 (2003-10-08)
 - Initialize the id variable in QueryIsSynaptics(), so that we don't
   print out garbage if the identification fails.
