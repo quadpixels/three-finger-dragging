@@ -166,7 +166,10 @@ corner. Once scrolling is engaged, moving your finger in clockwise
 circles around the trackpad will generate scroll down events and
 counter clockwise scroll up events. Lifting your finger will disengage
 circular scrolling. Use tight circles near the center of the pad for
-fast scrolling and large circles for better control.
+fast scrolling and large circles for better control. When used
+together with vertical scrolling, hitting the upper or lower right
+corner will seamlessly switch over from vertical to circular
+scrolling.
 
 
 FAQ

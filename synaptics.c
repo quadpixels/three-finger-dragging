@@ -1063,7 +1063,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 		priv->scroll_a = angle(priv, hw->x, hw->y);
 		DBG(7, ErrorF("circular scroll detected on edge\n"));
 	    }
-	} else {
+	}
+	if (!priv->circ_scroll_on) {
 	    if ((para->scroll_dist_vert != 0) && (edge & RIGHT_EDGE)) {
 		priv->vert_scroll_on = TRUE;
 		priv->scroll_y = hw->y;
@@ -1091,6 +1092,18 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     }
 
     /* scroll processing */
+
+    /* if hitting a corner (top right or bottom right) while vertical scrolling is active,
+       switch over to circular scrolling smoothly */
+    if (priv->vert_scroll_on && !priv->horiz_scroll_on && para->circular_scrolling) {
+	if ((edge & RIGHT_EDGE) && (edge & (TOP_EDGE | BOTTOM_EDGE))) {
+	    priv->vert_scroll_on = FALSE;
+	    priv->circ_scroll_on = TRUE;
+	    priv->scroll_a = angle(priv, hw->x, hw->y);
+	    DBG(7, ErrorF("switching to circular scrolling\n"));
+	}
+    }
+
     scroll_up = 0;
     scroll_down = 0;
     if (priv->vert_scroll_on) {
