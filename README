@@ -169,11 +169,11 @@ greater than EdgeMotionMaxZ, EdgeMotionMaxSpeed is used. For a
 pressure value between EdgeMotionMinZ and EdgeMotionMaxZ, the speed is
 increased linearly.
 
-Since synaptics touchpads don't have a button that corresponds to the
-middle button on a mouse, the driver can emulate middle mouse button
-events. If you press both the left and right mouse buttons at almost
-the same time (no more than EmulateMidButtonTime milliseconds apart)
-the driver generates a middle mouse button event.
+Since most synaptics touchpad models don't have a button that
+corresponds to the middle button on a mouse, the driver can emulate
+middle mouse button events. If you press both the left and right mouse
+buttons at almost the same time (no more than EmulateMidButtonTime
+milliseconds apart) the driver generates a middle mouse button event.
 
 Circular scrolling acts like a scrolling wheel on the trackpad.
 Scrolling is engaged when a drag starts in the given CircScrollTrigger
