@@ -21,3 +21,4 @@ taps for example):
 - Multifinger taps: two finger for middle button and three finger for
   right button events
 - Online configuration through shared memory (Option: SHMConfig)
+- Touchpad can be switched off temporarily

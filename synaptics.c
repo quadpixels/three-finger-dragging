@@ -1,4 +1,8 @@
 /*
+ *   2003 Jörg Bösner <ich@joerg-boesner.de>
+ *     patch for switching the touchpad off (for example, when a
+ *     USB mouse is connected)
+ *
  *   2003 Hartwig Felger <hgfelger@hgfelger.de>
  *     patch to make the horizontal-wheel-replacement-buttons work.
  *
@@ -389,6 +393,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->synpara->edge_motion_speed = xf86SetIntOption(local->options, "EdgeMotionSpeed", 40);
     priv->synpara->repeater = xf86SetStrOption(local->options, "Repeater", NULL);
     priv->synpara->updown_button_scrolling = xf86SetBoolOption(local->options, "UpDownScrolling", TRUE);
+    priv->synpara->touchpad_off = xf86SetBoolOption(local->options, "TouchpadOff", FALSE);
 
     str_par = xf86FindOptionValue(local->options, "MinSpeed");
     if((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->min_speed) != 1))
@@ -843,6 +848,10 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     int double_click;
     long delay = 1000000000;
     long timeleft;
+
+    /* If touchpad is switched off, we skip the whole thing and return delay */
+    if (para->touchpad_off == TRUE)
+	return delay;
 
     edge = edge_detection(priv, hw->x, hw->y);
 

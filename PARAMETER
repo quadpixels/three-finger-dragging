@@ -21,3 +21,5 @@ UpDownScrolling		Bool	If on, the up/down buttons generate button 4/5 events.
 				If off, the up button generates a double click and
 				the down button generates a button 2 event.
 EmulateMidButtonTime	Int	max time (in milliseconds) for middle button emulation.
+TouchpadOff		Bool	If on, the Touchpad is switched off (useful
+				if an external mouse is connected)

@@ -36,6 +36,7 @@ typedef struct _SynapticsSHM
     int edge_motion_speed;		    /* Edge motion speed when dragging */
     char* repeater;			    /* Repeater on or off */
     Bool updown_button_scrolling;	    /* Up/Down-Button scrolling or middle/double-click */
+    Bool touchpad_off;			    /* Switches the Touchpad off*/
 } SynapticsSHM, *SynapticsSHMPtr;
 
 #ifdef SYNAPTICS_PRIVATE
