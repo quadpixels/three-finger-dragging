@@ -11,7 +11,7 @@
 typedef struct _SynapticsSHM
 {
     /* Current device state */
-    int x, y;				    /* actual x, y Coordinates */
+    int x, y;				    /* actual x, y coordinates */
     int z;				    /* pressure value */
     int w;				    /* finger width value */
     int left, right, up, down;		    /* left/right/up/down buttons */
@@ -24,8 +24,7 @@ typedef struct _SynapticsSHM
     Bool isSynaptics;			    /* Synaptics touchpad active */
 
     /* Parameter data */
-    int	left_edge, right_edge, top_edge, bottom_edge;
-    /* edge coordinates absolute */
+    int	left_edge, right_edge, top_edge, bottom_edge; /* edge coordinates absolute */
     int	finger_low, finger_high;	    /* finger detection values in Z-values */
     unsigned long tap_time;
     int tap_move;			    /* max. tapping-time and movement in packets and coord. */
@@ -110,7 +109,7 @@ typedef struct _SynapticsPrivateRec
     /* Data for normal processing */
     XISBuffer *buffer;
     unsigned char protoBuf[6];		/* Buffer for Packet */
-    unsigned char lastByte;		/* letztes gelesene byte */
+    unsigned char lastByte;		/* Last read byte. Use for reset sequence detection. */
     int outOfSync;			/* How many consecutive incorrect packets we
 					   have received */
     int protoBufTail;
@@ -164,10 +163,7 @@ static Bool SynapticsParseRawPacket(LocalDevicePtr, SynapticsPrivatePtr,
 static Bool SynapticsGetPacket(LocalDevicePtr, SynapticsPrivatePtr);
 static void PrintIdent(SynapticsPrivatePtr);
 
-#endif
+#endif /* SYNAPTICS_PRIVATE */
 
 
-/*
- *    DO NOT PUT ANYTHING AFTER THIS ENDIF
- */
 #endif /* _SYNAPTICS_H_ */

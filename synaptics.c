@@ -164,7 +164,7 @@ GetlineBuffSys(char **line, size_t *len,int fd)
     /* In the buffer[] are still brest characters, starting at old_i.*/
     if(old_i)
 	memmove(buffer, buffer + old_i, brest);
-    buffer[0] = first_char;	/* 1. char was stored separetely, to make place for
+    buffer[0] = first_char;	/* 1. char was stored separately, to make place for
 				   the terminating '\0' */
     /* We fill up the buffer to its limit, each time */
     SYSCALL(read_len = read(fd, buffer + brest, BLEN - brest));
@@ -503,7 +503,7 @@ SynapticsCtrl(DeviceIntPtr device, PtrCtrl *ctrl)
 static Bool
 DeviceControl (DeviceIntPtr dev, int mode)
 {
-    Bool	RetValue;
+    Bool RetValue;
 
     switch (mode)
 	{
