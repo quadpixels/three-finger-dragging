@@ -4,7 +4,7 @@
  *     USB mouse is connected)
  *
  *   2003 Hartwig Felger <hgfelger@hgfelger.de>
- *     patch to make the horizontal-wheel-replacement-buttons work.
+ *     patch to make the horizontal wheel replacement buttons work.
  *
  *   2002 Peter Osterlund <petero2@telia.com>
  *     patches for fast scrolling, palm detection, edge motion,
@@ -14,11 +14,11 @@
  *     for newer Firmware (5.8) protocol changes for 3rd to 6th button
  *
  *	 Copyright (C) 2001 Stefan Gmeiner <riddlebox@freesurf.ch>
- *     start merging tpconfig and gpm code to a xfree-input module
+ *     start merging tpconfig and gpm code to an xfree input module
  *     adding some changes and extensions (ex. 3rd and 4th button)
  *
  *   Copyright (c) 1999 Henry Davies <hdavies@ameritech.net> for the
- *     absolute to relative translation code (from the gpm-source)
+ *     absolute to relative translation code (from the gpm source)
  *     and some other ideas
  *
  *   This program is free software; you can redistribute it and/or
@@ -239,7 +239,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     /* initialize the InputInfoRec */
     local->name                    = dev->identifier;
-    local->type_name               = XI_MOUSE; /* XI_TOUCHPAD and KDE killed the X-Server at startup ? */
+    local->type_name               = XI_MOUSE; /* XI_TOUCHPAD and KDE killed the X Server at startup ? */
     local->device_control          = DeviceControl;
     local->read_input              = ReadInput;
     local->control_proc            = ControlProc;
@@ -330,7 +330,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->accl) != 1))
 	priv->synpara->accl=0.0015;
 
-    /* Warn about (and fix) mis-configured TopEdge/BottomEdge parameters */
+    /* Warn about (and fix) incorrectly configured TopEdge/BottomEdge parameters */
     if (priv->synpara->top_edge > priv->synpara->bottom_edge) {
 	int tmp = priv->synpara->top_edge;
 	priv->synpara->top_edge = priv->synpara->bottom_edge;
@@ -369,8 +369,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     local->history_size = xf86SetIntOption( local->options, "HistorySize", 0 );
 
-    /* this results in an xstrdup that must be freed later */
-    /*local->name = xf86SetStrOption( local->options, "DeviceName", "Synaptics-Touchpad" );*/
     xf86ProcessCommonOptions(local, local->options);
     local->flags |= XI86_CONFIGURED;
 
@@ -391,11 +389,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	xf86CloseSerial (local->fd);
 	local->fd = -1;
     }
-
-    /* If it fails, the name will be printed
-       if (local->name)
-       xfree (local->name);
-    */
 
     if (priv->buffer)
 	XisbFree (priv->buffer);
@@ -819,14 +812,14 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     /* 3rd button emulation */
     mid = HandleMidButtonEmulation(priv, hw, &delay);
 
-    /* Up/Down-button scrolling or middle/double-click */
+    /* Up/Down button scrolling or middle/double click */
     double_click = FALSE;
     if (!para->updown_button_scrolling) {
-	if (hw->down) {		/* map down-button to middle-button */
+	if (hw->down) {		/* map down button to middle button */
 	    mid = TRUE;
 	}
 
-	if (hw->up) {		/* up-button generates double-click */
+	if (hw->up) {		/* up button generates double click */
 	    if (!priv->prev_up)
 		double_click = TRUE;
 	}
@@ -1641,7 +1634,7 @@ PrintIdent(SynapticsPrivatePtr priv)
     if (SYN_CAP_EXTENDED(priv->capabilities)) {
 	xf86Msg(X_PROBED, " Touchpad has extended capability bits\n");
 	if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap))
-	    xf86Msg(X_PROBED, " -> %d multi-buttons, i.e. besides standard buttons\n",
+	    xf86Msg(X_PROBED, " -> %d multi buttons, i.e. besides standard buttons\n",
 		    (int)(SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap)));
 	else if (SYN_CAP_FOUR_BUTTON(priv->capabilities))
 	    xf86Msg(X_PROBED, " -> four buttons\n");
