@@ -327,6 +327,13 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->synpara->updown_button_scrolling = xf86SetBoolOption(local->options, "UpDownScrolling", TRUE);
     priv->synpara->touchpad_off = xf86SetBoolOption(local->options, "TouchpadOff", FALSE);
     priv->synpara->locked_drags = xf86SetBoolOption(local->options, "LockedDrags", FALSE);
+    priv->synpara->tap_action[RT_TAP] = xf86SetIntOption(local->options, "RTCornerButton", 2);
+    priv->synpara->tap_action[RB_TAP] = xf86SetIntOption(local->options, "RBCornerButton", 3);
+    priv->synpara->tap_action[LT_TAP] = xf86SetIntOption(local->options, "LTCornerButton", 0);
+    priv->synpara->tap_action[LB_TAP] = xf86SetIntOption(local->options, "LBCornerButton", 0);
+    priv->synpara->tap_action[F1_TAP] = xf86SetIntOption(local->options, "TapButton1",     1);
+    priv->synpara->tap_action[F2_TAP] = xf86SetIntOption(local->options, "TapButton2",     2);
+    priv->synpara->tap_action[F3_TAP] = xf86SetIntOption(local->options, "TapButton3",     3);
 
     str_par = xf86FindOptionValue(local->options, "MinSpeed");
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->min_speed) != 1))
@@ -763,6 +770,23 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
     return finger;
 }
 
+static void
+ReportTap(SynapticsPrivate *priv, TapEvent tap)
+{
+    int button = priv->synpara->tap_action[tap];
+    switch (button) {
+    case 1:
+	priv->tap_left = TRUE;
+	break;
+    case 2:
+	priv->tap_mid = TRUE;
+	break;
+    case 3:
+	priv->tap_right = TRUE;
+	break;
+    }
+}
+
 /*
  * React on changes in the hardware state. This function is called every time
  * the hardware state changes. The return value is used to specify how many
@@ -873,35 +897,37 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 		    switch (edge) {
 		    case RIGHT_TOP_EDGE:
 			DBG(7, ErrorF("right top edge\n"));
-			priv->tap_mid = TRUE;
+			ReportTap(priv, RT_TAP);
 			break;
 		    case RIGHT_BOTTOM_EDGE:
 			DBG(7, ErrorF("right bottom edge\n"));
-			priv->tap_right = TRUE;
+			ReportTap(priv, RB_TAP);
 			break;
 		    case LEFT_TOP_EDGE:
 			DBG(7, ErrorF("left top edge\n"));
+			ReportTap(priv, LT_TAP);
 			break;
 		    case LEFT_BOTTOM_EDGE:
 			DBG(7, ErrorF("left bottom edge\n"));
+			ReportTap(priv, LB_TAP);
 			break;
 		    default:
 			DBG(7, ErrorF("no edge\n"));
-			priv->tap_left = TRUE;
+			ReportTap(priv, F1_TAP);
 		    }
 		} else {
 		    switch (priv->finger_count) {
 		    case 2:
 			DBG(7, ErrorF("two finger tap\n"));
-			priv->tap_mid = TRUE;
+			ReportTap(priv, F2_TAP);
 			break;
 		    case 3:
 			DBG(7, ErrorF("three finger tap\n"));
-			priv->tap_right = TRUE;
+			ReportTap(priv, F3_TAP);
 			break;
 		    default:
 			DBG(7, ErrorF("one finger\n"));
-			priv->tap_left = TRUE;
+			ReportTap(priv, F1_TAP);
 		    }
 		}
 	    }

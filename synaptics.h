@@ -7,6 +7,17 @@
  *		Public definitions.
  *			Used by driver and the shared memory configurator
  *****************************************************************************/
+typedef enum {
+    RT_TAP = 0,				    /* Right top corner */
+    RB_TAP,				    /* Right bottom corner */
+    LT_TAP,				    /* Left top corner */
+    LB_TAP,				    /* Left bottom corner */
+    F1_TAP,				    /* Non-corner tap, one finger */
+    F2_TAP,				    /* Non-corner tap, two fingers */
+    F3_TAP,				    /* Non-corner tap, three fingers */
+    MAX_TAP
+} TapEvent;
+
 #define SHM_SYNAPTICS 23947
 typedef struct _SynapticsSHM
 {
@@ -42,6 +53,7 @@ typedef struct _SynapticsSHM
     Bool updown_button_scrolling;	    /* Up/Down-Button scrolling or middle/double-click */
     Bool touchpad_off;			    /* Switches the Touchpad off*/
     Bool locked_drags;			    /* Enable locked drags */
+    int tap_action[MAX_TAP];		    /* Button to report on tap events */
 } SynapticsSHM;
 
 #ifdef SYNAPTICS_PRIVATE

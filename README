@@ -93,6 +93,20 @@ TouchpadOff		Bool	If on, the Touchpad is switched off (useful
 LockedDrags		Bool	If off, a tap and drag gesture ends when you release
 				the finger. If on, the gesture is active until you
 				tap a second time.
+RTCornerButton		Int	Which mouse button is reported on a right top corner tap
+				0=No action, 1=Left Button, 2=Middle Button, 3=Right Button
+RBCornerButton		Int	Which mouse button is reported on a right bottom corner tap
+				0=No action, 1=Left Button, 2=Middle Button, 3=Right Button
+LTCornerButton		Int	Which mouse button is reported on a left top corner tap
+				0=No action, 1=Left Button, 2=Middle Button, 3=Right Button
+LBCornerButton		Int	Which mouse button is reported on a left bottom corner tap
+				0=No action, 1=Left Button, 2=Middle Button, 3=Right Button
+TapButton1		Int	Which mouse button is reported on a non-corner one-finger tap
+				0=No action, 1=Left Button, 2=Middle Button, 3=Right Button
+TapButton2		Int	Which mouse button is reported on a non-corner two-finger tap
+				0=No action, 1=Left Button, 2=Middle Button, 3=Right Button
+TapButton3		Int	Which mouse button is reported on a non-corner three-finger tap
+				0=No action, 1=Left Button, 2=Middle Button, 3=Right Button
 
 A tap event happens when the finger is touched and released in a time
 interval shorter than MaxTapTime, and the touch and release
