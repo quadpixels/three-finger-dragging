@@ -186,8 +186,8 @@ SetDeviceAndProtocol(LocalDevicePtr local)
     } else if (str_par && !strcmp(str_par, "psaux")) {
 	/* Already set up */
     } else { /* default to auto-dev */
-	/* We are trying to find the right eventX Device, or fall back to
-	   the psaux Protocol and the given Device from XF86Config */
+	/* We are trying to find the right eventX device or fall back to
+	   the psaux protocol and the given device from XF86Config */
 	int fd = -1;
 	int i;
 	for (i = 0; ; i++) {
