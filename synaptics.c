@@ -1277,9 +1277,12 @@ struct ScrollData {
 };
 
 static void
-start_coasting(SynapticsPrivate *priv, edge_type edge)
+start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw, edge_type edge)
 {
     SynapticsSHM *para = priv->synpara;
+
+    priv->autoscroll_y = 0.0;
+    priv->autoscroll_x = 0.0;
 
     if ((priv->scroll_packet_count > 3) && (para->coasting_speed > 0.0)) {
 	double pkt_time = (HIST(0).millis - HIST(3).millis) / 1000.0;
@@ -1289,22 +1292,24 @@ start_coasting(SynapticsPrivate *priv, edge_type edge)
 	    int sdelta = para->scroll_dist_vert;
 	    if ((edge & RIGHT_EDGE) && pkt_time > 0 && sdelta > 0) {
 		double scrolls_per_sec = dy / pkt_time / sdelta;
-		if (fabs(scrolls_per_sec) >= para->coasting_speed)
+		if (fabs(scrolls_per_sec) >= para->coasting_speed) {
 		    priv->autoscroll_yspd = scrolls_per_sec;
+		    priv->autoscroll_y = (hw->y - priv->scroll_y) / (double)sdelta;
+		}
 	    }
 	} else {
 	    double dx = estimate_delta(HIST(0).x, HIST(1).x, HIST(2).x, HIST(3).x);
 	    int sdelta = para->scroll_dist_horiz;
 	    if ((edge & BOTTOM_EDGE) && pkt_time > 0 && sdelta > 0) {
 		double scrolls_per_sec = dx / pkt_time / sdelta;
-		if (fabs(scrolls_per_sec) >= para->coasting_speed)
+		if (fabs(scrolls_per_sec) >= para->coasting_speed) {
 		    priv->autoscroll_xspd = scrolls_per_sec;
+		    priv->autoscroll_x = (hw->x - priv->scroll_x) / (double)sdelta;
+		}
 	    }
 	}
     }
     priv->scroll_packet_count = 0;
-    priv->autoscroll_y = 0.0;
-    priv->autoscroll_x = 0.0;
 }
 
 static int
@@ -1365,7 +1370,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	scroll_stop = TRUE;
     }
     if (scroll_stop) {
-	start_coasting(priv, edge);
+	start_coasting(priv, hw, edge);
 	priv->circ_scroll_on = FALSE;
 	priv->vert_scroll_on = FALSE;
 	priv->horiz_scroll_on = FALSE;
