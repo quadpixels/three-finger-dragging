@@ -75,9 +75,9 @@
 /* #define DEBUG */
 
 #ifdef DEBUG
-#define DBG(x) (x)
+#define PS2DBG(x) (x)
 #else
-#define DBG(x)
+#define PS2DBG(x)
 #endif
 
 /*****************************************************************************
@@ -93,13 +93,13 @@ ps2_getbyte(int fd, byte *b)
 {
     if (xf86WaitForInput(fd, 50000) > 0) {
 	if (xf86ReadSerial(fd, b, 1) != 1) {
-	    DBG(ErrorF("ps2_getbyte: No byte read\n"));
+	    PS2DBG(ErrorF("ps2_getbyte: No byte read\n"));
 	    return !Success;
 	}
-	DBG(ErrorF("ps2_getbyte: byte %02X read\n", *b));
+	PS2DBG(ErrorF("ps2_getbyte: byte %02X read\n", *b));
 	return Success;
     }
-    DBG(ErrorF("ps2_getbyte: timeout xf86WaitForInput\n"));
+    PS2DBG(ErrorF("ps2_getbyte: timeout xf86WaitForInput\n"));
     return !Success;
 }
 
@@ -112,16 +112,16 @@ ps2_putbyte(int fd, byte b)
     byte ack;
 
     if (xf86WriteSerial(fd, &b, 1) != 1) {
-	DBG(ErrorF("ps2_putbyte: error xf86WriteSerial\n"));
+	PS2DBG(ErrorF("ps2_putbyte: error xf86WriteSerial\n"));
 	return !Success;
     }
-    DBG(ErrorF("ps2_putbyte: byte %02X send\n", b));
+    PS2DBG(ErrorF("ps2_putbyte: byte %02X send\n", b));
     /* wait for an ACK */
     if (ps2_getbyte(fd, &ack) != Success) {
 	return !Success;
     }
     if (ack != PS2_ACK) {
-	DBG(ErrorF("ps2_putbyte: wrong acknowledge 0x%02x\n", ack));
+	PS2DBG(ErrorF("ps2_putbyte: wrong acknowledge 0x%02x\n", ack));
 	return !Success;
     }
     return Success;
@@ -158,7 +158,7 @@ ps2_special_cmd(int fd, byte cmd)
 static Bool
 ps2_send_cmd(int fd, byte c)
 {
-    DBG(ErrorF("send command: 0x%02X\n", c));
+    PS2DBG(ErrorF("send command: 0x%02X\n", c));
     return ps2_special_cmd(fd, c) || ps2_putbyte(fd, PS2_CMD_STATUS_REQUEST);
 }
 
@@ -181,8 +181,8 @@ ps2_getbyte_passthrough(int fd, byte *response)
 	;
     /* Do some sanity checking */
     if ((ack & 0xfc) != 0x84) {
-	DBG(ErrorF("ps2_getbyte_passthrough: expected 0x84 and got: %02x\n",
-		   ack & 0xfc));
+	PS2DBG(ErrorF("ps2_getbyte_passthrough: expected 0x84 and got: %02x\n",
+		      ack & 0xfc));
 	return !Success;
     }
 
@@ -190,8 +190,8 @@ ps2_getbyte_passthrough(int fd, byte *response)
     ps2_getbyte(fd, &ack);
     ps2_getbyte(fd, &ack);
     if ((ack & 0xcc) != 0xc4) {
-	DBG(ErrorF("ps2_getbyte_passthrough: expected 0xc4 and got: %02x\n",
-		   ack & 0xcc));
+	PS2DBG(ErrorF("ps2_getbyte_passthrough: expected 0xc4 and got: %02x\n",
+		      ack & 0xcc));
 	return !Success;
     }
     ps2_getbyte(fd, &ack);
@@ -211,7 +211,7 @@ ps2_putbyte_passthrough(int fd, byte c)
 
     ps2_getbyte_passthrough(fd, &ack);
     if (ack != PS2_ACK) {
-	DBG(ErrorF("ps2_putbyte_passthrough: wrong acknowledge 0x%02x\n", ack));
+	PS2DBG(ErrorF("ps2_putbyte_passthrough: wrong acknowledge 0x%02x\n", ack));
 	return !Success;
     }
     return Success;
@@ -227,7 +227,7 @@ ps2_putbyte_passthrough(int fd, byte c)
 Bool
 synaptics_set_mode(int fd, byte mode)
 {
-    DBG(ErrorF("set mode byte to: 0x%02X\n", mode));
+    PS2DBG(ErrorF("set mode byte to: 0x%02X\n", mode));
     return (ps2_special_cmd(fd, mode) ||
 	    ps2_putbyte(fd, PS2_CMD_SET_SAMPLE_RATE) ||
 	    ps2_putbyte(fd, 0x14));
@@ -242,23 +242,23 @@ synaptics_reset(int fd)
     byte r[2];
 
     xf86FlushInput(fd);
-    DBG(ErrorF("Reset the Touchpad...\n"));
+    PS2DBG(ErrorF("Reset the Touchpad...\n"));
     if (ps2_putbyte(fd, PS2_CMD_RESET) != Success) {
-	DBG(ErrorF("...failed\n"));
+	PS2DBG(ErrorF("...failed\n"));
 	return !Success;
     }
     xf86WaitForInput(fd, 4000000);
     if ((ps2_getbyte(fd, &r[0]) == Success) &&
 	(ps2_getbyte(fd, &r[1]) == Success)) {
 	if (r[0] == 0xAA && r[1] == 0x00) {
-	    DBG(ErrorF("...done\n"));
+	    PS2DBG(ErrorF("...done\n"));
 	    return Success;
 	} else {
-	    DBG(ErrorF("...failed. Wrong reset ack 0x%02x, 0x%02x\n", r[0], r[1]));
+	    PS2DBG(ErrorF("...failed. Wrong reset ack 0x%02x, 0x%02x\n", r[0], r[1]));
 	    return !Success;
 	}
     }
-    DBG(ErrorF("...failed\n"));
+    PS2DBG(ErrorF("...failed\n"));
     return !Success;
 }
 
@@ -271,12 +271,12 @@ SynapticsResetPassthrough(int fd)
     ps2_putbyte_passthrough(fd, 0xff);
     ps2_getbyte_passthrough(fd, &ack);
     if (ack != 0xaa) {
-	DBG(ErrorF("SynapticsResetPassthrough: ack was %02x not 0xaa\n", ack));
+	PS2DBG(ErrorF("SynapticsResetPassthrough: ack was %02x not 0xaa\n", ack));
 	return !Success;
     }
     ps2_getbyte_passthrough(fd, &ack);
     if (ack != 0x00) {
-	DBG(ErrorF("SynapticsResetPassthrough: ack was %02x not 0x00\n", ack));
+	PS2DBG(ErrorF("SynapticsResetPassthrough: ack was %02x not 0x00\n", ack));
 	return !Success;
     }
 
@@ -295,18 +295,18 @@ synaptics_model_id(int fd, struct synapticshw *synhw)
 {
     byte mi[3];
 
-    DBG(ErrorF("Read mode id...\n"));
+    PS2DBG(ErrorF("Read mode id...\n"));
 
     if ((ps2_send_cmd(fd, SYN_QUE_MODEL) == Success) &&
 	(ps2_getbyte(fd, &mi[0]) == Success) &&
 	(ps2_getbyte(fd, &mi[1]) == Success) &&
 	(ps2_getbyte(fd, &mi[2]) == Success)) {
 	synhw->model_id = (mi[0] << 16) | (mi[1] << 8) | mi[2];
-	DBG(ErrorF("mode-id %06X\n", *model_id));
-	DBG(ErrorF("...done.\n"));
+	PS2DBG(ErrorF("mode-id %06X\n", synhw->model_id));
+	PS2DBG(ErrorF("...done.\n"));
 	return Success;
     }
-    DBG(ErrorF("...failed.\n"));
+    PS2DBG(ErrorF("...failed.\n"));
     return !Success;
 }
 
@@ -319,7 +319,7 @@ synaptics_capability(int fd, struct synapticshw *synhw)
 {
     byte cap[3];
 
-    DBG(ErrorF("Read capabilites...\n"));
+    PS2DBG(ErrorF("Read capabilites...\n"));
 
     synhw->ext_cap = 0;
     if ((ps2_send_cmd(fd, SYN_QUE_CAPABILITIES) == Success) &&
@@ -327,7 +327,7 @@ synaptics_capability(int fd, struct synapticshw *synhw)
 	(ps2_getbyte(fd, &cap[1]) == Success) &&
 	(ps2_getbyte(fd, &cap[2]) == Success)) {
 	synhw->capabilities = (cap[0] << 16) | (cap[1] << 8) | cap[2];
-	DBG(ErrorF("capabilities %06X\n", synhw->capabilities));
+	PS2DBG(ErrorF("capabilities %06X\n", synhw->capabilities));
 	if (SYN_CAP_VALID(*synhw)) {
 	    if (SYN_EXT_CAP_REQUESTS(*synhw)) {
 		if ((ps2_send_cmd(fd, SYN_QUE_EXT_CAPAB) == Success) &&
@@ -335,17 +335,17 @@ synaptics_capability(int fd, struct synapticshw *synhw)
 		    (ps2_getbyte(fd, &cap[1]) == Success) &&
 		    (ps2_getbyte(fd, &cap[2]) == Success)) {
 		    synhw->ext_cap = (cap[0] << 16) | (cap[1] << 8) | cap[2];
-		    DBG(ErrorF("ext-capability %06X\n", synhw->ext_cap));
+		    PS2DBG(ErrorF("ext-capability %06X\n", synhw->ext_cap));
 		} else {
-		    DBG(ErrorF("synaptics says, that it has extended-capabilities, "
-			       "but I cannot read them."));
+		    PS2DBG(ErrorF("synaptics says, that it has extended-capabilities, "
+				  "but I cannot read them."));
 		}
 	    }
-	    DBG(ErrorF("...done.\n"));
+	    PS2DBG(ErrorF("...done.\n"));
 	    return Success;
 	}
     }
-    DBG(ErrorF("...failed.\n"));
+    PS2DBG(ErrorF("...failed.\n"));
     return !Success;
 }
 
@@ -358,7 +358,7 @@ synaptics_identify(int fd, struct synapticshw *synhw)
 {
     byte id[3];
 
-    DBG(ErrorF("Identify Touchpad...\n"));
+    PS2DBG(ErrorF("Identify Touchpad...\n"));
 
     synhw->identity = 0;
     if ((ps2_send_cmd(fd, SYN_QUE_IDENTIFY) == Success) &&
@@ -366,13 +366,13 @@ synaptics_identify(int fd, struct synapticshw *synhw)
 	(ps2_getbyte(fd, &id[1]) == Success) &&
 	(ps2_getbyte(fd, &id[2]) == Success)) {
 	synhw->identity = (id[0] << 16) | (id[1] << 8) | id[2];
-	DBG(ErrorF("ident %06X\n", synhw->identity));
+	PS2DBG(ErrorF("ident %06X\n", synhw->identity));
 	if (SYN_ID_IS_SYNAPTICS(*synhw)) {
-	    DBG(ErrorF("...done.\n"));
+	    PS2DBG(ErrorF("...done.\n"));
 	    return Success;
 	}
     }
-    DBG(ErrorF("...failed.\n"));
+    PS2DBG(ErrorF("...failed.\n"));
     return !Success;
 }
 
@@ -399,7 +399,7 @@ synaptics_read_mode(int fd, unsigned char *mode)
 {
     byte modes[3];
 
-    DBG(ErrorF("Read mode byte...\n"));
+    PS2DBG(ErrorF("Read mode byte...\n"));
 
     if ((ps2_send_cmd(fd, SYN_QUE_MODES) == Success) &&
 	(ps2_getbyte(fd, &modes[0]) == Success) &&
@@ -407,13 +407,13 @@ synaptics_read_mode(int fd, unsigned char *mode)
 	(ps2_getbyte(fd, &modes[2]) == Success)) {
 
 	*mode = modes[2];
-	DBG(ErrorF("modes byte %02X%02X%02X\n", modes[0], modes[1], modes[2]));
+	PS2DBG(ErrorF("modes byte %02X%02X%02X\n", modes[0], modes[1], modes[2]));
 	if ((modes[0] == 0x3B) && (modes[1] == 0x47)) {
-	    DBG(ErrorF("...done.\n"));
+	    PS2DBG(ErrorF("...done.\n"));
 	    return Success;
 	}
     }
-    DBG(ErrorF("...failed.\n"));
+    PS2DBG(ErrorF("...failed.\n"));
     return !Success;
 }
 
