@@ -45,11 +45,14 @@ DRIVER = synaptics
 	$(RM) $@
 	$(CC) -c $(CFLAGS) $(_NOOP_) $*.c
 
-all:: $(DRIVER)_drv.o synclient
+all:: $(DRIVER)_drv.o synclient syndaemon
 
-install: $(BINDIR)/synclient $(INSTALLED_X)/lib/modules/input/$(DRIVER)_drv.o
+install: $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/lib/modules/input/$(DRIVER)_drv.o
 
 $(BINDIR)/synclient : synclient
+	cp $< $@
+
+$(BINDIR)/syndaemon : syndaemon
 	cp $< $@
 
 $(INSTALLED_X)/lib/modules/input/$(DRIVER)_drv.o : $(DRIVER)_drv.o
@@ -65,15 +68,22 @@ synclient.o	: synclient.c
 synclient	: synclient.o
 	$(CC) -o $@ $< -lm
 
+syndaemon.o	: syndaemon.c
+	$(CC) $(CFLAGSCLIENT) -c -o $@ $<
+
+syndaemon	: syndaemon.o
+	$(CC) -o $@ $< -lm -L$(INSTALLED_X)/lib -lXext -lX11
+
 testprotokoll: testprotokoll.c
 	$(CC) -o testprotokoll testprotokoll.c
 
 synaptics.o : synaptics.h ps2comm.h linux_input.h
 ps2comm.o   : ps2comm.h
 synclient.o : synaptics.h
+syndeamon.o : synaptics.h
 
 clean::
-	$(RM) *.CKP *.ln *.BAK *.bak *.o core errs ,* *~ *.a .emacs_* tags TAGS make.log MakeOut synclient "#"*
+	$(RM) *.CKP *.ln *.BAK *.bak *.o core errs ,* *~ *.a .emacs_* tags TAGS make.log MakeOut synclient syndaemon "#"*
 
 tags::
 	etags -o TAGS *.c *.h
