@@ -1388,13 +1388,13 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
 			break;
 		case EV_ABS:
 			switch (ev.code) {
-			case 0x00:						/* ABS_X */
+			case ABS_X:
 				priv->hwState.x = ev.value;
 				break;
-			case 0x01:						/* ABS_Y */
+			case ABS_Y:
 				priv->hwState.y = ev.value;
 				break;
-			case 0x18:						/* ABS_PRESSURE */
+			case ABS_PRESSURE:
 				priv->hwState.z = ev.value;
 				break;
 			}
