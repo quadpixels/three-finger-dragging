@@ -13,14 +13,11 @@ SynapticsReadPacket(int fd)
 	int inSync = 0;
 	unsigned char pBuf[7], u;
 
-	while(read(fd,&u, 1) == 1)
-	{
-
+	while (read(fd,&u, 1) == 1) {
 		pBuf[count++] = u;
 
 		/* check first byte */
-		if((count == 1) && ((u & 0xC8) != 0x80))
-		{
+		if ((count == 1) && ((u & 0xC8) != 0x80)) {
 			inSync = 0;
 			count = 0;
 			printf("Synaptics driver lost sync at 1st byte\n");
@@ -28,23 +25,20 @@ SynapticsReadPacket(int fd)
 		}
 
 		/* check 4th byte */
-		if((count == 4) && ((u & 0xc8) != 0xc0))
-		{
+		if ((count == 4) && ((u & 0xc8) != 0xc0)) {
 			inSync = 0;
 			count = 0;
 			printf("Synaptics driver lost sync at 4th byte\n");
 			continue;
 		}
 
-		if(count >= 6)
-		{ /* Full packet received */
-			if(!inSync) {
+		if (count >= 6) { /* Full packet received */
+			if (!inSync) {
 				inSync = 1;
 				printf("Synaptics driver resynced.\n");
 			}
 			count = 0;
-			switch(outputformat)
-			{
+			switch (outputformat) {
 				case 1: printf("Paket:%02X-%02X-%02X-%02X-%02X-%02X\n",
 			       		pBuf[0], pBuf[1], pBuf[2], pBuf[3], pBuf[4], pBuf[5]);
 					break;
@@ -66,13 +60,12 @@ int main(int argc, char* argv[])
 {
 	int fd;
 
-	if(argc > 1)
+	if (argc > 1)
 		outputformat = atoi(argv[1]);
 
 
 	fd=open("/dev/psaux", O_RDONLY);
-	if(fd==-1)
-	{
+	if (fd == -1) {
 		printf("Error opening /dev/psaux\n");
 		exit(1);
 	}
