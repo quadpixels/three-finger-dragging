@@ -6,22 +6,22 @@ Author: Stefan Gmeiner <riddlebox@freesurf.ch>
 Requirements
 ------------
 
-- Using with kernel 2.4.x for x < 10 needs a kernel patch
-  (pc_keyb.c.diff.2.4.3).
+1. Using with kernel 2.4.x for x < 10 needs a kernel patch
+   (pc_keyb.c.diff.2.4.3).
 
-- For use with kernel 2.6.x you need to enable synaptics touchpad
-  support when configuring the kernel. (CONFIG_MOUSE_PS2 and
-  CONFIG_MOUSE_PS2_SYNAPTICS). You also need support for the evdev
-  interface (CONFIG_INPUT_EVDEV). If you compile evdev as a module,
-  make sure it is loaded before starting the X server, as it will not
-  be auto-loaded.
+2. For use with kernel 2.6.x you need to enable synaptics touchpad
+   support when configuring the kernel. (CONFIG_MOUSE_PS2 and
+   CONFIG_MOUSE_PS2_SYNAPTICS). You also need support for the evdev
+   interface (CONFIG_INPUT_EVDEV). If you compile evdev as a module,
+   make sure it is loaded before starting the X server, as it will not
+   be auto-loaded.
 
-- For use with an ALPS touchpad, you need to use a 2.6.x kernel and
-  apply the alps patch. See the README.alps file for more details.
+3. For use with an ALPS touchpad, you need to use a 2.6.x kernel and
+   apply the alps patch. See the README.alps file for more details.
 
-- To compile the syndaemon program, you need X include files. On RPM
-  based systems, they are usually included in the XFree86-devel
-  package.
+4. To compile the syndaemon program, you need X include files. On RPM
+   based systems, they are usually included in the XFree86-devel
+   package.
 
 Installing
 ----------
