@@ -21,15 +21,22 @@ Prérequis.
    noyau 2.6.x et appliquer le patch alps. Voyez le fichier README.alps 
    pour plus de détails.
 
+4. Pour compiler le programme "syndeamon", vous avez besoin des
+   fichiers "include" de X. Sur un système basé sur les paquetages RPM,
+   ils sont habituellement inclus dans le paquet "XFree86-devel".
+
 Installation.
 -------------
 
 1. Taper "make" pour créer le driver "synaptics_drv.o"
 
 2. Copier le driver "synaptics_drv.o" dans le répertoire de modules de 
-   XFree ex: "/usr/X11R6/lib/modules/input/".
-   Utiliser "make install" en tant que root qui fait celà à votre place 
-   si X est installé dans "/usr/X11R6/".
+   XFree qui est habituellement "/usr/X11R6/lib/modules/input/".
+   Utiliser "make install" en tant que root qui fait celà à votre place. 
+   Noter cependant que certaines distributions ont un chemin différent
+   vers le répertoire de modules. Par example, dans la distribution
+   Gentoo 1.4 (avec XFree86 4.3.0), le chemin correcte 
+   est "/usr/X11R6/lib/modules/drivers/".
 
 3. Charger le driver en ajoutant dans le fichier de configuration de
    XFree la ligne 'Load "synaptics"' dans la secion module.
