@@ -1094,8 +1094,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     priv->finger_flag = finger;
 
     /* generate a history of the absolute positions */
-    MOVE_HIST(0).y = hw->y;
     MOVE_HIST(0).x = hw->x;
+    MOVE_HIST(0).y = hw->y;
 
     /* Add guest device movements */
     dx += hw->guest_dx;
