@@ -332,7 +332,7 @@ SynapticsDisableDevice(int fd)
 Bool
 QueryIsSynaptics(int fd)
 {
-    unsigned long id;
+    unsigned long id = 0;
     int i;
 
     for (i = 0; i < 3; i++) {
