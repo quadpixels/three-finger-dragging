@@ -8,7 +8,7 @@ TopEdge			Int	coordinates for top edge
 BottomEdge		Int	coordinates for bottom edge
 FingerLow		Int	min. finger pressure after ending with movement
 FingerHigh		Int	max. finger pressure before beginning with movement
-MaxTapTime		Int	max. time (time of 1/80s) for detecting a tap
+MaxTapTime		Int	max. time (in milliseconds) for detecting a tap
 MaxTapMove		Int	max. movement of the finger for detecting a tap
 VertScrollDelta		Int	move-distance of the finger for a scroll event
 HorizScrollDelta	Int	move-distance of the finger for a scroll event
@@ -20,4 +20,4 @@ AccelFactor		Float	acceleration-factor
 UpDownScrolling		Bool	If on, the up/down buttons generate button 4/5 events.
 				If off, the up button generates a double click and
 				the down button generates a button 2 event.
-EmulateMidButtonTime	Int	max time (time of 1/80s) for middle button emulation.
+EmulateMidButtonTime	Int	max time (in milliseconds) for middle button emulation.

@@ -24,7 +24,8 @@ typedef struct _SynapticsSHM
 	int	left_edge, right_edge, top_edge, bottom_edge;
 										/* edge coordinates absolute */
 	int	finger_low, finger_high;		/* finger detection values in Z-values */
-	int	tap_time, tap_move;				/* max. tapping-time and movement in packets and coord. */
+	unsigned long tap_time;
+	int tap_move;						/* max. tapping-time and movement in packets and coord. */
 	int emulate_mid_button_time;		/* Max time between left and right button presses to
 										   emulate a middle button press. */
 	int	scroll_dist_vert;				/* Scrolling distance in absolute coordinates */
@@ -46,10 +47,11 @@ typedef struct _SynapticsSHM
  * A structure to describe the state of the touchpad hardware (buttons and pad)
  */
 struct SynapticsHwState {
-	int x;
-	int y;
-	int z;
-	int w;
+	int millis;								/* Timestamp in milliseconds */
+	int x;									/* X position of finger */
+	int y;									/* Y position of finger */
+	int z;									/* Finger pressure */
+	int w;									/* Finger width/finger count */
 	Bool left;
 	Bool right;
 	Bool up;
@@ -73,7 +75,7 @@ struct input_event {
 typedef struct _SynapticsTapRec 
 {
 	int x, y;
-	unsigned int packet;
+	unsigned int millis;
 } SynapticsTapRec;
 
 typedef struct _SynapticsMoveHist 
@@ -85,8 +87,9 @@ enum MidButtonEmulation {
 	MBE_OFF,							/* No button pressed */
 	MBE_LEFT,							/* Left button pressed, waiting for right button or timeout */
 	MBE_RIGHT,							/* Right button pressed, waiting for left button or timeout */
-	MBE_MID								/* Left and right buttons pressed, waiting for both buttons
+	MBE_MID,							/* Left and right buttons pressed, waiting for both buttons
 										   to be released */
+	MBE_TIMEOUT							/* Waiting for both buttons to be released. */
 };
 
 enum SynapticsProtocol {
@@ -112,6 +115,8 @@ typedef struct _SynapticsPrivateRec
 
 	Bool shm_config;					/* True when shared memory area allocated */
 
+	OsTimerPtr timer;				   /* for up/down-button repeat, tap processing, etc */
+
 	/* Data for normal processing */
 	XISBuffer *buffer;
 	unsigned char protoBuf[6];			/* Buffer for Packet */
@@ -120,14 +125,14 @@ typedef struct _SynapticsPrivateRec
 	int protoBufTail;
 	int fifofd;		 					/* fd for fifo */
 	SynapticsTapRec touch_on;			/* data when the touchpad is touched */
-	SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY];
-										/* movement history */
+	SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY]; /* movement history */
+	int move_hist_idx;					/* Most recent entry in move_hist[] */
+
 	int scroll_y;						/* last y-scroll position */
 	int scroll_x;						/* last x-scroll position */
-	unsigned int count_packet_finger;	/* packet counter with finger on the touchpad */
-	unsigned int count_packet;			/* packet counter */
-	unsigned int count_packet_tapping;	/* packet counter for tapping */
-	unsigned int count_button_delay;	/* button delay for 3rd button emulation */
+	unsigned long finger_millis;		/* Time when finger entered touchpad */
+	unsigned int tapping_millis;		/* packet counter for tapping */
+	unsigned int button_delay_millis;	/* button delay for 3rd button emulation */
 	unsigned int prev_up;				/* Previous up button value, for double click emulation */
 	Bool finger_flag;					/* previous finger */
 	Bool tap, drag, doubletap;			/* feature flags */
@@ -136,8 +141,8 @@ typedef struct _SynapticsPrivateRec
 	Bool horiz_scroll_on;				/* scrolling flag */
 	double frac_x, frac_y;				/* absoulte -> relative fraction */
 	enum MidButtonEmulation mid_emu_state;	/* emulated 3rd button */
-	OsTimerPtr repeat_timer;			/* for up/down-button repeat */
 	int repeatButtons;					/* buttons for repeat */
+	unsigned long nextRepeat;			/* Time when to trigger next auto repeat event */
 	int lastButtons;					/* last State of the buttons */
 	int finger_count;					/* tap counter for fingers */
 	int palm;							/* Set to true when palm detected, reset to false when
@@ -150,6 +155,7 @@ SynapticsPrivateRec, *SynapticsPrivatePtr;
 
 static Bool DeviceControl(DeviceIntPtr, int);
 static void ReadInput(LocalDevicePtr);
+static int HandleState(LocalDevicePtr, struct SynapticsHwState*);
 static int ControlProc(LocalDevicePtr, xDeviceCtl*);
 static void CloseProc(LocalDevicePtr);
 static int SwitchMode(ClientPtr, DeviceIntPtr, int);
@@ -159,13 +165,12 @@ static Bool DeviceInit(DeviceIntPtr);
 static Bool DeviceOn(DeviceIntPtr);
 static Bool DeviceOff(DeviceIntPtr);
 static Bool DeviceInit(DeviceIntPtr);
-static Bool SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivatePtr priv,
-								struct SynapticsHwState *hw);
-static Bool SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
-									struct SynapticsHwState *hw);
-static Bool SynapticsReadEvent(SynapticsPrivatePtr priv, struct input_event *ev);
-static Bool SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
-									struct SynapticsHwState *hw);
+static Bool SynapticsGetHwState(LocalDevicePtr, SynapticsPrivatePtr, struct SynapticsHwState*);
+static Bool SynapticsParseEventData(LocalDevicePtr, SynapticsPrivatePtr,
+									struct SynapticsHwState*);
+static Bool SynapticsReadEvent(SynapticsPrivatePtr, struct input_event*);
+static Bool SynapticsParseRawPacket(LocalDevicePtr, SynapticsPrivatePtr,
+									struct SynapticsHwState*);
 static Bool SynapticsGetPacket(LocalDevicePtr, SynapticsPrivatePtr);
 static void PrintIdent(SynapticsPrivatePtr);
 
