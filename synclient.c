@@ -102,9 +102,9 @@ show_hw_info(SynapticsSHM *synshm)
 	printf("    Capabilities = %08x\n", synshm->synhw.capabilities);
 	printf("    Identity     = %08x\n", synshm->synhw.identity);
     } else {
-	printf("    No touchpad found\n");
-	printf("    Do you use a newer kernel than 2.4?\n");
-	printf("    Then browse the messages or boot.msg for the hardware info\n");
+	printf("    Can't detect hardware properties.\n");
+	printf("    This is normal if you are running linux kernel 2.6.\n");
+	printf("    Check the kernel log for touchpad hardware information.\n");
     }
 }
 
