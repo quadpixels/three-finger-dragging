@@ -15,9 +15,9 @@ Contents
 --------------------------------------------------------------
 
 If you are using a 2.6 linux kernel, check the /proc/bus/input/devices
-file. The touchpad should be identified a "SynPS/2 Synaptics TouchPad"
+file. The touchpad must be identified a "SynPS/2 Synaptics TouchPad"
 or an "AlpsPS/2 ALPS TouchPad". If it is identified as a "PS/2 Generic
-Mouse", something is wrong.
+Mouse" or "PS/2 Synaptics TouchPad", something is wrong.
 
 Possible fixes:
 
@@ -34,7 +34,10 @@ Possible fixes:
    but can help when trying to figure out what's wrong.)
 
 4. Make sure your boot loader doesn't pass any parameter to the kernel
-   that disables mouse extensions. ("psmouse_proto=bare" for example)
+   that disables mouse extensions. ("psmouse_proto=bare" for example).
+   Alternatively, if psmouse is compiled as a module, make sure that
+   modprobe doesn't pass such parameters. Check /etc/modprobe.conf and
+   "rmmod psmouse; modprobe -v psmouse".
 
 If you run a 2.4 kernel or an non-linux kernel, the
 /proc/bus/input/devices file is not available, but the BIOS setting
