@@ -22,6 +22,10 @@ Requirements
    based systems, they are usually included in the XFree86-devel
    package.
 
+5. If you use XFree86 version 4.0 or 4.1, you will need the XFree86
+   source code to compile the driver. See the "How do I compile the
+   driver?" section in the FAQ in the README file for details.
+
 Installing
 ----------
 
