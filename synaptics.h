@@ -13,7 +13,8 @@ typedef struct _SynapticsSHM
     /* Current device state */
     int x, y;				    /* actual x, y coordinates */
     int z;				    /* pressure value */
-    int w;				    /* finger width value */
+    int numFingers;			    /* number of fingers */
+    int fingerWidth;			    /* finger width value */
     int left, right, up, down;		    /* left/right/up/down buttons */
 
     /* Probed hardware properties */
@@ -54,7 +55,11 @@ struct SynapticsHwState {
     int x;			/* X position of finger */
     int y;			/* Y position of finger */
     int z;			/* Finger pressure */
-    int w;			/* Finger width/finger count */
+    Bool oneFinger;
+    Bool twoFingers;
+    Bool threeFingers;
+    int fingerWidth;
+
     Bool left;
     Bool right;
     Bool up;
@@ -138,7 +143,10 @@ typedef struct _SynapticsPrivateRec
     int palm;				/* Set to true when palm detected, reset to false when
 					   palm/finger contact disappears */
     int prev_z;				/* previous z value, for palm detection */
-    int avg_w;				/* weighted average of previous w values */
+    int avg_width;			/* weighted average of previous fingerWidth values */
+
+    Bool swapY;				/* Swap Y coordinate direction. For compatibility
+					   with old 2.5/2.6 kernels. Will be removed. */
 }
 SynapticsPrivateRec, *SynapticsPrivatePtr;
 

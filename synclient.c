@@ -133,14 +133,15 @@ static void set_variables(SynapticsSHM* synshm, int argc, char* argv[], int firs
 
 static int is_equal(SynapticsSHM* s1, SynapticsSHM* s2)
 {
-    return ((s1->x     == s2->x) &&
-	    (s1->y     == s2->y) &&
-	    (s1->z     == s2->z) &&
-	    (s1->w     == s2->w) &&
-	    (s1->left  == s2->left) &&
-	    (s1->right == s2->right) &&
-	    (s1->up    == s2->up) &&
-	    (s1->down  == s2->down));
+    return ((s1->x           == s2->x) &&
+	    (s1->y           == s2->y) &&
+	    (s1->z           == s2->z) &&
+	    (s1->numFingers  == s2->numFingers) &&
+	    (s1->fingerWidth == s2->fingerWidth) &&
+	    (s1->left        == s2->left) &&
+	    (s1->right       == s2->right) &&
+	    (s1->up          == s2->up) &&
+	    (s1->down        == s2->down));
 }
 
 static void monitor(SynapticsSHM* synshm, int delay)
@@ -152,8 +153,9 @@ static void monitor(SynapticsSHM* synshm, int delay)
     while(1) {
 	SynapticsSHM cur = *synshm;
 	if (!is_equal(&old, &cur)) {
-	    printf("x:%4d y:%4d z:%3d w:%2d left:%d right:%d up:%d down:%d\n",
-		   cur.x, cur.y, cur.z, cur.w, cur.left, cur.right, cur.up, cur.down);
+	    printf("x:%4d y:%4d z:%3d f:%1d w:%2d left:%d right:%d up:%d down:%d\n",
+		   cur.x, cur.y, cur.z, cur.numFingers, cur.fingerWidth,
+		   cur.left, cur.right, cur.up, cur.down);
 	    old = cur;
 	}
 	usleep(delay * 1000);

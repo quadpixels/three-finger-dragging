@@ -75,6 +75,16 @@
  *	Local Variables and Types
  ****************************************************************************/
 
+/*
+ * The x/y limits are taken from the Synaptics TouchPad interfacing Guide,
+ * section 2.3.2, which says that they should be valid regardless of the
+ * actual size of the sensor.
+ */
+#define XMIN_NOMINAL 1472
+#define XMAX_NOMINAL 5472
+#define YMIN_NOMINAL 1408
+#define YMAX_NOMINAL 4448
+
 #define MAX_UNSYNC_PACKETS 10				/* i.e. 10 to 60 bytes */
 
 typedef enum {
@@ -541,9 +551,9 @@ edge_detection(SynapticsPrivatePtr priv, int x, int y)
     else if (x < priv->synpara->left_edge)
 	edge |= LEFT_EDGE;
 
-    if (y > priv->synpara->top_edge)
+    if (y < priv->synpara->top_edge)
 	edge |= TOP_EDGE;
-    else if (y < priv->synpara->bottom_edge)
+    else if (y > priv->synpara->bottom_edge)
 	edge |= BOTTOM_EDGE;
 
     return edge;
@@ -700,30 +710,30 @@ SynapticsDetectFinger(SynapticsPrivatePtr priv, struct SynapticsHwState* hw)
 
     /* palm detection */
     if (finger) {
-	if ((hw->z > 200) && (hw->w > 10))
+	if ((hw->z > 200) && (hw->fingerWidth > 10))
 	    priv->palm = TRUE;
     } else {
 	priv->palm = FALSE;
     }
     if (hw->x == 0)
-	priv->avg_w = 0;
+	priv->avg_width = 0;
     else
-	priv->avg_w += (hw->w - priv->avg_w + 1) / 2;
+	priv->avg_width += (hw->fingerWidth - priv->avg_width + 1) / 2;
     if (finger && !priv->finger_flag) {
-	int safe_w = MAX(hw->w, priv->avg_w);
-	if (hw->w < 2)
-	    finger = TRUE;				/* more than one finger -> not a palm */
-	else if ((safe_w < 6) && (priv->prev_z < para->finger_high))
-	    finger = TRUE;				/* thin finger, distinct touch -> not a palm */
-	else if ((safe_w < 7) && (priv->prev_z < para->finger_high / 2))
-	    finger = TRUE;				/* thin finger, distinct touch -> not a palm */
-	else if (hw->z > priv->prev_z + 1) /* z not stable, may be a palm */
+	int safe_width = MAX(hw->fingerWidth, priv->avg_width);
+	if (hw->twoFingers || hw->threeFingers)
+	    finger = TRUE;			/* more than one finger -> not a palm */
+	else if ((safe_width < 6) && (priv->prev_z < para->finger_high))
+	    finger = TRUE;			/* thin finger, distinct touch -> not a palm */
+	else if ((safe_width < 7) && (priv->prev_z < para->finger_high / 2))
+	    finger = TRUE;			/* thin finger, distinct touch -> not a palm */
+	else if (hw->z > priv->prev_z + 1)	/* z not stable, may be a palm */
 	    finger = FALSE;
-	else if (hw->z < priv->prev_z - 5) /* z not stable, may be a palm */
+	else if (hw->z < priv->prev_z - 5)	/* z not stable, may be a palm */
 	    finger = FALSE;
 	else if (hw->z > 200)			/* z too large -> probably palm */
 	    finger = FALSE;
-	else if (hw->w > 10)				/* w too large -> probably palm */
+	else if (hw->fingerWidth > 10)		/* finger width too large -> probably palm */
 	    finger = FALSE;
     }
     priv->prev_z = hw->z;
@@ -765,7 +775,15 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     para->x = hw->x;
     para->y = hw->y;
     para->z = hw->z;
-    para->w = hw->w;
+    if (hw->oneFinger)
+	para->numFingers = 1;
+    else if (hw->twoFingers)
+	para->numFingers = 2;
+    else if (hw->threeFingers)
+	para->numFingers = 3;
+    else
+	para->numFingers = 0;
+    para->fingerWidth = hw->fingerWidth;
     para->left = hw->left;
     para->right = hw->right;
     para->up = hw->up;
@@ -875,9 +893,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     if (finger && /* finger is on the surface */
 	(timeleft > 0)) /* tap time is not succeeded */
 	{ /* count fingers when reported */
-	    if ((hw->w == 0) && (priv->finger_count == 0))
+	    if (hw->twoFingers && (priv->finger_count == 0))
 		priv->finger_count = 2;
-	    if (hw->w == 1)
+	    if (hw->threeFingers)
 		priv->finger_count = 3;
 	}
     else
@@ -943,13 +961,13 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     scroll_up = 0;
     scroll_down = 0;
     if (priv->vert_scroll_on) {
-	/* + = up, - = down */
+	/* + = down, - = up */
 	while (hw->y - priv->scroll_y > para->scroll_dist_vert) {
-	    scroll_up++;
+	    scroll_down++;
 	    priv->scroll_y += para->scroll_dist_vert;
 	}
 	while (hw->y - priv->scroll_y < -para->scroll_dist_vert) {
-	    scroll_down++;
+	    scroll_up++;
 	    priv->scroll_y -= para->scroll_dist_vert;
 	}
     }
@@ -972,12 +990,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	!priv->finger_count && !priv->palm) {
 	delay = MIN(delay, 13);
 	if (priv->count_packet_finger > 3) { /* min. 3 packets */
-	    dy = (1 *
-		  (((MOVE_HIST(1).y + MOVE_HIST(2).y) / 2) -
-		   ((hw->y			+ MOVE_HIST(1).y) / 2)));
-	    dx = (-1 *
-		  (((MOVE_HIST(1).x + MOVE_HIST(2).x) / 2) -
-		   ((hw->x			+ MOVE_HIST(1).x) / 2)));
+	    dx = (hw->x - MOVE_HIST(2).x) / 2;
+	    dy = (hw->y - MOVE_HIST(2).y) / 2;
 
 	    if (priv->drag) {
 		if (edge & RIGHT_EDGE) {
@@ -1270,6 +1284,15 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
 	    case BTN_3:						/* multi-btn-3 */
 		priv->hwState.cbRight = (ev.value ? TRUE : FALSE);
 		break;
+	    case BTN_TOOL_FINGER:
+		priv->hwState.oneFinger = (ev.value ? TRUE : FALSE);
+		break;
+	    case BTN_TOOL_DOUBLETAP:
+		priv->hwState.twoFingers = (ev.value ? TRUE : FALSE);
+		break;
+	    case BTN_TOOL_TRIPLETAP:
+		priv->hwState.threeFingers = (ev.value ? TRUE : FALSE);
+		break;
 	    }
 	    break;
 	case EV_ABS:
@@ -1278,17 +1301,44 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
 		priv->hwState.x = ev.value;
 		break;
 	    case ABS_Y:
-		priv->hwState.y = ev.value;
+		if (priv->swapY) {
+		    priv->hwState.y = YMAX_NOMINAL + YMIN_NOMINAL - ev.value;
+		} else {
+		    priv->hwState.y = ev.value;
+		}
 		break;
 	    case ABS_PRESSURE:
 		priv->hwState.z = ev.value;
+		break;
+	    case ABS_TOOL_WIDTH:
+		priv->hwState.fingerWidth = ev.value;
 		break;
 	    }
 	    break;
 	case EV_MSC:
 	    switch (ev.code) {
 	    case MSC_GESTURE:
-		priv->hwState.w = ev.value;
+		priv->swapY = TRUE;
+		switch (ev.value) {
+		case 0:
+		    priv->hwState.oneFinger = FALSE;
+		    priv->hwState.twoFingers = TRUE;
+		    priv->hwState.threeFingers = FALSE;
+		    priv->hwState.fingerWidth = 5;
+		    break;
+		case 1:
+		    priv->hwState.oneFinger = FALSE;
+		    priv->hwState.twoFingers = FALSE;
+		    priv->hwState.threeFingers = TRUE;
+		    priv->hwState.fingerWidth = 5;
+		    break;
+		default:
+		    priv->hwState.oneFinger = TRUE;
+		    priv->hwState.twoFingers = FALSE;
+		    priv->hwState.threeFingers = FALSE;
+		    priv->hwState.fingerWidth = ev.value;
+		    break;
+		}
 		break;
 	    }
 	    break;
@@ -1320,6 +1370,7 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
     Bool ret = SynapticsGetPacket(local, priv);
     int newabs = SYN_MODEL_NEWABS(priv->model_id);
     unsigned char *buf;
+    int w;
 
     if (ret != Success)
 	return ret;
@@ -1335,9 +1386,9 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 		 buf[5]);
 
 	hw->z = buf[2];
-	hw->w = (((buf[0] & 0x30) >> 2) |
-		 ((buf[0] & 0x04) >> 1) |
-		 ((buf[3] & 0x04) >> 2));
+	w = (((buf[0] & 0x30) >> 2) |
+	     ((buf[0] & 0x04) >> 1) |
+	     ((buf[3] & 0x04) >> 2));
 
 	hw->left  = (buf[0] & 0x01) ? 1 : 0;
 	hw->right = (buf[0] & 0x02) ? 1 : 0;
@@ -1376,8 +1427,8 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 
 	hw->z = (((buf[0] & 0x30) << 2) |
 		 (buf[3] & 0x3F));
-	hw->w = (((buf[1] & 0x80) >> 4) |
-		 ((buf[0] & 0x04) >> 1));
+	w = (((buf[1] & 0x80) >> 4) |
+	     ((buf[0] & 0x04) >> 1));
 
 	hw->left  = (buf[0] & 0x01) ? 1 : 0;
 	hw->right = (buf[0] & 0x02) ? 1 : 0;
@@ -1385,6 +1436,14 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 	hw->down  = 0;
 	hw->cbLeft = hw->cbRight = hw->up = hw->down = FALSE;
     }
+
+    hw->y = YMAX_NOMINAL + YMIN_NOMINAL - hw->y;
+
+    hw->oneFinger = FALSE;
+    hw->twoFingers = FALSE;
+    hw->threeFingers = FALSE;
+    hw->fingerWidth = 0;
+
     if (hw->z > 0) {
 	int w_ok = 0;
 	/*
@@ -1393,16 +1452,31 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 	 * normal width.
 	 */
 	if (SYN_CAP_EXTENDED(priv->capabilities)) {
-	    if ((hw->w >= 0) && (hw->w <= 1)) {
+	    if ((w >= 0) && (w <= 1)) {
 		w_ok = SYN_CAP_MULTIFINGER(priv->capabilities);
-	    } else if (hw->w == 2) {
+	    } else if (w == 2) {
 		w_ok = SYN_MODEL_PEN(priv->model_id);
-	    } else if ((hw->w >= 4) && (hw->w <= 15)) {
+	    } else if ((w >= 4) && (w <= 15)) {
 		w_ok = SYN_CAP_PALMDETECT(priv->capabilities);
 	    }
 	}
 	if (!w_ok)
-	    hw->w = 5;
+	    w = 5;
+
+	switch (w) {
+	case 0:
+	    hw->twoFingers = TRUE;
+	    hw->fingerWidth = 5;
+	    break;
+	case 1:
+	    hw->threeFingers = TRUE;
+	    hw->fingerWidth = 5;
+	    break;
+	default:
+	    hw->oneFinger = TRUE;
+	    hw->fingerWidth = w;
+	    break;
+	}
     }
 
     priv->hwState = *hw;

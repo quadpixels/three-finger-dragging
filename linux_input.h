@@ -47,10 +47,14 @@ struct input_id {
 #define BTN_5			0x105
 #define BTN_6			0x106
 #define BTN_7			0x107
+#define BTN_TOOL_FINGER		0x145
+#define BTN_TOOL_DOUBLETAP	0x14d
+#define BTN_TOOL_TRIPLETAP	0x14e
 
 #define ABS_X			0x00
 #define ABS_Y			0x01
 #define ABS_PRESSURE		0x18
+#define ABS_TOOL_WIDTH		0x1c
 
 #define MSC_GESTURE		0x02
 
