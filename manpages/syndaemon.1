@@ -1,0 +1,28 @@
+.TH "syndaemon" "1" "0.12.3" "" ""
+.SH "NAME"
+.LP 
+syndaemon \- a program that monitors keyboard activity and disables the touchpad when the keyboard is being used.
+.SH "SYNTAX"
+.LP 
+syndaemon [\fI\-i idle\-time\fP]
+.SH "DESCRIPTION"
+.LP 
+Disabling the touchpad while typing avoids unwanted movements of the pointer that could lead to giving focus to the wrong window.
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-i\fR <\fIidle\-time\fP>
+How many seconds to wait after the last key press before enabling the touchpad. (default is 2s).
+.SH "ENVIRONMENT VARIABLES"
+.LP 
+.TP 
+\fBDISPLAY\fP
+Specifies the X server to contact.
+.SH "AUTHORS"
+.LP 
+Peter Osterlund <petero2@telia.com> and many others.
+.TP 
+This man page was written by Mattia Dongili <dongili@supereva.it>
+.SH "SEE ALSO"
+.LP 
+synclient(1)

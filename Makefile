@@ -11,6 +11,7 @@ TOP_INCLUDES = -I$(TOP) $(TOP_X_INCLUDES)
 
 INSTALLED_X = /usr/X11R6
 BINDIR = /usr/local/bin
+MANDIR = /usr/local/man/man1
 
 XF86SRC = $(SERVERSRC)/hw/xfree86
 XF86COMSRC = $(XF86SRC)/common
@@ -50,7 +51,15 @@ DRIVER = synaptics
 
 all:: $(DRIVER)_drv.o synclient syndaemon
 
-install: $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/lib/modules/input/$(DRIVER)_drv.o
+install: $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/lib/modules/input/$(DRIVER)_drv.o install-man
+
+install-man: $(MANDIR)/synclient.1 $(MANDIR)/syndaemon.1
+
+$(MANDIR)/synclient.1:
+	install -D manpages/synclient.1 $(DESTDIR)/$@
+
+$(MANDIR)/syndaemon.1:
+	install -D manpages/syndaemon.1 $(DESTDIR)/$@
 
 $(BINDIR)/synclient : synclient
 	cp $< $@
