@@ -69,14 +69,14 @@ enum SynapticsProtocol {
     SYN_PROTO_EVENT		/* Linux kernel event interface */
 };
 
-struct synapticshw;
+struct SynapticsHwInfo;
 struct CommData;
 
 struct SynapticsProtocolOperations {
     void (*DeviceOnHook)(LocalDevicePtr local);
     void (*DeviceOffHook)(LocalDevicePtr local);
-    Bool (*QueryHardware)(LocalDevicePtr local, struct synapticshw *synhw);
-    Bool (*ReadHwState)(LocalDevicePtr local, struct synapticshw *synhw,
+    Bool (*QueryHardware)(LocalDevicePtr local, struct SynapticsHwInfo *synhw);
+    Bool (*ReadHwState)(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 			struct CommData *comm, struct SynapticsHwState *hwRet);
     Bool (*autoDevProbe)(LocalDevicePtr local);
 };

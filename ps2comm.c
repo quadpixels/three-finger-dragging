@@ -294,7 +294,7 @@ SynapticsResetPassthrough(int fd)
  * see also SYN_MODEL_* macros
  */
 static Bool
-synaptics_model_id(int fd, struct synapticshw *synhw)
+synaptics_model_id(int fd, struct SynapticsHwInfo *synhw)
 {
     byte mi[3];
 
@@ -319,7 +319,7 @@ synaptics_model_id(int fd, struct synapticshw *synhw)
  * see also the SYN_CAP_* macros
  */
 static Bool
-synaptics_capability(int fd, struct synapticshw *synhw)
+synaptics_capability(int fd, struct SynapticsHwInfo *synhw)
 {
     byte cap[3];
 
@@ -359,7 +359,7 @@ synaptics_capability(int fd, struct synapticshw *synhw)
  * See also the SYN_ID_* macros
  */
 static Bool
-synaptics_identify(int fd, struct synapticshw *synhw)
+synaptics_identify(int fd, struct SynapticsHwInfo *synhw)
 {
     byte id[3];
 
@@ -397,7 +397,7 @@ SynapticsDisableDevice(int fd)
 static Bool
 QueryIsSynaptics(int fd)
 {
-    struct synapticshw synhw;
+    struct SynapticsHwInfo synhw;
     int i;
 
     for (i = 0; i < 3; i++) {
@@ -416,7 +416,7 @@ QueryIsSynaptics(int fd)
 }
 
 static void
-PrintIdent(const synapticshw_t *synhw)
+PrintIdent(const struct SynapticsHwInfo *synhw)
 {
     xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(*synhw));
     xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(*synhw),
@@ -464,7 +464,7 @@ PS2DeviceOffHook(LocalDevicePtr local)
 }
 
 static Bool
-PS2QueryHardware(LocalDevicePtr local, synapticshw_t *synhw)
+PS2QueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 {
     int mode;
 
@@ -521,7 +521,7 @@ PS2QueryHardware(LocalDevicePtr local, synapticshw_t *synhw)
  * Decide if the current packet stored in priv->protoBuf is valid.
  */
 static Bool
-PacketOk(synapticshw_t *synhw, struct CommData *comm)
+PacketOk(struct SynapticsHwInfo *synhw, struct CommData *comm)
 {
     unsigned char *buf = comm->protoBuf;
     int newabs = SYN_MODEL_NEWABS(*synhw);
@@ -550,7 +550,7 @@ PacketOk(synapticshw_t *synhw, struct CommData *comm)
 }
 
 static Bool
-SynapticsGetPacket(LocalDevicePtr local, synapticshw_t *synhw,
+SynapticsGetPacket(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 		   struct CommData *comm)
 {
     int count = 0;
@@ -610,7 +610,7 @@ SynapticsGetPacket(LocalDevicePtr local, synapticshw_t *synhw,
 }
 
 static Bool
-PS2ReadHwState(LocalDevicePtr local, synapticshw_t *synhw,
+PS2ReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 	       struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     int newabs = SYN_MODEL_NEWABS(*synhw);

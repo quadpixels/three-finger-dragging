@@ -50,7 +50,7 @@ EventDeviceOffHook(LocalDevicePtr local)
 }
 
 static Bool
-EventQueryHardware(LocalDevicePtr local, struct synapticshw *synhw)
+EventQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 {
     return TRUE;
 }
@@ -72,7 +72,7 @@ SynapticsReadEvent(struct CommData *comm, struct input_event *ev)
 }
 
 static Bool
-EventReadHwState(LocalDevicePtr local, struct synapticshw *synhw,
+EventReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 		 struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     struct input_event ev;
