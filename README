@@ -153,8 +153,7 @@ FAQ
     2.4.x kernel.
 
     When configuring the kernel, enable PS/2 mouse support
-    (CONFIG_MOUSE_PS2) and synaptics touchpad support
-    (CONFIG_MOUSE_PS2_SYNAPTICS).
+    (CONFIG_MOUSE_PS2).
 
 * It still doesn't work with a 2.6 kernel.
 
