@@ -1,3 +1,9 @@
+0.13.6 (2004-10-23)
+- Updated the ALPS patch for kernel 2.6.9.
+- Fixed detection of ALPS touchpads with signature 63 03 c8.
+- Some documentation updates.
+- Updated the compatibility list.
+
 0.13.5 (2004-08-07)
 - FreeBSD psm driver update. From Arne Schwabe.
 - Support for ALPS dualpoint touchpads (DELL Latitude CPx, DELL
