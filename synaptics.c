@@ -138,7 +138,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	LocalDevicePtr local;
 	SynapticsPrivatePtr priv;
 	XF86OptionPtr optList; 
-	char *s;
+	char *str_par;
 	int shmid;
 
 	/* allocate memory for SynaticsPrivateRec */
@@ -225,14 +225,14 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->synpara->scroll_dist_horiz = xf86SetIntOption(local->options, "HorizScrollDelta", 100);
 	priv->synpara->edge_motion_speed = xf86SetIntOption(local->options, "EdgeMotionSpeed", 40);
 	priv->synpara->repeater = xf86SetStrOption(local->options, "Repeater", NULL);
-	s = xf86FindOptionValue(local->options, "MinSpeed");
-	if((!s) || (xf86sscanf(s, "%lf", &priv->synpara->min_speed) != 1))
+	str_par = xf86FindOptionValue(local->options, "MinSpeed");
+	if((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->min_speed) != 1))
 		priv->synpara->min_speed=0.02;
-	s = xf86FindOptionValue(local->options, "MaxSpeed");
-	if((!s) || (xf86sscanf(s, "%lf", &priv->synpara->max_speed) != 1))
+	str_par = xf86FindOptionValue(local->options, "MaxSpeed");
+	if((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->max_speed) != 1))
 		priv->synpara->max_speed=0.18;
-	s = xf86FindOptionValue(local->options, "AccelFactor");
-	if((!s) || (xf86sscanf(s, "%lf", &priv->synpara->accl) != 1))
+	str_par = xf86FindOptionValue(local->options, "AccelFactor");
+	if((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->accl) != 1))
 		priv->synpara->accl=0.0015;
 
 	priv->buffer = XisbNew(local->fd, 200);
