@@ -1,3 +1,2 @@
 * Options to disable features (palm detection, edge scrolling, etc)
 * Use ftok to get shared memory ID.
-* Configurable left corner tap behavior.
