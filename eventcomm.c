@@ -147,6 +147,7 @@ EventReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 		else
 		    hw->numFingers = 0;
 		*hwRet = *hw;
+		hw->guest_dx = hw->guest_dy = 0;
 		return TRUE;
 	    }
 	case EV_KEY:
@@ -200,6 +201,12 @@ EventReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 	    case BTN_TOOL_TRIPLETAP:
 		comm->threeFingers = v;
 		break;
+	    case BTN_A:
+		hw->guest_left = v;
+		break;
+	    case BTN_B:
+		hw->guest_right = v;
+		break;
 	    }
 	    break;
 	case EV_ABS:
@@ -215,6 +222,16 @@ EventReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 		break;
 	    case ABS_TOOL_WIDTH:
 		hw->fingerWidth = ev.value;
+		break;
+	    }
+	    break;
+	case EV_REL:
+	    switch (ev.code) {
+	    case REL_X:
+		hw->guest_dx = ev.value;
+		break;
+	    case REL_Y:
+		hw->guest_dy = ev.value;
 		break;
 	    }
 	    break;

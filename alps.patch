@@ -1,30 +1,31 @@
-Hi,
 
-I lifted some code off tpconfig and merged it with Peter's/Neil's ALPS driver.
-The driver will try to auto-detect presence of an ALPS touchpad by issuing
-E6/E7 requests and matching responses with known ALPS signatures. It will
-also try disabling hardware tapping so taps could be controlled by either
-userspace drivers (X/GPM) or future version of mousedev (2.6.8 I hope will
-have it).
+This patch implements an ALPS touchpad driver with the following
+features:
 
-Please give it a try.
-  
--- 
-Dmitry
+* Dmitry Torokhov: The driver will try to auto-detect presence of an
+  ALPS touchpad by issuing E6/E7 requests and matching responses with
+  known ALPS signatures.
 
+* Dmitry Torokhov: It will also try disabling hardware tapping so taps
+  could be controlled by either userspace drivers (X/GPM) or future
+  version of mousedev (2.6.8 I hope will have it).
+
+* Alastair M. Robinson: Code to set absolute mode for DualPoint
+  touchpads found on Dell CPx machines. (Ported to the 2.6 kernel
+  driver by Peter Osterlund)
 
 ---
 
  linux-petero/drivers/input/mouse/Makefile       |    2 
- linux-petero/drivers/input/mouse/alps.c         |  359 ++++++++++++++++++++++++
- linux-petero/drivers/input/mouse/alps.h         |   17 +
+ linux-petero/drivers/input/mouse/alps.c         |  417 ++++++++++++++++++++++++
+ linux-petero/drivers/input/mouse/alps.h         |   17 
  linux-petero/drivers/input/mouse/psmouse-base.c |   24 +
  linux-petero/drivers/input/mouse/psmouse.h      |    4 
- 5 files changed, 404 insertions(+), 2 deletions(-)
+ 5 files changed, 462 insertions(+), 2 deletions(-)
 
 diff -puN drivers/input/mouse/Makefile~alps drivers/input/mouse/Makefile
---- linux/drivers/input/mouse/Makefile~alps	2004-07-21 17:24:22.499256904 +0200
-+++ linux-petero/drivers/input/mouse/Makefile	2004-07-21 17:24:22.504256144 +0200
+--- linux/drivers/input/mouse/Makefile~alps	2004-07-30 23:12:35.759062064 +0200
++++ linux-petero/drivers/input/mouse/Makefile	2004-07-30 23:12:35.765061152 +0200
 @@ -14,4 +14,4 @@ obj-$(CONFIG_MOUSE_PS2)		+= psmouse.o
  obj-$(CONFIG_MOUSE_SERIAL)	+= sermouse.o
  obj-$(CONFIG_MOUSE_VSXXXAA)	+= vsxxxaa.o
@@ -33,8 +34,8 @@ diff -puN drivers/input/mouse/Makefile~alps drivers/input/mouse/Makefile
 +psmouse-objs  := psmouse-base.o alps.o logips2pp.o synaptics.o
 diff -puN /dev/null drivers/input/mouse/alps.c
 --- /dev/null	2004-02-23 22:02:56.000000000 +0100
-+++ linux-petero/drivers/input/mouse/alps.c	2004-07-21 17:24:22.504256144 +0200
-@@ -0,0 +1,359 @@
++++ linux-petero/drivers/input/mouse/alps.c	2004-07-30 23:12:48.765084848 +0200
+@@ -0,0 +1,417 @@
 +/*
 + * ALPS touchpad PS/2 mouse driver
 + *
@@ -120,9 +121,38 @@ diff -puN /dev/null drivers/input/mouse/alps.c
 +
 +	input_regs(dev, regs);
 +
++	if ((packet[0] & 0xc8) == 0x08) {   /* 3-byte PS/2 packet */
++		x = packet[1];
++		if (packet[0] & 0x10)
++			x = x - 256;
++		y = packet[2];
++		if (packet[0] & 0x20)
++			y = y - 256;
++		left  = (packet[0]     ) & 1;
++		right = (packet[0] >> 1) & 1;
++
++		input_report_rel(dev, REL_X, x);
++		input_report_rel(dev, REL_Y, -y);
++		input_report_key(dev, BTN_A, left);
++		input_report_key(dev, BTN_B, right);
++		input_sync(dev);
++		return;
++	}
++
 +	x = (packet[1] & 0x7f) | ((packet[2] & 0x78)<<(7-3));
 +	y = (packet[4] & 0x7f) | ((packet[3] & 0x70)<<(7-4));
 +	z = packet[5];
++
++	if (z == 127) {	/* DualPoint stick is relative, not absolute */
++		if (x > 383)
++			x = x - 768;
++		if (y > 255)
++			y = y - 512;
++		input_report_rel(dev, REL_X, x);
++		input_report_rel(dev, REL_Y, -y);
++		input_sync(dev);
++		return;
++	}
 +
 +	if (z > 30) input_report_key(dev, BTN_TOUCH, 1);
 +	if (z < 25) input_report_key(dev, BTN_TOUCH, 0);
@@ -163,6 +193,14 @@ diff -puN /dev/null drivers/input/mouse/alps.c
 +
 +static psmouse_ret_t alps_process_byte(struct psmouse *psmouse, struct pt_regs *regs)
 +{
++	if ((psmouse->packet[0] & 0xc8) == 0x08) { /* PS/2 packet */
++		if (psmouse->pktcnt == 3) {
++			alps_process_packet(psmouse, regs);
++			return PSMOUSE_FULL_PACKET;
++		}
++		return PSMOUSE_GOOD_DATA;
++	}
++
 +	/* ALPS absolute mode packets start with 0b11111mrl */
 +	if ((psmouse->packet[0] & 0xf8) != 0xf8)
 +		return PSMOUSE_BAD_DATA;
@@ -226,7 +264,29 @@ diff -puN /dev/null drivers/input/mouse/alps.c
 +	return -1;
 +}
 +
-+static int alps_absolute_mode(struct psmouse *psmouse)
++/*
++ * For DualPoint devices select the device that should respond to
++ * subsequent commands. It looks like glidepad is behind stickpointer,
++ * I'd thought it would be other way around...
++ */
++static int alps_passthrough_mode(struct psmouse *psmouse, int enable)
++{
++	unsigned char param[3];
++	int cmd = enable ? PSMOUSE_CMD_SETSCALE21 : PSMOUSE_CMD_SETSCALE11;
++
++	if (psmouse_command(psmouse, NULL, cmd) ||
++	    psmouse_command(psmouse, NULL, cmd) ||
++	    psmouse_command(psmouse, NULL, cmd) ||
++	    psmouse_command(psmouse, NULL, PSMOUSE_CMD_DISABLE))
++		return -1;
++
++	/* we may get 3 more bytes, just ignore them */
++	psmouse_command(psmouse, param, 0x0300);
++
++	return 0;
++}
++
++static int alps_magic_knock(struct psmouse *psmouse)
 +{
 +	/* Try ALPS magic knock - 4 disable before enable */
 +	if (psmouse_command(psmouse, NULL, PSMOUSE_CMD_DISABLE) ||
@@ -234,6 +294,25 @@ diff -puN /dev/null drivers/input/mouse/alps.c
 +	    psmouse_command(psmouse, NULL, PSMOUSE_CMD_DISABLE) ||
 +	    psmouse_command(psmouse, NULL, PSMOUSE_CMD_DISABLE) ||
 +	    psmouse_command(psmouse, NULL, PSMOUSE_CMD_ENABLE))
++		return -1;
++	return 0;
++}
++
++static int alps_absolute_mode(struct psmouse *psmouse)
++{
++	if (psmouse_command(psmouse, NULL, PSMOUSE_CMD_RESET_DIS))
++		return -1;
++
++	if (alps_passthrough_mode(psmouse, 1))
++		return -1;
++
++	if (alps_magic_knock(psmouse))
++		return -1;
++
++	if (alps_passthrough_mode(psmouse, 0))
++		return -1;
++
++	if (alps_magic_knock(psmouse))
 +		return -1;
 +
 +	/*
@@ -258,29 +337,7 @@ diff -puN /dev/null drivers/input/mouse/alps.c
 +}
 +
 +/*
-+ * For DualPint devices select the device that should respond to
-+ * subsequent commands. It looks like glidepad is behind stickpointer,
-+ * I'd thought it would be other way around...
-+ */
-+static int alps_passthrough_mode(struct psmouse *psmouse, int enable)
-+{
-+	unsigned char param[3];
-+	int cmd = enable ? PSMOUSE_CMD_SETSCALE21 : PSMOUSE_CMD_SETSCALE11;
-+
-+	if (psmouse_command(psmouse, NULL, cmd) ||
-+	    psmouse_command(psmouse, NULL, cmd) ||
-+	    psmouse_command(psmouse, NULL, cmd) ||
-+	    psmouse_command(psmouse, NULL, PSMOUSE_CMD_DISABLE))
-+		return -1;
-+
-+	/* we may get 3 more bytes, just ignore them */
-+	psmouse_command(psmouse, param, 0x0300);
-+
-+	return 0;
-+}
-+
-+/*
-+ * Turn touchpad tappinig on or off. The sequence are:
++ * Turn touchpad tapping on or off. The sequences are:
 + * 0xE9 0xF5 0xF5 0xF3 0x0A to enable,
 + * 0xE9 0xF5 0xF5 0xE8 0x00 to disable.
 + * My guess that 0xE9 (GetInfo) is here as a sync point.
@@ -368,9 +425,11 @@ diff -puN /dev/null drivers/input/mouse/alps.c
 +		return -1;
 +	}
 +
-+	psmouse->dev.evbit[LONG(EV_REL)] &= ~BIT(EV_REL);
-+	psmouse->dev.relbit[LONG(REL_X)] &= ~BIT(REL_X);
-+	psmouse->dev.relbit[LONG(REL_X)] &= ~BIT(REL_X);
++	psmouse->dev.evbit[LONG(EV_REL)] |= BIT(EV_REL);
++	psmouse->dev.relbit[LONG(REL_X)] |= BIT(REL_X);
++	psmouse->dev.relbit[LONG(REL_Y)] |= BIT(REL_Y);
++	psmouse->dev.keybit[LONG(BTN_A)] |= BIT(BTN_A);
++	psmouse->dev.keybit[LONG(BTN_B)] |= BIT(BTN_B);
 +
 +	psmouse->dev.evbit[LONG(EV_ABS)] |= BIT(EV_ABS);
 +	input_set_abs_params(&psmouse->dev, ABS_X, 0, 0, 0, 0);
@@ -396,7 +455,7 @@ diff -puN /dev/null drivers/input/mouse/alps.c
 +
 diff -puN /dev/null drivers/input/mouse/alps.h
 --- /dev/null	2004-02-23 22:02:56.000000000 +0100
-+++ linux-petero/drivers/input/mouse/alps.h	2004-07-21 17:24:22.504256144 +0200
++++ linux-petero/drivers/input/mouse/alps.h	2004-07-30 23:12:35.766061000 +0200
 @@ -0,0 +1,17 @@
 +/*
 + * ALPS touchpad PS/2 mouse driver
@@ -416,8 +475,8 @@ diff -puN /dev/null drivers/input/mouse/alps.h
 +
 +#endif
 diff -puN drivers/input/mouse/psmouse-base.c~alps drivers/input/mouse/psmouse-base.c
---- linux/drivers/input/mouse/psmouse-base.c~alps	2004-07-21 17:24:22.500256752 +0200
-+++ linux-petero/drivers/input/mouse/psmouse-base.c	2004-07-21 17:24:22.505255992 +0200
+--- linux/drivers/input/mouse/psmouse-base.c~alps	2004-07-30 23:12:35.761061760 +0200
++++ linux-petero/drivers/input/mouse/psmouse-base.c	2004-07-30 23:12:35.766061000 +0200
 @@ -2,6 +2,7 @@
   * PS/2 mouse driver
   *
@@ -471,8 +530,8 @@ diff -puN drivers/input/mouse/psmouse-base.c~alps drivers/input/mouse/psmouse-ba
  
  		if (set_properties) {
 diff -puN drivers/input/mouse/psmouse.h~alps drivers/input/mouse/psmouse.h
---- linux/drivers/input/mouse/psmouse.h~alps	2004-07-21 17:24:22.501256600 +0200
-+++ linux-petero/drivers/input/mouse/psmouse.h	2004-07-21 17:24:22.505255992 +0200
+--- linux/drivers/input/mouse/psmouse.h~alps	2004-07-30 23:12:35.762061608 +0200
++++ linux-petero/drivers/input/mouse/psmouse.h	2004-07-30 23:12:35.767060848 +0200
 @@ -2,13 +2,16 @@
  #define _PSMOUSE_H
  
