@@ -82,7 +82,7 @@ typedef enum {
 #define MIN(a, b) (((a)<(b))?(a):(b))
 #define TIME_DIFF(a, b) ((long)((a)-(b)))
 
-#define VERSION "0.11.3p4"
+#define VERSION "0.11.3p5"
 
 /*****************************************************************************
  * Forward declaration
@@ -521,8 +521,6 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 	hw.millis = now;
 	delay = HandleState(local, &hw);
 
-    xf86UnblockSIGIO (sigstate);
-
 	/*
 	 * Workaround for wraparound bug in the TimerSet function. This bug is already
 	 * fixed in CVS, but this driver needs to work with XFree86 versions 4.2.x and
@@ -533,6 +531,8 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 		wakeUpTime = 0xffffffffL;
 
 	priv->timer = TimerSet(priv->timer, TimerAbsolute, wakeUpTime, timerFunc, local);
+
+	xf86UnblockSIGIO (sigstate);
 
     return 0;
 }
@@ -930,7 +930,6 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 		delay = MIN(delay, 13);
 		if (priv->count_packet_finger > 3)
 		{ /* min. 3 packets */
-			delay = MIN(delay, 13);
 
 			dy = (1 * 
 				  (((MOVE_HIST(1).y + MOVE_HIST(2).y) / 2) - 
