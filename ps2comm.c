@@ -140,11 +140,11 @@ ps2_special_cmd(int fd, byte cmd)
     /* initialize with 'inert' command */
     if (ps2_putbyte(fd, PS2_CMD_SET_SCALING_1_1) == Success)
 	/* send 4x 2-bits with set resolution command */
-	for (i=0; i<4; i++) {
+	for (i = 0; i < 4; i++) {
 	    if (((ps2_putbyte(fd, PS2_CMD_SET_RESOLUTION)) != Success) ||
-		((ps2_putbyte(fd, (cmd>>6)&0x3) != Success)))
+		((ps2_putbyte(fd, (cmd >> 6) & 0x3) != Success)))
 		return !Success;
-	    cmd<<=2;
+	    cmd <<= 2;
 	}
     else
 	return !Success;
@@ -181,7 +181,7 @@ ps2_getbyte_passthrough(int fd, byte *response)
     /* Do some sanity checking */
     if ((ack & 0xfc) != 0x84) {
 	DBG(ErrorF("ps2_getbyte_passthrough: expected 0x84 and got: %02x\n",
-		   (ack & 0xfc)));
+		   ack & 0xfc));
 	return !Success;
     }
 
@@ -190,7 +190,7 @@ ps2_getbyte_passthrough(int fd, byte *response)
     ps2_getbyte(fd, &ack);
     if ((ack & 0xcc) != 0xc4) {
 	DBG(ErrorF("ps2_getbyte_passthrough: expected 0xc4 and got: %02x\n",
-		   (ack & 0xcc)));
+		   ack & 0xcc));
 	return !Success;
     }
     ps2_getbyte(fd, &ack);
@@ -300,7 +300,7 @@ synaptics_model_id(int fd, unsigned long int *model_id)
 	(ps2_getbyte(fd, &mi[0]) == Success) &&
 	(ps2_getbyte(fd, &mi[1]) == Success) &&
 	(ps2_getbyte(fd, &mi[2]) == Success)) {
-	*model_id = (mi[0]<<16) | (mi[1]<<8) | mi[2];
+	*model_id = (mi[0] << 16) | (mi[1] << 8) | mi[2];
 	DBG(ErrorF("mode-id %06X\n", *model_id));
 	DBG(ErrorF("...done.\n"));
 	return Success;
@@ -325,7 +325,7 @@ synaptics_capability(int fd, unsigned long int *capability, unsigned long int *e
 	(ps2_getbyte(fd, &cap[0]) == Success) &&
 	(ps2_getbyte(fd, &cap[1]) == Success) &&
 	(ps2_getbyte(fd, &cap[2]) == Success)) {
-	*capability = (cap[0]<<16) | (cap[1]<<8) | cap[2];
+	*capability = (cap[0] << 16) | (cap[1] << 8) | cap[2];
 	DBG(ErrorF("capability %06X\n", *capability));
 	if (SYN_CAP_VALID(*capability)) {
 	    if (SYN_EXT_CAP_REQUESTS(*capability)) {
@@ -333,7 +333,7 @@ synaptics_capability(int fd, unsigned long int *capability, unsigned long int *e
 		    (ps2_getbyte(fd, &cap[0]) == Success) &&
 		    (ps2_getbyte(fd, &cap[1]) == Success) &&
 		    (ps2_getbyte(fd, &cap[2]) == Success)) {
-		    *ext_capab = (cap[0]<<16) | (cap[1]<<8) | cap[2];
+		    *ext_capab = (cap[0] << 16) | (cap[1] << 8) | cap[2];
 		    DBG(ErrorF("ext-capability %06X\n", *ext_capab));
 		} else {
 		    DBG(ErrorF("synaptics says, that it has extended-capabilities, "
@@ -363,7 +363,7 @@ synaptics_identify(int fd, unsigned long int *ident)
 	(ps2_getbyte(fd, &id[0]) == Success) &&
 	(ps2_getbyte(fd, &id[1]) == Success) &&
 	(ps2_getbyte(fd, &id[2]) == Success)) {
-	*ident = (id[0]<<16) | (id[1]<<8) | id[2];
+	*ident = (id[0] << 16) | (id[1] << 8) | id[2];
 	DBG(ErrorF("ident %06X\n", *ident));
 	if (SYN_ID_IS_SYNAPTICS(*ident)) {
 	    DBG(ErrorF("...done.\n"));
