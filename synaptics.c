@@ -313,6 +313,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->tap_move = xf86SetIntOption(local->options, "MaxTapMove", 220);
     pars->tap_time_2 = xf86SetIntOption(local->options, "MaxDoubleTapTime", 180);
     pars->click_time = xf86SetIntOption(local->options, "ClickTime", 100);
+    pars->fast_taps = xf86SetIntOption(local->options, "FastTaps", FALSE);
     pars->emulate_mid_button_time = xf86SetIntOption(local->options,
 							      "EmulateMidButtonTime", 75);
     pars->scroll_dist_vert = xf86SetIntOption(local->options, "VertScrollDelta", 100);
@@ -907,6 +908,7 @@ SelectTapButton(SynapticsPrivate *priv, edge_type edge)
 static void
 SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
 {
+    SynapticsSHM *para = priv->synpara;
     DBG(7, ErrorF("SetTapState - %d -> %d (millis:%d)\n", priv->tap_state, tap_state, millis));
     switch (tap_state) {
     case TS_START:
@@ -914,7 +916,14 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
 	priv->tap_max_fingers = 0;
 	break;
     case TS_1:
+	priv->tap_button_state = TBS_BUTTON_UP;
+	break;
     case TS_2A:
+	if (para->fast_taps)
+	    priv->tap_button_state = TBS_BUTTON_DOWN;
+	else 
+	    priv->tap_button_state = TBS_BUTTON_UP;
+	break;
     case TS_2B:
 	priv->tap_button_state = TBS_BUTTON_UP;
 	break;
@@ -922,7 +931,10 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
 	priv->tap_button_state = TBS_BUTTON_DOWN;
 	break;
     case TS_SINGLETAP:
-	priv->tap_button_state = TBS_BUTTON_DOWN;
+	if (para->fast_taps)
+	    priv->tap_button_state = TBS_BUTTON_UP;
+	else 
+	    priv->tap_button_state = TBS_BUTTON_DOWN;
 	priv->touch_on.millis = millis;
 	break;
     default:

@@ -52,6 +52,7 @@ typedef struct _SynapticsSHM
     int tap_move;			    /* max. tapping time and movement in packets and coord. */
     unsigned long tap_time_2;		    /* max. tapping time for double taps */
     unsigned long click_time;		    /* The duration of a single click */
+    Bool fast_taps;			    /* Faster reaction to single taps */
     int emulate_mid_button_time;	    /* Max time between left and right button presses to
 					       emulate a middle button press. */
     int	scroll_dist_vert;		    /* Scrolling distance in absolute coordinates */
