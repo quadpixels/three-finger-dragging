@@ -14,7 +14,6 @@
 /* synaptics model ID bits */
 #define SYN_MODEL_ROT180(synhw) 	((synhw).model_id & (1 << 23))
 #define SYN_MODEL_PORTRAIT(synhw)	((synhw).model_id & (1 << 22))
-#define SYN_CAP_MIDDLE_BUTTON(synhw)	((synhw).model_id & (1 << 18))
 #define SYN_MODEL_SENSOR(synhw)		(((synhw).model_id >> 16) & 0x3f)
 #define SYN_MODEL_HARDWARE(synhw)	(((synhw).model_id >> 9) & 0x7f)
 #define SYN_MODEL_NEWABS(synhw)		((synhw).model_id & (1 << 7))
@@ -24,6 +23,7 @@
 
 /* synaptics capability bits */
 #define SYN_CAP_EXTENDED(synhw)		((synhw).capabilities & (1 << 23))
+#define SYN_CAP_MIDDLE_BUTTON(synhw)	((synhw).capabilities & (1 << 18))
 #define SYN_CAP_PASSTHROUGH(synhw)	((synhw).capabilities & (1 << 7))
 #define SYN_CAP_SLEEP(synhw)		((synhw).capabilities & (1 << 4))
 #define SYN_CAP_FOUR_BUTTON(synhw)	((synhw).capabilities & (1 << 3))
