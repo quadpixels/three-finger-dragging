@@ -66,13 +66,32 @@ event_query_is_synaptics(int fd)
 }
 
 static Bool
+event_query_is_alps(int fd)
+{
+    struct input_id id;
+    int ret;
+
+    SYSCALL(ret = ioctl(fd, EVIOCGID, &id));
+    if (ret >= 0) {
+	if ((id.bustype == BUS_I8042) &&
+	    (id.vendor == 0x0002) &&
+	    (id.product == PSMOUSE_ALPS)) {
+	    return TRUE;
+	}
+    }
+
+    return FALSE;
+}
+
+static Bool
 EventQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 {
-    /* is the synaptics touchpad active? */
-    if (!event_query_is_synaptics(local->fd))
-	return FALSE;
+    if (event_query_is_synaptics(local->fd))
+	xf86Msg(X_PROBED, "%s synaptics touchpad found\n", local->name);
+    else if (event_query_is_alps(local->fd))
+	xf86Msg(X_PROBED, "%s ALPS touchpad found\n", local->name);
 
-    xf86Msg(X_PROBED, "%s synaptics touchpad found\n", local->name);
+    /* Always return true. The device could be an ALPS touchpad in disguise. */
     return TRUE;
 }
 
@@ -202,7 +221,7 @@ EventAutoDevProbe(LocalDevicePtr local)
     for (i = 0; ; i++) {
 	char fname[64];
 	int fd = -1;
-	Bool is_synaptics;
+	Bool is_touchpad;
 
 	sprintf(fname, "%s/%s%d", DEV_INPUT_EVENT, EVENT_DEV_NAME, i);
 	SYSCALL(fd = open(fname, O_RDONLY));
@@ -214,10 +233,11 @@ EventAutoDevProbe(LocalDevicePtr local)
 	    }
 	}
 	have_evdev = TRUE;
-	is_synaptics = event_query_is_synaptics(fd);
+	is_touchpad = (event_query_is_synaptics(fd) ||
+		       event_query_is_alps(fd));
 	SYSCALL(close(fd));
-	if (is_synaptics) {
-	    xf86Msg(X_PROBED, "%s auto-dev sets Synaptics Device to %s\n",
+	if (is_touchpad) {
+	    xf86Msg(X_PROBED, "%s auto-dev sets device to %s\n",
 		    local->name, fname);
 	    xf86ReplaceStrOption(local->options, "Device", fname);
 	    return TRUE;

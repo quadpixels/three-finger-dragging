@@ -64,6 +64,7 @@ struct input_id {
 #define BUS_I8042		0x11
 
 #define PSMOUSE_SYNAPTICS 	7
+#define PSMOUSE_ALPS 		8
 
 
 #endif /* _LINUX_INPUT_H_ */
