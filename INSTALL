@@ -100,7 +100,8 @@ Section "ServerLayout"
    environment. All local users can change the parameters at any
    time.
 
-If you can't get the driver working, mail the logfiles and the
-configuration file to petero2@telia.com. If you use a 2.6.x linux
+If you can't get the driver working, check the trouble-shooting.txt
+file for common problems. If that doesn't help, mail the logfiles and
+the configuration file to petero2@telia.com. If you use a 2.6.x linux
 kernel, also mail the output from dmesg and the output from
 "cat /proc/bus/input/devices".

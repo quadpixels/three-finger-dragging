@@ -129,7 +129,7 @@ distribution : synaptics-$(VERSION).tar.bz2
 
 ALLFILES = COMPATIBILITY FILES INSTALL INSTALL.DE INSTALL.FR LICENSE Makefile \
 	NEWS README README.alps TODO Xincludes/ alps.patch linux_input.h \
-	pc_keyb.c.diff.2.4.3 \
+	pc_keyb.c.diff.2.4.3 trouble-shooting.txt \
 	synproto.h ps2comm.c ps2comm.h eventcomm.c eventcomm.h alpscomm.c alpscomm.h \
 	psmcomm.c psmcomm.h freebsd_mouse.h \
 	synaptics.c synaptics.h synaptics.spec \

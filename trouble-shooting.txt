@@ -1,0 +1,130 @@
+Trouble-shooting guide
+----------------------
+
+Contents
+--------
+
+1. Check that the touchpad is correctly detected by the kernel
+2. Check that an external PS/2 mouse isn't causing problems
+3. Check if some other program is using the /dev/psaux device
+4. Check that the evdev kernel driver is available
+5. Check that the synaptics driver is properly loaded by the X server
+
+
+1. Check that the touchpad is correctly detected by the kernel
+--------------------------------------------------------------
+
+If you are using a 2.6 linux kernel, check the /proc/bus/input/devices
+file. The touchpad should be identified a "SynPS/2 Synaptics TouchPad"
+or an "AlpsPS/2 ALPS TouchPad". If it is identified as a "PS/2 Generic
+Mouse", something is wrong.
+
+Possible fixes:
+
+1. Check your BIOS settings. Some BIOSes can do USB -> PS/2 mouse
+   emulation which can interfere with the touchpad. There may be a way
+   to disable the legacy mouse emulation from the BIOS setup program.
+
+2. Arrange so that the kernel initializes the USB subsystem before the
+   PS/2 touchpad. Initializing the USB mouse sometimes disables the
+   BIOS emulation. Compiling psmouse as a module and loading it in
+   /etc/rc.d/rc.local usually assures the USB is initialized first.
+
+3. Disconnect the USB mouse and restart the computer. (Not really a fix,
+   but can help when trying to figure out what's wrong.)
+
+4. Make sure your boot loader doesn't pass any parameter to the kernel
+   that disables mouse extensions. ("psmouse_proto=bare" for example)
+
+If you run a 2.4 kernel or an non-linux kernel, the
+/proc/bus/input/devices file is not available, but the BIOS setting
+could be relevant anyway.
+
+
+2. Check that an external PS/2 mouse isn't causing problems
+-----------------------------------------------------------
+
+If you want to use an external PS/2 mouse at the same time as the
+synaptics touchpad driver, you must use a 2.6 linux kernel and your
+hardware (keyboard controller) must support active multiplexing. You
+should see something like this when the computer boots:
+
+       mice: PS/2 mouse device common for all mice
+       i8042.c: Detected active multiplexing controller, rev 1.1.
+       serio: i8042 AUX0 port at 0x60,0x64 irq 12
+       serio: i8042 AUX1 port at 0x60,0x64 irq 12
+       serio: i8042 AUX2 port at 0x60,0x64 irq 12
+       serio: i8042 AUX3 port at 0x60,0x64 irq 12
+
+If you don't use a 2.6 kernel or your hardware doesn't support active
+multiplexing, you can't use an external PS/2 mouse together with the
+touchpad driver.
+
+
+3. Check if some other program is using the /dev/psaux device
+-------------------------------------------------------------
+
+If you use a 2.4 linux kernel, only one program at a time can reliably
+read from /dev/psaux. This means that if you for example have GPM
+running, it will probably prevent the synaptics driver from working
+correctly. It also means that if you have a second InputDevice in your
+X configuration file, it must not read from /dev/psaux. You probably
+want it to read from /dev/input/mice instea, which will handle USB
+mice in both 2.4 and 2.6 linux kernels, and both USB and external PS/2
+mice if you use a 2.6 kernel.
+
+The 2.6 linux kernel fixes the /dev/psaux shortcoming, so that you can
+safely run GPM and the synaptics driver at the same time.
+
+
+4. Check that the evdev kernel driver is available
+--------------------------------------------------
+
+If you are using a 2.6 linux kernel, the evdev kernel driver is needed
+for the X driver to be able to communicate with the kernel driver.
+Check the /proc/bus/input/devices file. The Handlers= line should
+contain an event device name, like this:
+
+	H: Handlers=mouse0 event0
+
+If there is no event handler, you either have to load the evdev kernel
+module or recompile the kernel and build it into the kernel. If you
+don't want to recompile the kernel, adding "/sbin/modprobe evdev" to
+/etc/rc.d/rc.sysinit usually works.
+
+
+5. Check that the synaptics driver is properly loaded by the X server
+---------------------------------------------------------------------
+
+The X log file is usually called /var/log/XFree86.0.log or
+/var/log/Xorg.0.log. It should contain something like this:
+
+	(II) LoadModule: "synaptics"
+	(II) Loading /usr/X11R6/lib/modules/input/synaptics_drv.o
+	(II) Module synaptics: vendor="X.Org Foundation"
+	        compiled for 4.3.99.902, module version = 1.0.0
+	        Module class: X.Org XInput Driver
+	        ABI class: X.Org XInput driver, version 0.4
+
+If the LoadModule line is missing, you probably forgot to add
+
+	Load "synaptics"
+
+to the "Module" section in the X config file, or you modified the
+wrong config file. Some systems that have been upgraded from XFree86
+to Xorg or from XFree86 3.x to XFree86 4.x can have multiple config
+files in the /etc/X11/ directory, but only one is used.
+
+Next, check that the log file also contains a line like this:
+
+	(II) Synaptics touchpad driver version 0.13.4
+
+If there is no such line, there is probably a binary compatibility
+problem between the synaptics driver and the X server.
+
+1. Try upgrading to the latest synaptics driver.
+
+2. Try installing the X SDK package if it is available for your
+   version of X. (In Fedora Core 2, that package is called
+   xorg-x11-sdk-6.7.0-2.i386.rpm.) Then re-compile the synaptics
+   driver and try again.
