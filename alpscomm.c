@@ -160,10 +160,8 @@ ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
 	    y = y - 256;
 	hw->guest_dx = x;
 	hw->guest_dy = -y;
-	if (packet[0] & 0x01)
-	    hw->guest_left = 1;
-	if (packet[0] & 0x02)
-	    hw->guest_right = 1;
+	hw->guest_left  = (packet[0] & 0x01) ? TRUE : FALSE;
+	hw->quest_right = (packet[0] & 0x02) ? TRUE : FALSE;
 	return;
     }
 
@@ -178,7 +176,10 @@ ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
 	    y = y - 512;
 	hw->guest_dx = x;
 	hw->guest_dy = -y;
-	z = 0;
+	hw->left   = packet[2] & 1;
+	hw->left  |= packet[3] & 1;
+	hw->right  = (packet[2] >> 1) & 1;
+	hw->right |= (packet[3] >> 1) & 1;
 	return;
     }
 

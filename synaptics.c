@@ -1323,6 +1323,12 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     hw->up |= hw->multi[0];
     hw->down |= hw->multi[1];
 
+    if (!para->guestmouse_off) {
+	hw->left |= hw->guest_left;
+	hw->middle |= hw->guest_mid;
+	hw->right |= hw->guest_right;
+    }
+
     /* 3rd button emulation */
     hw->middle |= HandleMidButtonEmulation(priv, hw, &delay);
 
@@ -1369,11 +1375,6 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     timeleft = ComputeDeltas(priv, hw, edge, &dx, &dy);
     delay = MIN(delay, timeleft);
 
-    if (!para->guestmouse_off) {
-	hw->left |= hw->guest_left;
-	hw->middle |= hw->guest_mid;
-	hw->right |= hw->guest_right;
-    }
     buttons = ((hw->left     ? 0x01 : 0) |
 	       (hw->middle   ? 0x02 : 0) |
 	       (hw->right    ? 0x04 : 0) |
