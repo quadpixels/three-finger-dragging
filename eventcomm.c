@@ -235,6 +235,7 @@ EventAutoDevProbe(LocalDevicePtr local)
        the psaux protocol and the given device from XF86Config */
     int i;
     Bool have_evdev = FALSE;
+    int noent_cnt = 0;
 
     for (i = 0; ; i++) {
 	char fname[64];
@@ -245,11 +246,15 @@ EventAutoDevProbe(LocalDevicePtr local)
 	SYSCALL(fd = open(fname, O_RDONLY));
 	if (fd < 0) {
 	    if (errno == ENOENT) {
-		break;
+		if (++noent_cnt >= 10)
+		    break;
+		else
+		    continue;
 	    } else {
 		continue;
 	    }
 	}
+	noent_cnt = 0;
 	have_evdev = TRUE;
 	is_touchpad = event_query_is_touchpad(fd);
 	SYSCALL(close(fd));
