@@ -1,3 +1,24 @@
+0.12.4 (2004-02-10)
+- Changed suggested default values in the INSTALL file, to get more
+  reasonable speed settings and edge parameters.
+- Include time in the "synclient -m" output.
+- Handle touchpads with a scroll region on the right side where very
+  large X coordinates (typically 8176=0x1ff0) are reported.
+- Added more models to the compatibility list.
+- Updated the documentation.
+- Added support for circular scrolling. From Alexei Gilchrist.
+- Removed the saved_touchpad_off variable in syndaemon. It's more
+  robust to just not disable the touchpad if it already is disabled.
+- Added manpages for synclient and syndaemon. Contributed by Mattia
+  Dongili.
+- Added uninstall target to the Makefile. From Paul Bender.
+- Automatically build using the 4.3 SDK if available. Patch from Paul
+  Bender.
+- Removed unnecessary local X include files that are available in the
+  XFree86-devel package. Patch from Paul Bender.
+- Added a "distribution" target to the Makefile.
+- Added an RPM .spec file. From Giorgio Bellussi.
+
 0.12.3 (2004-01-11)
 - Added more models to the compatibility list.
 - Updated the documentation.
