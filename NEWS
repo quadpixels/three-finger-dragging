@@ -1,3 +1,11 @@
+0.11.3p10 (2003-07-30)
+- Improved support for the old-style synaptics protocol.
+- Cleanup: Moved middle mouse button emulation to a separate function.
+- Cleanup: Moved finger detection to a separate function.
+- More robust resynchronization code, after an idea from Harwig
+  Felger. When we realize we are out of sync, only throw away one
+  byte, not all bytes already read from the touchpad.
+
 0.11.3p9: (2003-07-29)
 - Added support for the old synaptics protocol. By Hartwig Felger.
 
