@@ -1,7 +1,7 @@
 Device			String	Synaptics device
 Protocol		String	"auto-dev" (automatic, default), "psaux" (raw) or
 				"event" (linux 2.5 kernel events)
-SHMConfig		Bool	switch on/off shared-memory for configuration
+SHMConfig		Bool	switch on/off shared memory for configuration
 LeftEdge		Int	coordinates for left edge
 RightEdge		Int	coordinates for right edge
 TopEdge			Int	coordinates for top edge
@@ -12,13 +12,13 @@ FingerHigh		Int	When finger pressure goes above this value, the
 				driver counts it as a touch.
 MaxTapTime		Int	max. time (in milliseconds) for detecting a tap
 MaxTapMove		Int	max. movement of the finger for detecting a tap
-VertScrollDelta		Int	move-distance of the finger for a scroll event
-HorizScrollDelta	Int	move-distance of the finger for a scroll event
+VertScrollDelta		Int	move distance of the finger for a scroll event
+HorizScrollDelta	Int	move distance of the finger for a scroll event
 EdgeMotionSpeed		Int	edge motion speed when dragging
 Repeater		String	repeater device
-MinSpeed		Float	min. Speed-factor
-MaxSpeed		Float	max. Speed-factor
-AccelFactor		Float	acceleration-factor
+MinSpeed		Float	min. Speed factor
+MaxSpeed		Float	max. Speed factor
+AccelFactor		Float	acceleration factor
 UpDownScrolling		Bool	If on, the up/down buttons generate button 4/5 events.
 				If off, the up button generates a double click and
 				the down button generates a button 2 event.
