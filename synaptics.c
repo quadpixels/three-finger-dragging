@@ -85,7 +85,7 @@ typedef enum {
 #define MIN(a, b) (((a)<(b))?(a):(b))
 #define TIME_DIFF(a, b) ((long)((a)-(b)))
 
-#define VERSION "0.11.3p5"
+#define VERSION "0.11.3p6"
 
 /*****************************************************************************
  * Forward declaration
