@@ -1285,10 +1285,11 @@ SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivate *priv,
 
 static Bool
 SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivate *priv,
-			struct SynapticsHwState *hw)
+			struct SynapticsHwState *hwRet)
 {
     struct input_event ev;
     Bool v;
+    struct SynapticsHwState *hw = &(priv->hwState);
 
     while (SynapticsReadEvent(priv, &ev) == Success) {
 	switch (ev.type) {
@@ -1296,54 +1297,54 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivate *priv,
 	    switch (ev.code) {
 	    case SYN_REPORT:
 		if (priv->oneFinger)
-		    priv->hwState.numFingers = 1;
+		    hw->numFingers = 1;
 		else if (priv->twoFingers)
-		    priv->hwState.numFingers = 2;
+		    hw->numFingers = 2;
 		else if (priv->threeFingers)
-		    priv->hwState.numFingers = 3;
+		    hw->numFingers = 3;
 		else
-		    priv->hwState.numFingers = 0;
-		*hw = priv->hwState;
+		    hw->numFingers = 0;
+		*hwRet = *hw;
 		return Success;
 	    }
 	case EV_KEY:
 	    v = (ev.value ? TRUE : FALSE);
 	    switch (ev.code) {
 	    case BTN_LEFT:
-		priv->hwState.left = v;
+		hw->left = v;
 		break;
 	    case BTN_RIGHT:
-		priv->hwState.right = v;
+		hw->right = v;
 		break;
 	    case BTN_FORWARD:
-		priv->hwState.up = v;
+		hw->up = v;
 		break;
 	    case BTN_BACK:
-		priv->hwState.down = v;
+		hw->down = v;
 		break;
 	    case BTN_0:
-		priv->hwState.multi[0] = v;
+		hw->multi[0] = v;
 		break;
 	    case BTN_1:
-		priv->hwState.multi[1] = v;
+		hw->multi[1] = v;
 		break;
 	    case BTN_2:
-		priv->hwState.multi[2] = v;
+		hw->multi[2] = v;
 		break;
 	    case BTN_3:
-		priv->hwState.multi[3] = v;
+		hw->multi[3] = v;
 		break;
 	    case BTN_4:
-		priv->hwState.multi[4] = v;
+		hw->multi[4] = v;
 		break;
 	    case BTN_5:
-		priv->hwState.multi[5] = v;
+		hw->multi[5] = v;
 		break;
 	    case BTN_6:
-		priv->hwState.multi[6] = v;
+		hw->multi[6] = v;
 		break;
 	    case BTN_7:
-		priv->hwState.multi[7] = v;
+		hw->multi[7] = v;
 		break;
 	    case BTN_TOOL_FINGER:
 		priv->oneFinger = v;
@@ -1359,16 +1360,16 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivate *priv,
 	case EV_ABS:
 	    switch (ev.code) {
 	    case ABS_X:
-		priv->hwState.x = ev.value;
+		hw->x = ev.value;
 		break;
 	    case ABS_Y:
-		priv->hwState.y = ev.value;
+		hw->y = ev.value;
 		break;
 	    case ABS_PRESSURE:
-		priv->hwState.z = ev.value;
+		hw->z = ev.value;
 		break;
 	    case ABS_TOOL_WIDTH:
-		priv->hwState.fingerWidth = ev.value;
+		hw->fingerWidth = ev.value;
 		break;
 	    }
 	    break;
@@ -1395,12 +1396,13 @@ SynapticsReadEvent(SynapticsPrivate *priv, struct input_event *ev)
 
 static Bool
 SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
-			struct SynapticsHwState *hw)
+			struct SynapticsHwState *hwRet)
 {
     Bool ret = SynapticsGetPacket(local, priv);
     int newabs = SYN_MODEL_NEWABS(priv->model_id);
     unsigned char *buf;
     int w;
+    struct SynapticsHwState *hw = &(priv->hwState);
 
     if (ret != Success)
 	return ret;
@@ -1526,7 +1528,7 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 	}
     }
 
-    priv->hwState = *hw;
+    *hwRet = *hw;
 
     return Success;
 }
