@@ -92,7 +92,7 @@ typedef enum {
 #define DEV_INPUT_EVENT "/dev/input/"
 #define PROC_BUS_INPUT_DEV "/proc/bus/input/devices"
 
-#define VERSION "0.11.3p6"
+#define VERSION "0.11.3p7"
 
 /*****************************************************************************
  * Forward declaration
