@@ -38,7 +38,6 @@
  *	Standard Headers
  ****************************************************************************/
 
-#include <stdio.h>
 #include <misc.h>
 #include <xf86.h>
 #define NEED_XF86_TYPES
