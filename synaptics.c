@@ -122,6 +122,7 @@ static Bool DeviceInit(DeviceIntPtr);
 static Bool DeviceOn(DeviceIntPtr);
 static Bool DeviceOff(DeviceIntPtr);
 static Bool DeviceClose(DeviceIntPtr);
+static Bool QueryHardware(LocalDevicePtr);
 
 
 InputDriverRec SYNAPTICS = {
@@ -1639,7 +1640,7 @@ ConvertProc(LocalDevicePtr local,
 }
 
 
-Bool
+static Bool
 QueryHardware(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;

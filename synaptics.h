@@ -194,8 +194,6 @@ typedef struct _SynapticsPrivateRec
 } SynapticsPrivate;
 
 
-Bool QueryHardware(LocalDevicePtr);
-
 #endif /* SYNAPTICS_PRIVATE */
 
 
