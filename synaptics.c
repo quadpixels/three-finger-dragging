@@ -478,6 +478,16 @@ DeviceOn (DeviceIntPtr dev)
 	return !Success;
     }
 
+    /* Try to grab the event device so that data doesn't leak to /dev/input/mice */
+    if (priv->proto == SYN_PROTO_EVENT) {
+	int ret;
+	SYSCALL(ret = ioctl(local->fd, EVIOCGRAB, (pointer)1));
+	if (ret < 0) {
+	    xf86Msg(X_WARNING, "%s can't grab event device\n",
+		    local->name, errno);
+	}
+    }
+
     priv->buffer = XisbNew(local->fd, 64);
     if (!priv->buffer) {
 	xf86CloseSerial(local->fd);

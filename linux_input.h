@@ -25,6 +25,7 @@ struct input_id {
 };
 
 #define EVIOCGID		_IOR('E', 0x02, struct input_id)	/* get device ID */
+#define EVIOCGRAB		_IOW('E', 0x90, int)			/* Grab/Release device */
 
 
 #define EV_SYN			0x00
