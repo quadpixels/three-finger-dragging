@@ -9,6 +9,7 @@ FingerHigh		Int	max. finger pressure before beginning with movement
 MaxTapTime		Int	max. time (time of 1/80s) for detecting a tap
 MaxTapMove		Int	max. movement of the finger for detecting a tap
 VertScrollDelta		Int	move-distance of the finger for a scroll event
+EdgeMotionSpeed		Int	edge motion speed when dragging
 Repeater		String	repeater device
 MinSpeed		Float	min. Speed-factor
 MaxSpeed		Float	max. Speed-factor

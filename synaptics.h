@@ -35,6 +35,7 @@ typedef struct _SynapticsSHM {
 	int	tap_time, tap_move;				/* max. tapping-time and movement in packets and coord. */
 	int	scroll_dist_vert;				/* Scrolling distance in absolute coordinates */
 	double min_speed, max_speed, accl;  /* movement parameters */
+	int edge_motion_speed;				/* Edge motion speed when dragging */
 	char* repeater;						/* Repeater on or off */
 } SynapticsSHM, *SynapticsSHMPtr;
 

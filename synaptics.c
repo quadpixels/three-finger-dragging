@@ -196,6 +196,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->synpara->tap_time = xf86SetIntOption(local->options, "MaxTapTime", 20);
 	priv->synpara->tap_move = xf86SetIntOption(local->options, "MaxTapMove", 220);
 	priv->synpara->scroll_dist_vert = xf86SetIntOption(local->options, "VertScrollDelta", 100);
+	priv->synpara->edge_motion_speed = xf86SetIntOption(local->options, "EdgeMotionSpeed", 40);
 	priv->synpara->repeater = xf86SetStrOption(local->options, "Repeater", NULL);
 	s = xf86FindOptionValue(local->options, "MinSpeed");
 	if((!s) || (xf86sscanf(s, "%lf", &priv->synpara->min_speed) != 1))
@@ -702,7 +703,20 @@ ReadInput(LocalDevicePtr local)
 				dx = (-1 * 
 				   (((priv->move_hist[MOVE_HIST(1)].x + priv->move_hist[MOVE_HIST(2)].x) / 2) - 
 					((x                           	  + priv->move_hist[MOVE_HIST(1)].x) / 2)));
-				
+
+				if (priv->drag) {
+					if (edge & RIGHT_EDGE) {
+						dx += para->edge_motion_speed;
+					} else if (edge & LEFT_EDGE) {
+						dx -= para->edge_motion_speed;
+					}
+					if (edge & TOP_EDGE) {
+						dy -= para->edge_motion_speed;
+					} else if (edge & BOTTOM_EDGE) {
+						dy += para->edge_motion_speed;
+					}
+				}
+
 				/* speed in depence of distance/packet */
 				dist = move_distance( dx, dy );
 				speed = dist * para->accl; 
