@@ -37,6 +37,9 @@ ALPS_sync(int fd)
 
 /*
  * send the ALPS init sequence, ie 4 consecutive "disable"s before the "enable"
+ * This "magic knock" is performed both for the trackpad and for the pointing
+ * stick. Not all models have a pointing stick, but trying to initialize it
+ * anyway doesn't seem to hurt.
  */
 static void
 ALPS_initialize(int fd)
