@@ -42,7 +42,7 @@ struct Parameter {
 #define DEFINE_PAR(name, memb, type, min_val, max_val) \
 { name, offsetof(SynapticsSHM, memb), (type), (min_val), (max_val) }
 
-struct Parameter params[] = {
+static struct Parameter params[] = {
 	DEFINE_PAR("LeftEdge",             left_edge,               PT_INT,    0, 10000),
 	DEFINE_PAR("RightEdge",            right_edge,              PT_INT,    0, 10000),
 	DEFINE_PAR("TopEdge",              top_edge,                PT_INT,    0, 10000),
