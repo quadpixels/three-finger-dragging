@@ -19,10 +19,10 @@ typedef enum {
 } TapEvent;
 
 struct SynapticsHwInfo {
-    unsigned long int model_id;		    /* Model-ID */
-    unsigned long int capabilities;	    /* Capabilities */
-    unsigned long int ext_cap;		    /* Extended Capabilities */
-    unsigned long int identity;		    /* Identification */
+    unsigned int model_id;		    /* Model-ID */
+    unsigned int capabilities;		    /* Capabilities */
+    unsigned int ext_cap;		    /* Extended Capabilities */
+    unsigned int identity;		    /* Identification */
     Bool hasGuest;			    /* Has a guest mouse */
 };
 

@@ -49,7 +49,7 @@ EventDeviceOnHook(LocalDevicePtr local)
     int ret;
     SYSCALL(ret = ioctl(local->fd, EVIOCGRAB, (pointer)1));
     if (ret < 0) {
-	xf86Msg(X_WARNING, "%s can't grab event device\n",
+	xf86Msg(X_WARNING, "%s can't grab event device, errno=%d\n",
 		local->name, errno);
     }
 }
