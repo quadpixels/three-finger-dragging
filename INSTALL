@@ -22,18 +22,16 @@ Requirements
 Installing
 ----------
 
-1. If you are installing the driver by binary you can go to step 3.
+1. Type "make" to build the driver "synaptics_drv.o".
 
-2. Type "make" to build the driver "synaptics_drv.o".
-
-3. Copy the driver module "synaptics_drv.o" into the XFree module path
+2. Copy the driver module "synaptics_drv.o" into the XFree module path
 "ex. /usr/X11R6/lib/modules/input/". Running "make install" as root
 will do this for you if you have X installed in /usr/X11R6/.
 
-4. Load the driver by changig the XFree configuration file through
+3. Load the driver by changig the XFree configuration file through
 adding the line 'Load "synaptics"' in the module section.
 
-5. Add/Replace in the InputDevice section for the touchpad the
+4. Add/Replace in the InputDevice section for the touchpad the
 following lines:
 
 Section "InputDevice"
@@ -60,7 +58,7 @@ EndSection
 Change the Identifier to the same name as in the ServerLayout section.
 The Option "Repeater" is at the moment for testing.
 
-6. Add the "CorePointer" option to the InputDevice line at the ServerLayout section:
+5. Add the "CorePointer" option to the InputDevice line at the ServerLayout section:
 
 Section "ServerLayout"
 ...
@@ -71,12 +69,12 @@ Section "ServerLayout"
    to use an external mouse too, you have to set all mouse input
    devices except one to "AlwaysCore" instead of "CorePointer".
 
-7. Start/Restart the X Server. If the touchpad doesn't work:
+6. Start/Restart the X Server. If the touchpad doesn't work:
    a) Check the XFree Logfiles
    b) Try to start the XServer with 'startx -- -logverbose 8' for more
       Output
 
-8. If you want to be able to change driver parameters without
+7. If you want to be able to change driver parameters without
    restarting the X server, enable the "SHMConfig" option in the XFree
    configuration file. You can then use the "synclient" program to
    query and modify driver parameters on the fly.
