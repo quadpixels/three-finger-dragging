@@ -671,9 +671,6 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
     return 0;
 }
 
-
-#define MOVE_HIST(a) (priv->move_hist[((priv->count_packet_finger-(a))%SYNAPTICS_MOVE_HISTORY)])
-
 static int clamp(int val, int min, int max)
 {
     if (val < min)
@@ -979,6 +976,102 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     return delay;
 }
 
+#define MOVE_HIST(a) (priv->move_hist[((priv->count_packet_finger-(a))%SYNAPTICS_MOVE_HISTORY)])
+
+static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
+			  edge_type edge, int *dxP, int *dyP)
+{
+    SynapticsSHM *para = priv->synpara;
+    Bool moving_state;
+    int dist, dx, dy;
+    double speed, integral;
+    long delay = 1000000000;
+
+    dx = dy = 0;
+
+    moving_state = FALSE;
+    switch (priv->tap_state) {
+    case TS_MOVE:
+    case TS_DRAG:
+	moving_state = TRUE;
+	break;
+    case TS_1:
+    case TS_3:
+    case TS_5:
+	if (hw->numFingers == 1)
+	    moving_state = TRUE;
+	break;
+    default:
+	break;
+    }
+    if (moving_state && !priv->palm &&
+	!priv->vert_scroll_on && !priv->horiz_scroll_on && !priv->circ_scroll_on) {
+	delay = MIN(delay, 13);
+	if (priv->count_packet_finger > 3) { /* min. 3 packets */
+	    dx = (hw->x - MOVE_HIST(2).x) / 2;
+	    dy = (hw->y - MOVE_HIST(2).y) / 2;
+
+	    if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always) {
+		int minZ = para->edge_motion_min_z;
+		int maxZ = para->edge_motion_max_z;
+		int minSpd = para->edge_motion_min_speed;
+		int maxSpd = para->edge_motion_max_speed;
+		int edge_speed;
+
+		if (hw->z <= minZ) {
+		    edge_speed = minSpd;
+		} else if (hw->z >= maxZ) {
+		    edge_speed = maxSpd;
+		} else {
+		    edge_speed = minSpd + (hw->z - minZ) * (maxSpd - minSpd) / (maxZ - minZ);
+		}
+		if (edge & RIGHT_EDGE) {
+		    dx += clamp(edge_speed - dx, 0, edge_speed);
+		} else if (edge & LEFT_EDGE) {
+		    dx -= clamp(edge_speed + dx, 0, edge_speed);
+		}
+		if (edge & TOP_EDGE) {
+		    dy -= clamp(edge_speed + dy, 0, edge_speed);
+		} else if (edge & BOTTOM_EDGE) {
+		    dy += clamp(edge_speed - dy, 0, edge_speed);
+		}
+	    }
+
+	    /* speed depending on distance/packet */
+	    dist = move_distance(dx, dy);
+	    speed = dist * para->accl;
+	    if (speed > para->max_speed) {  /* set max speed factor */
+		speed = para->max_speed;
+	    } else if (speed < para->min_speed) { /* set min speed factor */
+		speed = para->min_speed;
+	    }
+
+	    /* save the fraction for adding to the next priv->count_packet */
+	    priv->frac_x = xf86modf((dx * speed) + priv->frac_x, &integral);
+	    dx = integral;
+	    priv->frac_y = xf86modf((dy * speed) + priv->frac_y, &integral);
+	    dy = integral;
+	}
+
+	priv->count_packet_finger++;
+    } else {				    /* reset packet counter */
+	priv->count_packet_finger = 0;
+    }
+
+    /* Add guest device movements */
+    dx += hw->guest_dx;
+    dy += hw->guest_dy;
+
+    *dxP = dx;
+    *dyP = dy;
+
+    /* generate a history of the absolute positions */
+    MOVE_HIST(0).x = hw->x;
+    MOVE_HIST(0).y = hw->y;
+
+    return delay;
+}
+
 struct ScrollData {
     int left, right, up, down;
 };
@@ -1100,19 +1193,16 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
     SynapticsSHM *para = priv->synpara;
-    Bool finger, moving_state;
-    int dist, dx, dy, buttons, id;
+    Bool finger;
+    int dx, dy, buttons, id;
     edge_type edge;
     Bool mid;
-    double speed, integral;
     int change;
     struct ScrollData scroll;
     int double_click;
     long delay = 1000000000;
     long timeleft;
     int i;
-
-    dx = dy = 0;
 
     /* update hardware state in shared memory */
     para->x = hw->x;
@@ -1185,74 +1275,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 
     HandleScrolling(priv, hw, edge, finger, &scroll);
 
-    moving_state = FALSE;
-    switch (priv->tap_state) {
-    case TS_MOVE:
-    case TS_DRAG:
-	moving_state = TRUE;
-	break;
-    case TS_1:
-    case TS_3:
-    case TS_5:
-	if (hw->numFingers == 1)
-	    moving_state = TRUE;
-	break;
-    default:
-	break;
-    }
-    if (moving_state && !priv->palm &&
-	!priv->vert_scroll_on && !priv->horiz_scroll_on && !priv->circ_scroll_on) {
-	delay = MIN(delay, 13);
-	if (priv->count_packet_finger > 3) { /* min. 3 packets */
-	    dx = (hw->x - MOVE_HIST(2).x) / 2;
-	    dy = (hw->y - MOVE_HIST(2).y) / 2;
+    timeleft = ComputeDeltas(priv, hw, edge, &dx, &dy);
+    delay = MIN(delay, timeleft);
 
-	    if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always) {
-		int minZ = para->edge_motion_min_z;
-		int maxZ = para->edge_motion_max_z;
-		int minSpd = para->edge_motion_min_speed;
-		int maxSpd = para->edge_motion_max_speed;
-		int edge_speed;
-
-		if (hw->z <= minZ) {
-		    edge_speed = minSpd;
-		} else if (hw->z >= maxZ) {
-		    edge_speed = maxSpd;
-		} else {
-		    edge_speed = minSpd + (hw->z - minZ) * (maxSpd - minSpd) / (maxZ - minZ);
-		}
-		if (edge & RIGHT_EDGE) {
-		    dx += clamp(edge_speed - dx, 0, edge_speed);
-		} else if (edge & LEFT_EDGE) {
-		    dx -= clamp(edge_speed + dx, 0, edge_speed);
-		}
-		if (edge & TOP_EDGE) {
-		    dy -= clamp(edge_speed + dy, 0, edge_speed);
-		} else if (edge & BOTTOM_EDGE) {
-		    dy += clamp(edge_speed - dy, 0, edge_speed);
-		}
-	    }
-
-	    /* speed depending on distance/packet */
-	    dist = move_distance(dx, dy);
-	    speed = dist * para->accl;
-	    if (speed > para->max_speed) {  /* set max speed factor */
-		speed = para->max_speed;
-	    } else if (speed < para->min_speed) { /* set min speed factor */
-		speed = para->min_speed;
-	    }
-
-	    /* save the fraction for adding to the next priv->count_packet */
-	    priv->frac_x = xf86modf((dx * speed) + priv->frac_x, &integral);
-	    dx = integral;
-	    priv->frac_y = xf86modf((dy * speed) + priv->frac_y, &integral);
-	    dy = integral;
-	}
-
-	priv->count_packet_finger++;
-    } else {				    /* reset packet counter */
-	priv->count_packet_finger = 0;
-    }
 
     buttons = ((hw->left     ? 0x01 : 0) |
 	       (mid          ? 0x02 : 0) |
@@ -1278,14 +1303,6 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 	if (priv->tap_button_state == TBS_BUTTON_DOWN)
 	    buttons |= tap_mask;
     }
-
-    /* generate a history of the absolute positions */
-    MOVE_HIST(0).x = hw->x;
-    MOVE_HIST(0).y = hw->y;
-
-    /* Add guest device movements */
-    dx += hw->guest_dx;
-    dy += hw->guest_dy;
 
     /* Post events */
     if (dx || dy)
