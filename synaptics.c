@@ -266,7 +266,7 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 }
 
 /*
- *  called by the module loader for initialtion
+ *  called by the module loader for initialization
  */
 static InputInfoPtr
 SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
