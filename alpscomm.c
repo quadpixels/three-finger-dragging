@@ -30,11 +30,12 @@
 static void
 ALPS_initialize(int fd)
 {
-    ps2_synaptics_disable_device(fd);
-    ps2_synaptics_disable_device(fd);
-    ps2_synaptics_disable_device(fd);
-    ps2_synaptics_disable_device(fd);
-    ps2_synaptics_enable_device(fd);
+    xf86FlushInput(fd);
+    ps2_putbyte(fd, PS2_CMD_DISABLE);
+    ps2_putbyte(fd, PS2_CMD_DISABLE);
+    ps2_putbyte(fd, PS2_CMD_DISABLE);
+    ps2_putbyte(fd, PS2_CMD_DISABLE);
+    ps2_putbyte(fd, PS2_CMD_ENABLE);
 }
 
 static void

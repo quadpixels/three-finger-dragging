@@ -4,6 +4,28 @@
 #include <sys/ioctl.h>
 #include "xf86_OSproc.h"
 
+/* acknowledge for commands and parameter */
+#define PS2_ACK 			0xFA
+#define PS2_ERROR			0xFC
+
+/* standard PS/2 commands */
+#define PS2_CMD_RESET			0xFF
+#define PS2_CMD_RESEND			0xFE
+#define PS2_CMD_SET_DEFAULT		0xF6
+#define PS2_CMD_DISABLE			0xF5
+#define PS2_CMD_ENABLE			0xF4
+#define PS2_CMD_SET_SAMPLE_RATE		0xF3
+#define PS2_CMD_READ_DEVICE_TYPE	0xF2
+#define PS2_CMD_SET_REMOTE_MODE		0xF0
+#define PS2_CMD_SET_WRAP_MODE		0xEE
+#define PS2_CMD_RESET_WRAP_MODE		0xEC
+#define PS2_CMD_READ_DATA		0xEB
+#define PS2_CMD_SET_STREAM_MODE		0xEA
+#define PS2_CMD_STATUS_REQUEST		0xE9
+#define PS2_CMD_SET_RESOLUTION		0xE8
+#define PS2_CMD_SET_SCALING_2_1		0xE7
+#define PS2_CMD_SET_SCALING_1_1		0xE6
+
 /* synatics modes */
 #define SYN_BIT_ABSOLUTE_MODE		(1 << 7)
 #define SYN_BIT_HIGH_RATE		(1 << 6)
@@ -51,8 +73,7 @@
 typedef unsigned char byte;
 
 
-Bool ps2_synaptics_enable_device(int fd);
-Bool ps2_synaptics_disable_device(int fd);
+Bool ps2_putbyte(int fd, byte b);
 
 struct SynapticsHwInfo;
 void ps2_print_ident(const struct SynapticsHwInfo *synhw);

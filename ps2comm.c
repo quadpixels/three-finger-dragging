@@ -32,28 +32,6 @@
 
 #define MAX_UNSYNC_PACKETS 10				/* i.e. 10 to 60 bytes */
 
-/* acknowledge for commands and parameter */
-#define PS2_ACK 			0xFA
-#define PS2_ERROR			0xFC
-
-/* standard PS/2 commands */
-#define PS2_CMD_RESET			0xFF
-#define PS2_CMD_RESEND			0xFE
-#define PS2_CMD_SET_DEFAULT		0xF6
-#define PS2_CMD_DISABLE			0xF5
-#define PS2_CMD_ENABLE			0xF4
-#define PS2_CMD_SET_SAMPLE_RATE		0xF3
-#define PS2_CMD_READ_DEVICE_TYPE	0xF2
-#define PS2_CMD_SET_REMOTE_MODE		0xF0
-#define PS2_CMD_SET_WRAP_MODE		0xEE
-#define PS2_CMD_RESET_WRAP_MODE		0xEC
-#define PS2_CMD_READ_DATA		0xEB
-#define PS2_CMD_SET_STREAM_MODE		0xEA
-#define PS2_CMD_STATUS_REQUEST		0xE9
-#define PS2_CMD_SET_RESOLUTION		0xE8
-#define PS2_CMD_SET_SCALING_2_1		0xE7
-#define PS2_CMD_SET_SCALING_1_1		0xE6
-
 /* synaptics queries */
 #define SYN_QUE_IDENTIFY		0x00
 #define SYN_QUE_MODES			0x01
@@ -108,7 +86,7 @@ ps2_getbyte(int fd, byte *b)
 /*
  * Write a byte to the ps/2 port, wait for ACK
  */
-static Bool
+Bool
 ps2_putbyte(int fd, byte b)
 {
     byte ack;
@@ -380,13 +358,13 @@ ps2_synaptics_identify(int fd, struct SynapticsHwInfo *synhw)
     return FALSE;
 }
 
-Bool
+static Bool
 ps2_synaptics_enable_device(int fd)
 {
     return ps2_putbyte(fd, PS2_CMD_ENABLE);
 }
 
-Bool
+static Bool
 ps2_synaptics_disable_device(int fd)
 {
     xf86FlushInput(fd);
