@@ -1407,7 +1407,7 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
     if (ret != Success)
 	return ret;
 
-    memset(hw, 0, sizeof(hw));
+    memset(hw, 0, sizeof(*hw));
 
     buf = priv->protoBuf;
     if (newabs) {			    /* newer protos...*/
