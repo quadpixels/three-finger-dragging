@@ -171,10 +171,12 @@ SetDeviceAndProtocol(LocalDevicePtr local)
     enum SynapticsProtocol proto = SYN_PROTO_PSAUX;
 
     str_par = xf86FindOptionValue(local->options, "Protocol");
-    if (str_par && !strcmp(str_par, "event")) {
-	proto = SYN_PROTO_EVENT;
-    } else if (str_par && !strcmp(str_par, "psaux")) {
+    if (str_par && !strcmp(str_par, "psaux")) {
 	/* Already set up */
+    } else if (str_par && !strcmp(str_par, "event")) {
+	proto = SYN_PROTO_EVENT;
+    } else if (str_par && !strcmp(str_par, "psm")) {
+	proto = SYN_PROTO_PSM;
     } else { /* default to auto-dev */
 	if (event_proto_operations.autoDevProbe(local))
 	    proto = SYN_PROTO_EVENT;
@@ -186,7 +188,8 @@ SetDeviceAndProtocol(LocalDevicePtr local)
     case SYN_PROTO_EVENT:
 	priv->proto_ops = &event_proto_operations;
 	break;
-    default:
+    case SYN_PROTO_PSM:
+	priv->proto_ops = &psm_proto_operations;
 	break;
     }
 }

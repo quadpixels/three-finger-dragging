@@ -52,8 +52,8 @@ CC = gcc
 
 LDCOMBINEFLAGS = -r
 
-SRCS = synaptics.c ps2comm.c eventcomm.c
-OBJS = synaptics.o ps2comm.o eventcomm.o
+SRCS = synaptics.c ps2comm.c eventcomm.c psmcomm.c
+OBJS = synaptics.o ps2comm.o eventcomm.o psmcomm.o
 
 .c.o:
 	$(RM) $@
@@ -99,6 +99,7 @@ syndaemon	: syndaemon.o
 synaptics.o : synaptics.h synproto.h Makefile
 ps2comm.o   : ps2comm.h synproto.h synaptics.h
 eventcomm.o : eventcomm.h linux_input.h synproto.h synaptics.h
+psmcomm.o   : freebsd_mouse.h psmcomm.h synproto.h synaptics.h
 synclient.o : synaptics.h
 syndaemon.o : synaptics.h
 
@@ -117,6 +118,7 @@ ALLFILES = COMPATIBILITY FILES INSTALL INSTALL.DE INSTALL.FR LICENSE Makefile \
 	NEWS README README.alps TODO Xincludes/ alps.patch linux_input.h \
 	pc_keyb.c.diff.2.4.3 \
 	synproto.h ps2comm.c ps2comm.h eventcomm.c eventcomm.h \
+	psmcomm.c psmcomm.h freebsd_mouse.h \
 	synaptics.c synaptics.h synaptics.spec \
 	synclient.c syndaemon.c
 

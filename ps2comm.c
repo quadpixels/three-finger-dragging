@@ -414,7 +414,7 @@ ps2_query_is_synaptics(int fd)
     }
 }
 
-static void
+void
 ps2_print_ident(const struct SynapticsHwInfo *synhw)
 {
     xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(*synhw));
