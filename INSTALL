@@ -62,5 +62,10 @@ step 8.
    b) Try to start the XServer with 'startx -- -logverbose 8' for more
       Output
 
+9. If you want to be able to change driver parameters without
+   restarting the X server, enable the "SHMConfig" option in the XFree
+   configuration file. You can then use the "synclient" program to
+   query and modify driver parameters on the fly.
+
 If you can't get the driver working, mail the logfiles and the
 configuration file to me.
