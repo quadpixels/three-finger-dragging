@@ -92,6 +92,9 @@ static void PrintIdent(SynapticsPrivatePtr);
  *    DO NOT PUT ANYTHING AFTER THIS ENDIF
  */
 #endif
+
+/* Local Variables: */
+/* tab-width: 4 */
+/* End: */
 /* vim:ts=4:sw=4:cindent:
 */
-

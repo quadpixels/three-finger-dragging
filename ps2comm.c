@@ -340,6 +340,9 @@ QueryIsSynaptics(int fd)
 	}
 }
 
+/* Local Variables: */
+/* tab-width: 4 */
+/* End: */
 /* 
  * vim: ts=4 sw=4 cindent
  */

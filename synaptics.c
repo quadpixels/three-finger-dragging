@@ -900,5 +900,8 @@ PrintIdent(SynapticsPrivatePtr priv) {
 	}
 }
 
+/* Local Variables: */
+/* tab-width: 4 */
+/* End: */
 /* vim:ts=2:sw=2:cindent:
 */
