@@ -319,6 +319,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     repeater = xf86SetStrOption(local->options, "Repeater", NULL);
     pars->updown_button_scrolling = xf86SetBoolOption(local->options, "UpDownScrolling", TRUE);
     pars->touchpad_off = xf86SetBoolOption(local->options, "TouchpadOff", FALSE);
+    pars->guestmouse_off = xf86SetBoolOption(local->options, "GuestMouseOff", FALSE);
     pars->locked_drags = xf86SetBoolOption(local->options, "LockedDrags", FALSE);
     pars->tap_action[RT_TAP] = xf86SetIntOption(local->options, "RTCornerButton", 2);
     pars->tap_action[RB_TAP] = xf86SetIntOption(local->options, "RBCornerButton", 3);
@@ -1037,8 +1038,10 @@ static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     }
 
     /* Add guest device movements */
-    dx += hw->guest_dx;
-    dy += hw->guest_dy;
+    if (!para->guestmouse_off) {
+	dx += hw->guest_dx;
+	dy += hw->guest_dy;
+    }
 
     *dxP = dx;
     *dyP = dy;

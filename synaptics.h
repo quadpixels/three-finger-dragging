@@ -61,7 +61,8 @@ typedef struct _SynapticsSHM
     Bool edge_motion_use_always;	    /* If false, egde motion is used only when dragging */
 
     Bool updown_button_scrolling;	    /* Up/Down-Button scrolling or middle/double-click */
-    Bool touchpad_off;			    /* Switches the Touchpad off*/
+    Bool touchpad_off;			    /* Switches the touchpad off */
+    Bool guestmouse_off;		    /* Switches the guest mouse off */
     Bool locked_drags;			    /* Enable locked drags */
     int tap_action[MAX_TAP];		    /* Button to report on tap events */
     Bool circular_scrolling;		    /* Enable circular scrolling */
