@@ -1353,7 +1353,6 @@ QueryHardware(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
     SynapticsSHM *para = priv->synpara;
-    int retries;
     int mode;
 
     if (priv->proto == SYN_PROTO_EVENT)
@@ -1380,8 +1379,7 @@ QueryHardware(LocalDevicePtr local)
 
     xf86Msg(X_PROBED, "%s synaptics touchpad found\n", local->name);
 
-    retries = 3;
-    while ((retries++ <= 3) && (synaptics_reset(local->fd) != Success))
+    if (synaptics_reset(local->fd) != Success)
 	xf86Msg(X_ERROR, "%s reset failed\n", local->name);
 
     if (synaptics_get_hwinfo(local->fd, &priv->synhw) != Success)
