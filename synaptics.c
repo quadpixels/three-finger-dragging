@@ -1,19 +1,19 @@
 /*
- *   2003 Jörg Bösner <ich@joerg-boesner.de>
+ *   Copyright 2003 Jörg Bösner <ich@joerg-boesner.de>
  *     patch for switching the touchpad off (for example, when a
  *     USB mouse is connected)
  *
- *   2003 Hartwig Felger <hgfelger@hgfelger.de>
+ *   Copyright 2003 Hartwig Felger <hgfelger@hgfelger.de>
  *     patch to make the horizontal wheel replacement buttons work.
  *
- *   2002 Peter Osterlund <petero2@telia.com>
+ *   Copyright 2002 Peter Osterlund <petero2@telia.com>
  *     patches for fast scrolling, palm detection, edge motion,
  *     horizontal scrolling
  *
- *   2002 S. Lehner <sam_x@bluemail.ch>
+ *   Copyright 2002 S. Lehner <sam_x@bluemail.ch>
  *     for newer Firmware (5.8) protocol changes for 3rd to 6th button
  *
- *	 Copyright (C) 2001 Stefan Gmeiner <riddlebox@freesurf.ch>
+ *   Copyright (C) 2001 Stefan Gmeiner <riddlebox@freesurf.ch>
  *     start merging tpconfig and gpm code to an xfree input module
  *     adding some changes and extensions (ex. 3rd and 4th button)
  *
