@@ -25,46 +25,46 @@
 #include "ps2comm.h"
 
 /* acknowledge for commands and parameter */
-#define PS2_ACK 0xFA
-#define PS2_ERROR 0xFC
+#define PS2_ACK 			0xFA
+#define PS2_ERROR			0xFC
 
 /* standard PS/2 commands */
-#define PS2_CMD_RESET 0xFF
-#define PS2_CMD_RESEND 0xFE
-#define PS2_CMD_SET_DEFAULT 0xF6
-#define PS2_CMD_DISABLE 0xF5
-#define PS2_CMD_ENABLE 0xF4
-#define PS2_CMD_SET_SAMPLE_RATE 0xF3
-#define PS2_CMD_READ_DEVICE_TYPE 0xF2
-#define PS2_CMD_SET_REMOTE_MODE 0xF0
-#define PS2_CMD_SET_WRAP_MODE 0xEE
-#define PS2_CMD_RESET_WRAP_MODE 0xEC
-#define PS2_CMD_READ_DATA 0xEB
-#define PS2_CMD_SET_STREAM_MODE 0xEA
-#define PS2_CMD_STATUS_REQUEST 0xE9
-#define PS2_CMD_SET_RESOLUTION 0xE8
-#define PS2_CMD_SET_SCALING_2_1 0xE7
-#define PS2_CMD_SET_SCALING_1_1 0xE6
+#define PS2_CMD_RESET			0xFF
+#define PS2_CMD_RESEND			0xFE
+#define PS2_CMD_SET_DEFAULT		0xF6
+#define PS2_CMD_DISABLE			0xF5
+#define PS2_CMD_ENABLE			0xF4
+#define PS2_CMD_SET_SAMPLE_RATE		0xF3
+#define PS2_CMD_READ_DEVICE_TYPE	0xF2
+#define PS2_CMD_SET_REMOTE_MODE		0xF0
+#define PS2_CMD_SET_WRAP_MODE		0xEE
+#define PS2_CMD_RESET_WRAP_MODE		0xEC
+#define PS2_CMD_READ_DATA		0xEB
+#define PS2_CMD_SET_STREAM_MODE		0xEA
+#define PS2_CMD_STATUS_REQUEST		0xE9
+#define PS2_CMD_SET_RESOLUTION		0xE8
+#define PS2_CMD_SET_SCALING_2_1		0xE7
+#define PS2_CMD_SET_SCALING_1_1		0xE6
 
 /* synaptics queries */
-#define SYN_QUE_IDENTIFY 0x00
-#define SYN_QUE_MODES 0x01
-#define SYN_QUE_CAPABILITIES 0x02
-#define SYN_QUE_MODEL 0x03
-#define SYN_QUE_SERIAL_NUMBER_PREFIX 0x06
-#define SYN_QUE_SERIAL_NUMBER_SUFFIX 0x07
-#define SYN_QUE_RESOLUTION 0x08
-#define SYN_QUE_EXT_CAPAB 0x09
+#define SYN_QUE_IDENTIFY		0x00
+#define SYN_QUE_MODES			0x01
+#define SYN_QUE_CAPABILITIES		0x02
+#define SYN_QUE_MODEL			0x03
+#define SYN_QUE_SERIAL_NUMBER_PREFIX	0x06
+#define SYN_QUE_SERIAL_NUMBER_SUFFIX	0x07
+#define SYN_QUE_RESOLUTION		0x08
+#define SYN_QUE_EXT_CAPAB		0x09
 
 /* status request response bits (PS2_CMD_STATUS_REQUEST) */
-#define PS2_RES_REMOTE(r) (r&(1<<22))
-#define PS2_RES_ENABLE(r) (r&(1<<21))
-#define PS2_RES_SCALING(r) (r&(1<<20))
-#define PS2_RES_LEFT(r) (r&(1<<18))
-#define PS2_RES_MIDDLE(r) (r&(1<<17))
-#define PS2_RES_RIGHT(r) (r&(1<<16))
-#define PS2_RES_RESOLUTION(r) ((r>>8)&0x03)
-#define PS2_RES_SAMPLE_RATE(r) (r&0xff)
+#define PS2_RES_REMOTE(r)	((r) & (1 << 22))
+#define PS2_RES_ENABLE(r)	((r) & (1 << 21))
+#define PS2_RES_SCALING(r)	((r) & (1 << 20))
+#define PS2_RES_LEFT(r)		((r) & (1 << 18))
+#define PS2_RES_MIDDLE(r)	((r) & (1 << 17))
+#define PS2_RES_RIGHT(r)	((r) & (1 << 16))
+#define PS2_RES_RESOLUTION(r)	(((r) >> 8) & 0x03)
+#define PS2_RES_SAMPLE_RATE(r)	((r) & 0xff)
 
 /* #define DEBUG */
 
