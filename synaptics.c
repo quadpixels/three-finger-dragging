@@ -488,6 +488,12 @@ ReadInput(LocalDevicePtr local)
 		/* shared memory */
 		para->x = x;
 		para->y = y;
+		para->z = z;
+		para->w = w;
+		para->left = left;
+		para->right = right;
+		para->up = up;
+		para->down = down;
 
 		/* 3rd button emulation */
 		if(!left && !right) {

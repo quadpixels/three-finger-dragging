@@ -19,6 +19,9 @@ typedef struct _SynapticsMoveHist {
 
 typedef struct _SynapticsSHM {
 	int x, y;							/* actual x, y Coordinates */
+	int z;								/* pressure value */
+	int w;								/* finger width value */
+	int left, right, up, down;			/* left/right/up/down buttons */
 
 	unsigned long int model_id;			/* Model-ID */
 	unsigned long int capabilities; 	/* Capabilities */
