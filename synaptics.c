@@ -1409,33 +1409,14 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 						struct SynapticsHwState *hw)
 {
 	Bool ret = SynapticsGetPacket(local, priv);
+	int newabs = SYN_MODEL_NEWABS(priv->model_id);
 	unsigned char *buf;
 
 	if (ret != Success)
 		return ret;
 
 	buf = priv->protoBuf;
-	if (((buf[0] & 0xC0) == 0xC0) && ((buf[1] & 0x60) == 0) &&
-		((buf[3] & 0xC0) == 0x80) && ((buf[4] & 0x60) == 0)) /* old proto...*/
-	{
-			DBG(7, ErrorF("using old protocol\n"));
-			hw->x = (((buf[1] & 0x1F) << 8) |
-					 buf[2]);
-			hw->y = (((buf[4] & 0x1F) << 8) |
-					 buf[5]);
-
-			hw->z = (((buf[0] & 0x30) << 2) |
-					 (buf[3] & 0x3F));
-			hw->w = (((buf[1] & 0x80) >> 4) |
-					 ((buf[0] & 0x04) >> 1));
-
-			hw->left  = (buf[0] & 0x01) ? 1 : 0;
-			hw->right = (buf[0] & 0x02) ? 1 : 0;
-			hw->up    = 0;
-			hw->down  = 0;
-			hw->cbLeft = hw->cbRight = hw->up = hw->down = FALSE;
-	}
-	else if (((buf[0] & 0xC8) == 0x80) && ((buf[3] & 0xC8) == 0xC0)) /* newer protos...*/
+	if (newabs)								/* newer protos...*/
 	{
 		DBG(7, ErrorF("using new protocols\n"));
 		hw->x = (((buf[3] & 0x10) << 8) |
@@ -1479,12 +1460,24 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 			}
 		}
 	}
-	else
+	else									/* old proto...*/
 	{
-		xf86Msg(X_ERROR, "Wrong protocol version, not recognized by synaptics driver: "
-				"%x %x %x %x %x %x.\n", (int)buf[0], (int)buf[1], (int)buf[2],
-				(int)buf[3], (int)buf[4], (int)buf[5]);
-		return !Success;
+		DBG(7, ErrorF("using old protocol\n"));
+		hw->x = (((buf[1] & 0x1F) << 8) |
+				 buf[2]);
+		hw->y = (((buf[4] & 0x1F) << 8) |
+				 buf[5]);
+
+		hw->z = (((buf[0] & 0x30) << 2) |
+				 (buf[3] & 0x3F));
+		hw->w = (((buf[1] & 0x80) >> 4) |
+				 ((buf[0] & 0x04) >> 1));
+
+		hw->left  = (buf[0] & 0x01) ? 1 : 0;
+		hw->right = (buf[0] & 0x02) ? 1 : 0;
+		hw->up    = 0;
+		hw->down  = 0;
+		hw->cbLeft = hw->cbRight = hw->up = hw->down = FALSE;
 	}
 	if (hw->z > 0) {
 		int w_ok = 0;
@@ -1516,7 +1509,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 {
 	int count = 0;
 	int c;
-	int old_proto = 0;
+	int newabs = SYN_MODEL_NEWABS(priv->model_id);
 	unsigned char u;
 
 	while((c = XisbRead(priv->buffer)) >= 0) {
@@ -1555,22 +1548,16 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 		/* check first byte */
 		if(priv->protoBufTail == 1)
 		{
-			old_proto = 0;
-			if((u & 0xC8) != 0x80) /* newer protocols need this...*/
+			if (newabs ? ((u & 0xC8) != 0x80) : ((u & 0xC0) != 0xC0))
 			{
-				if((u & 0xC0) != 0xC0) /* old protocol needs this...*/
-				{
-					priv->inSync = FALSE;
-					priv->protoBufTail = 0;
-					DBG(4, ErrorF("Synaptics driver lost sync at 1st byte\n"));
-					continue;
-				}
-				else
-					old_proto = 1;
+				priv->inSync = FALSE;
+				priv->protoBufTail = 0;
+				DBG(4, ErrorF("Synaptics driver lost sync at 1st byte\n"));
+				continue;
 			}
 		}
 		/* for old protocol check 2nd and 5th byte */
-		if (old_proto && ((priv->protoBufTail == 2) || (priv->protoBufTail == 5)) &&
+		if (!newabs && ((priv->protoBufTail == 2) || (priv->protoBufTail == 5)) &&
 			((u & 0x60) != 0x00))
 		{
 			if (priv->protoBufTail == 2)
@@ -1587,8 +1574,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 		}
 		/* check 4th byte */
 		if((priv->protoBufTail == 4) &&
-		   ((((u & 0xc8) != 0xc0) && !old_proto) ||
-			(((u & 0xc0) != 0x80) && old_proto)))
+		   (newabs ? ((u & 0xc8) != 0xc0) : ((u & 0xc0) != 0x80)))
 		{
 			priv->inSync = FALSE;
 			priv->protoBufTail = 0;
