@@ -76,5 +76,4 @@ clean::
 	$(RM) *.CKP *.ln *.BAK *.bak *.o core errs ,* *~ *.a .emacs_* tags TAGS make.log MakeOut synclient "#"*
 
 tags::
-	$(TAGS) -w *.[ch]
-	$(TAGS) -xw *.[ch] > TAGS
+	etags -o TAGS *.c *.h
