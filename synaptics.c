@@ -1137,8 +1137,11 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
 	while (SynapticsReadEvent(priv, &ev) == Success) {
 		switch (ev.type) {
 		case 0x00:							/* SYN */
-			*hw = priv->hwState;
-			return Success;
+			switch (ev.code) {
+			case 0:							/* SYN_REPORT */
+				*hw = priv->hwState;
+				return Success;
+			}
 		case 0x01:							/* KEY */
 			switch (ev.code) {
 			case 0x110:						/* BTN_LEFT */
