@@ -54,6 +54,9 @@ typedef struct _SynapticsSHM
     Bool touchpad_off;			    /* Switches the Touchpad off*/
     Bool locked_drags;			    /* Enable locked drags */
     int tap_action[MAX_TAP];		    /* Button to report on tap events */
+    Bool circular_scrolling;		    /* Enable circular scrolling */
+    double scroll_dist_circ;		    /* Scrolling angle radians */
+    int circular_trigger;		    /* Trigger area for circular scrolling */
 } SynapticsSHM;
 
 #ifdef SYNAPTICS_PRIVATE
@@ -147,6 +150,7 @@ typedef struct _SynapticsPrivateRec
     int largest_valid_x;		/* Largest valid X coordinate seen so far */
     int scroll_y;			/* last y-scroll position */
     int scroll_x;			/* last x-scroll position */
+    double scroll_a;			/* last angle-scroll position */
     unsigned long count_packet_finger;	/* packet counter with finger on the touchpad */
     unsigned int tapping_millis;	/* packet counter for tapping */
     unsigned int button_delay_millis;	/* button delay for 3rd button emulation */
@@ -157,6 +161,7 @@ typedef struct _SynapticsPrivateRec
     Bool tap_left, tap_mid, tap_right;	/* tapping buttons */
     Bool vert_scroll_on;		/* scrolling flag */
     Bool horiz_scroll_on;		/* scrolling flag */
+    Bool circ_scroll_on;		/* scrolling flag */
     double frac_x, frac_y;		/* absoulte -> relative fraction */
     enum MidButtonEmulation mid_emu_state;	/* emulated 3rd button */
     int repeatButtons;			/* buttons for repeat */

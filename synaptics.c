@@ -1,4 +1,7 @@
 /*
+ *   Copyright 2004 Alexei Gilchrist <alexei@physics.uq.edu.au>
+ *     patch for circular scrolling
+ *
  *   Copyright 2003 Jörg Bösner <ich@joerg-boesner.de>
  *     patch for switching the touchpad off (for example, when a
  *     USB mouse is connected)
@@ -109,6 +112,10 @@ typedef enum {
 #define MIN(a, b) (((a)<(b))?(a):(b))
 #define TIME_DIFF(a, b) ((long)((a)-(b)))
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 /* for auto-dev: */
 #define DEV_INPUT_EVENT "/dev/input"
@@ -336,6 +343,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->synpara->tap_action[F1_TAP] = xf86SetIntOption(local->options, "TapButton1",     1);
     priv->synpara->tap_action[F2_TAP] = xf86SetIntOption(local->options, "TapButton2",     2);
     priv->synpara->tap_action[F3_TAP] = xf86SetIntOption(local->options, "TapButton3",     3);
+    priv->synpara->circular_scrolling = xf86SetBoolOption(local->options, "CircularScrolling", FALSE);
+    priv->synpara->circular_trigger   = xf86SetIntOption(local->options, "CircScrollTrigger", 0);
 
     str_par = xf86FindOptionValue(local->options, "MinSpeed");
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->min_speed) != 1))
@@ -346,6 +355,14 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     str_par = xf86FindOptionValue(local->options, "AccelFactor");
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->accl) != 1))
 	priv->synpara->accl=0.0015;
+    str_par = xf86FindOptionValue(local->options, "CircScrollDelta");
+    if ((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->scroll_dist_circ) != 1))
+	priv->synpara->scroll_dist_circ = 0.1;
+
+    if (priv->synpara->circular_trigger < 0 || priv->synpara->circular_trigger > 8) {
+	xf86Msg(X_WARNING, "Unknown circular scrolling trigger, using 0 (edges)");
+	priv->synpara->circular_trigger = 0;
+    }
 
     /* Warn about (and fix) incorrectly configured TopEdge/BottomEdge parameters */
     if (priv->synpara->top_edge > priv->synpara->bottom_edge) {
@@ -571,6 +588,28 @@ static int
 move_distance(int dx, int dy)
 {
     return xf86sqrt((dx * dx) + (dy * dy));
+}
+
+/* return angle of point relative to center */
+static double
+angle(SynapticsPrivate *priv, int x, int y)
+{
+    double xCenter = (priv->synpara->left_edge + priv->synpara->right_edge) / 2.0;
+    double yCenter = (priv->synpara->top_edge + priv->synpara->bottom_edge) / 2.0;
+
+    return xf86atan2(-(y - yCenter), x - xCenter);
+}
+
+/* return angle difference */
+static double
+diffa(double a1, double a2)
+{
+    double da = xf86fmod(a2 - a1, 2 * M_PI);
+    if (da < 0)
+	da += 2 * M_PI;
+    if (da > M_PI)
+	da -= 2 * M_PI;
+    return da;
 }
 
 static edge_type
@@ -1004,16 +1043,37 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 
     /* scroll detection */
     if (finger && !priv->finger_flag) {
-	if (edge & RIGHT_EDGE) {
-	    priv->vert_scroll_on = TRUE;
-	    priv->scroll_y = hw->y;
-	    DBG(7, ErrorF("vert edge scroll detected on right edge\n"));
+	if (para->circular_scrolling) {
+	    if ((para->circular_trigger == 0 && edge) ||
+		(para->circular_trigger == 1 && edge & TOP_EDGE) ||
+		(para->circular_trigger == 2 && edge & TOP_EDGE && edge & RIGHT_EDGE) ||
+		(para->circular_trigger == 3 && edge & RIGHT_EDGE) ||
+		(para->circular_trigger == 4 && edge & RIGHT_EDGE && edge & BOTTOM_EDGE) ||
+		(para->circular_trigger == 5 && edge & BOTTOM_EDGE) ||
+		(para->circular_trigger == 6 && edge & BOTTOM_EDGE && edge & LEFT_EDGE) ||
+		(para->circular_trigger == 7 && edge & LEFT_EDGE) ||
+		(para->circular_trigger == 8 && edge & LEFT_EDGE && edge & TOP_EDGE)) {
+		priv->circ_scroll_on = TRUE;
+		priv->scroll_a = angle(priv, hw->x, hw->y);
+		DBG(7, ErrorF("circular scroll detected on edge\n"));
+	    }
+	} else {
+	    if (edge & RIGHT_EDGE) {
+		priv->vert_scroll_on = TRUE;
+		priv->scroll_y = hw->y;
+		DBG(7, ErrorF("vert edge scroll detected on right edge\n"));
+	    }
+	    if (edge & BOTTOM_EDGE) {
+		priv->horiz_scroll_on = TRUE;
+		priv->scroll_x = hw->x;
+		DBG(7, ErrorF("horiz edge scroll detected on bottom edge\n"));
+	    }
 	}
-	if (edge & BOTTOM_EDGE) {
-	    priv->horiz_scroll_on = TRUE;
-	    priv->scroll_x = hw->x;
-	    DBG(7, ErrorF("horiz edge scroll detected on bottom edge\n"));
-	}
+    }
+    if (priv->circ_scroll_on && (!finger || priv->palm)) {
+	/* circular scroll locks in until finger is raised */
+	DBG(7, ErrorF("cicular scroll off\n"));
+	priv->circ_scroll_on = FALSE;
     }
     if (priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger || priv->palm)) {
 	DBG(7, ErrorF("vert edge scroll off\n"));
@@ -1038,6 +1098,25 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	    priv->scroll_y -= para->scroll_dist_vert;
 	}
     }
+    if (priv->circ_scroll_on) {
+	/* + = counter clockwise, - = clockwise */
+	while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) > para->scroll_dist_circ) {
+	    scroll_up++;
+	    if (scroll_up > 1000)
+		break; /* safety */
+	    priv->scroll_a += para->scroll_dist_circ;
+	    if (priv->scroll_a > M_PI)
+		priv->scroll_a -= 2 * M_PI;
+	}
+	while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) < -para->scroll_dist_circ) {
+	    scroll_down++;
+	    if (scroll_down > 1000)
+		break; /* safety */
+	    priv->scroll_a -= para->scroll_dist_circ;
+	    if (priv->scroll_a < -M_PI)
+		priv->scroll_a += 2 * M_PI;
+	}
+    }
     scroll_left = 0;
     scroll_right = 0;
     if (priv->horiz_scroll_on) {
@@ -1053,7 +1132,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     }
 
     /* movement */
-    if (finger && !priv->vert_scroll_on && !priv->horiz_scroll_on &&
+    if (finger && !priv->vert_scroll_on && !priv->horiz_scroll_on && !priv->circ_scroll_on &&
 	!priv->finger_count && !priv->palm) {
 	delay = MIN(delay, 13);
 	if (priv->count_packet_finger > 3) { /* min. 3 packets */

@@ -107,6 +107,12 @@ TapButton2		Int	Which mouse button is reported on a non-corner two-finger tap
 				0=No action, 1=Left Button, 2=Middle Button, 3=Right Button
 TapButton3		Int	Which mouse button is reported on a non-corner three-finger tap
 				0=No action, 1=Left Button, 2=Middle Button, 3=Right Button
+CircularScrolling	Bool	If on, circular scrolling is used (see below)
+CircScrollDelta		Float	Move angle (radians) of finger to generate a scroll event
+CircScrollTrigger	Int	Trigger region on the touchpad to start circular scrolling
+				0=All Edges, 1=Top Edge, 2=Top Right Corner, 3=Right Edge,
+				4=Bottom Right Corner, 5=Bottom Edge, 6=Bottom Left Corner,
+				7=Left Edge, 8=Top Left Corner
 
 A tap event happens when the finger is touched and released in a time
 interval shorter than MaxTapTime, and the touch and release
@@ -133,6 +139,14 @@ events. If you press both the left and right mouse buttons at almost
 the same time (no more than EmulateMidButtonTime milliseconds apart)
 the driver generates a middle mouse button event.
 
+Circular scrolling acts like a scrolling wheel on the trackpad.
+Scrolling is engaged when a drag starts in the given CircScrollTrigger
+region, which can be all edges, a particular side, or a particular
+corner. Once scrolling is engaged, moving your finger in clockwise
+circles around the trackpad will generate scroll down events and
+counter clockwise scroll up events. Lifting your finger will disengage
+circular scrolling. Use tight circles near the center of the pad for
+fast scrolling and large circles for better control.
 
 FAQ
 ---

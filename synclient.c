@@ -71,6 +71,9 @@ static struct Parameter params[] = {
     DEFINE_PAR("TapButton1",           tap_action[F1_TAP],      PT_INT,    0, 3),
     DEFINE_PAR("TapButton2",           tap_action[F2_TAP],      PT_INT,    0, 3),
     DEFINE_PAR("TapButton3",           tap_action[F3_TAP],      PT_INT,    0, 3),
+    DEFINE_PAR("CircularScrolling",    circular_scrolling,      PT_BOOL,   0, 1),
+    DEFINE_PAR("CircScrollDelta",      scroll_dist_circ,        PT_DOUBLE, .01, 3),
+    DEFINE_PAR("CircScrollTrigger",    circular_trigger,        PT_INT,    0, 8),
     { 0, 0, 0, 0, 0 }
 };
 
