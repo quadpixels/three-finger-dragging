@@ -1,3 +1,36 @@
+0.11.3p7: (2003-07-17)
+- Added support for touchpads with "multi buttons". (Hartwig Felger)
+- Mention the synclient program in the INSTALL file.
+- Updated COMPATIBILITY file.
+- Implemented protocol "auto-dev" that automatically tries to find the
+  proper device node and protocol for the touchpad. This makes it
+  possible to have the same XF86Config file for 2.4 and 2.5 kernels.
+  (Hartwig Felger)
+
+0.11.3p6: (2003-07-13)
+- Build fix for gentoo linux.
+- Longer timeout in the reset sequence. Experience from the 2.5 kernel
+  driver has shown that 4 seconds is needed for some touchpads.
+- Made horizontal wheel replacement buttons work. (Patch from Hartwig
+  Felger.)
+- Improved driver initialisation and finalization. From Hartwig
+  Felger.
+- Reset the touchpad to relative mode when the X server
+  terminates. (So that you can run gpm afterwards for example.)
+- Implemented install target in the Makefile.
+
+0.11.3p5: (2003-07-08)
+- Fixed rare X server hang/crash.
+
+0.11.3p4: (2003-07-05)
+- Workaround for an X server bug that could make the X server crash.
+- Fixed bug that sometimes incorrectly moved the cursor to the upper
+  right corner of the screen.
+
+0.11.3p3: (2003-06-19)
+- Added support for linux kernel 2.5.x.
+
+
 09.06.02 - Version 0.11.1
 - new packet format for Firmware 5.8 and others; solves problems with some
   models with 6 buttons (S. Lehner <sam_x@bluemail.ch>)

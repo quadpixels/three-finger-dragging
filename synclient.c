@@ -20,6 +20,8 @@ static void show_hw_info(SynapticsSHM* synshm)
 		printf("    Identity     = %08lx\n", synshm->identity);
 	} else {
 		printf("    No touchpad found\n");
+		printf("    Do you use a newer kernel than 2.4?\n");
+		printf("    Then browse the messages or boot.msg for the hardware info\n");
 	}
 }
 

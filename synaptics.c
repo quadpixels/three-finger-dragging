@@ -240,21 +240,26 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 					   "the Device Option.\n");
 			} else { /* Now update Device Option to found eventX */
 				static char *event_device;
-				event_device = malloc(strlen(line) - sizeof(INP_DEV_H) + sizeof(DEV_INPUT_EVENT) + 1);
-				if(event_device == NULL) {
-					ErrorF("auto-dev: cannot get memory for telling the right device name. "
+				char *s;
+
+				event_device=NULL;
+				s=strstr(line+sizeof(INP_DEV_H)-1, "event"); /* there might also be some other devices f.e. js0... */
+				if(s != NULL) {
+					s[sizeof("event")]='\0'; /* terminate the string after event2 */
+					event_device = malloc(strlen(s) + sizeof(DEV_INPUT_EVENT) + 1);
+				}
+				if(s == NULL || event_device == NULL) {
+					if(s == NULL)
+						ErrorF("auto-dev: cannot find the event-device in the handlers-entry for the "
+							   "Synaptics touchpad hardware. Falling back to psaux protocol and the "
+							   "Device Option from XF86Config.\n");
+					else
+						ErrorF("auto-dev: cannot get memory for telling the right device name. "
 						   "Falling back to psaux protocol and the Device Option from XF86Config.\n");
 				} else {
 					priv->proto = SYN_PROTO_EVENT;
 					strcpy(event_device, DEV_INPUT_EVENT);
-					strcat(event_device, line + sizeof(INP_DEV_H) - 1);
-					{
-						int i;
-						for(i = strlen(event_device); i >= 0; --i)
-							if(event_device[i] > ' ')
-								break;
-						event_device[i + 1] = 0;
-					}
+					strcat(event_device, s);
 					xf86Msg(X_PROBED, "%s auto-dev sets Synaptics Device to %s\n",
 							local->name, event_device);
 					xf86ReplaceStrOption(local->options, "Device", event_device);

@@ -1,13 +1,23 @@
-The touchpad driver has the following functions (some function requires features from the touchpad that must be present, multifinger taps for example):
-- Movement with adjustable, non-linear acceleration and speed (Options: MinSpeed, MaxSpeed, AccelFactor)
-- Button events through short touching of the touchpad (Options: MaxTapTime, MaxTapMove)
-- Double-Button events through double short touching of the touchpad 
-- Dragging through short touching and holding down the finger on the touchpad
-- Middle and right button events on the upper and lower corner of the touchpad (Option: Edges)
-- Scrolling (button four and five events) through moving the finger on the right side of the touchpad (Options: Edges, VertScrollDelta)
+The touchpad driver has the following functions (some function
+requires features from the touchpad that must be present, multifinger
+taps for example):
+- Movement with adjustable, non-linear acceleration and speed
+  (Options: MinSpeed, MaxSpeed, AccelFactor)
+- Button events through short touching of the touchpad (Options:
+  MaxTapTime, MaxTapMove)
+- Double-Button events through double short touching of the touchpad
+- Dragging through short touching and holding down the finger on the
+  touchpad
+- Middle and right button events on the upper and lower corner of the
+  touchpad (Option: Edges)
+- Scrolling (button four and five events) through moving the finger on
+  the right side of the touchpad (Options: Edges, VertScrollDelta)
 - The up/down button sends button four/five events
+- The multi-buttons send button four/five events, and six/seven events
+  for horizontal scrolling (needs patch for 2.6-kernels, hopefully
+  being in 2.6.0-test2)
 - Adjustable finger detection (Option: Finger)
 - Ext Mouse repeater support - Alpha! (Option: Repeater)
-- Multifinger taps: two finger for middle button and three finger for right button events
+- Multifinger taps: two finger for middle button and three finger for
+  right button events
 - Online configuration through shared memory (Option: SHMConfig)
-
