@@ -1271,6 +1271,7 @@ QueryHardware (LocalDevicePtr local)
 	SynapticsPrivatePtr priv = (SynapticsPrivatePtr) local->private;
 	SynapticsSHMPtr para = priv->synpara;
 	int retries;
+	int mode;
 
 	xf86Msg(X_INFO, "xfree driver for the synaptics touchpad %s\n", VERSION);
 
@@ -1315,10 +1316,12 @@ QueryHardware (LocalDevicePtr local)
 	para->capabilities = priv->capabilities;
 	para->ext_cap = priv->ext_cap;
 
-	if(synaptics_set_mode(local->fd, SYN_BIT_ABSOLUTE_MODE |
-	                                 SYN_BIT_HIGH_RATE |
-	                                 SYN_BIT_DISABLE_GESTURE |
-	                                 SYN_BIT_W_MODE) != Success)
+	mode = SYN_BIT_ABSOLUTE_MODE | SYN_BIT_HIGH_RATE;
+	if (SYN_ID_MAJOR(priv->identity) >= 4)
+		mode |= SYN_BIT_DISABLE_GESTURE;
+	if (SYN_CAP_EXTENDED(priv->capabilities))
+		mode |= SYN_BIT_W_MODE;
+	if(synaptics_set_mode(local->fd, mode) != Success)
 		return !Success;
 
 	SynapticsEnableDevice(local->fd);
