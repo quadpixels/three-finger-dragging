@@ -103,7 +103,7 @@ ps2comm.o   : ps2comm.h synproto.h synaptics.h
 eventcomm.o : eventcomm.h linux_input.h synproto.h synaptics.h
 psmcomm.o   : freebsd_mouse.h psmcomm.h synproto.h synaptics.h ps2comm.h
 alpscomm.o  : alpscomm.h ps2comm.h synproto.h synaptics.h
-synclient.o : synaptics.h
+synclient.o : synaptics.h Makefile
 syndaemon.o : synaptics.h
 
 clean::
