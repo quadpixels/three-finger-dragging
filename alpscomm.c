@@ -50,7 +50,7 @@ ALPSDeviceOffHook(LocalDevicePtr local)
 static Bool
 ALPSQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 {
-    ALPS_initialize(local->fd);    
+    ALPS_initialize(local->fd);
     return TRUE;
 }
 
