@@ -130,7 +130,7 @@ static XF86ModuleVersionInfo VersionRec =
 
 
 static pointer
-SetupProc(pointer module, pointer options, int *errmaj, int *errmin )
+SetupProc(pointer module, pointer options, int *errmaj, int *errmin)
 {
 	xf86AddInputDriver(&SYNAPTICS, module, 0);
 	return module;
@@ -621,7 +621,7 @@ move_distance(int dx, int dy)
 }
 
 static edge_type
-edge_detection( SynapticsPrivatePtr priv, int x, int y )
+edge_detection(SynapticsPrivatePtr priv, int x, int y)
 {
 	edge_type edge = 0;
 
@@ -706,47 +706,14 @@ ReadInput(LocalDevicePtr local)
 		priv->timer = TimerSet(priv->timer, 0, delay, timerFunc, local);
 }
 
-/*
- * React on changes in the hardware state. This function is called every time
- * the hardware state changes. The return value is used to specify how many
- * milliseconds to wait before calling the function again if no state change
- * occurs.
- */
 static int
-HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
+HandleMidButtonEmulation(SynapticsPrivatePtr priv, struct SynapticsHwState* hw, long* delay)
 {
-	SynapticsPrivatePtr priv = (SynapticsPrivatePtr) (local->private);
 	SynapticsSHMPtr para = priv->synpara;
-	Bool finger;
-	int dist, dx, dy, buttons, id;
-	edge_type edge;
-	Bool mid;
-	double speed, integral;
-	int change;
-	int scroll_up, scroll_down, scroll_left, scroll_right;
-	int double_click;
-	Bool done;
-	int delay = 1000000000;
+	Bool done = FALSE;
 	long timeleft;
+	int mid = 0;
 
-	mid   = FALSE;
-
-	edge = edge_detection(priv, hw->x, hw->y);
-
-	dx = dy = 0;
-
-	/* update finger position in shared memory */
-	para->x = hw->x;
-	para->y = hw->y;
-	para->z = hw->z;
-	para->w = hw->w;
-	para->left = hw->left;
-	para->right = hw->right;
-	para->up = hw->up;
-	para->down = hw->down;
-
-	/* 3rd button emulation */
-	done = FALSE;
 	while (!done) {
 		switch (priv->mid_emu_state) {
 		case MBE_OFF:
@@ -763,7 +730,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 			timeleft = TIME_DIFF(priv->button_delay_millis + para->emulate_mid_button_time,
 								 hw->millis);
 			if (timeleft > 0)
-				delay = MIN(delay, timeleft);
+				*delay = MIN(*delay, timeleft);
 			if (!hw->left || (timeleft <= 0)) {
 				hw->left = TRUE;
 				priv->mid_emu_state = MBE_TIMEOUT;
@@ -779,7 +746,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 			timeleft = TIME_DIFF(priv->button_delay_millis + para->emulate_mid_button_time,
 								 hw->millis);
 			if (timeleft > 0)
-				delay = MIN(delay, timeleft);
+				*delay = MIN(*delay, timeleft);
 			if (!hw->right || (timeleft <= 0)) {
 				hw->right = TRUE;
 				priv->mid_emu_state = MBE_TIMEOUT;
@@ -808,6 +775,47 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 			}
 		}
 	}
+	return mid;
+}
+
+/*
+ * React on changes in the hardware state. This function is called every time
+ * the hardware state changes. The return value is used to specify how many
+ * milliseconds to wait before calling the function again if no state change
+ * occurs.
+ */
+static int
+HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
+{
+	SynapticsPrivatePtr priv = (SynapticsPrivatePtr) (local->private);
+	SynapticsSHMPtr para = priv->synpara;
+	Bool finger;
+	int dist, dx, dy, buttons, id;
+	edge_type edge;
+	Bool mid;
+	double speed, integral;
+	int change;
+	int scroll_up, scroll_down, scroll_left, scroll_right;
+	int double_click;
+	long delay = 1000000000;
+	long timeleft;
+
+	edge = edge_detection(priv, hw->x, hw->y);
+
+	dx = dy = 0;
+
+	/* update finger position in shared memory */
+	para->x = hw->x;
+	para->y = hw->y;
+	para->z = hw->z;
+	para->w = hw->w;
+	para->left = hw->left;
+	para->right = hw->right;
+	para->up = hw->up;
+	para->down = hw->down;
+
+	/* 3rd button emulation */
+	mid = HandleMidButtonEmulation(priv, hw, &delay);
 
 	/* Up/Down-button scrolling or middle/double-click */
 	double_click = FALSE;
@@ -1518,7 +1526,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 		/* test if there is a reset sequence received */
 		if((c == 0x00) && (priv->lastByte == 0xAA))
 		{
-			if(xf86WaitForInput(local->fd, 50000) == 0 )
+			if(xf86WaitForInput(local->fd, 50000) == 0)
 			{
 				DBG(7, ErrorF("Reset received\n"));
 				QueryHardware(local);
