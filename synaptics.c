@@ -324,7 +324,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->edge_motion_use_always = xf86SetBoolOption(local->options, "EdgeMotionUseAlways", FALSE);
     repeater = xf86SetStrOption(local->options, "Repeater", NULL);
     pars->updown_button_scrolling = xf86SetBoolOption(local->options, "UpDownScrolling", TRUE);
-    pars->touchpad_off = xf86SetBoolOption(local->options, "TouchpadOff", FALSE);
+    pars->touchpad_off = xf86SetIntOption(local->options, "TouchpadOff", 0);
     pars->guestmouse_off = xf86SetBoolOption(local->options, "GuestMouseOff", FALSE);
     pars->locked_drags = xf86SetBoolOption(local->options, "LockedDrags", FALSE);
     pars->tap_action[RT_TAP] = xf86SetIntOption(local->options, "RTCornerButton", 2);
@@ -871,6 +871,11 @@ SelectTapButton(SynapticsPrivate *priv, edge_type edge)
 {
     TapEvent tap;
 
+    if (priv->synpara->touchpad_off == 2) {
+	priv->tap_button = 0;
+	return;
+    }    
+
     switch (priv->tap_max_fingers) {
     case 1:
     default:
@@ -1338,7 +1343,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     para->guest_dy = hw->guest_dy;
 
     /* If touchpad is switched off, we skip the whole thing and return delay */
-    if (para->touchpad_off == TRUE)
+    if (para->touchpad_off == 1)
 	return delay;
 
     /* Treat the first two multi buttons as up/down for now. */

@@ -32,6 +32,7 @@
 
 static SynapticsSHM *synshm;
 static int pad_disabled;
+static int disable_taps_only;
 static int background = 0;
 
 
@@ -41,6 +42,7 @@ static void usage()
     fprintf(stderr, "  -i How many seconds to wait after the last key press before\n");
     fprintf(stderr, "     enabling the touchpad. (default is 2s)\n");
     fprintf(stderr, "  -d Start as a daemon, ie in the background.\n");
+    fprintf(stderr, "  -t Only disable tapping, not mouse movements.\n");
     exit(1);
 }
 
@@ -151,7 +153,10 @@ static void main_loop(Display *display, double idle_time)
 		if (!background)
 		    printf("Disable\n");
 		pad_disabled = 1;
-		synshm->touchpad_off = 1;
+		if (disable_taps_only)
+		    synshm->touchpad_off = 2;
+		else
+		    synshm->touchpad_off = 1;
 	    }
 	}
 
@@ -167,13 +172,16 @@ int main(int argc, char *argv[])
     int shmid;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "i:d?")) != EOF) {
+    while ((c = getopt(argc, argv, "i:dt?")) != EOF) {
 	switch(c) {
 	case 'i':
 	    idle_time = atof(optarg);
 	    break;
 	case 'd':
 	    background = 1;
+	    break;
+	case 't':
+	    disable_taps_only = 1;
 	    break;
 	default:
 	    usage();
