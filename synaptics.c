@@ -465,15 +465,7 @@ DeviceControl(DeviceIntPtr dev, int mode)
 	RetValue = DeviceOff( dev );
 	break;
     case DEVICE_CLOSE:
-	{
-	    int shmid;
-	    LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
-	    SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
-	    RetValue = DeviceOff( dev );
-	    if (priv->shm_config)
-		if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
-		    xf86shmctl(shmid, XF86IPC_RMID, NULL);
-	}
+	RetValue = DeviceOff( dev );
 	break;
     default:
 	RetValue = BadValue;
