@@ -4,6 +4,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <X11/Xdefs.h>
 #include "synaptics.h"
@@ -25,6 +26,8 @@ int main()
 	SynapticsSHM *synshm;
 	int shmid;
 	SynapticsSHM old;
+	memset(&old, 0, sizeof(SynapticsSHM));
+	old.x = -1;							/* Force first equality test to fail */
 
 	if((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0)) == -1) {
 		if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) == -1) {
