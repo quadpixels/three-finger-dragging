@@ -75,16 +75,29 @@ EndSection
 Change the Identifier to the same name as in the ServerLayout section.
 The Option "Repeater" is at the moment for testing.
 
-5. Add the "CorePointer" option to the InputDevice line at the ServerLayout section:
+5. Add the "CorePointer" option to the InputDevice line at the
+   ServerLayout section:
 
-Section "ServerLayout"
-...
-  InputDevice "Synaptics Mouse"  "CorePointer"
-...
+      Section "ServerLayout"
+      ...
+              InputDevice "Synaptics Mouse"  "CorePointer"
+      ...
 
    Note! You can not have more than one core pointer, so if you want
    to use an external mouse too, you have to set all mouse input
-   devices except one to "AlwaysCore" instead of "CorePointer".
+   devices except one to "AlwaysCore" instead of "CorePointer". For
+   example:
+
+      Section "ServerLayout"
+      ...
+              InputDevice    "Mouse0" "CorePointer"
+              InputDevice    "Synaptics Mouse" "AlwaysCore"
+      ...
+      Section "InputDevice"
+      ...
+              Identifier  "Mouse0"
+              Option      "Device" "/dev/input/mice"
+      ...
 
 6. Start/Restart the X Server. If the touchpad doesn't work:
    a) Check the XFree log file. This file is usually called
