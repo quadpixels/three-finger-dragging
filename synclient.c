@@ -242,11 +242,12 @@ static void monitor(SynapticsSHM* synshm, int delay)
 
 static void usage()
 {
-    fprintf(stderr, "Usage: synclient [-m interval] [-h] [-l] [-?] [var1=value1 [var2=value2] ...]\n");
+    fprintf(stderr, "Usage: synclient [-m interval] [-h] [-l] [-V] [-?] [var1=value1 [var2=value2] ...]\n");
     fprintf(stderr, "  -m monitor changes to the touchpad state.\n"
 	    "     interval specifies how often (in ms) to poll the touchpad state\n");
     fprintf(stderr, "  -h Show detected hardware properties\n");
     fprintf(stderr, "  -l List current user settings\n");
+    fprintf(stderr, "  -V Print version number and exit\n");
     fprintf(stderr, "  -? Show this help message\n");
     fprintf(stderr, "  var=value  Set user parameter 'var' to 'value'.\n");
     exit(1);
@@ -265,7 +266,7 @@ int main(int argc, char* argv[])
     int first_cmd;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "m:hl")) != -1) {
+    while ((c = getopt(argc, argv, "m:hlV")) != -1) {
 	switch (c) {
 	case 'm':
 	    do_monitor = 1;
@@ -278,6 +279,9 @@ int main(int argc, char* argv[])
 	case 'l':
 	    dump_settings = 1;
 	    break;
+	case 'V':
+	    printf("%s\n", VERSION);
+	    exit(0);
 	default:
 	    usage();
 	}

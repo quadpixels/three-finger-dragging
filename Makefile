@@ -48,7 +48,7 @@ CCOPTIONS += $(call check_gcc,-fno-merge-constants,)
 CCOPTIONS += $(call check_gcc,-fno-pic,)
 CDEBUGFLAGS = -O2
 CFLAGS = $(CDEBUGFLAGS) $(CCOPTIONS) $(ALLDEFINES) -DVERSION="\"$(VERSION)\""
-CFLAGSCLIENT = $(CDEBUGFLAGS) $(CCOPTIONS) -I$(X_INCLUDES_ROOT)/include
+CFLAGSCLIENT = $(CDEBUGFLAGS) $(CCOPTIONS) -DVERSION="\"$(VERSION)\"" -I$(X_INCLUDES_ROOT)/include
 
 CC = gcc
 
