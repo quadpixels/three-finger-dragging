@@ -8,6 +8,14 @@ LOCAL_X = Xincludes/usr/X11R6
 BINDIR = $(DESTDIR)/usr/local/bin
 MANDIR = $(DESTDIR)/usr/local/man/man1
 
+ifeq ($(ARCH),x86_64)
+  ARCH_DEFINES = -D__x86_64__ -D_XSERVER64
+  LIBDIR = lib64
+else
+  ARCH_DEFINES = -D__i386__
+  LIBDIR = lib
+endif
+
 ifeq ($(TOP),)
   # This hack attempts to check if the needed XFree86 header files are installed.
   # It checks for a needed XFree86 4.3.00 SDK header file that is not installed by
@@ -15,14 +23,14 @@ ifeq ($(TOP),)
   # If it is not present, then it assumes that all header files are not present
   # and uses the local copy of the XFree86 4.2.0 header files.
   X_INCLUDES_ROOT = $(shell \
-    if [ -f $(INSTALLED_X)/lib/Server/include/xisb.h ] ; then \
+    if [ -f $(INSTALLED_X)/$(LIBDIR)/Server/include/xisb.h ] ; then \
       echo -n $(INSTALLED_X) ; \
     else \
       echo -n $(LOCAL_X) ; \
     fi )
   ALLINCLUDES = -I. -I$(X_INCLUDES_ROOT)/include/X11 \
 		-I$(X_INCLUDES_ROOT)/include/X11/extensions \
-		-I$(X_INCLUDES_ROOT)/lib/Server/include
+		-I$(X_INCLUDES_ROOT)/$(LIBDIR)/Server/include
 else
   SERVERSRC = $(TOP)/programs/Xserver
   ALLINCLUDES = -I. \
@@ -38,14 +46,6 @@ MODULE_DEFINES = -DIN_MODULE -DXFree86Module
 PROTO_DEFINES = -DFUNCPROTO=15 -DNARROWPROTO
 
 ARCH = $(shell /bin/arch)
-
-ifeq ($(ARCH),x86_64)
-  ARCH_DEFINES = -D__x86_64__ -D_XSERVER64
-  LIBDIR = lib64
-else
-  ARCH_DEFINES = -D__i386__
-  LIBDIR = lib
-endif
 
 STD_DEFINES = -Dlinux -D_POSIX_C_SOURCE=199309L -D_POSIX_SOURCE -D_XOPEN_SOURCE -D_BSD_SOURCE -D_SVID_SOURCE  -D_GNU_SOURCE  -DSHAPE -DXINPUT -DXKB -DLBX -DXAPPGROUP -DXCSECURITY -DTOGCUP   -DDPMSExtension  -DPIXPRIV -DPANORAMIX  -DRENDER -DGCCUSESGAS -DAVOID_GLYPHBLT -DPIXPRIV -DSINGLEDEPTH -DXFreeXDGA -DXvExtension -DXFree86LOADER  -DXFree86Server -DXF86VIDMODE  -DSMART_SCHEDULE -DBUILDDEBUG -DX_BYTE_ORDER=X_LITTLE_ENDIAN -DNDEBUG $(ARCH_DEFINES)
 ALLDEFINES = $(ALLINCLUDES) $(STD_DEFINES) $(PROTO_DEFINES) $(MODULE_DEFINES)
