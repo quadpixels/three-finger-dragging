@@ -443,6 +443,16 @@ updownTimer(OsTimerPtr timer, CARD32 now, pointer arg)
 
 #define MOVE_HIST(a) ((priv->count_packet_finger-(a))%SYNAPTICS_MOVE_HISTORY)
 
+static int clamp(int val, int min, int max)
+{
+	if (val < min)
+		return min;
+	else if (val < max)
+		return val;
+	else
+		return max;
+}
+
 static void
 ReadInput(LocalDevicePtr local)
 {
@@ -706,14 +716,14 @@ ReadInput(LocalDevicePtr local)
 
 				if (priv->drag) {
 					if (edge & RIGHT_EDGE) {
-						dx += para->edge_motion_speed;
+						dx += clamp(para->edge_motion_speed - dx, 0, para->edge_motion_speed);
 					} else if (edge & LEFT_EDGE) {
-						dx -= para->edge_motion_speed;
+						dx -= clamp(para->edge_motion_speed + dx, 0, para->edge_motion_speed);
 					}
 					if (edge & TOP_EDGE) {
-						dy -= para->edge_motion_speed;
+						dy -= clamp(para->edge_motion_speed + dy, 0, para->edge_motion_speed);
 					} else if (edge & BOTTOM_EDGE) {
-						dy += para->edge_motion_speed;
+						dy += clamp(para->edge_motion_speed - dy, 0, para->edge_motion_speed);
 					}
 				}
 
