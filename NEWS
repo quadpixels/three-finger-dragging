@@ -2,7 +2,7 @@
 - Improved support for the old-style synaptics protocol.
 - Cleanup: Moved middle mouse button emulation to a separate function.
 - Cleanup: Moved finger detection to a separate function.
-- More robust resynchronization code, after an idea from Harwig
+- More robust resynchronization code, after an idea from Hartwig
   Felger. When we realize we are out of sync, only throw away one
   byte, not all bytes already read from the touchpad.
 
