@@ -1384,13 +1384,7 @@ QueryHardware(LocalDevicePtr local)
     while ((retries++ <= 3) && (synaptics_reset(local->fd) != Success))
 	xf86Msg(X_ERROR, "%s reset failed\n", local->name);
 
-    if (synaptics_identify(local->fd, &priv->synhw) != Success)
-	return !Success;
-
-    if (synaptics_model_id(local->fd, &priv->synhw.model_id) != Success)
-	return !Success;
-
-    if (synaptics_capability(local->fd, &priv->synhw) != Success)
+    if (synaptics_get_hwinfo(local->fd, &priv->synhw) != Success)
 	return !Success;
 
     para->synhw = priv->synhw;

@@ -290,8 +290,8 @@ SynapticsResetPassthrough(int fd)
  * Read the model-id bytes from the touchpad
  * see also SYN_MODEL_* macros
  */
-Bool
-synaptics_model_id(int fd, unsigned long int *model_id)
+static Bool
+synaptics_model_id(int fd, struct synapticshw *synhw)
 {
     byte mi[3];
 
@@ -301,7 +301,7 @@ synaptics_model_id(int fd, unsigned long int *model_id)
 	(ps2_getbyte(fd, &mi[0]) == Success) &&
 	(ps2_getbyte(fd, &mi[1]) == Success) &&
 	(ps2_getbyte(fd, &mi[2]) == Success)) {
-	*model_id = (mi[0] << 16) | (mi[1] << 8) | mi[2];
+	synhw->model_id = (mi[0] << 16) | (mi[1] << 8) | mi[2];
 	DBG(ErrorF("mode-id %06X\n", *model_id));
 	DBG(ErrorF("...done.\n"));
 	return Success;
@@ -314,7 +314,7 @@ synaptics_model_id(int fd, unsigned long int *model_id)
  * Read the capability-bits from the touchpad
  * see also the SYN_CAP_* macros
  */
-Bool
+static Bool
 synaptics_capability(int fd, struct synapticshw *synhw)
 {
     byte cap[3];
@@ -353,7 +353,7 @@ synaptics_capability(int fd, struct synapticshw *synhw)
  * Identify Touchpad
  * See also the SYN_ID_* macros
  */
-Bool
+static Bool
 synaptics_identify(int fd, struct synapticshw *synhw)
 {
     byte id[3];
@@ -374,6 +374,21 @@ synaptics_identify(int fd, struct synapticshw *synhw)
     }
     DBG(ErrorF("...failed.\n"));
     return !Success;
+}
+
+Bool
+synaptics_get_hwinfo(int fd, struct synapticshw *synhw)
+{
+    if (synaptics_identify(fd, synhw) != Success)
+	return !Success;
+
+    if (synaptics_model_id(fd, synhw) != Success)
+	return !Success;
+
+    if (synaptics_capability(fd, synhw) != Success)
+	return !Success;
+
+    return Success;
 }
 
 /*

@@ -49,15 +49,9 @@ typedef unsigned char byte;
 Bool
 synaptics_reset(int fd);
 
-Bool
-synaptics_model_id(int fd, unsigned long int *model_id);
-
 struct synapticshw;
 Bool
-synaptics_capability(int fd, struct synapticshw *synhw);
-
-Bool
-synaptics_identify(int fd, struct synapticshw *synhw);
+synaptics_get_hwinfo(int fd, struct synapticshw *synhw);
 
 Bool
 synaptics_set_mode(int fd, byte cmd);
