@@ -1,23 +1,38 @@
 VERSION=0.12.5
 
+# Define the TOP variable to build using include files from a local source tree.
+#TOP = /usr/src/redhat/BUILD/XFree86-4.3.0/xc
+
 INSTALLED_X = $(DESTDIR)/usr/X11R6
 LOCAL_X = Xincludes/usr/X11R6
 BINDIR = $(DESTDIR)/usr/local/bin
 MANDIR = $(DESTDIR)/usr/local/man/man1
 
-# This hack attempts to check if the needed XFree86 header files are installed.
-# It checks for a needed XFree86 4.3.00 SDK header file that is not installed by
-# default. If it is present, then it assumes that all header files are present.
-# If it is not present, then it assumes that all header files are not present
-# and uses the local copy of the XFree86 4.2.0 header files.
-X_INCLUDES_ROOT = $(shell \
-  if [ -f $(INSTALLED_X)/lib/Server/include/xisb.h ] ; then \
-    echo -n $(INSTALLED_X) ; \
-  else \
-    echo -n $(LOCAL_X) ; \
-  fi )
-
-ALLINCLUDES = -I. -I$(X_INCLUDES_ROOT)/include/X11 -I$(X_INCLUDES_ROOT)/include/X11/extensions -I$(X_INCLUDES_ROOT)/lib/Server/include
+ifeq ($(TOP),)
+  # This hack attempts to check if the needed XFree86 header files are installed.
+  # It checks for a needed XFree86 4.3.00 SDK header file that is not installed by
+  # default. If it is present, then it assumes that all header files are present.
+  # If it is not present, then it assumes that all header files are not present
+  # and uses the local copy of the XFree86 4.2.0 header files.
+  X_INCLUDES_ROOT = $(shell \
+    if [ -f $(INSTALLED_X)/lib/Server/include/xisb.h ] ; then \
+      echo -n $(INSTALLED_X) ; \
+    else \
+      echo -n $(LOCAL_X) ; \
+    fi )
+  ALLINCLUDES = -I. -I$(X_INCLUDES_ROOT)/include/X11 \
+		-I$(X_INCLUDES_ROOT)/include/X11/extensions \
+		-I$(X_INCLUDES_ROOT)/lib/Server/include
+else
+  SERVERSRC = $(TOP)/programs/Xserver
+  ALLINCLUDES = -I. \
+	-I$(SERVERSRC)/hw/xfree86/common \
+	-I$(SERVERSRC)/hw/xfree86/os-support \
+	-I$(SERVERSRC)/mi \
+	-I$(SERVERSRC)/include \
+	-I$(TOP)/include
+  X_INCLUDES_ROOT = $(TOP)
+endif
 
 MODULE_DEFINES = -DIN_MODULE -DXFree86Module
 PROTO_DEFINES = -DFUNCPROTO=15 -DNARROWPROTO
