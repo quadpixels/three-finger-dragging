@@ -1,3 +1,15 @@
+0.11.5 (2003-09-25)
+- Use the EVIOCGID ioctl for synaptics event device auto detection.
+  This is much simpler than parsing /proc/bus/input/devices and more
+  robust too.
+- Added support for the new 2.6 kernel events ABS_TOOL_WIDTH,
+  BTN_TOOL_FINGER, BTN_TOOL_DOUBLETAP and BTN_TOOL_TRIPLETAP. Note
+  that this swaps the direction of the Y axis internally to match X
+  and the linux input subsystem. Because of this, the TopEdge and
+  BottomEdge parameters must be modified in the config file. There is
+  some backwards compatibility code for old 2.5/2.6 kernels that will
+  probably be deleted later.
+
 0.11.4 (2003-09-22)
 - Reset the touchpad if it has been out of sync for too long. (By
   Hartwig Felger, cleaned up somewhat by me.) The synaptics manual
