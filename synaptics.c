@@ -256,6 +256,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     local->history_size            = 0;
     local->always_core_feedback    = 0;
 
+    xf86Msg(X_INFO, "Synaptics touchpad driver version %s\n", VERSION);
+
     xf86CollectInputOptions(local, NULL, NULL);
 
     xf86OptionListReport(local->options);
@@ -1185,8 +1187,6 @@ QueryHardware (LocalDevicePtr local)
     SynapticsSHMPtr para = priv->synpara;
     int retries;
     int mode;
-
-    xf86Msg(X_INFO, "xfree driver for the synaptics touchpad %s\n", VERSION);
 
     if (priv->proto == SYN_PROTO_EVENT)
 	return Success;
