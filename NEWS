@@ -1,3 +1,9 @@
+0.13.1 (2004-05-03)
+- Fixed detection of ALPS touchpads when using a 2.6 linux kernel.
+- Added more models to the compatibility list.
+- Added a "GuestMouseOff" parameter to disable the pass through
+  device. From Moritz Maass.
+
 0.13.0 (2004-04-24)
 - Added back support for the TOP Makefile variable. (Needed when
   compiling for XFree86 < 4.2).
