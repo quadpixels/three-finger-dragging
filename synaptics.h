@@ -57,9 +57,7 @@ struct SynapticsHwState {
     int x;			/* X position of finger */
     int y;			/* Y position of finger */
     int z;			/* Finger pressure */
-    Bool oneFinger;
-    Bool twoFingers;
-    Bool threeFingers;
+    int numFingers;
     int fingerWidth;
 
     Bool left;
@@ -147,6 +145,10 @@ typedef struct _SynapticsPrivateRec
 					   palm/finger contact disappears */
     int prev_z;				/* previous z value, for palm detection */
     int avg_width;			/* weighted average of previous fingerWidth values */
+
+    Bool oneFinger;			/* Used by SynapticsParseEventData to */
+    Bool twoFingers;			/* keep track of the number of fingers */
+    Bool threeFingers;			/* on the touchpad. */
 } SynapticsPrivate;
 
 

@@ -736,7 +736,7 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 	priv->avg_width += (hw->fingerWidth - priv->avg_width + 1) / 2;
     if (finger && !priv->finger_flag) {
 	int safe_width = MAX(hw->fingerWidth, priv->avg_width);
-	if (hw->twoFingers || hw->threeFingers)
+	if (hw->numFingers > 1)
 	    finger = TRUE;			/* more than one finger -> not a palm */
 	else if ((safe_width < 6) && (priv->prev_z < para->finger_high))
 	    finger = TRUE;			/* thin finger, distinct touch -> not a palm */
@@ -785,14 +785,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     para->x = hw->x;
     para->y = hw->y;
     para->z = hw->z;
-    if (hw->oneFinger)
-	para->numFingers = 1;
-    else if (hw->twoFingers)
-	para->numFingers = 2;
-    else if (hw->threeFingers)
-	para->numFingers = 3;
-    else
-	para->numFingers = 0;
+    para->numFingers = hw->numFingers;
     para->fingerWidth = hw->fingerWidth;
     para->left = hw->left;
     para->right = hw->right;
@@ -913,9 +906,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     if (finger &&			/* finger is on the surface */
 	(timeleft > 0)) {		/* tap time is not succeeded */
 	/* count fingers when reported */
-	if (hw->twoFingers && (priv->finger_count == 0))
+	if ((hw->numFingers == 2) && (priv->finger_count == 0))
 	    priv->finger_count = 2;
-	if (hw->threeFingers)
+	if (hw->numFingers == 3)
 	    priv->finger_count = 3;
     } else { /* reset finger counts */
 	priv->finger_count = 0;
@@ -1269,6 +1262,14 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivate *priv,
 	case EV_SYN:
 	    switch (ev.code) {
 	    case SYN_REPORT:
+		if (priv->oneFinger)
+		    priv->hwState.numFingers = 1;
+		else if (priv->twoFingers)
+		    priv->hwState.numFingers = 2;
+		else if (priv->threeFingers)
+		    priv->hwState.numFingers = 3;
+		else
+		    priv->hwState.numFingers = 0;
 		*hw = priv->hwState;
 		return Success;
 	    }
@@ -1312,13 +1313,13 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivate *priv,
 		priv->hwState.multi[7] = v;
 		break;
 	    case BTN_TOOL_FINGER:
-		priv->hwState.oneFinger = v;
+		priv->oneFinger = v;
 		break;
 	    case BTN_TOOL_DOUBLETAP:
-		priv->hwState.twoFingers = v;
+		priv->twoFingers = v;
 		break;
 	    case BTN_TOOL_TRIPLETAP:
-		priv->hwState.threeFingers = v;
+		priv->threeFingers = v;
 		break;
 	    }
 	    break;
@@ -1439,9 +1440,7 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 
     hw->y = YMAX_NOMINAL + YMIN_NOMINAL - hw->y;
 
-    hw->oneFinger = FALSE;
-    hw->twoFingers = FALSE;
-    hw->threeFingers = FALSE;
+    hw->numFingers = 0;
     hw->fingerWidth = 0;
 
     if (hw->z > 0) {
@@ -1465,15 +1464,15 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 
 	switch (w) {
 	case 0:
-	    hw->twoFingers = TRUE;
+	    hw->numFingers = 2;
 	    hw->fingerWidth = 5;
 	    break;
 	case 1:
-	    hw->threeFingers = TRUE;
+	    hw->numFingers = 3;
 	    hw->fingerWidth = 5;
 	    break;
 	default:
-	    hw->oneFinger = TRUE;
+	    hw->numFingers = 1;
 	    hw->fingerWidth = w;
 	    break;
 	}
