@@ -1,3 +1,19 @@
+0.13.4 (2004-07-27)
+- Fixed X server crash caused by forgetting to remove the timer
+  callback in the DeviceOff() function.
+- Fixed a problem with the shared memory area not being accessible
+  after logging out from a KDE session and then logging in again
+  without restarting the X server.
+- Added support for circular touchpads. From Axel G. Rossberg.
+- Added a true daemon mode to syndaemon. From James Ketrenos.
+- Better default parameters for alps touchpads.
+- Added Dmitry Torokhov's updated alps patch that can do hardware
+  auto-detection and also disables hardware tapping.
+- Modified the Makefile to make it easier to build the driver for
+  x86_64 systems.
+- Some documentation updates.
+- Updated the compatibility list.
+
 0.13.3 (2004-06-13)
 - Added support for Synaptics cPad devices. (Also requires a 2.6
   kernel patch.) From Jan Steinhoff.
