@@ -14,8 +14,18 @@ struct input_event {
 	unsigned long tv_usec;
 	unsigned short type;
 	unsigned short code;
-	unsigned int value;
+	int value;
 };
+
+struct input_id {
+	unsigned short bustype;
+	unsigned short vendor;
+	unsigned short product;
+	unsigned short version;
+};
+
+#define EVIOCGID		_IOR('E', 0x02, struct input_id)	/* get device ID */
+
 
 #define EV_SYN			0x00
 #define EV_KEY			0x01
@@ -43,5 +53,11 @@ struct input_event {
 #define ABS_PRESSURE		0x18
 
 #define MSC_GESTURE		0x02
+
+
+#define BUS_I8042		0x11
+
+#define PSMOUSE_SYNAPTICS 	7
+
 
 #endif /* _LINUX_INPUT_H_ */

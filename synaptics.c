@@ -45,6 +45,7 @@
  *	Standard Headers
  ****************************************************************************/
 
+#include <sys/ioctl.h>
 #include <misc.h>
 #include <xf86.h>
 #define NEED_XF86_TYPES
@@ -93,10 +94,8 @@ typedef enum {
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
 /* for auto-dev: */
-#define INP_DEV_N "N: Name=\"SynPS/2 "
-#define INP_DEV_H "H: Handlers="
-#define DEV_INPUT_EVENT "/dev/input/"
-#define PROC_BUS_INPUT_DEV "/proc/bus/input/devices"
+#define DEV_INPUT_EVENT "/dev/input"
+#define EVENT_DEV_NAME "event"
 
 #define VERSION "0.11.4"
 
@@ -150,55 +149,6 @@ XF86ModuleData synapticsModuleData = {&VersionRec, &SetupProc, NULL };
  *	Function Definitions
  ****************************************************************************/
 
-/*
- * This is used to read /proc/bus/input/devices line by line...
- * Input: fd: a filehandle, opened for reading.
- * Output: line, len: Pointing to a string.
- * ExitCode: 0 success, -1 EOF then line+len are not to use
- */
-static int
-GetlineBuffSys(char **line, size_t *len,int fd)
-{
-#define BLEN 100                     /* must hold the whole line, to get a match */
-    static char buffer[BLEN + 1];    /* buffer to hold the rest from last call */
-    static int brest = 0, old_i = 0; /* rest and its start in buffer[] */
-    static char first_char = 0;      /* As it made place for the term.-'\0'... */
-    int read_len, i;
-
-    /* In the buffer[] are still brest characters, starting at old_i.*/
-    if (old_i)
-	memmove(buffer, buffer + old_i, brest);
-    buffer[0] = first_char;	/* 1. char was stored separately, to make place for
-				   the terminating '\0' */
-    /* We fill up the buffer to its limit, each time */
-    SYSCALL(read_len = read(fd, buffer + brest, BLEN - brest));
-    if (read_len < 0) {
-	ErrorF("auto-dev: Read error on " PROC_BUS_INPUT_DEV ".\n");
-	return -1; /* report EOF on behalf...  */
-    }
-    read_len += brest;
-    /* from now read_len is the count of valid characters in the buffer[] */
-    if (read_len == 0)
-	return -1; /* EOF */
-    /* find EOL */
-    for (i = 0; i < read_len && buffer[i] != '\n'; ++i)
-	;
-    /* If not EO-buffer, we include terminating '\n' */
-    if (i < read_len)
-	++i;
-    *line = buffer;
-    *len = i;
-
-    /* store the first char, of the next line, to make place for
-       the termination '\0' */
-    first_char = buffer[i];
-    buffer[i] = 0;
-
-    brest = read_len-i;
-    old_i = i;
-    return 0;
-}
-
 static void
 SetDeviceAndProtocol(LocalDevicePtr local)
 {
@@ -215,63 +165,33 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 	/* We are trying to find the right eventX Device, or fall back to
 	   the psaux Protocol and the given Device from XF86Config */
 	int fd = -1;
-	int status = 0;  /* 0, start, 1=found "Synaptics", 2=found device */
-	SYSCALL(fd = open(PROC_BUS_INPUT_DEV, O_RDONLY));
-	if (fd < 0) {/* no luck, so fall back to "psaux" */
-	    /* hopefully we have a valid device from XF86Config...*/
-	    xf86Msg(X_PROBED, "%s Could not open " PROC_BUS_INPUT_DEV
-		    " to auto-determine the synaptics touchpad device, "
-		    "falling back to psaux protocol and the Device Option.\n",
-		    local->name);
-	} else {
-	    char *line = NULL;
-	    size_t len = 0;
-	    while (GetlineBuffSys(&line, &len, fd) != -1) {
-		if (strncmp(line, INP_DEV_N, sizeof(INP_DEV_N) - 1) == 0) {
-		    DBG(7, ErrorF("auto-dev: Found Synaptics in " PROC_BUS_INPUT_DEV "\n"));
-		    status = 1;
-		}
-		else if (strncmp(line, INP_DEV_H, sizeof(INP_DEV_H) - 1) == 0 && status == 1) {
-		    status = 2;
-		    DBG(7, ErrorF("auto-dev: Found its handler entry\n"));
+	int i;
+	for (i = 0; ; i++) {
+	    char fname[64];
+	    struct input_id id;
+	    int ret;
+
+	    sprintf(fname, "%s/%s%d", DEV_INPUT_EVENT, EVENT_DEV_NAME, i);
+	    SYSCALL(fd = open(fname, O_RDONLY));
+	    if (fd < 0) {
+		if (errno == ENOENT) {
+		    ErrorF("%s no synaptics event device found\n", local->name);
 		    break;
+		} else {
+		    continue;
 		}
 	    }
+	    SYSCALL(ret = ioctl(fd, EVIOCGID, &id));
 	    SYSCALL(close(fd));
-	    if (status != 2) { /* fall back... */
-		ErrorF("auto-dev: Could not find " INP_DEV_N " and its handler entry "
-		       INP_DEV_H " in " PROC_BUS_INPUT_DEV ". So we are unable to auto-determine "
-		       "the synaptics touchpad device, falling back to psaux protocol and "
-		       "the Device Option.\n");
-	    } else { /* Now update Device Option to found eventX */
-		static char *event_device;
-		char *s;
-
-		event_device=NULL;
-		s=strstr(line+sizeof(INP_DEV_H)-1, "event"); /* there might also be some other devices f.e. js0... */
-		if (s != NULL) {
-		    char *p = s + sizeof("event");
-		    while (*p && (*p >= '0') && (*p <= '9'))
-			p++;
-		    *p = 0; /* terminate the string after event2 */
-		    event_device = malloc(strlen(s) + sizeof(DEV_INPUT_EVENT) + 1);
-		}
-		if (s == NULL || event_device == NULL) {
-		    if (s == NULL)
-			ErrorF("auto-dev: cannot find the event-device in the handlers-entry for the "
-			       "Synaptics touchpad hardware. Falling back to psaux protocol and the "
-			       "Device Option from XF86Config.\n");
-		    else
-			ErrorF("auto-dev: cannot get memory for telling the right device name. "
-			       "Falling back to psaux protocol and the Device Option from XF86Config.\n");
-		} else {
+	    if (ret >= 0) {
+		if ((id.bustype == BUS_I8042) &&
+		    (id.vendor == 0x0002) &&
+		    (id.product == PSMOUSE_SYNAPTICS)) {
 		    priv->proto = SYN_PROTO_EVENT;
-		    strcpy(event_device, DEV_INPUT_EVENT);
-		    strcat(event_device, s);
 		    xf86Msg(X_PROBED, "%s auto-dev sets Synaptics Device to %s\n",
-			    local->name, event_device);
-		    xf86ReplaceStrOption(local->options, "Device", event_device);
-		    free(event_device);
+			    local->name, fname);
+		    xf86ReplaceStrOption(local->options, "Device", fname);
+		    break;
 		}
 	    }
 	}
