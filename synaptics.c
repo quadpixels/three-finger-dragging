@@ -48,7 +48,9 @@
 #include <xisb.h>
 #include <exevents.h>			/* Needed for InitValuator/Proximity stuff	*/
 #include "mipointer.h"
+#ifdef XFREE_4_0_3
 #include <xf86Optrec.h>  		/* needed for Options */ 
+#endif
 
 
 /*****************************************************************************
@@ -141,7 +143,11 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 {
 	LocalDevicePtr local;
 	SynapticsPrivatePtr priv;
+#ifdef XFREE_4_0_3
 	XF86OptionPtr optList; 
+#else
+	pointer optList;
+#endif
 	char *str_par;
 	int shmid;
 
