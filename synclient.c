@@ -164,21 +164,30 @@ static void set_variables(SynapticsSHM* synshm, int argc, char* argv[], int firs
 
 static int is_equal(SynapticsSHM* s1, SynapticsSHM* s2)
 {
-    return ((s1->x           == s2->x) &&
-	    (s1->y           == s2->y) &&
-	    (s1->z           == s2->z) &&
-	    (s1->numFingers  == s2->numFingers) &&
-	    (s1->fingerWidth == s2->fingerWidth) &&
-	    (s1->left        == s2->left) &&
-	    (s1->right       == s2->right) &&
-	    (s1->up          == s2->up) &&
-	    (s1->down        == s2->down) &&
-	    (s1->middle      == s2->middle) &&
-	    (s1->guest_left  == s2->guest_left) &&
-	    (s1->guest_mid   == s2->guest_mid) &&
-	    (s1->guest_right == s2->guest_right) &&
-	    (s1->guest_dx    == s2->guest_dx) &&
-	    (s1->guest_dy    == s2->guest_dy));
+    int i;
+
+    if ((s1->x           != s2->x) ||
+	(s1->y           != s2->y) ||
+	(s1->z           != s2->z) ||
+	(s1->numFingers  != s2->numFingers) ||
+	(s1->fingerWidth != s2->fingerWidth) ||
+	(s1->left        != s2->left) ||
+	(s1->right       != s2->right) ||
+	(s1->up          != s2->up) ||
+	(s1->down        != s2->down) ||
+	(s1->middle      != s2->middle) ||
+	(s1->guest_left  != s2->guest_left) ||
+	(s1->guest_mid   != s2->guest_mid) ||
+	(s1->guest_right != s2->guest_right) ||
+	(s1->guest_dx    != s2->guest_dx) ||
+	(s1->guest_dy    != s2->guest_dy))
+	return 0;
+
+    for (i = 0; i < 8; i++)
+	if (s1->multi[i] != s2->multi[i])
+	    return 0;
+
+    return 1;
 }
 
 static double get_time()
