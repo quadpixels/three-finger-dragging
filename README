@@ -121,6 +121,9 @@ CircScrollTrigger	Int	Trigger region on the touchpad to start circular scrolling
 				0=All Edges, 1=Top Edge, 2=Top Right Corner, 3=Right Edge,
 				4=Bottom Right Corner, 5=Bottom Edge, 6=Bottom Left Corner,
 				7=Left Edge, 8=Top Left Corner
+CircularPad	        Bool	Instead of being a rectangle, the edge is the ellipse
+				enclosed by the Left/Right/Top/BottomEdge parameters.
+				For circular touchpads.
 
 A tap event happens when the finger is touched and released in a time
 interval shorter than MaxTapTime, and the touch and release

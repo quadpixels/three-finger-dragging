@@ -100,6 +100,7 @@ static struct Parameter params[] = {
     DEFINE_PAR("CircularScrolling",    circular_scrolling,      PT_BOOL,   0, 1),
     DEFINE_PAR("CircScrollDelta",      scroll_dist_circ,        PT_DOUBLE, .01, 3),
     DEFINE_PAR("CircScrollTrigger",    circular_trigger,        PT_INT,    0, 8),
+    DEFINE_PAR("CircularPad",          circular_pad,            PT_BOOL,   0, 1),
     { 0, 0, 0, 0, 0 }
 };
 

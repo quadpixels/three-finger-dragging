@@ -103,6 +103,10 @@ typedef enum {
 #define M_PI 3.14159265358979323846
 #endif
 
+#ifndef M_SQRT1_2
+#define M_SQRT1_2  0.70710678118654752440  /* 1/sqrt(2) */
+#endif
+
 /*****************************************************************************
  * Forward declaration
  ****************************************************************************/
@@ -332,6 +336,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->tap_action[F3_TAP] = xf86SetIntOption(local->options, "TapButton3",     3);
     pars->circular_scrolling = xf86SetBoolOption(local->options, "CircularScrolling", FALSE);
     pars->circular_trigger   = xf86SetIntOption(local->options, "CircScrollTrigger", 0);
+    pars->circular_pad       = xf86SetBoolOption(local->options, "CircularPad", FALSE);
 
     str_par = xf86FindOptionValue(local->options, "MinSpeed");
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->min_speed) != 1))
@@ -564,6 +569,30 @@ move_distance(int dx, int dy)
     return xf86sqrt((dx * dx) + (dy * dy));
 }
 
+/*
+ * Convert from absolute X/Y coordinates to a coordinate system where
+ * -1 corresponds to the left/upper edge and +1 corresponds to the
+ * right/lower edge.
+ */
+static void relative_coords(SynapticsPrivate *priv, int x, int y,
+			    double* relX, double* relY)
+{
+    int minX = priv->synpara->left_edge;
+    int maxX = priv->synpara->right_edge;
+    int minY = priv->synpara->top_edge;
+    int maxY = priv->synpara->bottom_edge;
+    double xCenter = (minX + maxX) / 2.0;
+    double yCenter = (minY + maxY) / 2.0;
+
+    if ((maxX - xCenter > 0) && (maxY - yCenter > 0)) {
+	*relX = (x - xCenter) / (maxX - xCenter);
+	*relY = (y - yCenter) / (maxY - yCenter);
+    } else {	
+	*relX = 0;
+	*relY = 0;
+    }
+}
+
 /* return angle of point relative to center */
 static double
 angle(SynapticsPrivate *priv, int x, int y)
@@ -587,9 +616,37 @@ diffa(double a1, double a2)
 }
 
 static edge_type
+circular_edge_detection(SynapticsPrivate *priv, int x, int y)
+{
+    edge_type edge = 0;
+    double relX, relY, relR;
+
+    relative_coords(priv, x, y, &relX, &relY);
+    relR = relX * relX + relY * relY;
+
+    if (relR > 1) {
+	/* we are outside the ellipse enclosed by the edge parameters */
+	if (relX > M_SQRT1_2)
+	    edge |= RIGHT_EDGE;
+	else if (relX < -M_SQRT1_2)
+	    edge |= LEFT_EDGE;
+
+	if (relY < -M_SQRT1_2)
+	    edge |= TOP_EDGE;
+	else if (relY > M_SQRT1_2)
+	    edge |= BOTTOM_EDGE;
+    }
+
+    return edge;
+}
+
+static edge_type
 edge_detection(SynapticsPrivate *priv, int x, int y)
 {
     edge_type edge = 0;
+
+    if (priv->synpara->circular_pad)
+	return circular_edge_detection(priv, x, y);
 
     if (x > priv->synpara->right_edge)
 	edge |= RIGHT_EDGE;
@@ -1046,6 +1103,8 @@ static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		int minSpd = para->edge_motion_min_speed;
 		int maxSpd = para->edge_motion_max_speed;
 		int edge_speed;
+		int x_edge_speed = 0;
+		int y_edge_speed = 0;
 
 		if (hw->z <= minZ) {
 		    edge_speed = minSpd;
@@ -1054,16 +1113,28 @@ static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		} else {
 		    edge_speed = minSpd + (hw->z - minZ) * (maxSpd - minSpd) / (maxZ - minZ);
 		}
-		if (edge & RIGHT_EDGE) {
-		    dx += clamp(edge_speed - dx, 0, edge_speed);
-		} else if (edge & LEFT_EDGE) {
-		    dx -= clamp(edge_speed + dx, 0, edge_speed);
+		if (!priv->synpara->circular_pad) {
+		    /* on rectangular pad */
+		    if (edge & RIGHT_EDGE) {
+			x_edge_speed = edge_speed;
+		    } else if (edge & LEFT_EDGE) {
+			x_edge_speed = -edge_speed;
+		    }
+		    if (edge & TOP_EDGE) {
+			y_edge_speed = -edge_speed;
+		    } else if (edge & BOTTOM_EDGE) {
+			y_edge_speed = edge_speed;
+		    }
+		} else if (edge) {
+		    /* at edge of circular pad */
+		    double relX, relY;
+
+		    relative_coords(priv, hw->x, hw->y, &relX, &relY);
+		    x_edge_speed = (int)(edge_speed * relX);
+		    y_edge_speed = (int)(edge_speed * relY);
 		}
-		if (edge & TOP_EDGE) {
-		    dy -= clamp(edge_speed + dy, 0, edge_speed);
-		} else if (edge & BOTTOM_EDGE) {
-		    dy += clamp(edge_speed - dy, 0, edge_speed);
-		}
+		dx += x_edge_speed;
+		dy += y_edge_speed;
 	    }
 
 	    /* speed depending on distance/packet */

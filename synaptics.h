@@ -70,6 +70,7 @@ typedef struct _SynapticsSHM
     Bool circular_scrolling;		    /* Enable circular scrolling */
     double scroll_dist_circ;		    /* Scrolling angle radians */
     int circular_trigger;		    /* Trigger area for circular scrolling */
+    Bool circular_pad;			    /* Edge has an oval or circular shape */
 } SynapticsSHM;
 
 /*
