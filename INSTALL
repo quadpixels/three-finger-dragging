@@ -79,9 +79,10 @@ Section "ServerLayout"
    devices except one to "AlwaysCore" instead of "CorePointer".
 
 6. Start/Restart the X Server. If the touchpad doesn't work:
-   a) Check the XFree Logfiles
-   b) Try to start the XServer with 'startx -- -logverbose 8' for more
-      Output
+   a) Check the XFree log file. This file is usually called
+      /var/log/XFree86.0.log.
+   b) Try to start the X server with 'startx -- -logverbose 8' for
+      more output.
 
 7. If you want to be able to change driver parameters without
    restarting the X server, enable the "SHMConfig" option in the XFree
