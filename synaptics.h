@@ -196,7 +196,7 @@ typedef struct _SynapticsPrivateRec
     enum MidButtonEmulation mid_emu_state;	/* emulated 3rd button */
     int repeatButtons;			/* buttons for repeat */
     unsigned long nextRepeat;		/* Time when to trigger next auto repeat event */
-    int lastButtons;			/* last State of the buttons */
+    int lastButtons;			/* last state of the buttons */
     int palm;				/* Set to true when palm detected, reset to false when
 					   palm/finger contact disappears */
     int prev_z;				/* previous z value, for palm detection */
