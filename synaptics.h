@@ -70,6 +70,19 @@ typedef struct _SynapticsSHM
     int circular_trigger;		    /* Trigger area for circular scrolling */
 } SynapticsSHM;
 
+/*
+ * The x/y limits are taken from the Synaptics TouchPad interfacing Guide,
+ * section 2.3.2, which says that they should be valid regardless of the
+ * actual size of the sensor.
+ */
+#define XMIN_NOMINAL 1472
+#define XMAX_NOMINAL 5472
+#define YMIN_NOMINAL 1408
+#define YMAX_NOMINAL 4448
+
+#define XMAX_VALID 6143
+
+
 #ifdef SYNAPTICS_PRIVATE
 
 #include "synproto.h"
@@ -123,7 +136,6 @@ typedef struct _SynapticsPrivateRec
     /* shared memory pointer */
     SynapticsSHM *synpara;
 
-    enum SynapticsProtocol proto;
     struct SynapticsProtocolOperations* proto_ops;
 
     struct SynapticsHwState hwState;
@@ -174,31 +186,13 @@ typedef struct _SynapticsPrivateRec
     int prev_z;				/* previous z value, for palm detection */
     int avg_width;			/* weighted average of previous fingerWidth values */
 
-    Bool oneFinger;			/* Used by SynapticsParseEventData to */
+    Bool oneFinger;			/* Used by EventReadHwState to */
     Bool twoFingers;			/* keep track of the number of fingers */
     Bool threeFingers;			/* on the touchpad. */
 } SynapticsPrivate;
 
 
-static Bool DeviceControl(DeviceIntPtr, int);
-static void ReadInput(LocalDevicePtr);
-static int HandleState(LocalDevicePtr, struct SynapticsHwState*);
-static int ControlProc(LocalDevicePtr, xDeviceCtl*);
-static void CloseProc(LocalDevicePtr);
-static int SwitchMode(ClientPtr, DeviceIntPtr, int);
-static Bool ConvertProc(LocalDevicePtr, int, int, int, int, int, int, int, int, int*, int*);
-static Bool QueryHardware(LocalDevicePtr);
-static Bool DeviceInit(DeviceIntPtr);
-static Bool DeviceOn(DeviceIntPtr);
-static Bool DeviceOff(DeviceIntPtr);
-static Bool DeviceInit(DeviceIntPtr);
-static Bool SynapticsGetHwState(LocalDevicePtr, SynapticsPrivate *, struct SynapticsHwState *);
-static Bool SynapticsParseEventData(LocalDevicePtr, SynapticsPrivate *,
-				    struct SynapticsHwState *);
-static Bool SynapticsReadEvent(SynapticsPrivate *, struct input_event *);
-static Bool SynapticsParseRawPacket(LocalDevicePtr, SynapticsPrivate *,
-				    struct SynapticsHwState *);
-static Bool SynapticsGetPacket(LocalDevicePtr, SynapticsPrivate *);
+Bool QueryHardware(LocalDevicePtr);
 
 #endif /* SYNAPTICS_PRIVATE */
 

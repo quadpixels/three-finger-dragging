@@ -27,8 +27,12 @@
 
 #include "ps2comm.h"
 #include "synproto.h"
+#include <xisb.h>
+#define SYNAPTICS_PRIVATE
 #include "synaptics.h"
 #include <xf86.h>
+
+#define MAX_UNSYNC_PACKETS 10				/* i.e. 10 to 60 bytes */
 
 /* acknowledge for commands and parameter */
 #define PS2_ACK 			0xFA
@@ -517,8 +521,249 @@ PS2QueryHardware(LocalDevicePtr local, synapticshw_t *synhw, Bool *hasGuest)
     return TRUE;
 }
 
+/*
+ * Decide if the current packet stored in priv->protoBuf is valid.
+ */
+static Bool
+PacketOk(SynapticsPrivate *priv)
+{
+    unsigned char *buf = priv->protoBuf;
+    int newabs = SYN_MODEL_NEWABS(priv->synhw);
+
+    if (newabs ? ((buf[0] & 0xC0) != 0x80) : ((buf[0] & 0xC0) != 0xC0)) {
+	DBG(4, ErrorF("Synaptics driver lost sync at 1st byte\n"));
+	return FALSE;
+    }
+
+    if (!newabs && ((buf[1] & 0x60) != 0x00)) {
+	DBG(4, ErrorF("Synaptics driver lost sync at 2nd byte\n"));
+	return FALSE;
+    }
+
+    if ((newabs ? ((buf[3] & 0xC0) != 0xC0) : ((buf[3] & 0xC0) != 0x80))) {
+	DBG(4, ErrorF("Synaptics driver lost sync at 4th byte\n"));
+	return FALSE;
+    }
+
+    if (!newabs && ((buf[4] & 0x60) != 0x00)) {
+	DBG(4, ErrorF("Synaptics driver lost sync at 5th byte\n"));
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
+static Bool
+SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivate *priv)
+{
+    int count = 0;
+    int c;
+    unsigned char u;
+
+    while ((c = XisbRead(priv->buffer)) >= 0) {
+	u = (unsigned char)c;
+
+	/* test if there is a reset sequence received */
+	if ((c == 0x00) && (priv->lastByte == 0xAA)) {
+	    if (xf86WaitForInput(local->fd, 50000) == 0) {
+		DBG(7, ErrorF("Reset received\n"));
+		QueryHardware(local);
+	    } else
+		DBG(3, ErrorF("faked reset received\n"));
+	}
+	priv->lastByte = u;
+
+	/* when there is no synaptics touchpad pipe the data to the repeater fifo */
+	if (!priv->isSynaptics) {
+	    xf86write(priv->fifofd, &u, 1);
+	    if (++count >= 3)
+		return FALSE;
+	    continue;
+	}
+
+	/* to avoid endless loops */
+	if (count++ > 30) {
+	    ErrorF("Synaptics driver lost sync... got gigantic packet!\n");
+	    return FALSE;
+	}
+
+	priv->protoBuf[priv->protoBufTail++] = u;
+
+	/* Check that we have a valid packet. If not, we are out of sync,
+	   so we throw away the first byte in the packet.*/
+	if (priv->protoBufTail >= 6) {
+	    if (!PacketOk(priv)) {
+		int i;
+		for (i = 0; i < priv->protoBufTail - 1; i++)
+		    priv->protoBuf[i] = priv->protoBuf[i + 1];
+		priv->protoBufTail--;
+		priv->outOfSync++;
+		if (priv->outOfSync > MAX_UNSYNC_PACKETS) {
+		    priv->outOfSync = 0;
+		    DBG(3, ErrorF("Synaptics synchronization lost too long -> reset touchpad.\n"));
+		    QueryHardware(local); /* including a reset */
+		    continue;
+		}
+	    }
+	}
+
+	if (priv->protoBufTail >= 6) { /* Full packet received */
+	    if (priv->outOfSync > 0) {
+		priv->outOfSync = 0;
+		DBG(4, ErrorF("Synaptics driver resynced.\n"));
+	    }
+	    priv->protoBufTail = 0;
+	    return TRUE;
+	}
+    }
+
+    return FALSE;
+}
+
+static Bool
+PS2ReadHwState(LocalDevicePtr local, SynapticsPrivate *priv,
+	       struct SynapticsHwState *hwRet)
+{
+    int newabs = SYN_MODEL_NEWABS(priv->synhw);
+    unsigned char *buf = priv->protoBuf;
+    struct SynapticsHwState *hw = &(priv->hwState);
+    int w, i;
+
+    if (!SynapticsGetPacket(local, priv))
+	return FALSE;
+
+    /* Handle guest packets */
+    hw->guest_dx = hw->guest_dy = 0;
+    if (newabs && priv->hasGuest) {
+	w = (((buf[0] & 0x30) >> 2) |
+	     ((buf[0] & 0x04) >> 1) |
+	     ((buf[3] & 0x04) >> 2));
+	if (w == 3) {	       /* If w is 3, this is a guest packet */
+	    if (buf[4] != 0)
+		hw->guest_dx =   buf[4] - ((buf[1] & 0x10) ? 256 : 0);
+	    if (buf[5] != 0)
+		hw->guest_dy = -(buf[5] - ((buf[1] & 0x20) ? 256 : 0));
+	    hw->guest_left  = (buf[1] & 0x01) ? TRUE : FALSE;
+	    hw->guest_mid   = (buf[1] & 0x04) ? TRUE : FALSE;
+	    hw->guest_right = (buf[1] & 0x02) ? TRUE : FALSE;
+	    *hwRet = *hw;
+	    return TRUE;
+	}
+    }
+
+    /* Handle normal packets */
+    hw->x = hw->y = hw->z = hw->numFingers = hw->fingerWidth = 0;
+    hw->left = hw->right = hw->up = hw->down = hw->middle = FALSE;
+    for (i = 0; i < 8; i++)
+	hw->multi[i] = FALSE;
+
+    if (newabs) {			    /* newer protos...*/
+	DBG(7, ErrorF("using new protocols\n"));
+	hw->x = (((buf[3] & 0x10) << 8) |
+		 ((buf[1] & 0x0f) << 8) |
+		 buf[4]);
+	hw->y = (((buf[3] & 0x20) << 7) |
+		 ((buf[1] & 0xf0) << 4) |
+		 buf[5]);
+
+	hw->z = buf[2];
+	w = (((buf[0] & 0x30) >> 2) |
+	     ((buf[0] & 0x04) >> 1) |
+	     ((buf[3] & 0x04) >> 2));
+
+	hw->left  = (buf[0] & 0x01) ? 1 : 0;
+	hw->right = (buf[0] & 0x02) ? 1 : 0;
+
+	if (SYN_CAP_EXTENDED(priv->synhw)) {
+	    if (SYN_CAP_FOUR_BUTTON(priv->synhw)) {
+		hw->up = ((buf[3] & 0x01)) ? 1 : 0;
+		if (hw->left)
+		    hw->up = !hw->up;
+		hw->down = ((buf[3] & 0x02)) ? 1 : 0;
+		if (hw->right)
+		    hw->down = !hw->down;
+	    }
+	    if (SYN_CAP_MULTI_BUTTON_NO(priv->synhw)) {
+		if ((buf[3] & 2) ? !hw->right : hw->right) {
+		    switch (SYN_CAP_MULTI_BUTTON_NO(priv->synhw) & ~0x01) {
+		    default:
+			break;
+		    case 8:
+			hw->multi[7] = ((buf[5] & 0x08)) ? 1 : 0;
+			hw->multi[6] = ((buf[4] & 0x08)) ? 1 : 0;
+		    case 6:
+			hw->multi[5] = ((buf[5] & 0x04)) ? 1 : 0;
+			hw->multi[4] = ((buf[4] & 0x04)) ? 1 : 0;
+		    case 4:
+			hw->multi[3] = ((buf[5] & 0x02)) ? 1 : 0;
+			hw->multi[2] = ((buf[4] & 0x02)) ? 1 : 0;
+		    case 2:
+			hw->multi[1] = ((buf[5] & 0x01)) ? 1 : 0;
+			hw->multi[0] = ((buf[4] & 0x01)) ? 1 : 0;
+		    }
+		}
+	    }
+	}
+    } else {			    /* old proto...*/
+	DBG(7, ErrorF("using old protocol\n"));
+	hw->x = (((buf[1] & 0x1F) << 8) |
+		 buf[2]);
+	hw->y = (((buf[4] & 0x1F) << 8) |
+		 buf[5]);
+
+	hw->z = (((buf[0] & 0x30) << 2) |
+		 (buf[3] & 0x3F));
+	w = (((buf[1] & 0x80) >> 4) |
+	     ((buf[0] & 0x04) >> 1));
+
+	hw->left  = (buf[0] & 0x01) ? 1 : 0;
+	hw->right = (buf[0] & 0x02) ? 1 : 0;
+    }
+
+    hw->y = YMAX_NOMINAL + YMIN_NOMINAL - hw->y;
+
+    if (hw->z > 0) {
+	int w_ok = 0;
+	/*
+	 * Use capability bits to decide if the w value is valid.
+	 * If not, set it to 5, which corresponds to a finger of
+	 * normal width.
+	 */
+	if (SYN_CAP_EXTENDED(priv->synhw)) {
+	    if ((w >= 0) && (w <= 1)) {
+		w_ok = SYN_CAP_MULTIFINGER(priv->synhw);
+	    } else if (w == 2) {
+		w_ok = SYN_MODEL_PEN(priv->synhw);
+	    } else if ((w >= 4) && (w <= 15)) {
+		w_ok = SYN_CAP_PALMDETECT(priv->synhw);
+	    }
+	}
+	if (!w_ok)
+	    w = 5;
+
+	switch (w) {
+	case 0:
+	    hw->numFingers = 2;
+	    hw->fingerWidth = 5;
+	    break;
+	case 1:
+	    hw->numFingers = 3;
+	    hw->fingerWidth = 5;
+	    break;
+	default:
+	    hw->numFingers = 1;
+	    hw->fingerWidth = w;
+	    break;
+	}
+    }
+
+    *hwRet = *hw;
+    return TRUE;
+}
+
 struct SynapticsProtocolOperations psaux_proto_operations = {
     PS2DeviceOnHook,
     PS2DeviceOffHook,
-    PS2QueryHardware
+    PS2QueryHardware,
+    PS2ReadHwState
 };

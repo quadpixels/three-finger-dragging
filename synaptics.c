@@ -85,20 +85,6 @@
  *	Local Variables and Types
  ****************************************************************************/
 
-/*
- * The x/y limits are taken from the Synaptics TouchPad interfacing Guide,
- * section 2.3.2, which says that they should be valid regardless of the
- * actual size of the sensor.
- */
-#define XMIN_NOMINAL 1472
-#define XMAX_NOMINAL 5472
-#define YMIN_NOMINAL 1408
-#define YMAX_NOMINAL 4448
-
-#define XMAX_VALID 6143
-
-#define MAX_UNSYNC_PACKETS 10				/* i.e. 10 to 60 bytes */
-
 typedef enum {
     BOTTOM_EDGE = 1,
     TOP_EDGE = 2,
@@ -126,8 +112,18 @@ typedef enum {
 /*****************************************************************************
  * Forward declaration
  ****************************************************************************/
-static InputInfoPtr
-SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags);
+static InputInfoPtr SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags);
+static Bool DeviceControl(DeviceIntPtr, int);
+static void ReadInput(LocalDevicePtr);
+static int HandleState(LocalDevicePtr, struct SynapticsHwState*);
+static int ControlProc(LocalDevicePtr, xDeviceCtl*);
+static void CloseProc(LocalDevicePtr);
+static int SwitchMode(ClientPtr, DeviceIntPtr, int);
+static Bool ConvertProc(LocalDevicePtr, int, int, int, int, int, int, int, int, int*, int*);
+static Bool DeviceInit(DeviceIntPtr);
+static Bool DeviceOn(DeviceIntPtr);
+static Bool DeviceOff(DeviceIntPtr);
+static Bool DeviceInit(DeviceIntPtr);
 
 
 InputDriverRec SYNAPTICS = {
@@ -178,11 +174,11 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 {
     char *str_par;
     SynapticsPrivate *priv = local->private;
+    enum SynapticsProtocol proto = SYN_PROTO_PSAUX;
 
-    priv->proto = SYN_PROTO_PSAUX;
     str_par = xf86FindOptionValue(local->options, "Protocol");
     if (str_par && !strcmp(str_par, "event")) {
-	priv->proto = SYN_PROTO_EVENT;
+	proto = SYN_PROTO_EVENT;
     } else if (str_par && !strcmp(str_par, "psaux")) {
 	/* Already set up */
     } else { /* default to auto-dev */
@@ -212,7 +208,7 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 		if ((id.bustype == BUS_I8042) &&
 		    (id.vendor == 0x0002) &&
 		    (id.product == PSMOUSE_SYNAPTICS)) {
-		    priv->proto = SYN_PROTO_EVENT;
+		    proto = SYN_PROTO_EVENT;
 		    xf86Msg(X_PROBED, "%s auto-dev sets Synaptics Device to %s\n",
 			    local->name, fname);
 		    xf86ReplaceStrOption(local->options, "Device", fname);
@@ -221,7 +217,7 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 	    }
 	}
     }
-    switch (priv->proto) {
+    switch (proto) {
     case SYN_PROTO_PSAUX:
 	priv->proto_ops = &psaux_proto_operations;
 	break;
@@ -682,6 +678,12 @@ static int clamp(int val, int min, int max)
 	return max;
 }
 
+static Bool
+SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivate *priv,
+		    struct SynapticsHwState *hw)
+{
+    return priv->proto_ops->ReadHwState(local, priv, hw);
+}
 
 /*
  *  called for each full received packet from the touchpad
@@ -1418,7 +1420,7 @@ ConvertProc(LocalDevicePtr local,
 }
 
 
-static Bool
+Bool
 QueryHardware(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
@@ -1446,369 +1448,3 @@ QueryHardware(LocalDevicePtr local)
     return TRUE;
 }
 
-static Bool
-SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivate *priv,
-		    struct SynapticsHwState *hw)
-{
-    if (priv->proto == SYN_PROTO_PSAUX) {
-	return SynapticsParseRawPacket(local, priv, hw);
-    } else if (priv->proto == SYN_PROTO_EVENT) {
-	return SynapticsParseEventData(local, priv, hw);
-    } else {
-	return FALSE;
-    }
-}
-
-static Bool
-SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivate *priv,
-			struct SynapticsHwState *hwRet)
-{
-    struct input_event ev;
-    Bool v;
-    struct SynapticsHwState *hw = &(priv->hwState);
-
-    while (SynapticsReadEvent(priv, &ev)) {
-	switch (ev.type) {
-	case EV_SYN:
-	    switch (ev.code) {
-	    case SYN_REPORT:
-		if (priv->oneFinger)
-		    hw->numFingers = 1;
-		else if (priv->twoFingers)
-		    hw->numFingers = 2;
-		else if (priv->threeFingers)
-		    hw->numFingers = 3;
-		else
-		    hw->numFingers = 0;
-		*hwRet = *hw;
-		return TRUE;
-	    }
-	case EV_KEY:
-	    v = (ev.value ? TRUE : FALSE);
-	    switch (ev.code) {
-	    case BTN_LEFT:
-		hw->left = v;
-		break;
-	    case BTN_RIGHT:
-		hw->right = v;
-		break;
-	    case BTN_MIDDLE:
-		hw->middle = v;
-		break;
-	    case BTN_FORWARD:
-		hw->up = v;
-		break;
-	    case BTN_BACK:
-		hw->down = v;
-		break;
-	    case BTN_0:
-		hw->multi[0] = v;
-		break;
-	    case BTN_1:
-		hw->multi[1] = v;
-		break;
-	    case BTN_2:
-		hw->multi[2] = v;
-		break;
-	    case BTN_3:
-		hw->multi[3] = v;
-		break;
-	    case BTN_4:
-		hw->multi[4] = v;
-		break;
-	    case BTN_5:
-		hw->multi[5] = v;
-		break;
-	    case BTN_6:
-		hw->multi[6] = v;
-		break;
-	    case BTN_7:
-		hw->multi[7] = v;
-		break;
-	    case BTN_TOOL_FINGER:
-		priv->oneFinger = v;
-		break;
-	    case BTN_TOOL_DOUBLETAP:
-		priv->twoFingers = v;
-		break;
-	    case BTN_TOOL_TRIPLETAP:
-		priv->threeFingers = v;
-		break;
-	    }
-	    break;
-	case EV_ABS:
-	    switch (ev.code) {
-	    case ABS_X:
-		hw->x = ev.value;
-		break;
-	    case ABS_Y:
-		hw->y = ev.value;
-		break;
-	    case ABS_PRESSURE:
-		hw->z = ev.value;
-		break;
-	    case ABS_TOOL_WIDTH:
-		hw->fingerWidth = ev.value;
-		break;
-	    }
-	    break;
-	}
-    }
-    return FALSE;
-}
-
-static Bool
-SynapticsReadEvent(SynapticsPrivate *priv, struct input_event *ev)
-{
-    int i, c;
-    unsigned char *pBuf, u;
-
-    for (i = 0; i < sizeof(struct input_event); i++) {
-	if ((c = XisbRead(priv->buffer)) < 0)
-	    return FALSE;
-	u = (unsigned char)c;
-	pBuf = (unsigned char *)ev;
-	pBuf[i] = u;
-    }
-    return TRUE;
-}
-
-static Bool
-SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
-			struct SynapticsHwState *hwRet)
-{
-    int newabs = SYN_MODEL_NEWABS(priv->synhw);
-    unsigned char *buf = priv->protoBuf;
-    struct SynapticsHwState *hw = &(priv->hwState);
-    int w, i;
-
-    if (!SynapticsGetPacket(local, priv))
-	return FALSE;
-
-    /* Handle guest packets */
-    hw->guest_dx = hw->guest_dy = 0;
-    if (newabs && priv->hasGuest) {
-	w = (((buf[0] & 0x30) >> 2) |
-	     ((buf[0] & 0x04) >> 1) |
-	     ((buf[3] & 0x04) >> 2));
-	if (w == 3) {	       /* If w is 3, this is a guest packet */
-	    if (buf[4] != 0)
-		hw->guest_dx =   buf[4] - ((buf[1] & 0x10) ? 256 : 0);
-	    if (buf[5] != 0)
-		hw->guest_dy = -(buf[5] - ((buf[1] & 0x20) ? 256 : 0));
-	    hw->guest_left  = (buf[1] & 0x01) ? TRUE : FALSE;
-	    hw->guest_mid   = (buf[1] & 0x04) ? TRUE : FALSE;
-	    hw->guest_right = (buf[1] & 0x02) ? TRUE : FALSE;
-	    *hwRet = *hw;
-	    return TRUE;
-	}
-    }
-
-    /* Handle normal packets */
-    hw->x = hw->y = hw->z = hw->numFingers = hw->fingerWidth = 0;
-    hw->left = hw->right = hw->up = hw->down = hw->middle = FALSE;
-    for (i = 0; i < 8; i++)
-	hw->multi[i] = FALSE;
-
-    if (newabs) {			    /* newer protos...*/
-	DBG(7, ErrorF("using new protocols\n"));
-	hw->x = (((buf[3] & 0x10) << 8) |
-		 ((buf[1] & 0x0f) << 8) |
-		 buf[4]);
-	hw->y = (((buf[3] & 0x20) << 7) |
-		 ((buf[1] & 0xf0) << 4) |
-		 buf[5]);
-
-	hw->z = buf[2];
-	w = (((buf[0] & 0x30) >> 2) |
-	     ((buf[0] & 0x04) >> 1) |
-	     ((buf[3] & 0x04) >> 2));
-
-	hw->left  = (buf[0] & 0x01) ? 1 : 0;
-	hw->right = (buf[0] & 0x02) ? 1 : 0;
-
-	if (SYN_CAP_EXTENDED(priv->synhw)) {
-	    if (SYN_CAP_FOUR_BUTTON(priv->synhw)) {
-		hw->up = ((buf[3] & 0x01)) ? 1 : 0;
-		if (hw->left)
-		    hw->up = !hw->up;
-		hw->down = ((buf[3] & 0x02)) ? 1 : 0;
-		if (hw->right)
-		    hw->down = !hw->down;
-	    }
-	    if (SYN_CAP_MULTI_BUTTON_NO(priv->synhw)) {
-		if ((buf[3] & 2) ? !hw->right : hw->right) {
-		    switch (SYN_CAP_MULTI_BUTTON_NO(priv->synhw) & ~0x01) {
-		    default:
-			break;
-		    case 8:
-			hw->multi[7] = ((buf[5] & 0x08)) ? 1 : 0;
-			hw->multi[6] = ((buf[4] & 0x08)) ? 1 : 0;
-		    case 6:
-			hw->multi[5] = ((buf[5] & 0x04)) ? 1 : 0;
-			hw->multi[4] = ((buf[4] & 0x04)) ? 1 : 0;
-		    case 4:
-			hw->multi[3] = ((buf[5] & 0x02)) ? 1 : 0;
-			hw->multi[2] = ((buf[4] & 0x02)) ? 1 : 0;
-		    case 2:
-			hw->multi[1] = ((buf[5] & 0x01)) ? 1 : 0;
-			hw->multi[0] = ((buf[4] & 0x01)) ? 1 : 0;
-		    }
-		}
-	    }
-	}
-    } else {			    /* old proto...*/
-	DBG(7, ErrorF("using old protocol\n"));
-	hw->x = (((buf[1] & 0x1F) << 8) |
-		 buf[2]);
-	hw->y = (((buf[4] & 0x1F) << 8) |
-		 buf[5]);
-
-	hw->z = (((buf[0] & 0x30) << 2) |
-		 (buf[3] & 0x3F));
-	w = (((buf[1] & 0x80) >> 4) |
-	     ((buf[0] & 0x04) >> 1));
-
-	hw->left  = (buf[0] & 0x01) ? 1 : 0;
-	hw->right = (buf[0] & 0x02) ? 1 : 0;
-    }
-
-    hw->y = YMAX_NOMINAL + YMIN_NOMINAL - hw->y;
-
-    if (hw->z > 0) {
-	int w_ok = 0;
-	/*
-	 * Use capability bits to decide if the w value is valid.
-	 * If not, set it to 5, which corresponds to a finger of
-	 * normal width.
-	 */
-	if (SYN_CAP_EXTENDED(priv->synhw)) {
-	    if ((w >= 0) && (w <= 1)) {
-		w_ok = SYN_CAP_MULTIFINGER(priv->synhw);
-	    } else if (w == 2) {
-		w_ok = SYN_MODEL_PEN(priv->synhw);
-	    } else if ((w >= 4) && (w <= 15)) {
-		w_ok = SYN_CAP_PALMDETECT(priv->synhw);
-	    }
-	}
-	if (!w_ok)
-	    w = 5;
-
-	switch (w) {
-	case 0:
-	    hw->numFingers = 2;
-	    hw->fingerWidth = 5;
-	    break;
-	case 1:
-	    hw->numFingers = 3;
-	    hw->fingerWidth = 5;
-	    break;
-	default:
-	    hw->numFingers = 1;
-	    hw->fingerWidth = w;
-	    break;
-	}
-    }
-
-    *hwRet = *hw;
-    return TRUE;
-}
-
-/*
- * Decide if the current packet stored in priv->protoBuf is valid.
- */
-static Bool
-PacketOk(SynapticsPrivate *priv)
-{
-    unsigned char *buf = priv->protoBuf;
-    int newabs = SYN_MODEL_NEWABS(priv->synhw);
-
-    if (newabs ? ((buf[0] & 0xC0) != 0x80) : ((buf[0] & 0xC0) != 0xC0)) {
-	DBG(4, ErrorF("Synaptics driver lost sync at 1st byte\n"));
-	return FALSE;
-    }
-
-    if (!newabs && ((buf[1] & 0x60) != 0x00)) {
-	DBG(4, ErrorF("Synaptics driver lost sync at 2nd byte\n"));
-	return FALSE;
-    }
-
-    if ((newabs ? ((buf[3] & 0xC0) != 0xC0) : ((buf[3] & 0xC0) != 0x80))) {
-	DBG(4, ErrorF("Synaptics driver lost sync at 4th byte\n"));
-	return FALSE;
-    }
-
-    if (!newabs && ((buf[4] & 0x60) != 0x00)) {
-	DBG(4, ErrorF("Synaptics driver lost sync at 5th byte\n"));
-	return FALSE;
-    }
-
-    return TRUE;
-}
-
-static Bool
-SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivate *priv)
-{
-    int count = 0;
-    int c;
-    unsigned char u;
-
-    while ((c = XisbRead(priv->buffer)) >= 0) {
-	u = (unsigned char)c;
-
-	/* test if there is a reset sequence received */
-	if ((c == 0x00) && (priv->lastByte == 0xAA)) {
-	    if (xf86WaitForInput(local->fd, 50000) == 0) {
-		DBG(7, ErrorF("Reset received\n"));
-		QueryHardware(local);
-	    } else
-		DBG(3, ErrorF("faked reset received\n"));
-	}
-	priv->lastByte = u;
-
-	/* when there is no synaptics touchpad pipe the data to the repeater fifo */
-	if (!priv->isSynaptics) {
-	    xf86write(priv->fifofd, &u, 1);
-	    if (++count >= 3)
-		return FALSE;
-	    continue;
-	}
-
-	/* to avoid endless loops */
-	if (count++ > 30) {
-	    ErrorF("Synaptics driver lost sync... got gigantic packet!\n");
-	    return FALSE;
-	}
-
-	priv->protoBuf[priv->protoBufTail++] = u;
-
-	/* Check that we have a valid packet. If not, we are out of sync,
-	   so we throw away the first byte in the packet.*/
-	if (priv->protoBufTail >= 6) {
-	    if (!PacketOk(priv)) {
-		int i;
-		for (i = 0; i < priv->protoBufTail - 1; i++)
-		    priv->protoBuf[i] = priv->protoBuf[i + 1];
-		priv->protoBufTail--;
-		priv->outOfSync++;
-		if (priv->outOfSync > MAX_UNSYNC_PACKETS) {
-		    priv->outOfSync = 0;
-		    DBG(3, ErrorF("Synaptics synchronization lost too long -> reset touchpad.\n"));
-		    QueryHardware(local); /* including a reset */
-		    continue;
-		}
-	    }
-	}
-
-	if (priv->protoBufTail >= 6) { /* Full packet received */
-	    if (priv->outOfSync > 0) {
-		priv->outOfSync = 0;
-		DBG(4, ErrorF("Synaptics driver resynced.\n"));
-	    }
-	    priv->protoBufTail = 0;
-	    return TRUE;
-	}
-    }
-
-    return FALSE;
-}
