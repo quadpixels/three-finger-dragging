@@ -228,7 +228,7 @@ ps2_putbyte_passthrough(int fd, byte c)
  * Set the synaptics touchpad mode byte by special commands
  */
 static Bool
-synaptics_set_mode(int fd, byte mode)
+ps2_synaptics_set_mode(int fd, byte mode)
 {
     PS2DBG(ErrorF("set mode byte to: 0x%02X\n", mode));
     return (ps2_special_cmd(fd, mode) &&
@@ -240,7 +240,7 @@ synaptics_set_mode(int fd, byte mode)
  * reset the touchpad
  */
 static Bool
-synaptics_reset(int fd)
+ps2_synaptics_reset(int fd)
 {
     byte r[2];
 
@@ -265,7 +265,7 @@ synaptics_reset(int fd)
 }
 
 static Bool
-SynapticsResetPassthrough(int fd)
+ps2_synaptics_reset_passthrough(int fd)
 {
     byte ack;
 
@@ -273,12 +273,12 @@ SynapticsResetPassthrough(int fd)
     ps2_putbyte_passthrough(fd, 0xff);
     ps2_getbyte_passthrough(fd, &ack);
     if (ack != 0xaa) {
-	PS2DBG(ErrorF("SynapticsResetPassthrough: ack was %02x not 0xaa\n", ack));
+	PS2DBG(ErrorF("ps2_synaptics_reset_passthrough: ack was %02x not 0xaa\n", ack));
 	return FALSE;
     }
     ps2_getbyte_passthrough(fd, &ack);
     if (ack != 0x00) {
-	PS2DBG(ErrorF("SynapticsResetPassthrough: ack was %02x not 0x00\n", ack));
+	PS2DBG(ErrorF("ps2_synaptics_reset_passthrough: ack was %02x not 0x00\n", ack));
 	return FALSE;
     }
 
@@ -293,7 +293,7 @@ SynapticsResetPassthrough(int fd)
  * see also SYN_MODEL_* macros
  */
 static Bool
-synaptics_model_id(int fd, struct SynapticsHwInfo *synhw)
+ps2_synaptics_model_id(int fd, struct SynapticsHwInfo *synhw)
 {
     byte mi[3];
 
@@ -318,7 +318,7 @@ synaptics_model_id(int fd, struct SynapticsHwInfo *synhw)
  * see also the SYN_CAP_* macros
  */
 static Bool
-synaptics_capability(int fd, struct SynapticsHwInfo *synhw)
+ps2_synaptics_capability(int fd, struct SynapticsHwInfo *synhw)
 {
     byte cap[3];
 
@@ -358,7 +358,7 @@ synaptics_capability(int fd, struct SynapticsHwInfo *synhw)
  * See also the SYN_ID_* macros
  */
 static Bool
-synaptics_identify(int fd, struct SynapticsHwInfo *synhw)
+ps2_synaptics_identify(int fd, struct SynapticsHwInfo *synhw)
 {
     byte id[3];
 
@@ -381,32 +381,32 @@ synaptics_identify(int fd, struct SynapticsHwInfo *synhw)
 }
 
 static Bool
-SynapticsEnableDevice(int fd)
+ps2_synaptics_enable_device(int fd)
 {
     return ps2_putbyte(fd, PS2_CMD_ENABLE);
 }
 
 static Bool
-SynapticsDisableDevice(int fd)
+ps2_synaptics_disable_device(int fd)
 {
     xf86FlushInput(fd);
     return ps2_putbyte(fd, PS2_CMD_DISABLE);
 }
 
 static Bool
-QueryIsSynaptics(int fd)
+ps2_query_is_synaptics(int fd)
 {
     struct SynapticsHwInfo synhw;
     int i;
 
     for (i = 0; i < 3; i++) {
-	if (SynapticsDisableDevice(fd))
+	if (ps2_synaptics_disable_device(fd))
 	    break;
     }
 
     xf86WaitForInput(fd, 20000);
     xf86FlushInput(fd);
-    if (synaptics_identify(fd, &synhw)) {
+    if (ps2_synaptics_identify(fd, &synhw)) {
 	return TRUE;
     } else {
 	ErrorF("Query no Synaptics: %06X\n", synhw.identity);
@@ -415,7 +415,7 @@ QueryIsSynaptics(int fd)
 }
 
 static void
-PrintIdent(const struct SynapticsHwInfo *synhw)
+ps2_print_ident(const struct SynapticsHwInfo *synhw)
 {
     xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(*synhw));
     xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(*synhw),
@@ -458,8 +458,8 @@ PS2DeviceOnHook(LocalDevicePtr local)
 static void
 PS2DeviceOffHook(LocalDevicePtr local)
 {
-    synaptics_reset(local->fd);
-    SynapticsEnableDevice(local->fd);
+    ps2_synaptics_reset(local->fd);
+    ps2_synaptics_enable_device(local->fd);
 }
 
 static Bool
@@ -468,21 +468,21 @@ PS2QueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
     int mode;
 
     /* is the synaptics touchpad active? */
-    if (!QueryIsSynaptics(local->fd))
+    if (!ps2_query_is_synaptics(local->fd))
 	return FALSE;
 
     xf86Msg(X_PROBED, "%s synaptics touchpad found\n", local->name);
 
-    if (!synaptics_reset(local->fd))
+    if (!ps2_synaptics_reset(local->fd))
 	xf86Msg(X_ERROR, "%s reset failed\n", local->name);
 
-    if (!synaptics_identify(local->fd, synhw))
+    if (!ps2_synaptics_identify(local->fd, synhw))
 	return FALSE;
 
-    if (!synaptics_model_id(local->fd, synhw))
+    if (!ps2_synaptics_model_id(local->fd, synhw))
 	return FALSE;
 
-    if (!synaptics_capability(local->fd, synhw))
+    if (!ps2_synaptics_capability(local->fd, synhw))
 	return FALSE;
 
     mode = SYN_BIT_ABSOLUTE_MODE | SYN_BIT_HIGH_RATE;
@@ -490,7 +490,7 @@ PS2QueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 	mode |= SYN_BIT_DISABLE_GESTURE;
     if (SYN_CAP_EXTENDED(*synhw))
 	mode |= SYN_BIT_W_MODE;
-    if (!synaptics_set_mode(local->fd, mode))
+    if (!ps2_synaptics_set_mode(local->fd, mode))
 	return FALSE;
 
     /* Check to see if the host mouse supports a guest */
@@ -502,16 +502,16 @@ PS2QueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 	 * packets */
 
 	/* Disable the host to talk to the guest */
-	SynapticsDisableDevice(local->fd);
+	ps2_synaptics_disable_device(local->fd);
 	/* Reset it, set defaults, streaming and enable it */
-	if (!SynapticsResetPassthrough(local->fd)) {
+	if (!ps2_synaptics_reset_passthrough(local->fd)) {
 	    synhw->hasGuest = FALSE;
 	}
     }
 
-    SynapticsEnableDevice(local->fd);
+    ps2_synaptics_enable_device(local->fd);
 
-    PrintIdent(synhw);
+    ps2_print_ident(synhw);
 
     return TRUE;
 }
@@ -520,7 +520,7 @@ PS2QueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
  * Decide if the current packet stored in priv->protoBuf is valid.
  */
 static Bool
-PacketOk(struct SynapticsHwInfo *synhw, struct CommData *comm)
+ps2_packet_ok(struct SynapticsHwInfo *synhw, struct CommData *comm)
 {
     unsigned char *buf = comm->protoBuf;
     int newabs = SYN_MODEL_NEWABS(*synhw);
@@ -549,8 +549,8 @@ PacketOk(struct SynapticsHwInfo *synhw, struct CommData *comm)
 }
 
 static Bool
-SynapticsGetPacket(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
-		   struct CommData *comm)
+ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
+			 struct CommData *comm)
 {
     int count = 0;
     int c;
@@ -580,7 +580,7 @@ SynapticsGetPacket(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 	/* Check that we have a valid packet. If not, we are out of sync,
 	   so we throw away the first byte in the packet.*/
 	if (comm->protoBufTail >= 6) {
-	    if (!PacketOk(synhw, comm)) {
+	    if (!ps2_packet_ok(synhw, comm)) {
 		int i;
 		for (i = 0; i < comm->protoBufTail - 1; i++)
 		    comm->protoBuf[i] = comm->protoBuf[i + 1];
@@ -617,7 +617,7 @@ PS2ReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
     struct SynapticsHwState *hw = &(comm->hwState);
     int w, i;
 
-    if (!SynapticsGetPacket(local, synhw, comm))
+    if (!ps2_synaptics_get_packet(local, synhw, comm))
 	return FALSE;
 
     /* Handle guest packets */
