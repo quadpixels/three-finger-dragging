@@ -35,9 +35,9 @@ static void show_hw_info(SynapticsSHM* synshm)
 {
     printf("Hardware properties:\n");
     if (synshm->isSynaptics) {
-	printf("    Model Id     = %08lx\n", synshm->model_id);
-	printf("    Capabilities = %08lx\n", synshm->capabilities);
-	printf("    Identity     = %08lx\n", synshm->identity);
+	printf("    Model Id     = %08lx\n", synshm->synhw.model_id);
+	printf("    Capabilities = %08lx\n", synshm->synhw.capabilities);
+	printf("    Identity     = %08lx\n", synshm->synhw.identity);
     } else {
 	printf("    No touchpad found\n");
 	printf("    Do you use a newer kernel than 2.4?\n");

@@ -18,6 +18,14 @@ typedef enum {
     MAX_TAP
 } TapEvent;
 
+typedef struct synapticshw {
+    unsigned long int model_id;		    /* Model-ID */
+    unsigned long int capabilities;	    /* Capabilities */
+    unsigned long int ext_cap;		    /* Extended Capabilities */
+    unsigned long int identity;		    /* Identification */
+} synapticshw_t;
+
+
 #define SHM_SYNAPTICS 23947
 typedef struct _SynapticsSHM
 {
@@ -33,10 +41,8 @@ typedef struct _SynapticsSHM
     int guest_dx, guest_dy; 		    /* guest device movement */
 
     /* Probed hardware properties */
-    unsigned long int model_id;		    /* Model-ID */
-    unsigned long int capabilities;	    /* Capabilities */
-    unsigned long int ext_cap;		    /* Extended Capabilities */
-    unsigned long int identity;		    /* Identification */
+    synapticshw_t synhw;
+
     Bool isSynaptics;			    /* Synaptics touchpad active */
 
     /* Parameter data */
@@ -133,10 +139,7 @@ typedef struct _SynapticsPrivateRec
     struct SynapticsHwState hwState;
 
     /* Data read from the touchpad */
-    unsigned long int model_id;		/* Model-ID */
-    unsigned long int capabilities; 	/* Capabilities */
-    unsigned long int ext_cap;		/* Extended Capabilities */
-    unsigned long int identity;		/* Identification */
+    synapticshw_t synhw;
     Bool isSynaptics;			/* Synaptics touchpad active */
     Bool hasGuest;			/* Has a guest mouse */
     Bool shm_config;			/* True when shared memory area allocated */

@@ -28,6 +28,7 @@
 #include "xf86_OSproc.h"
 
 #include "ps2comm.h"
+#include "synaptics.h"
 
 /* acknowledge for commands and parameter */
 #define PS2_ACK 			0xFA
@@ -314,27 +315,27 @@ synaptics_model_id(int fd, unsigned long int *model_id)
  * see also the SYN_CAP_* macros
  */
 Bool
-synaptics_capability(int fd, unsigned long int *capability, unsigned long int *ext_capab)
+synaptics_capability(int fd, struct synapticshw *synhw)
 {
     byte cap[3];
 
     DBG(ErrorF("Read capabilites...\n"));
 
-    *ext_capab = 0;
+    synhw->ext_cap = 0;
     if ((ps2_send_cmd(fd, SYN_QUE_CAPABILITIES) == Success) &&
 	(ps2_getbyte(fd, &cap[0]) == Success) &&
 	(ps2_getbyte(fd, &cap[1]) == Success) &&
 	(ps2_getbyte(fd, &cap[2]) == Success)) {
-	*capability = (cap[0] << 16) | (cap[1] << 8) | cap[2];
-	DBG(ErrorF("capability %06X\n", *capability));
-	if (SYN_CAP_VALID(*capability)) {
-	    if (SYN_EXT_CAP_REQUESTS(*capability)) {
+	synhw->capabilities = (cap[0] << 16) | (cap[1] << 8) | cap[2];
+	DBG(ErrorF("capabilities %06X\n", synhw->capabilities));
+	if (SYN_CAP_VALID(*synhw)) {
+	    if (SYN_EXT_CAP_REQUESTS(*synhw)) {
 		if ((ps2_send_cmd(fd, SYN_QUE_EXT_CAPAB) == Success) &&
 		    (ps2_getbyte(fd, &cap[0]) == Success) &&
 		    (ps2_getbyte(fd, &cap[1]) == Success) &&
 		    (ps2_getbyte(fd, &cap[2]) == Success)) {
-		    *ext_capab = (cap[0] << 16) | (cap[1] << 8) | cap[2];
-		    DBG(ErrorF("ext-capability %06X\n", *ext_capab));
+		    synhw->ext_cap = (cap[0] << 16) | (cap[1] << 8) | cap[2];
+		    DBG(ErrorF("ext-capability %06X\n", synhw->ext_cap));
 		} else {
 		    DBG(ErrorF("synaptics says, that it has extended-capabilities, "
 			       "but I cannot read them."));
@@ -353,19 +354,20 @@ synaptics_capability(int fd, unsigned long int *capability, unsigned long int *e
  * See also the SYN_ID_* macros
  */
 Bool
-synaptics_identify(int fd, unsigned long int *ident)
+synaptics_identify(int fd, struct synapticshw *synhw)
 {
     byte id[3];
 
     DBG(ErrorF("Identify Touchpad...\n"));
 
+    synhw->identity = 0;
     if ((ps2_send_cmd(fd, SYN_QUE_IDENTIFY) == Success) &&
 	(ps2_getbyte(fd, &id[0]) == Success) &&
 	(ps2_getbyte(fd, &id[1]) == Success) &&
 	(ps2_getbyte(fd, &id[2]) == Success)) {
-	*ident = (id[0] << 16) | (id[1] << 8) | id[2];
-	DBG(ErrorF("ident %06X\n", *ident));
-	if (SYN_ID_IS_SYNAPTICS(*ident)) {
+	synhw->identity = (id[0] << 16) | (id[1] << 8) | id[2];
+	DBG(ErrorF("ident %06X\n", synhw->identity));
+	if (SYN_ID_IS_SYNAPTICS(*synhw)) {
 	    DBG(ErrorF("...done.\n"));
 	    return Success;
 	}
@@ -416,7 +418,7 @@ SynapticsDisableDevice(int fd)
 Bool
 QueryIsSynaptics(int fd)
 {
-    unsigned long id = 0;
+    struct synapticshw synhw;
     int i;
 
     for (i = 0; i < 3; i++) {
@@ -426,10 +428,10 @@ QueryIsSynaptics(int fd)
 
     xf86WaitForInput(fd, 20000);
     xf86FlushInput(fd);
-    if (synaptics_identify(fd, &id) == Success) {
+    if (synaptics_identify(fd, &synhw) == Success) {
 	return TRUE;
     } else {
-	ErrorF("Query no Synaptics: %06X\n", id);
+	ErrorF("Query no Synaptics: %06X\n", synhw.identity);
 	return FALSE;
     }
 }

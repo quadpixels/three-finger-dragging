@@ -1382,29 +1382,27 @@ QueryHardware(LocalDevicePtr local)
     while ((retries++ <= 3) && (synaptics_reset(local->fd) != Success))
 	xf86Msg(X_ERROR, "%s reset failed\n", local->name);
 
-    if (synaptics_identify(local->fd, &priv->identity) != Success)
+    if (synaptics_identify(local->fd, &priv->synhw) != Success)
 	return !Success;
-    para->identity = priv->identity;
 
-    if (synaptics_model_id(local->fd, &priv->model_id) != Success)
+    if (synaptics_model_id(local->fd, &priv->synhw.model_id) != Success)
 	return !Success;
-    para->model_id = priv->model_id;
 
-    if (synaptics_capability(local->fd, &priv->capabilities, &priv->ext_cap) != Success)
+    if (synaptics_capability(local->fd, &priv->synhw) != Success)
 	return !Success;
-    para->capabilities = priv->capabilities;
-    para->ext_cap = priv->ext_cap;
+
+    para->synhw = priv->synhw;
 
     mode = SYN_BIT_ABSOLUTE_MODE | SYN_BIT_HIGH_RATE;
-    if (SYN_ID_MAJOR(priv->identity) >= 4)
+    if (SYN_ID_MAJOR(priv->synhw) >= 4)
 	mode |= SYN_BIT_DISABLE_GESTURE;
-    if (SYN_CAP_EXTENDED(priv->capabilities))
+    if (SYN_CAP_EXTENDED(priv->synhw))
 	mode |= SYN_BIT_W_MODE;
     if (synaptics_set_mode(local->fd, mode) != Success)
 	return !Success;
 
     /* Check to see if the host mouse supports a guest */
-    if (SYN_CAP_PASSTHROUGH(priv->capabilities)) {
+    if (SYN_CAP_PASSTHROUGH(priv->synhw)) {
         priv->hasGuest = TRUE;
 
 	/* Enable the guest mouse.  Set it to relative mode, three byte
@@ -1557,7 +1555,7 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 			struct SynapticsHwState *hwRet)
 {
     Bool ret = SynapticsGetPacket(local, priv);
-    int newabs = SYN_MODEL_NEWABS(priv->model_id);
+    int newabs = SYN_MODEL_NEWABS(priv->synhw);
     unsigned char *buf = priv->protoBuf;
     struct SynapticsHwState *hw = &(priv->hwState);
     int w, i;
@@ -1607,8 +1605,8 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 	hw->left  = (buf[0] & 0x01) ? 1 : 0;
 	hw->right = (buf[0] & 0x02) ? 1 : 0;
 
-	if (SYN_CAP_EXTENDED(priv->capabilities)) {
-	    if (SYN_CAP_FOUR_BUTTON(priv->capabilities)) {
+	if (SYN_CAP_EXTENDED(priv->synhw)) {
+	    if (SYN_CAP_FOUR_BUTTON(priv->synhw)) {
 		hw->up = ((buf[3] & 0x01)) ? 1 : 0;
 		if (hw->left)
 		    hw->up = !hw->up;
@@ -1616,9 +1614,9 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 		if (hw->right)
 		    hw->down = !hw->down;
 	    }
-	    if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap)) {
+	    if (SYN_CAP_MULTI_BUTTON_NO(priv->synhw)) {
 		if ((buf[3] & 2) ? !hw->right : hw->right) {
-		    switch (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap) & ~0x01) {
+		    switch (SYN_CAP_MULTI_BUTTON_NO(priv->synhw) & ~0x01) {
 		    default:
 			break;
 		    case 8:
@@ -1662,13 +1660,13 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 	 * If not, set it to 5, which corresponds to a finger of
 	 * normal width.
 	 */
-	if (SYN_CAP_EXTENDED(priv->capabilities)) {
+	if (SYN_CAP_EXTENDED(priv->synhw)) {
 	    if ((w >= 0) && (w <= 1)) {
-		w_ok = SYN_CAP_MULTIFINGER(priv->capabilities);
+		w_ok = SYN_CAP_MULTIFINGER(priv->synhw);
 	    } else if (w == 2) {
-		w_ok = SYN_MODEL_PEN(priv->model_id);
+		w_ok = SYN_MODEL_PEN(priv->synhw);
 	    } else if ((w >= 4) && (w <= 15)) {
-		w_ok = SYN_CAP_PALMDETECT(priv->capabilities);
+		w_ok = SYN_CAP_PALMDETECT(priv->synhw);
 	    }
 	}
 	if (!w_ok)
@@ -1701,7 +1699,7 @@ static Bool
 PacketOk(SynapticsPrivate *priv)
 {
     unsigned char *buf = priv->protoBuf;
-    int newabs = SYN_MODEL_NEWABS(priv->model_id);
+    int newabs = SYN_MODEL_NEWABS(priv->synhw);
 
     if (newabs ? ((buf[0] & 0xC0) != 0x80) : ((buf[0] & 0xC0) != 0xC0)) {
 	DBG(4, ErrorF("Synaptics driver lost sync at 1st byte\n"));
@@ -1796,32 +1794,32 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivate *priv)
 static void
 PrintIdent(SynapticsPrivate *priv)
 {
-    xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(priv->identity));
-    xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(priv->identity),
-	    SYN_ID_MINOR(priv->identity));
+    xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(priv->synhw));
+    xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(priv->synhw),
+	    SYN_ID_MINOR(priv->synhw));
 
-    if (SYN_MODEL_ROT180(priv->model_id))
+    if (SYN_MODEL_ROT180(priv->synhw))
 	xf86Msg(X_PROBED, " 180 degree mounted touchpad\n");
-    if (SYN_MODEL_PORTRAIT(priv->model_id))
+    if (SYN_MODEL_PORTRAIT(priv->synhw))
 	xf86Msg(X_PROBED, " portrait touchpad\n");
-    xf86Msg(X_PROBED, " Sensor: %d\n", SYN_MODEL_SENSOR(priv->model_id));
-    if (SYN_MODEL_NEWABS(priv->model_id))
+    xf86Msg(X_PROBED, " Sensor: %d\n", SYN_MODEL_SENSOR(priv->synhw));
+    if (SYN_MODEL_NEWABS(priv->synhw))
 	xf86Msg(X_PROBED, " new absolute packet format\n");
-    if (SYN_MODEL_PEN(priv->model_id))
+    if (SYN_MODEL_PEN(priv->synhw))
 	xf86Msg(X_PROBED, " pen detection\n");
 
-    if (SYN_CAP_EXTENDED(priv->capabilities)) {
+    if (SYN_CAP_EXTENDED(priv->synhw)) {
 	xf86Msg(X_PROBED, " Touchpad has extended capability bits\n");
-	if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap))
+	if (SYN_CAP_MULTI_BUTTON_NO(priv->synhw))
 	    xf86Msg(X_PROBED, " -> %d multi buttons, i.e. besides standard buttons\n",
-		    (int)(SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap)));
-	else if (SYN_CAP_FOUR_BUTTON(priv->capabilities))
+		    (int)(SYN_CAP_MULTI_BUTTON_NO(priv->synhw)));
+	else if (SYN_CAP_FOUR_BUTTON(priv->synhw))
 	    xf86Msg(X_PROBED, " -> four buttons\n");
-	if (SYN_CAP_MULTIFINGER(priv->capabilities))
+	if (SYN_CAP_MULTIFINGER(priv->synhw))
 	    xf86Msg(X_PROBED, " -> multifinger detection\n");
-	if (SYN_CAP_PALMDETECT(priv->capabilities))
+	if (SYN_CAP_PALMDETECT(priv->synhw))
 	    xf86Msg(X_PROBED, " -> palm detection\n");
-	if (SYN_CAP_PASSTHROUGH(priv->capabilities))
+	if (SYN_CAP_PASSTHROUGH(priv->synhw))
 	    xf86Msg(X_PROBED, " -> pass-through port\n");
     }
 }
