@@ -258,6 +258,17 @@ FAQ
 
 	xmodmap -pp
 
+* Horizontal scrolling doesn't work in some programs? Is it a driver
+  bug?
+
+    No, probably not. Support for horizontal scroll events must be
+    handled by the application programs. Not all programs do that
+    yet. Ask the authors of the application in question to implement
+    support for horizontal scroll events.
+
+    You can use the "xev" program to check if the synaptics driver
+    generates the horizontal scroll events.
+
 * Can the driver be used together with gpm?
 
     No, not reliably, if you are using a 2.4.x kernel. The gpm driver
