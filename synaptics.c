@@ -1616,7 +1616,7 @@ PrintIdent(SynapticsPrivatePtr priv)
     if (SYN_CAP_EXTENDED(priv->capabilities)) {
 	xf86Msg(X_PROBED, " Touchpad has extended capability bits\n");
 	if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap))
-	    xf86Msg(X_PROBED, " -> %d mulit-buttons, i.e. besides standard buttons\n",
+	    xf86Msg(X_PROBED, " -> %d multi-buttons, i.e. besides standard buttons\n",
 		    (int)(SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap)));
 	else if (SYN_CAP_FOUR_BUTTON(priv->capabilities))
 	    xf86Msg(X_PROBED, " -> four buttons\n");
