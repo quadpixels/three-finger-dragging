@@ -13,7 +13,7 @@ BuildPreReq: XFree86-devel
 This is a driver for the Synaptics TouchPad for XFree86 4.x. A
 Synaptics touchpad by default operates in compatibility mode by
 emulating a standard mouse. However, by using a dedicated driver, more
-advance features of the touchpad becomes available.
+advanced features of the touchpad becomes available.
 
 %prep
 
