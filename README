@@ -95,6 +95,87 @@ LockedDrags		Bool	If off, a tap and drag gesture ends when you release
 				tap a second time.
 
 
+FAQ
+---
+
+* Is this free software?
+
+    Yes, the source code is released under the GNU General Public
+    License.
+
+* How do I use this driver with Linux kernel 2.6.x?
+
+    You need kernel 2.6.0-test6 or later and version 0.11.7 or later
+    of the XFree86 driver. You need to have the "evdev" driver loaded
+    or compiled into the kernel (CONFIG_INPUT_EVDEV). Set the
+    "Protocol" parameter in the X configuration file to
+    "auto-dev". Also, if you set the "Device" parameter to
+    "/dev/psaux", the same X configuration file should work for a
+    2.4.x kernel.
+
+    When configuring the kernel, enable PS/2 mouse support
+    (CONFIG_MOUSE_PS2) and synaptics touchpad support
+    (CONFIG_MOUSE_PS2_SYNAPTICS).
+
+* How can I configure tap-to-click behavior?
+
+    If you set MaxTapTime=0 then the touchpad will not use tapping at
+    all, i.e. touching/tapping will not be taken as a mouse click.
+
+    If, instead, you set MaxTapMove=0, then the touchpad will not use
+    tapping for a single finger tap (left mouse button click) but will
+    for the two and three finger tap (middle and right button click).
+
+* Why did tap-to-click stop working after I upgraded from an old version?
+
+    Time is now measured in milliseconds instead of "number of
+    packets". In practice, this means that if you are upgrading from
+    an old version, you need to change MaxTapTime and
+    EmulateMidButtonTime to make "tap to click" work. Good values are
+    180 and 75 respectively.
+
+* Gnome scrollbars scroll too much when using tap-to-click. Why?
+
+    The MaxTapTime parameter is probably too big. Try setting it to
+    180. Gnome scrollbars use auto repeat, ie if you press the left
+    mouse button and keep it pressed, the scroll bar will move until
+    you release the button. This will lead to problems if the tap time
+    is longer than the delay before auto repeat starts.
+
+* Can the driver be used together with gpm?
+
+    No, not reliably, if you are using a 2.4.x kernel. The gpm driver
+    and the X driver both try to read data from the touchpad, and if
+    they try to read at the same time, both drivers see incomplete
+    data and don't know how to interpret it.
+
+    If you are running a 2.6.x kernel though, there should be no
+    conflict, because the kernel driver will make sure both user space
+    drivers receive all events from the touchpad.
+
+* How do I compile the driver?
+
+    Beginning with version 0.11.8, it should be possible to compile
+    the driver by simply running "make". This will compile a driver
+    for XFree86 4.2.x, which will also work for 4.3.x versions of
+    XFree86.
+
+    If you have an older version of XFree86, you will need an
+    installed X source tree. On an RPM based distribution, you can
+    build a suitable source tree by installing the XFree86 source RPM
+    and compile it. For example, in RedHat 9, use the following
+    commands:
+
+      # rpm -vU XFree86-4.3.0-2.src.rpm
+      # cd /usr/src/redhat/SPECS
+      # rpmbuild -bb XFree86.spec
+
+    Then change the TOP variable in the Makefile to match the version
+    of XFree86 you are using. In the example above, set
+
+      TOP = /usr/src/redhat/BUILD/XFree86-4.3.0/xc
+
+
 Authors
 -------
 
