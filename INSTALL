@@ -38,10 +38,10 @@ Installing
    "/usr/X11R6/lib/modules/drivers".
 
 3. Load the driver by changig the XFree configuration file through
-adding the line 'Load "synaptics"' in the module section.
+   adding the line 'Load "synaptics"' in the module section.
 
 4. Add/Replace in the InputDevice section for the touchpad the
-following lines:
+   following lines:
 
 Section "InputDevice"
   Driver  	"synaptics"
