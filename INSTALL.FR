@@ -1,0 +1,98 @@
+Installation du driver du touchpad Synaptics pour XFree 4.x
+===========================================================
+
+Traduction française: Michel Rigot <michel.rigot@advalvas.be>
+
+Prérequis.
+----------
+
+1. L'utilisation d'un noyau antérieur à la version 2.4.10 nécessite 
+   un patch (pc_keyb.c.diff.2.4.3).
+
+2. Avec le noyau 2.6.x, vous devez activer le support du touchpad 
+   synaptics lors de la configuration du noyau 
+   (CONFIG_MOUSE_PS2 et CONFIG_MOUSE_PS2_SYNAPTICS). Vous avez également 
+   besoin du support pour l'interface evdev (CONFIG_INPUT_EVDEV).
+   Si vous compilez evdev en tant que module, soyez attentif à ce qu'il 
+   soit chargé avant le démarrage du serveur X. Ceci est important 
+   puisqu'il ne sera pas chargé automatiquement.
+
+3. Pour son utilisation avec un touchpad ALPS, vous devez utiliser un 
+   noyau 2.6.x et appliquer le patch alps. Voyez le fichier README.alps 
+   pour plus de détails.
+
+Installation.
+-------------
+
+1. Taper "make" pour créer le driver "synaptics_drv.o"
+
+2. Copier le driver "synaptics_drv.o" dans le répertoire de modules de 
+   XFree ex: "/usr/X11R6/lib/modules/input/".
+   Utiliser "make install" en tant que root qui fait celà à votre place 
+   si X est installé dans "/usr/X11R6/".
+
+3. Charger le driver en ajoutant dans le fichier de configuration de
+   XFree la ligne 'Load "synaptics"' dans la secion module.
+
+4. Ajouter ou remplacer les lignes suivantes pour le touchpad dans la 
+   section "InputDevice"
+
+Section "InputDevice"
+  Driver  	"synaptics"
+  Identifier  	"Mouse[1]"
+  Option 	"Device"  	"/dev/psaux"
+  Option	"Protocol"	"auto-dev"
+  Option	"LeftEdge"      "1900"
+  Option	"RightEdge"     "5400"
+  Option	"TopEdge"       "1900"
+  Option	"BottomEdge"    "4000"
+  Option	"FingerLow"	"25"
+  Option	"FingerHigh"	"30"
+  Option	"MaxTapTime"	"180"
+  Option	"MaxTapMove"	"220"
+  Option	"VertScrollDelta" "100"
+  Option	"MinSpeed"	"0.02"
+  Option	"MaxSpeed"	"0.18"
+  Option	"AccelFactor" "0.0010"
+  Option	"SHMConfig"	"on"
+#  Option	"Repeater"	"/dev/ps2mouse"
+EndSection
+
+   Modifier la valeur de "Identifier" pour qu'elle corresponde au nom
+   dans la section "ServerLayout".
+   L'Option "Repeater" est en test pour le moment.
+
+5. Ajouter l' option "CorePointer" à la ligne "InputDevice" dans la
+   section "ServerLayout".
+
+Section "ServerLayout"
+  InputDevice	"Mouse[1]"	"CorePointer"
+  ...
+
+   Note! Vous ne pouvez avoir plus d'un "core pointer", alors si vous
+         voulez utiliser une souris externe en plus du touchpad, vous
+         devez placer tous les périphériques d'entrée de type souris
+         en tant que "AlwaysCore", et un seul comme "CorePointer".
+
+6. Démarrer ou redémarrer le serveur X. Si le touchpad ne 
+   fonctionne pas:
+
+  a) Vérifier les fichiers log de XFree.
+  b) Essayer de démarrerle serveur X de la façon suivante pour obtenir
+     plus de renseignements: "startx -- -logverbose 8"
+
+7. Si vous désirez pouvoir changer les paramètres du driver sans
+   redémarrer le serveur X, activer l'option "SHMConfig" dans le
+   fichier de configuration de XFree. Vous pouvez alors utiliser le
+   programme "synclient" pour interroger ou modifier les paramètres 
+   du driverau vol.
+
+   Note! Celà présente un certain danger si vous travaillez dans un 
+         environnement multi-utilisateurs non sécurisé. En effet,
+         tous les utilisateurs locaux ont la possiblitéde changer les 
+         paramètres à leur guise.
+
+Si vous ne parvenez pas à faire fonctionner le driver, envoyez les
+fichiers log et de configuration à <petero2@telia.com>. Si vous 
+utilisez un noyau Linux 2.6.x, envoyez également la sortie de "dmesg" 
+et le contenu de "/proc/bus/input/devices".
