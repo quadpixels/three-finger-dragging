@@ -26,18 +26,21 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 
 #include "synaptics.h"
 
 static SynapticsSHM *synshm;
 static int pad_disabled;
+static int background = 0;
 
 
 static void usage()
 {
-    fprintf(stderr, "Usage: syndaemon [-i idle-time]\n");
+    fprintf(stderr, "Usage: syndaemon [-i idle-time] [-d]\n");
     fprintf(stderr, "  -i How many seconds to wait after the last key press before\n");
     fprintf(stderr, "     enabling the touchpad. (default is 2s)\n");
+    fprintf(stderr, "  -d Start as a daemon, ie in the background.\n");
     exit(1);
 }
 
@@ -138,13 +141,15 @@ static void main_loop(Display *display, double idle_time)
 
 	if (current_time > last_activity + idle_time) {	/* Enable touchpad */
 	    if (pad_disabled) {
-		printf("Enable\n");
+		if (!background)
+		    printf("Enable\n");
 		synshm->touchpad_off = 0;
 		pad_disabled = 0;
 	    }
 	} else {			    /* Disable touchpad */
 	    if (!pad_disabled && !synshm->touchpad_off) {
-		printf("Disable\n");
+		if (!background)
+		    printf("Disable\n");
 		pad_disabled = 1;
 		synshm->touchpad_off = 1;
 	    }
@@ -162,10 +167,13 @@ int main(int argc, char *argv[])
     int shmid;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "i:?")) != EOF) {
+    while ((c = getopt(argc, argv, "i:d?")) != EOF) {
 	switch(c) {
 	case 'i':
 	    idle_time = atof(optarg);
+	    break;
+	case 'd':
+	    background = 1;
 	    break;
 	default:
 	    usage();
@@ -199,6 +207,20 @@ int main(int argc, char *argv[])
 
     /* Install a signal handler to restore synaptics parameters on exit */
     install_signal_handler();
+
+    if (background) {
+	pid_t pid;
+	if ((pid = fork()) < 0) {
+	    perror("fork");
+	    exit(3);
+	} else if (pid != 0)
+	    exit(0);
+
+	/* Child (daemon) is running here */
+	setsid();	/* Become session leader */
+	chdir("/");	/* In case the file system gets unmounted */
+	umask(0);	/* We don't want any surprises */
+    }
 
     /* Run the main loop */
     main_loop(display, idle_time);
