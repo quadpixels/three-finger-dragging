@@ -358,7 +358,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->edge_motion_min_z = xf86SetIntOption(local->options, "EdgeMotionMinZ", 30);
     pars->edge_motion_max_z = xf86SetIntOption(local->options, "EdgeMotionMaxZ", 160);
     pars->edge_motion_min_speed = xf86SetIntOption(local->options, "EdgeMotionMinSpeed", 1);
-    pars->edge_motion_max_speed = xf86SetIntOption(local->options, "EdgeMotionMaxSpeed", 200);
+    pars->edge_motion_max_speed = xf86SetIntOption(local->options, "EdgeMotionMaxSpeed", 400);
     pars->edge_motion_use_always = xf86SetBoolOption(local->options, "EdgeMotionUseAlways", FALSE);
     repeater = xf86SetStrOption(local->options, "Repeater", NULL);
     pars->updown_button_scrolling = xf86SetBoolOption(local->options, "UpDownScrolling", TRUE);
@@ -1183,7 +1183,7 @@ static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    double tmpf;
 	    int x_edge_speed = 0;
 	    int y_edge_speed = 0;
-	    double dtime = (hw->millis - HIST(1).millis) / 1000.0;
+	    double dtime = (hw->millis - HIST(0).millis) / 1000.0;
 	    dx = estimate_delta(hw->x, HIST(0).x, HIST(1).x, HIST(2).x);
 	    dy = estimate_delta(hw->y, HIST(0).y, HIST(1).y, HIST(2).y);
 
