@@ -329,6 +329,15 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->accl) != 1))
 	priv->synpara->accl=0.0015;
 
+    /* Warn about (and fix) mis-configured TopEdge/BottomEdge parameters */
+    if (priv->synpara->top_edge > priv->synpara->bottom_edge) {
+	int tmp = priv->synpara->top_edge;
+	priv->synpara->top_edge = priv->synpara->bottom_edge;
+	priv->synpara->bottom_edge = tmp;
+	xf86Msg(X_WARNING, "%s: TopEdge is bigger than BottomEdge. Fixing.\n",
+		local->name);
+    }
+
     priv->buffer = XisbNew(local->fd, 200);
     DBG(9, XisbTrace (priv->buffer, 1));
 
