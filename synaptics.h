@@ -18,6 +18,8 @@ typedef enum {
     MAX_TAP
 } TapEvent;
 
+#define SYN_MAX_BUTTONS 12		    /* Max number of mouse buttons */
+
 struct SynapticsHwInfo {
     unsigned int model_id;		    /* Model-ID */
     unsigned int capabilities;		    /* Capabilities */

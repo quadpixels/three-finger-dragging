@@ -535,14 +535,18 @@ static Bool
 DeviceInit(DeviceIntPtr dev)
 {
     LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
-    unsigned char map[] = {0, 1, 2, 3, 4, 5, 6, 7};
+    unsigned char map[SYN_MAX_BUTTONS + 1];
+    int i;
 
     DBG(3, ErrorF("Synaptics DeviceInit called\n"));
+
+    for (i = 0; i <= SYN_MAX_BUTTONS; i++)
+	map[i] = i;
 
     dev->public.on = FALSE;
 
     InitPointerDeviceStruct((DevicePtr)dev, map,
-			    7,
+			    SYN_MAX_BUTTONS,
 			    miPointerGetMotionEvents, SynapticsCtrl,
 			    miPointerGetMotionBufferSize());
 
@@ -904,7 +908,7 @@ SelectTapButton(SynapticsPrivate *priv, edge_type edge)
     }
 
     priv->tap_button = priv->synpara->tap_action[tap];
-    priv->tap_button = clamp(priv->tap_button, 0, 7);
+    priv->tap_button = clamp(priv->tap_button, 0, SYN_MAX_BUTTONS);
 }
 
 static void
