@@ -93,7 +93,7 @@ typedef enum {
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
 /* for auto-dev: */
-#define INP_DEV_N "N: Name=\"Synaptics Synaptics TouchPad\""
+#define INP_DEV_N "N: Name=\"SynPS/2 "
 #define INP_DEV_H "H: Handlers="
 #define DEV_INPUT_EVENT "/dev/input/"
 #define PROC_BUS_INPUT_DEV "/proc/bus/input/devices"
