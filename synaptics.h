@@ -74,6 +74,10 @@ typedef struct _SynapticsPrivateRec
 	int repeatButtons;					/* buttons for repeat */
 	int lastButtons;					/* last State of the buttons */
 	int finger_count;					/* tap counter for fingers */
+	int palm;							/* Set to true when palm detected, reset to false when
+										 * palm/finger contact disappears */
+	int prev_z;							/* previous z value, for palm detection */
+	int avg_w;							/* weighted average of previous w values */
 }
 SynapticsPrivateRec, *SynapticsPrivatePtr;
 

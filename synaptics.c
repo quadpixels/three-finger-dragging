@@ -61,6 +61,7 @@ typedef enum {
 	LEFT_TOP_EDGE = TOP_EDGE | LEFT_EDGE
 } edge_type;
 
+#define MAX(a, b) (((a)>(b))?(a):(b))
 #define DIFF_TIME(a, b) (((a)>(b))?(a)-(b):(b)-(a))
 #define VERSION "0.10p1"
 
@@ -523,8 +524,42 @@ ReadInput(LocalDevicePtr local)
 		finger = (((z > para->finger_high) && !priv->finger_flag) ||
 				  ((z > para->finger_low) && priv->finger_flag));
 
+		/* palm detection */
+		if(SYN_CAP_EXTENDED(priv->capabilities) && SYN_CAP_PALMDETECT(priv->capabilities)) {
+			if(finger) {
+				if((z > 200) && (w > 10))
+					priv->palm = TRUE;
+			} else {
+				priv->palm = FALSE;
+			}
+			if(x == 0)
+				priv->avg_w = 0;
+			else
+				priv->avg_w += (w - priv->avg_w + 1) / 2;
+			if(finger && !priv->finger_flag) {
+				int safe_w = MAX(w, priv->avg_w);
+				if(w < 2)
+					finger = TRUE;				/* more than one finger -> not a palm */
+				else if((safe_w < 6) && (priv->prev_z < para->finger_high))
+					finger = TRUE;				/* thin finger, distinct touch -> not a palm */
+				else if((safe_w < 7) && (priv->prev_z < para->finger_high / 2))
+					finger = TRUE;				/* thin finger, distinct touch -> not a palm */
+				else if(z > priv->prev_z + 1)	/* z not stable, may be a palm */
+					finger = FALSE;
+				else if(z < priv->prev_z - 5)	/* z not stable, may be a palm */
+					finger = FALSE;
+				else if(z > 200)				/* z too large -> probably palm */
+					finger = FALSE;
+				else if(w > 10)					/* w too large -> probably palm */
+					finger = FALSE;
+			}
+			priv->prev_z = z;
+		}
+
 		/* tap and drag detection */
-		if(finger && !priv->finger_flag) { /* touched */
+		if(priv->palm) {
+			/* Palm detected, skip tap/drag processing */
+		} else if(finger && !priv->finger_flag) { /* touched */
 			DBG(7, ErrorF("touched - x:%d, y:%d packet:%lu\n", x, y, priv->count_packet));
 			if(priv->tap) {
 				DBG(7, ErrorF("drag detected - tap time:%lu\n", priv->count_packet_tapping));
@@ -638,7 +673,7 @@ ReadInput(LocalDevicePtr local)
 				DBG(7, ErrorF("edge scroll detected on right edge\n"));
 			}
 		}
-		if(priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger)) {
+		if(priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger || priv->palm)) {
 			DBG(7, ErrorF("edge scroll off\n"));
 			priv->vert_scroll_on = FALSE;	
 		}
@@ -659,7 +694,7 @@ ReadInput(LocalDevicePtr local)
 		}
 
 		/* movement */
-		if(finger && !priv->vert_scroll_on && !priv->finger_count) {
+		if(finger && !priv->vert_scroll_on && !priv->finger_count && !priv->palm) {
 			if(priv->count_packet_finger > 3) { /* min. 3 packets */
 				dy = (1 * 
 				   (((priv->move_hist[MOVE_HIST(1)].y + priv->move_hist[MOVE_HIST(2)].y) / 2) - 
