@@ -244,10 +244,10 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->synpara->bottom_edge = xf86SetIntOption(local->options, "BottomEdge", 1800);
 	priv->synpara->finger_low = xf86SetIntOption(local->options, "FingerLow", 25);
 	priv->synpara->finger_high = xf86SetIntOption(local->options, "FingerHigh", 30);
-	priv->synpara->tap_time = xf86SetIntOption(local->options, "MaxTapTime", 20);
+	priv->synpara->tap_time = xf86SetIntOption(local->options, "MaxTapTime", 180);
 	priv->synpara->tap_move = xf86SetIntOption(local->options, "MaxTapMove", 220);
 	priv->synpara->emulate_mid_button_time = xf86SetIntOption(local->options,
-															  "EmulateMidButtonTime", 6);
+															  "EmulateMidButtonTime", 75);
 	priv->synpara->scroll_dist_vert = xf86SetIntOption(local->options, "VertScrollDelta", 100);
 	priv->synpara->scroll_dist_horiz = xf86SetIntOption(local->options, "HorizScrollDelta", 100);
 	priv->synpara->edge_motion_speed = xf86SetIntOption(local->options, "EdgeMotionSpeed", 40);
