@@ -10,11 +10,11 @@
  *     for newer Firmware (5.8) protocol changes for 3rd to 6th button
  *
  *	 Copyright (C) 2001 Stefan Gmeiner <riddlebox@freesurf.ch>
- *     start merging tpconfig and gpm code to a xfree-input modul
+ *     start merging tpconfig and gpm code to a xfree-input module
  *     adding some changes and extensions (ex. 3rd and 4th button)
  *
  *   Copyright (c) 1999 Henry Davies <hdavies@ameritech.net> for the
- *     absolut to relative translation code (from the gpm-source)
+ *     absolute to relative translation code (from the gpm-source)
  *     and some other ideas
  *
  *   This program is free software; you can redistribute it and/or
