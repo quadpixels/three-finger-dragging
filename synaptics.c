@@ -694,7 +694,7 @@ ReadInput(LocalDevicePtr local)
     int delay = 0;
     Bool newDelay = FALSE;
 
-    while (SynapticsGetHwState(local, priv, &hw) == Success) {
+    while (SynapticsGetHwState(local, priv, &hw)) {
 	hw.millis = GetTimeInMillis();
 	delay = HandleState(local, &hw);
 	newDelay = TRUE;
@@ -1455,7 +1455,7 @@ SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivate *priv,
     } else if (priv->proto == SYN_PROTO_EVENT) {
 	return SynapticsParseEventData(local, priv, hw);
     } else {
-	return !Success;
+	return FALSE;
     }
 }
 
@@ -1467,7 +1467,7 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivate *priv,
     Bool v;
     struct SynapticsHwState *hw = &(priv->hwState);
 
-    while (SynapticsReadEvent(priv, &ev) == Success) {
+    while (SynapticsReadEvent(priv, &ev)) {
 	switch (ev.type) {
 	case EV_SYN:
 	    switch (ev.code) {
@@ -1481,7 +1481,7 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivate *priv,
 		else
 		    hw->numFingers = 0;
 		*hwRet = *hw;
-		return Success;
+		return TRUE;
 	    }
 	case EV_KEY:
 	    v = (ev.value ? TRUE : FALSE);
@@ -1554,7 +1554,7 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivate *priv,
 	    break;
 	}
     }
-    return !Success;
+    return FALSE;
 }
 
 static Bool
@@ -1565,26 +1565,25 @@ SynapticsReadEvent(SynapticsPrivate *priv, struct input_event *ev)
 
     for (i = 0; i < sizeof(struct input_event); i++) {
 	if ((c = XisbRead(priv->buffer)) < 0)
-	    return !Success;
+	    return FALSE;
 	u = (unsigned char)c;
 	pBuf = (unsigned char *)ev;
 	pBuf[i] = u;
     }
-    return Success;
+    return TRUE;
 }
 
 static Bool
 SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 			struct SynapticsHwState *hwRet)
 {
-    Bool ret = SynapticsGetPacket(local, priv);
     int newabs = SYN_MODEL_NEWABS(priv->synhw);
     unsigned char *buf = priv->protoBuf;
     struct SynapticsHwState *hw = &(priv->hwState);
     int w, i;
 
-    if (ret != Success)
-	return ret;
+    if (!SynapticsGetPacket(local, priv))
+	return FALSE;
 
     /* Handle guest packets */
     hw->guest_dx = hw->guest_dy = 0;
@@ -1601,7 +1600,7 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 	    hw->guest_mid   = (buf[1] & 0x04) ? TRUE : FALSE;
 	    hw->guest_right = (buf[1] & 0x02) ? TRUE : FALSE;
 	    *hwRet = *hw;
-	    return Success;
+	    return TRUE;
 	}
     }
 
@@ -1712,7 +1711,7 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
     }
 
     *hwRet = *hw;
-    return Success;
+    return TRUE;
 }
 
 /*
@@ -1771,14 +1770,14 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivate *priv)
 	if (!priv->isSynaptics) {
 	    xf86write(priv->fifofd, &u, 1);
 	    if (++count >= 3)
-		return !Success;
+		return FALSE;
 	    continue;
 	}
 
 	/* to avoid endless loops */
 	if (count++ > 30) {
 	    ErrorF("Synaptics driver lost sync... got gigantic packet!\n");
-	    return !Success;
+	    return FALSE;
 	}
 
 	priv->protoBuf[priv->protoBufTail++] = u;
@@ -1807,9 +1806,9 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivate *priv)
 		DBG(4, ErrorF("Synaptics driver resynced.\n"));
 	    }
 	    priv->protoBufTail = 0;
-	    return Success;
+	    return TRUE;
 	}
     }
 
-    return !Success;
+    return FALSE;
 }
