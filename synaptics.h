@@ -172,7 +172,7 @@ typedef struct _SynapticsPrivateRec
     Bool vert_scroll_on;		/* scrolling flag */
     Bool horiz_scroll_on;		/* scrolling flag */
     Bool circ_scroll_on;		/* scrolling flag */
-    double frac_x, frac_y;		/* absoulte -> relative fraction */
+    double frac_x, frac_y;		/* absolute -> relative fraction */
     enum MidButtonEmulation mid_emu_state;	/* emulated 3rd button */
     int repeatButtons;			/* buttons for repeat */
     unsigned long nextRepeat;		/* Time when to trigger next auto repeat event */
