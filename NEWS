@@ -11,7 +11,7 @@
 - Fixed spelling errors.
 - synaptics: Added "Acer 661 LCi" to the compatibility list.
 - Made it possible to disable the touchpad at runtime. (Patch from
-  Jörg Bösner.
+  Jörg Bösner.)
 - Clarified description of FingerLow/FingerHigh parameters.
 - Added "DELL Latitude CPi" to the compatibility list.
 - Changed the identifier for the synaptics protocol to match kernel
