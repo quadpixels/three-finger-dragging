@@ -814,16 +814,14 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     /* Up/Down-button scrolling or middle/double-click */
     double_click = FALSE;
     if (!para->updown_button_scrolling) {
-	if (hw->down)
-	    { /* map down-button to middle-button */
-		mid = TRUE;
-	    }
+	if (hw->down) {		/* map down-button to middle-button */
+	    mid = TRUE;
+	}
 
-	if (hw->up)
-	    { /* up-button generates double-click */
-		if (!priv->prev_up)
-		    double_click = TRUE;
-	    }
+	if (hw->up) {		/* up-button generates double-click */
+	    if (!priv->prev_up)
+		double_click = TRUE;
+	}
 	priv->prev_up = hw->up;
 
 	/* reset up/down button events */
@@ -835,92 +833,87 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     /* tap and drag detection */
     if (priv->palm) {
 	/* Palm detected, skip tap/drag processing */
-    } else if (finger && !priv->finger_flag)
-	{ /* touched */
-	    DBG(7, ErrorF("touched - x:%d, y:%d millis:%lu\n", hw->x, hw->y, hw->millis));
-	    if (priv->tap) {
-		DBG(7, ErrorF("drag detected - tap time:%lu\n", priv->tapping_millis));
-		priv->drag = TRUE; /* drag gesture */
-	    }
-	    priv->touch_on.x = hw->x;
-	    priv->touch_on.y = hw->y;
-	    priv->touch_on.millis = hw->millis;
+    } else if (finger && !priv->finger_flag) { /* touched */
+	DBG(7, ErrorF("touched - x:%d, y:%d millis:%lu\n", hw->x, hw->y, hw->millis));
+	if (priv->tap) {
+	    DBG(7, ErrorF("drag detected - tap time:%lu\n", priv->tapping_millis));
+	    priv->drag = TRUE; /* drag gesture */
 	}
-    else if (!finger && priv->finger_flag)
-	{ /* untouched */
-	    DBG(7, ErrorF("untouched - x:%d, y:%d millis:%lu finger:%d\n",
-			  hw->x, hw->y, hw->millis, priv->finger_count));
-	    /* check if
-	       1. the tap is in tap_time
-	       2. the max movement is in tap_move or more than one finger are tapped */
-	    if ((TIME_DIFF(hw->millis, priv->touch_on.millis + para->tap_time) < 0) &&
-		(((abs(hw->x - priv->touch_on.x) < para->tap_move) &&
-		  (abs(hw->y - priv->touch_on.y) < para->tap_move)) ||
-		 priv->finger_count)) {
-		if (priv->drag) {
-		    DBG(7, ErrorF("double tapping detected\n"));
-		    priv->doubletap = TRUE;
-		    priv->tap = FALSE;
+	priv->touch_on.x = hw->x;
+	priv->touch_on.y = hw->y;
+	priv->touch_on.millis = hw->millis;
+    } else if (!finger && priv->finger_flag) { /* untouched */
+	DBG(7, ErrorF("untouched - x:%d, y:%d millis:%lu finger:%d\n",
+		      hw->x, hw->y, hw->millis, priv->finger_count));
+	/* check if
+	   1. the tap is in tap_time
+	   2. the max movement is in tap_move or more than one finger are tapped */
+	if ((TIME_DIFF(hw->millis, priv->touch_on.millis + para->tap_time) < 0) &&
+	    (((abs(hw->x - priv->touch_on.x) < para->tap_move) &&
+	      (abs(hw->y - priv->touch_on.y) < para->tap_move)) ||
+	     priv->finger_count)) {
+	    if (priv->drag) {
+		DBG(7, ErrorF("double tapping detected\n"));
+		priv->doubletap = TRUE;
+		priv->tap = FALSE;
+	    } else {
+		DBG(7, ErrorF("tapping detected @ "));
+		priv->tapping_millis = hw->millis;
+		priv->tap = TRUE;
+		if (priv->finger_count == 0) {
+		    switch (edge) {
+		    case RIGHT_TOP_EDGE:
+			DBG(7, ErrorF("right top edge\n"));
+			priv->tap_mid = TRUE;
+			break;
+		    case RIGHT_BOTTOM_EDGE:
+			DBG(7, ErrorF("right bottom edge\n"));
+			priv->tap_right = TRUE;
+			break;
+		    case LEFT_TOP_EDGE:
+			DBG(7, ErrorF("left top edge\n"));
+			break;
+		    case LEFT_BOTTOM_EDGE:
+			DBG(7, ErrorF("left bottom edge\n"));
+			break;
+		    default:
+			DBG(7, ErrorF("no edge\n"));
+			priv->tap_left = TRUE;
+		    }
 		} else {
-		    DBG(7, ErrorF("tapping detected @ "));
-		    priv->tapping_millis = hw->millis;
-		    priv->tap = TRUE;
-		    if (priv->finger_count == 0) {
-			switch (edge) {
-			case RIGHT_TOP_EDGE:
-			    DBG(7, ErrorF("right top edge\n"));
-			    priv->tap_mid = TRUE;
-			    break;
-			case RIGHT_BOTTOM_EDGE:
-			    DBG(7, ErrorF("right bottom edge\n"));
-			    priv->tap_right = TRUE;
-			    break;
-			case LEFT_TOP_EDGE:
-			    DBG(7, ErrorF("left top edge\n"));
-			    break;
-			case LEFT_BOTTOM_EDGE:
-			    DBG(7, ErrorF("left bottom edge\n"));
-			    break;
-			default:
-			    DBG(7, ErrorF("no edge\n"));
-			    priv->tap_left = TRUE;
-			}
-		    } else {
-			switch (priv->finger_count) {
-			case 2:
-			    DBG(7, ErrorF("two finger tap\n"));
-			    priv->tap_mid = TRUE;
-			    break;
-			case 3:
-			    DBG(7, ErrorF("three finger tap\n"));
-			    priv->tap_right = TRUE;
-			    break;
-			default:
-			    DBG(7, ErrorF("one finger\n"));
-			    priv->tap_left = TRUE;
-			}
+		    switch (priv->finger_count) {
+		    case 2:
+			DBG(7, ErrorF("two finger tap\n"));
+			priv->tap_mid = TRUE;
+			break;
+		    case 3:
+			DBG(7, ErrorF("three finger tap\n"));
+			priv->tap_right = TRUE;
+			break;
+		    default:
+			DBG(7, ErrorF("one finger\n"));
+			priv->tap_left = TRUE;
 		    }
 		}
-	    } /* tap detection */
-	    priv->drag = FALSE;
-	} /* finger lost */
+	    }
+	} /* tap detection */
+	priv->drag = FALSE;
+    } /* finger lost */
 
     /* detecting 2 and 3 fingers */
     timeleft = TIME_DIFF(priv->touch_on.millis + para->tap_time, hw->millis);
     if (timeleft > 0)
 	delay = MIN(delay, timeleft);
-    if (finger && /* finger is on the surface */
-	(timeleft > 0)) /* tap time is not succeeded */
-	{ /* count fingers when reported */
-	    if (hw->twoFingers && (priv->finger_count == 0))
-		priv->finger_count = 2;
-	    if (hw->threeFingers)
-		priv->finger_count = 3;
-	}
-    else
-	{ /* reset finger counts */
-	    priv->finger_count = 0;
-	}
+    if (finger &&			/* finger is on the surface */
+	(timeleft > 0)) {		/* tap time is not succeeded */
+	/* count fingers when reported */
+	if (hw->twoFingers && (priv->finger_count == 0))
+	    priv->finger_count = 2;
+	if (hw->threeFingers)
+	    priv->finger_count = 3;
+    } else { /* reset finger counts */
+	priv->finger_count = 0;
+    }
 
     /* reset tapping button flags */
     if (!priv->tap && !priv->drag && !priv->doubletap) {
@@ -1028,14 +1021,11 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	    /* speed in depence of distance/packet */
 	    dist = move_distance( dx, dy );
 	    speed = dist * para->accl;
-	    if (speed > para->max_speed)
-		{ /* set max speed factor */
-		    speed = para->max_speed;
-		}
-	    else if (speed < para->min_speed)
-		{ /* set min speed factor */
-		    speed = para->min_speed;
-		}
+	    if (speed > para->max_speed) {  /* set max speed factor */
+		speed = para->max_speed;
+	    } else if (speed < para->min_speed) { /* set min speed factor */
+		speed = para->min_speed;
+	    }
 
 	    /* save the fraction for adding to the next priv->count_packet */
 	    priv->frac_x = xf86modf((dx * speed) + priv->frac_x, &integral);
@@ -1045,11 +1035,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	}
 
 	priv->count_packet_finger++;
+    } else {				    /* reset packet counter */
+	priv->count_packet_finger = 0;
     }
-    else
-	{ /* reset packet counter */
-	    priv->count_packet_finger = 0;
-	}
 
 
     buttons = ((hw->left  ? 0x01 : 0) |
@@ -1589,15 +1577,14 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 	    }
 	}
 
-	if (priv->protoBufTail >= 6)
-	    { /* Full packet received */
-		if (priv->outOfSync > 0) {
-		    priv->outOfSync = 0;
-		    DBG(4, ErrorF("Synaptics driver resynced.\n"));
-		}
-		priv->protoBufTail = 0;
-		return Success;
+	if (priv->protoBufTail >= 6) { /* Full packet received */
+	    if (priv->outOfSync > 0) {
+		priv->outOfSync = 0;
+		DBG(4, ErrorF("Synaptics driver resynced.\n"));
 	    }
+	    priv->protoBufTail = 0;
+	    return Success;
+	}
     }
 
     return !Success;
