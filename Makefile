@@ -43,15 +43,13 @@ LDCOMBINEFLAGS = -r
 SRCS = synaptics.c ps2comm.c
 OBJS = synaptics.o ps2comm.o
 
-DRIVER = synaptics
-
 .c.o:
 	$(RM) $@
 	$(CC) -c $(CFLAGS) $(_NOOP_) $*.c
 
-all:: $(DRIVER)_drv.o synclient syndaemon
+all:: synaptics_drv.o synclient syndaemon
 
-install: $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/lib/modules/input/$(DRIVER)_drv.o install-man
+install: $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/lib/modules/input/synaptics_drv.o install-man
 
 install-man: $(MANDIR)/synclient.1 $(MANDIR)/syndaemon.1
 
@@ -67,10 +65,10 @@ $(BINDIR)/synclient : synclient
 $(BINDIR)/syndaemon : syndaemon
 	cp $< $@
 
-$(INSTALLED_X)/lib/modules/input/$(DRIVER)_drv.o : $(DRIVER)_drv.o
+$(INSTALLED_X)/lib/modules/input/synaptics_drv.o : synaptics_drv.o
 	cp $< $@
 
-$(DRIVER)_drv.o:  $(OBJS) $(EXTRALIBRARYDEPS)
+synaptics_drv.o: $(OBJS)
 	$(RM) $@
 	$(LD) $(LDCOMBINEFLAGS)  $(OBJS) -o $@
 
