@@ -1,19 +1,19 @@
-/* 
+/*
  *   2003 Hartwig Felger <hgfelger@hgfelger.de>
  *     patch to make the horizontal-wheel-replacement-buttons work.
  *
  *   2002 Peter Osterlund <petero2@telia.com>
- *     patches for fast scrolling, palm detection, edge motion, 
+ *     patches for fast scrolling, palm detection, edge motion,
  *     horizontal scrolling
  *
  *   2002 S. Lehner <sam_x@bluemail.ch>
- *     for newer Firmware (5.8) protocol changes for 3rd to 6th button 
+ *     for newer Firmware (5.8) protocol changes for 3rd to 6th button
  *
  *	 Copyright (C) 2001 Stefan Gmeiner <riddlebox@freesurf.ch>
  *     start merging tpconfig and gpm code to a xfree-input modul
  *     adding some changes and extensions (ex. 3rd and 4th button)
- * 
- *   Copyright (c) 1999 Henry Davies <hdavies@ameritech.net> for the 
+ *
+ *   Copyright (c) 1999 Henry Davies <hdavies@ameritech.net> for the
  *     absolut to relative translation code (from the gpm-source)
  *     and some other ideas
  *
@@ -51,7 +51,7 @@
 #include <exevents.h>			/* Needed for InitValuator/Proximity stuff	*/
 #include "mipointer.h"
 #ifdef XFREE_4_0_3
-#include <xf86Optrec.h>  		/* needed for Options */ 
+#include <xf86Optrec.h>  		/* needed for Options */
 #endif
 
 
@@ -123,7 +123,7 @@ static XF86ModuleVersionInfo VersionRec =
 
 
 static pointer
-SetupProc(pointer module, pointer options, int *errmaj, int *errmin ) 
+SetupProc(pointer module, pointer options, int *errmaj, int *errmin )
 {
 	xf86AddInputDriver(&SYNAPTICS, module, 0);
 	return module;
@@ -139,7 +139,7 @@ XF86ModuleData synapticsModuleData = {&VersionRec, &SetupProc, NULL };
  ****************************************************************************/
 
 /*
- *  called by the module loader for initialtion       
+ *  called by the module loader for initialtion
  */
 static InputInfoPtr
 SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
@@ -147,7 +147,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	LocalDevicePtr local;
 	SynapticsPrivatePtr priv;
 #ifdef XFREE_4_0_3
-	XF86OptionPtr optList; 
+	XF86OptionPtr optList;
 #else
 	pointer optList;
 #endif
@@ -162,7 +162,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
 	/* Allocate a new InputInfoRec and add it to the head xf86InputDevs. */
 	local = xf86AllocateInput(drv, 0);
-	if (!local) 
+	if (!local)
 	{
 		xfree(priv);
 		return NULL;
@@ -212,23 +212,23 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
 	/* install shared memory or normal memory for parameter */
 	priv->shm_config = FALSE;
-	if(xf86SetBoolOption(local->options, "SHMConfig", FALSE)) 
+	if(xf86SetBoolOption(local->options, "SHMConfig", FALSE))
 	{
 		if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
 			xf86shmctl(shmid, XF86IPC_RMID, NULL);
-		if((shmid = xf86shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0777 | XF86IPC_CREAT)) == -1) 
+		if((shmid = xf86shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0777 | XF86IPC_CREAT)) == -1)
 		{
 			xf86Msg(X_ERROR, "%s error shmget\n", local->name);
 			goto SetupProc_fail;
-		} 
-		else if((priv->synpara = (SynapticsSHM*) xf86shmat(shmid, NULL, 0)) == NULL) 
+		}
+		else if((priv->synpara = (SynapticsSHM*) xf86shmat(shmid, NULL, 0)) == NULL)
 		{
 			xf86Msg(X_ERROR, "%s error shmat\n", local->name);
 			goto SetupProc_fail;
 		}
 		priv->shm_config = TRUE;
-	} 
-	else 
+	}
+	else
 	{
 		priv->synpara = xcalloc (1, sizeof (SynapticsSHM));
 		if(!priv->synpara)
@@ -270,22 +270,22 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->buffer = XisbNew(local->fd, 200);
 	DBG(9, XisbTrace (priv->buffer, 1));
 
-	if(priv->synpara->repeater) 
+	if(priv->synpara->repeater)
 	{
 		/* create repeater fifo */
 		if((xf86mknod(priv->synpara->repeater, 666, XF86_S_IFIFO) != 0) &&
-		   (xf86errno != xf86_EEXIST)) 
+		   (xf86errno != xf86_EEXIST))
 		{
 				xf86Msg(X_ERROR, "%s can't create repeater fifo\n", local->name);
 				xf86free(priv->synpara->repeater);
 				priv->synpara->repeater = NULL;
 				priv->fifofd = -1;
-		} 
-		else 
+		}
+		else
 		{
 			/* open the repeater fifo */
 			optList = xf86NewOption("Device", priv->synpara->repeater);
-			if((priv->fifofd = xf86OpenSerial(optList)) == -1) 
+			if((priv->fifofd = xf86OpenSerial(optList)) == -1)
 			{
 				xf86Msg(X_ERROR, "%s repeater device open failed\n", local->name);
 				xf86free(priv->synpara->repeater);
@@ -295,7 +295,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		}
 	}
 
-	if(QueryHardware(local) != Success) 
+	if(QueryHardware(local) != Success)
 	{
 		xf86Msg(X_ERROR, "%s Unable to query/initialize Synaptics hardware.\n", local->name);
 		goto SetupProc_fail;
@@ -308,10 +308,10 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	xf86ProcessCommonOptions(local, local->options);
 	local->flags |= XI86_CONFIGURED;
 
-	if (local->fd != -1) 
-	{ 
+	if (local->fd != -1)
+	{
 		xf86RemoveEnabledDevice (local);
-		if (priv->buffer) 
+		if (priv->buffer)
 		{
 			XisbFree(priv->buffer);
 			priv->buffer = NULL;
@@ -328,7 +328,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		local->fd = -1;
 	}
 
-	/* If it fails, the name will be printed 
+	/* If it fails, the name will be printed
 	if (local->name)
 		xfree (local->name);
 	*/
@@ -418,10 +418,10 @@ DeviceOn (DeviceIntPtr dev)
 
 	priv->buffer = XisbNew(local->fd, 64);
 	if (!priv->buffer) {
-			xf86CloseSerial(local->fd);
-			local->fd = -1;
-			return (!Success);
-		}
+		xf86CloseSerial(local->fd);
+		local->fd = -1;
+		return (!Success);
+	}
 
 	xf86FlushInput(local->fd);
 
@@ -441,7 +441,7 @@ DeviceOff(DeviceIntPtr dev)
 
 	DBG(3, ErrorF("Synaptics DeviceOff called\n"));
 
-	if (local->fd != -1) { 
+	if (local->fd != -1) {
 		xf86RemoveEnabledDevice (local);
 		if (priv->buffer) {
 			XisbFree(priv->buffer);
@@ -474,19 +474,19 @@ DeviceInit(DeviceIntPtr dev)
 	/* Y valuator */
 	xf86InitValuatorAxisStruct(dev, 1, 0, -1, 1, 0, 1);
 	xf86InitValuatorDefaults(dev, 1);
-	
+
 	xf86MotionHistoryAllocate(local);
 
 	return Success;
 }
 
-static int 
+static int
 move_distance(int dx, int dy)
 {
 	return(xf86sqrt((dx * dx) + (dy * dy)));
 }
 
-static edge_type 
+static edge_type
 edge_detection( SynapticsPrivatePtr priv, int x, int y )
 {
 	edge_type edge = 0;
@@ -515,7 +515,7 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 	CARD32 wakeUpTime;
 
     sigstate = xf86BlockSIGIO ();
-	
+
 	hw = priv->hwState;
 	hw.millis = now;
 	delay = HandleState(local, &hw);
@@ -728,14 +728,14 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 			finger = FALSE;
 	}
 	priv->prev_z = hw->z;
- 
+
 	/* tap and drag detection */
 	if(priv->palm) {
 		/* Palm detected, skip tap/drag processing */
-	} else if(finger && !priv->finger_flag) 
+	} else if(finger && !priv->finger_flag)
 		{ /* touched */
 			DBG(7, ErrorF("touched - x:%d, y:%d millis:%lu\n", hw->x, hw->y, hw->millis));
-			if(priv->tap) 
+			if(priv->tap)
 				{
 					DBG(7, ErrorF("drag detected - tap time:%lu\n", priv->tapping_millis));
 					priv->drag = TRUE; /* drag gesture */
@@ -743,33 +743,33 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 			priv->touch_on.x = hw->x;
 			priv->touch_on.y = hw->y;
 			priv->touch_on.millis = hw->millis;
-		} 
-	else if(!finger && priv->finger_flag) 
+		}
+	else if(!finger && priv->finger_flag)
 		{ /* untouched */
-			DBG(7, ErrorF("untouched - x:%d, y:%d millis:%lu finger:%d\n", 
+			DBG(7, ErrorF("untouched - x:%d, y:%d millis:%lu finger:%d\n",
 			              hw->x, hw->y, hw->millis, priv->finger_count));
 			/* check if
 			   1. the tap is in tap_time
 			   2. the max movement is in tap_move or more than one finger are tapped */
 			if((TIME_DIFF(hw->millis, priv->touch_on.millis + para->tap_time) < 0) &&
-			   (((abs(hw->x - priv->touch_on.x) < para->tap_move) &&     
-				 (abs(hw->y - priv->touch_on.y) < para->tap_move)) || 
-				priv->finger_count)) 
+			   (((abs(hw->x - priv->touch_on.x) < para->tap_move) &&
+				 (abs(hw->y - priv->touch_on.y) < para->tap_move)) ||
+				priv->finger_count))
 				{
-					if(priv->drag) 
+					if(priv->drag)
 						{
 							DBG(7, ErrorF("double tapping detected\n"));
 							priv->doubletap = TRUE;
 							priv->tap = FALSE;
-						} 
-					else 
+						}
+					else
 						{
 							DBG(7, ErrorF("tapping detected @ "));
 							priv->tapping_millis = hw->millis;
 							priv->tap = TRUE;
-							if(priv->finger_count == 0) 
+							if(priv->finger_count == 0)
 								{
-									switch(edge) 
+									switch(edge)
 										{
 										case RIGHT_TOP_EDGE:
 											DBG(7, ErrorF("right top edge\n"));
@@ -779,26 +779,26 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 											DBG(7, ErrorF("right bottom edge\n"));
 											priv->tap_right = TRUE;
 											break;
-										case LEFT_TOP_EDGE: 
+										case LEFT_TOP_EDGE:
 											DBG(7, ErrorF("left top edge\n"));
 											break;
-										case LEFT_BOTTOM_EDGE: 
+										case LEFT_BOTTOM_EDGE:
 											DBG(7, ErrorF("left bottom edge\n"));
 											break;
 										default:
 											DBG(7, ErrorF("no edge\n"));
 											priv->tap_left = TRUE;
 										}
-								} 
-							else 
+								}
+							else
 								{
-									switch(priv->finger_count) 
+									switch(priv->finger_count)
 										{
-										case 2: 	
+										case 2:
 											DBG(7, ErrorF("two finger tap\n"));
 											priv->tap_mid = TRUE;
 											break;
-										case 3: 	
+										case 3:
 											DBG(7, ErrorF("three finger tap\n"));
 											priv->tap_right = TRUE;
 											break;
@@ -808,7 +808,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 										}
 								}
 						}
-				} /* tap detection */ 
+				} /* tap detection */
 			priv->drag = FALSE;
 		} /* finger lost */
 
@@ -823,14 +823,14 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 				priv->finger_count = 2;
 			if(hw->w == 1)
 				priv->finger_count = 3;
-		} 
+		}
 	else
-		{ /* reset finger counts */	
+		{ /* reset finger counts */
 			priv->finger_count = 0;
 		}
 
 	/* reset tapping button flags */
-	if(!priv->tap && !priv->drag && !priv->doubletap) 
+	if(!priv->tap && !priv->drag && !priv->doubletap)
 		{
 			priv->tap_left = priv->tap_mid = priv->tap_right = FALSE;
 		}
@@ -844,14 +844,14 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 			hw->left  |= priv->tap_left;
 			mid       |= priv->tap_mid;
 			hw->right |= priv->tap_right;
-		} 
-	else 
+		}
+	else
 		{
 			priv->tap = FALSE;
 		}
 
 	/* drag processing */
-	if(priv->drag) 
+	if(priv->drag)
 		{
 			hw->left  |= priv->tap_left;
 			mid       |= priv->tap_mid;
@@ -859,7 +859,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 		}
 
 	/* double tap processing */
-	if(priv->doubletap && !priv->finger_flag) 
+	if(priv->doubletap && !priv->finger_flag)
 		{
 			hw->left  |= priv->tap_left;
 			mid       |= priv->tap_mid;
@@ -868,9 +868,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 		}
 
 	/* scroll detection */
-	if(finger && !priv->finger_flag) 
+	if(finger && !priv->finger_flag)
 		{
-			if(edge & RIGHT_EDGE) 
+			if(edge & RIGHT_EDGE)
 				{
 					priv->vert_scroll_on = TRUE;
 					priv->scroll_y = hw->y;
@@ -882,13 +882,13 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
  				DBG(7, ErrorF("horiz edge scroll detected on bottom edge\n"));
  			}
 		}
-	if(priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger || priv->palm)) 
+	if(priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger || priv->palm))
 		{
 			DBG(7, ErrorF("vert edge scroll off\n"));
-			priv->vert_scroll_on = FALSE;	
+			priv->vert_scroll_on = FALSE;
 		}
 	if(priv->horiz_scroll_on && (!(edge & BOTTOM_EDGE) || !finger || priv->palm))
-		{	
+		{
  			DBG(7, ErrorF("horiz edge scroll off\n"));
  			priv->horiz_scroll_on = FALSE;
  		}
@@ -896,7 +896,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	/* scroll processing */
 	scroll_up = 0;
 	scroll_down = 0;
-	if(priv->vert_scroll_on) 
+	if(priv->vert_scroll_on)
 		{
  			/* + = up, - = down */
  			while(hw->y - priv->scroll_y > para->scroll_dist_vert) {
@@ -924,17 +924,17 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 
 	/* movement */
 	if(finger && !priv->vert_scroll_on && !priv->horiz_scroll_on &&
-	   !priv->finger_count && !priv->palm) 
+	   !priv->finger_count && !priv->palm)
 	{
 		delay = MIN(delay, 13);
 		if (priv->count_packet_finger > 3)
 		{ /* min. 3 packets */
 
-			dy = (1 * 
-				  (((MOVE_HIST(1).y + MOVE_HIST(2).y) / 2) - 
+			dy = (1 *
+				  (((MOVE_HIST(1).y + MOVE_HIST(2).y) / 2) -
 				   ((hw->y			+ MOVE_HIST(1).y) / 2)));
-			dx = (-1 * 
-				  (((MOVE_HIST(1).x + MOVE_HIST(2).x) / 2) - 
+			dx = (-1 *
+				  (((MOVE_HIST(1).x + MOVE_HIST(2).x) / 2) -
 				   ((hw->x			+ MOVE_HIST(1).x) / 2)));
 
 			if (priv->drag) {
@@ -952,7 +952,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 
 			/* speed in depence of distance/packet */
 			dist = move_distance( dx, dy );
-			speed = dist * para->accl; 
+			speed = dist * para->accl;
 			if(speed > para->max_speed)
 			{ /* set max speed factor */
 				speed = para->max_speed;
@@ -971,7 +971,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 
 		priv->count_packet_finger++;
 	}
-	else 
+	else
 	{ /* reset packet counter */
 		priv->count_packet_finger = 0;
 	}
@@ -995,16 +995,16 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	/* Post events */
 	if(dx || dy)
 		xf86PostMotionEvent(local->dev, 0, 0, 2, dx, dy);
-		
+
 	change = buttons ^ priv->lastButtons;
-	while(change) 
+	while(change)
 		{
 			id = ffs(change); /* number of first set bit 1..32 is returned */
 			change &= ~(1 << (id - 1));
 			xf86PostButtonEvent(local->dev, FALSE, id, (buttons & (1 << (id - 1))), 0, 0);
 		}
 	priv->lastButtons = buttons;
- 
+
 	while(scroll_up-- > 0) {
 		xf86PostButtonEvent(local->dev, FALSE, 4, !hw->up, 0, 0);
 		xf86PostButtonEvent(local->dev, FALSE, 4, hw->up, 0, 0);
@@ -1118,7 +1118,7 @@ QueryHardware (LocalDevicePtr local)
 	SynapticsPrivatePtr priv = (SynapticsPrivatePtr) local->private;
 	SynapticsSHMPtr para = priv->synpara;
 	int retries;
-	
+
 	xf86Msg(X_INFO, "xfree driver for the synaptics touchpad %s\n", VERSION);
 
 	if (priv->proto == SYN_PROTO_EVENT)
@@ -1128,8 +1128,8 @@ QueryHardware (LocalDevicePtr local)
 	priv->isSynaptics = QueryIsSynaptics(local->fd);
 
 	if((!priv->isSynaptics) && (!para->repeater || (priv->fifofd == -1))) {
-		xf86Msg(X_ERROR, "%s no synaptics touchpad detected and no repeater device\n", 
-		        local->name);		
+		xf86Msg(X_ERROR, "%s no synaptics touchpad detected and no repeater device\n",
+		        local->name);
 		priv->isSynaptics = TRUE;
 		return(!Success);
 	}
@@ -1145,14 +1145,14 @@ QueryHardware (LocalDevicePtr local)
 	xf86Msg(X_PROBED, "%s synaptics touchpad found\n", local->name);
 
 	retries = 3;
-	while((retries++ <= 3) && (synaptics_reset(local->fd) != Success)) 
+	while((retries++ <= 3) && (synaptics_reset(local->fd) != Success))
 		xf86Msg(X_ERROR, "%s reset failed\n", local->name);
 
-	if(synaptics_identify(local->fd, &priv->identity) != Success) 
+	if(synaptics_identify(local->fd, &priv->identity) != Success)
 		return !Success;
 	para->identity = priv->identity;
 
-	if(synaptics_model_id(local->fd, &priv->model_id) != Success) 	
+	if(synaptics_model_id(local->fd, &priv->model_id) != Success)
 		return !Success;
 	para->model_id = priv->model_id;
 
@@ -1178,7 +1178,7 @@ QueryHardware (LocalDevicePtr local)
 
 	PrintIdent(priv);
 
-	return Success;	
+	return Success;
 }
 
 static Bool
@@ -1360,9 +1360,9 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 		u = (unsigned char)c;
 
 		/* test if there is a reset sequence received */
-		if((c == 0x00) && (priv->lastByte == 0xAA)) 
+		if((c == 0x00) && (priv->lastByte == 0xAA))
 		{
-			if(xf86WaitForInput(local->fd, 50000) == 0 ) 
+			if(xf86WaitForInput(local->fd, 50000) == 0 )
 			{
 				DBG(7, ErrorF("Reset received\n"));
 				QueryHardware(local);
@@ -1372,7 +1372,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 		priv->lastByte = u;
 
 		/* when there is no synaptics touchpad pipe the data to the repeater fifo */
-		if(!priv->isSynaptics) 
+		if(!priv->isSynaptics)
 		{
 			xf86write(priv->fifofd, &u, 1);
 			if(++count >= 3)
@@ -1381,7 +1381,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 		}
 
 		/* to avoid endless loops */
-		if(count++ > 100) 
+		if(count++ > 100)
 		{
 			ErrorF("Synaptics driver lost sync... got gigantic packet!\n");
 			return (!Success);
@@ -1390,7 +1390,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 		pBuf[priv->protoBufTail++] = u;
 
 		/* check first byte */
-		if((priv->protoBufTail == 1) && ((u & 0xC8) != 0x80)) 
+		if((priv->protoBufTail == 1) && ((u & 0xC8) != 0x80))
 		{
 			priv->inSync = FALSE;
 			priv->protoBufTail = 0;
@@ -1399,7 +1399,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 		}
 
 		/* check 4th byte */
-		if((priv->protoBufTail == 4) && ((u & 0xc8) != 0xc0)) 
+		if((priv->protoBufTail == 4) && ((u & 0xc8) != 0xc0))
 		{
 			priv->inSync = FALSE;
 			priv->protoBufTail = 0;
@@ -1407,14 +1407,14 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 			continue;
 		}
 
-		if(priv->protoBufTail >= 6) 
+		if(priv->protoBufTail >= 6)
 		{ /* Full packet received */
 			if(!priv->inSync) {
 				priv->inSync = TRUE;
 				DBG(4, ErrorF("Synaptics driver resynced.\n"));
 			}
 			priv->protoBufTail = 0;
-			return Success;	
+			return Success;
 		}
 	}
 

@@ -72,13 +72,13 @@ struct input_event {
 };
 
 
-typedef struct _SynapticsTapRec 
+typedef struct _SynapticsTapRec
 {
 	int x, y;
 	unsigned int millis;
 } SynapticsTapRec;
 
-typedef struct _SynapticsMoveHist 
+typedef struct _SynapticsMoveHist
 {
 	int x, y;
 } SynapticsMoveHistRec;
@@ -176,7 +176,7 @@ static void PrintIdent(SynapticsPrivatePtr);
 #endif
 
 
-/* 
+/*
  *    DO NOT PUT ANYTHING AFTER THIS ENDIF
  */
 #endif /* _SYNAPTICS_H_ */
