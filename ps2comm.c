@@ -27,7 +27,6 @@
 
 #include "ps2comm.h"
 #include "synproto.h"
-#include <xisb.h>
 #include "synaptics.h"
 #include <xf86.h>
 
@@ -753,7 +752,8 @@ PS2ReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
     return TRUE;
 }
 
-static Bool PS2AutoDevProbe(LocalDevicePtr local)
+static Bool
+PS2AutoDevProbe(LocalDevicePtr local)
 {
     return FALSE;
 }

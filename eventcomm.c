@@ -19,7 +19,6 @@
 
 #include "eventcomm.h"
 #include "synproto.h"
-#include <xisb.h>
 #include "synaptics.h"
 #include <xf86.h>
 
@@ -169,7 +168,8 @@ EventReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
     return FALSE;
 }
 
-static Bool EventAutoDevProbe(LocalDevicePtr local)
+static Bool
+EventAutoDevProbe(LocalDevicePtr local)
 {
     /* We are trying to find the right eventX device or fall back to
        the psaux protocol and the given device from XF86Config */
