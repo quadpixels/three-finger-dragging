@@ -1420,7 +1420,7 @@ static void
 PrintIdent(SynapticsPrivatePtr priv)
 {
 	xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(priv->identity));
-	xf86Msg(X_PROBED, " Firware: %d.%d\n", SYN_ID_MAJOR(priv->identity), SYN_ID_MINOR(priv->identity));
+	xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(priv->identity), SYN_ID_MINOR(priv->identity));
 
 	if(SYN_MODEL_ROT180(priv->model_id))
 		xf86Msg(X_PROBED, " 180 degree mounted touchpad\n");
