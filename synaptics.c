@@ -61,7 +61,6 @@
 #include <xf86_OSproc.h>
 #include <xf86Xinput.h>
 #include <xisb.h>
-#include <exevents.h>			/* Needed for InitValuator/Proximity stuff	*/
 #include "mipointer.h"
 #ifdef XFREE_4_0_3
 #include <xf86Optrec.h>  		/* needed for Options */
