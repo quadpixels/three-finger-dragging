@@ -221,6 +221,16 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 	    }
 	}
     }
+    switch (priv->proto) {
+    case SYN_PROTO_PSAUX:
+	priv->proto_ops = &psaux_proto_operations;
+	break;
+    case SYN_PROTO_EVENT:
+	priv->proto_ops = &event_proto_operations;
+	break;
+    default:
+	break;
+    }
 }
 
 /*
@@ -516,15 +526,7 @@ DeviceOn(DeviceIntPtr dev)
 	return !Success;
     }
 
-    /* Try to grab the event device so that data doesn't leak to /dev/input/mice */
-    if (priv->proto == SYN_PROTO_EVENT) {
-	int ret;
-	SYSCALL(ret = ioctl(local->fd, EVIOCGRAB, (pointer)1));
-	if (ret < 0) {
-	    xf86Msg(X_WARNING, "%s can't grab event device\n",
-		    local->name, errno);
-	}
-    }
+    priv->proto_ops->DeviceOnHook(local);
 
     priv->buffer = XisbNew(local->fd, 64);
     if (!priv->buffer) {
@@ -553,8 +555,7 @@ DeviceOff(DeviceIntPtr dev)
 
     if (local->fd != -1) {
 	xf86RemoveEnabledDevice(local);
-	if (priv->proto == SYN_PROTO_PSAUX)
-	    synaptics_set_mode(local->fd, 0);
+	priv->proto_ops->DeviceOffHook(local);
 	if (priv->buffer) {
 	    XisbFree(priv->buffer);
 	    priv->buffer = NULL;

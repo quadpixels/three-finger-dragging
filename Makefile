@@ -52,8 +52,8 @@ CC = gcc
 
 LDCOMBINEFLAGS = -r
 
-SRCS = synaptics.c ps2comm.c
-OBJS = synaptics.o ps2comm.o
+SRCS = synaptics.c ps2comm.c eventcomm.c
+OBJS = synaptics.o ps2comm.o eventcomm.o
 
 .c.o:
 	$(RM) $@
@@ -99,8 +99,9 @@ syndaemon	: syndaemon.o
 testprotokoll: testprotokoll.c
 	$(CC) -o testprotokoll testprotokoll.c
 
-synaptics.o : synaptics.h ps2comm.h linux_input.h Makefile
-ps2comm.o   : ps2comm.h
+synaptics.o : synaptics.h ps2comm.h synproto.h Makefile
+ps2comm.o   : ps2comm.h synproto.h
+eventcomm.o : eventcomm.h synproto.h linux_input.h
 synclient.o : synaptics.h
 syndeamon.o : synaptics.h
 
@@ -118,7 +119,8 @@ distribution : synaptics-$(VERSION).tar.bz2
 ALLFILES = COMPATIBILITY FILES INSTALL INSTALL.DE INSTALL.FR LICENSE Makefile \
 	NEWS README README.alps TODO Xincludes/ alps.patch linux_input.h \
 	pc_keyb.c.diff.2.4.3 \
-	ps2comm.c ps2comm.h synaptics.c synaptics.h synaptics.spec \
+	synproto.h ps2comm.c ps2comm.h eventcomm.c eventcomm.h \
+	synaptics.c synaptics.h synaptics.spec \
 	synclient.c syndaemon.c testprotokoll.c
 
 DST=synaptics-$(VERSION)

@@ -25,9 +25,8 @@
  *
  */
 
-#include "xf86_OSproc.h"
-
 #include "ps2comm.h"
+#include "synproto.h"
 #include "synaptics.h"
 
 /* acknowledge for commands and parameter */
@@ -450,3 +449,20 @@ QueryIsSynaptics(int fd)
 	return FALSE;
     }
 }
+
+
+static void
+DeviceOnHook(LocalDevicePtr local)
+{
+}
+
+static void
+DeviceOffHook(LocalDevicePtr local)
+{
+    synaptics_set_mode(local->fd, 0);
+}
+
+struct SynapticsProtocolOperations psaux_proto_operations = {
+    DeviceOnHook,
+    DeviceOffHook
+};

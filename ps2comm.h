@@ -1,6 +1,9 @@
 #ifndef _PS2COMM_H_
 #define _PS2COMM_H_
 
+#include <sys/ioctl.h>
+#include "xf86_OSproc.h"
+
 /* synatics modes */
 #define SYN_BIT_ABSOLUTE_MODE		(1 << 7)
 #define SYN_BIT_HIGH_RATE		(1 << 6)

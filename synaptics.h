@@ -2,6 +2,7 @@
 #define _SYNAPTICS_H_
 
 #include "linux_input.h"
+#include <X11/Xdefs.h>
 
 /******************************************************************************
  *		Public definitions.
@@ -72,37 +73,14 @@ typedef struct _SynapticsSHM
 } SynapticsSHM;
 
 #ifdef SYNAPTICS_PRIVATE
+
+#include "synproto.h"
+
 /******************************************************************************
  *		Definitions
  *					structs, typedefs, #defines, enums
  *****************************************************************************/
 #define SYNAPTICS_MOVE_HISTORY	5
-
-/*
- * A structure to describe the state of the touchpad hardware (buttons and pad)
- */
-struct SynapticsHwState {
-    int millis;			/* Timestamp in milliseconds */
-    int x;			/* X position of finger */
-    int y;			/* Y position of finger */
-    int z;			/* Finger pressure */
-    int numFingers;
-    int fingerWidth;
-
-    Bool left;
-    Bool right;
-    Bool up;
-    Bool down;
-
-    Bool multi[8];
-    Bool middle;		/* Some ALPS touchpads have a middle button */
-
-    Bool guest_left;		/* guest device */
-    Bool guest_mid;
-    Bool guest_right;
-    int  guest_dx;
-    int  guest_dy;
-};
 
 typedef struct _SynapticsTapRec
 {
@@ -142,17 +120,13 @@ enum TapButtonState {
     TBS_BUTTON_UP_DOWN		/* Send button up event + set down state */
 };
 
-enum SynapticsProtocol {
-    SYN_PROTO_PSAUX,		/* Raw psaux device */
-    SYN_PROTO_EVENT		/* Linux kernel event interface */
-};
-
 typedef struct _SynapticsPrivateRec
 {
     /* shared memory pointer */
     SynapticsSHM *synpara;
 
     enum SynapticsProtocol proto;
+    struct SynapticsProtocolOperations* proto_ops;
 
     struct SynapticsHwState hwState;
 
