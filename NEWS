@@ -1,3 +1,10 @@
+0.13.2 (2004-05-09)
+- Fixed middle mouse button emulation, which broke in the 0.13.0
+  release.
+- Made double clicks faster, so that they work in xmms and the gtk
+  file selector. (They became slower in the 0.13.0 release.)
+- Updated the compatibility list.
+
 0.13.1 (2004-05-03)
 - Fixed detection of ALPS touchpads when using a 2.6 linux kernel.
 - Added more models to the compatibility list.
