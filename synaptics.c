@@ -1415,48 +1415,77 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 		return ret;
 
 	buf = priv->protoBuf;
+	if (((buf[0] & 0xC0) == 0xC0) && ((buf[1] & 0x60) == 0) &&
+		((buf[3] & 0xC0) == 0x80) && ((buf[4] & 0x60) == 0)) /* old proto...*/
+	{
+			DBG(7, ErrorF("using old protocol\n"));
+			hw->x = (((buf[1] & 0x1F) << 8) |
+					 buf[2]);
+			hw->y = (((buf[4] & 0x1F) << 8) |
+					 buf[5]);
 
-	hw->x = (((buf[3] & 0x10) << 8) |
-			 ((buf[1] & 0x0f) << 8) |
-			 buf[4]);
-	hw->y = (((buf[3] & 0x20) << 7) |
-			 ((buf[1] & 0xf0) << 4) |
-			 buf[5]);
+			hw->z = (((buf[0] & 0x30) << 2) |
+					 (buf[3] & 0x3F));
+			hw->w = (((buf[1] & 0x80) >> 4) |
+					 ((buf[0] & 0x04) >> 1));
 
-	hw->z = buf[2];
-	hw->w = (((buf[0] & 0x30) >> 2) |
-			 ((buf[0] & 0x04) >> 1) |
-			 ((buf[3] & 0x04) >> 2));
+			hw->left  = (buf[0] & 0x01) ? 1 : 0;
+			hw->right = (buf[0] & 0x02) ? 1 : 0;
+			hw->up    = 0;
+			hw->down  = 0;
+			hw->cbLeft = hw->cbRight = hw->up = hw->down = FALSE;
+	}
+	else if (((buf[0] & 0xC8) == 0x80) && ((buf[3] & 0xC8) == 0xC0)) /* newer protos...*/
+	{
+		DBG(7, ErrorF("using new protocols\n"));
+		hw->x = (((buf[3] & 0x10) << 8) |
+				 ((buf[1] & 0x0f) << 8) |
+				 buf[4]);
+		hw->y = (((buf[3] & 0x20) << 7) |
+				 ((buf[1] & 0xf0) << 4) |
+				 buf[5]);
 
-	hw->left  = (buf[0] & 0x01) ? 1 : 0;
-	hw->right = (buf[0] & 0x02) ? 1 : 0;
-	hw->up    = 0;
-	hw->down  = 0;
+		hw->z = buf[2];
+		hw->w = (((buf[0] & 0x30) >> 2) |
+				 ((buf[0] & 0x04) >> 1) |
+				 ((buf[3] & 0x04) >> 2));
 
-	if (SYN_CAP_EXTENDED(priv->capabilities)) {
-		if (SYN_CAP_FOUR_BUTTON(priv->capabilities)) {
-			hw->up = ((buf[3] & 0x01)) ? 1 : 0;
-			if (hw->left)
-				hw->up = !hw->up;
-			hw->down = ((buf[3] & 0x02)) ? 1 : 0;
-			if (hw->right)
-				hw->down = !hw->down;
-		}
-		if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap)) {
-			/* aka. type with 6 buttons */
-			if (buf[3] == 0xC2) {
-				if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap) > 2) {
-					hw->cbLeft  = (buf[4] & 0x02) ? TRUE : FALSE;
-					hw->cbRight = (buf[5] & 0x02) ? TRUE : FALSE;
+		hw->left  = (buf[0] & 0x01) ? 1 : 0;
+		hw->right = (buf[0] & 0x02) ? 1 : 0;
+		hw->up    = 0;
+		hw->down  = 0;
+
+		if (SYN_CAP_EXTENDED(priv->capabilities)) {
+			if (SYN_CAP_FOUR_BUTTON(priv->capabilities)) {
+				hw->up = ((buf[3] & 0x01)) ? 1 : 0;
+				if (hw->left)
+					hw->up = !hw->up;
+				hw->down = ((buf[3] & 0x02)) ? 1 : 0;
+				if (hw->right)
+					hw->down = !hw->down;
+			}
+			if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap)) {
+				/* aka. type with 6 buttons */
+				if ((buf[3]&2) ? !hw->right : hw->right) {
+					if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap) > 2) {
+						hw->cbLeft  = (buf[4] & 0x02) ? TRUE : FALSE;
+						hw->cbRight = (buf[5] & 0x02) ? TRUE : FALSE;
+					}
+					hw->up      = (buf[4] & 0x01) ? TRUE : FALSE;
+					hw->down    = (buf[5] & 0x01) ? TRUE : FALSE;
+				} else {
+					hw->cbLeft = hw->cbRight = hw->up = hw->down = FALSE;
 				}
-				hw->up      = (buf[4] & 0x01) ? TRUE : FALSE;
-				hw->down    = (buf[5] & 0x01) ? TRUE : FALSE;
-			} else {
-				hw->cbLeft = hw->cbRight = hw->up = hw->down = FALSE;
 			}
 		}
 	}
-
+	else
+	{
+		xf86Msg(X_ERROR, "Wrong protocol version, not recognized by synaptics driver: "
+				"%x %x %x %x %x %x.\n", (int)buf[0], (int)buf[1], (int)buf[2],
+				(int)buf[3], (int)buf[4], (int)buf[5]);
+		return !Success;
+	}
 	if (hw->z > 0) {
 		int w_ok = 0;
 		/*
@@ -1487,6 +1516,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 {
 	int count = 0;
 	int c;
+	int old_proto = 0;
 	unsigned char u;
 
 	while((c = XisbRead(priv->buffer)) >= 0) {
@@ -1514,7 +1544,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 		}
 
 		/* to avoid endless loops */
-		if(count++ > 100)
+		if(count++ > 30)
 		{
 			ErrorF("Synaptics driver lost sync... got gigantic packet!\n");
 			return (!Success);
@@ -1523,16 +1553,42 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 		priv->protoBuf[priv->protoBufTail++] = u;
 
 		/* check first byte */
-		if((priv->protoBufTail == 1) && ((u & 0xC8) != 0x80))
+		if(priv->protoBufTail == 1)
+		{
+			old_proto = 0;
+			if((u & 0xC8) != 0x80) /* newer protocols need this...*/
+			{
+				if((u & 0xC0) != 0xC0) /* old protocol needs this...*/
+				{
+					priv->inSync = FALSE;
+					priv->protoBufTail = 0;
+					DBG(4, ErrorF("Synaptics driver lost sync at 1st byte\n"));
+					continue;
+				}
+				else
+					old_proto = 1;
+			}
+		}
+		/* for old protocol check 2nd and 5th byte */
+		if (old_proto && ((priv->protoBufTail == 2) || (priv->protoBufTail == 5)) &&
+			((u & 0x60) != 0x00))
 		{
 			priv->inSync = FALSE;
 			priv->protoBufTail = 0;
-			DBG(4, ErrorF("Synaptics driver lost sync at 1st byte\n"));
+			if (priv->protoBufTail == 2)
+			{
+				DBG(4, ErrorF("Synaptics driver lost sync at 2nd byte\n"));
+			}
+			else
+			{
+				DBG(4, ErrorF("Synaptics driver lost sync at 5th byte\n"));
+			}
 			continue;
 		}
-
 		/* check 4th byte */
-		if((priv->protoBufTail == 4) && ((u & 0xc8) != 0xc0))
+		if((priv->protoBufTail == 4) &&
+		   ((((u & 0xc8) != 0xc0) && !old_proto) ||
+			(((u & 0xc0) != 0x80) && old_proto)))
 		{
 			priv->inSync = FALSE;
 			priv->protoBufTail = 0;
