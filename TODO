@@ -1,4 +1,3 @@
-* Resetsequenz für repeater treiber
-* feartures über optionen abschalten
-* ftok benutzen um Shared-Memory ID zu erzeugen
-* linke Ecken gleiche Funktion wie rechte Ecken bzw. Konfigurierbar
+* Options to disable features (palm detection, edge scrolling, etc)
+* Use ftok to get shared memory ID.
+* Configurable left corner tap behavior.
