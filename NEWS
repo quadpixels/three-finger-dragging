@@ -1,3 +1,10 @@
+0.11.6 (2003-09-26)
+- Updated the config section in INSTALL.DE. Added warning explaining
+  that the file is not up to date.
+- Forgot to change the default values for TopEdge and BottomEdge when
+  reversing the Y direction in version 0.11.5.
+- Warn about (and fix) mis-configured TopEdge/BottomEdge parameters.
+
 0.11.5 (2003-09-25)
 - Use the EVIOCGID ioctl for synaptics event device auto detection.
   This is much simpler than parsing /proc/bus/input/devices and more
