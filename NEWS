@@ -1,3 +1,16 @@
+0.11.3p11 (2003-07-31)
+- When setting the mode byte, don't set bits that the touchpad doesn't
+  understand. Those bits are reserved and setting them can lead to
+  weird problems, like the left button not working, as reported by
+  Miles Lane.
+- Replaced a few forgotten hardcoded values with symbolic constants.
+- Disable stream mode before trying to identify/initialize the
+  touchpad. Otherwise the touchpad can report motion data in the
+  middle of the initialization sequence, which will confuse the driver
+  and make the initialization fail. (Thanks to Miles Lane for helping
+  to debug this problem.)
+- Updated COMPATIBILITY file.
+
 0.11.3p10 (2003-07-30)
 - Improved support for the old-style synaptics protocol.
 - Cleanup: Moved middle mouse button emulation to a separate function.
