@@ -354,7 +354,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 static void
 SynapticsCtrl(DeviceIntPtr device, PtrCtrl *ctrl)
 {
-	ErrorF("SynapticsCtrl called.\n");
+	DBG(3, ErrorF("SynapticsCtrl called.\n"));
 /*
     pInfo = device->public.devicePrivate;
     pMse = pInfo->private;
@@ -406,7 +406,7 @@ DeviceOn (DeviceIntPtr dev)
 	LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
 	SynapticsPrivatePtr priv = (SynapticsPrivatePtr) (local->private);
 
-	ErrorF("Synaptics DeviceOn called\n");
+	DBG(3, ErrorF("Synaptics DeviceOn called\n"));
 
 	local->fd = xf86OpenSerial(local->options);
 	if (local->fd == -1) {
@@ -438,10 +438,10 @@ DeviceOff(DeviceIntPtr dev)
 	LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
 	SynapticsPrivatePtr priv = (SynapticsPrivatePtr) (local->private);
 
-	ErrorF("Synaptics DeviceOff called\n");
+	DBG(3, ErrorF("Synaptics DeviceOff called\n"));
 
 	if (local->fd != -1) { 
-	xf86RemoveEnabledDevice (local);
+		xf86RemoveEnabledDevice (local);
 		if (priv->buffer) {
 			XisbFree(priv->buffer);
 			priv->buffer = NULL;
@@ -460,7 +460,7 @@ DeviceInit(DeviceIntPtr dev)
 	LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
 	unsigned char map[] = {0, 1, 2, 3, 4, 5, 6, 7};
 
-	ErrorF("Synaptics DeviceInit called\n");
+	DBG(3, ErrorF("Synaptics DeviceInit called\n"));
 
 	dev->public.on = FALSE;
 
@@ -998,7 +998,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	change = buttons ^ priv->lastButtons;
 	while(change) 
 		{
-			id = ffs(change);
+			id = ffs(change); /* number of first set bit 1..32 is returned */
 			change &= ~(1 << (id - 1));
 			xf86PostButtonEvent(local->dev, FALSE, id, (buttons & (1 << (id - 1))), 0, 0);
 		}
@@ -1069,7 +1069,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 static int
 ControlProc(LocalDevicePtr local, xDeviceCtl * control)
 {
-	ErrorF("Control Proc called\n");
+	DBG(3, ErrorF("Control Proc called\n"));
 	return (Success);
 }
 
@@ -1077,7 +1077,7 @@ ControlProc(LocalDevicePtr local, xDeviceCtl * control)
 static void
 CloseProc (LocalDevicePtr local)
 {
-	ErrorF("Close Proc called\n");
+	DBG(3, ErrorF("Close Proc called\n"));
 }
 
 static int
@@ -1359,7 +1359,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 				DBG(7, ErrorF("Reset received\n"));
 				QueryHardware(local);
 			} else
-				ErrorF("faked reset received\n");
+				DBG(3, ErrorF("faked reset received\n"));
 		}
 		priv->lastByte = u;
 
@@ -1375,6 +1375,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 		/* to avoid endless loops */
 		if(count++ > 100) 
 		{
+			ErrorF("Synaptics driver lost sync... got gigantic packet!\n");
 			return (!Success);
 		}
 
