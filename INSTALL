@@ -24,9 +24,12 @@ Installing
 
 1. Type "make" to build the driver "synaptics_drv.o".
 
-2. Copy the driver module "synaptics_drv.o" into the XFree module path
-"ex. /usr/X11R6/lib/modules/input/". Running "make install" as root
-will do this for you if you have X installed in /usr/X11R6/.
+2. Copy the driver module "synaptics_drv.o" into the XFree module
+   path. This path is usually "/usr/X11R6/lib/modules/input/", and
+   running "make install" as root will do this for you. Note though
+   that some distributions have a different module path. For example,
+   in Gentoo 1.4 (with XFree86 4.3.0), the correct path is
+   "/usr/X11R6/lib/modules/drivers".
 
 3. Load the driver by changig the XFree configuration file through
 adding the line 'Load "synaptics"' in the module section.
