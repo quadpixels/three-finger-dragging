@@ -160,6 +160,7 @@ static void monitor(SynapticsSHM* synshm, int delay)
 		   cur.left, cur.right, cur.up, cur.down,
 		   cur.multi[0], cur.multi[1], cur.multi[2], cur.multi[3],
 		   cur.multi[4], cur.multi[5], cur.multi[6], cur.multi[7]);
+	    fflush(stdout);
 	    old = cur;
 	}
 	usleep(delay * 1000);
