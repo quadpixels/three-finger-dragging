@@ -199,7 +199,7 @@ synaptics_reset(int fd)
 #endif
 		return !Success; 
 	}
-	xf86WaitForInput(fd, 1500000);
+	xf86WaitForInput(fd, 4000000);
 	if((ps2_getbyte(fd, &r[0]) == Success) && 
 	   (ps2_getbyte(fd, &r[1]) == Success)) {
 		if(r[0] == 0xAA && r[1] == 0x00) {
