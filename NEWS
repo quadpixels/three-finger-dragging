@@ -1,3 +1,26 @@
+0.12.2 (2003-12-17)
+- Added more models to the compatibility list.
+- Updated the documentation.
+- Added an fflush() call after the printf in the monitor loop in
+  synclient.c. This makes "synclient -m" behave better when the output
+  is piped to some other program. From Anders Kaseorg.
+- Added parameter settings to the InputDevice example in README.alps,
+  so that the whole thing can be cut and pasted into the XFree86
+  config file. Suggestion from Gene Imes.
+- Made syndaemon recognize the '?' option, causing the help message to
+  be printed.
+- In the syndaemon help message, print the default disable time.
+  Suggestion from Frédéric Bothamy.
+- Only use the -fno-merge-constants compiler flag if the compiler
+  understands it.
+- Updated INSTALL.DE. Translation contributed by Markus B.
+- Added pass through support, ie support for guest devices. From David
+  Kennedy and Fred Hucht, somewhat cleaned up by me.
+- Updated the alps.patch to handle the gesture bit correctly. From Tom
+  Sightler.
+- Made tap processing configurable. Patch from Justin Quek, cleaned up
+  somewhat by me.
+
 0.12.1 (2003-11-14)
 - Added more models to the compatibility list.
 - Updated the documentation.
