@@ -478,8 +478,17 @@ ReadInput(LocalDevicePtr local)
 		left  = (priv->protoBuf[0] & 0x01) ? TRUE : FALSE;
 		mid   = FALSE;
 		right = (priv->protoBuf[0] & 0x2) ? TRUE : FALSE;
-		up    = ((priv->protoBuf[3] & 0x01) && !left) ? TRUE : FALSE;
-		down  = ((priv->protoBuf[3] & 0x02) && !right) ? TRUE : FALSE;
+		up    = FALSE;
+		down  = FALSE;
+		if(SYN_CAP_EXTENDED(priv->capabilities) &&
+		   (SYN_CAP_FOUR_BUTTON(priv->capabilities))) {
+			up = ((priv->protoBuf[3] & 0x01)) ? TRUE : FALSE;
+			if (left)
+				up = !up;
+			down = ((priv->protoBuf[3] & 0x02)) ? TRUE : FALSE;
+			if (right)
+				down = !down;
+		}
 
 		edge = edge_detection(priv, x, y);
 
