@@ -1410,7 +1410,7 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 
     /* Handle guest packets */
     hw->guest_dx = hw->guest_dy = 0;
-    if (priv->hasGuest) {
+    if (newabs && priv->hasGuest) {
 	w = (((buf[0] & 0x30) >> 2) |
 	     ((buf[0] & 0x04) >> 1) |
 	     ((buf[3] & 0x04) >> 2));
