@@ -1090,6 +1090,7 @@ QueryHardware (LocalDevicePtr local)
 		priv->isSynaptics = TRUE;
 		return(!Success);
 	}
+	para->isSynaptics = priv->isSynaptics;
 
 	if(!priv->isSynaptics) {
 		xf86Msg(X_PROBED, "%s no synaptics touchpad, data piped to repeater fifo\n", local->name);
@@ -1106,12 +1107,15 @@ QueryHardware (LocalDevicePtr local)
 
 	if(synaptics_identify(local->fd, &priv->identity) != Success) 
 		return !Success;
+	para->identity = priv->identity;
 
 	if(synaptics_model_id(local->fd, &priv->model_id) != Success) 	
 		return !Success;
+	para->model_id = priv->model_id;
 
 	if(synaptics_capability(local->fd, &priv->capabilities) != Success)
 		return !Success;
+	para->capabilities = priv->capabilities;
 
 	if(synaptics_set_mode(local->fd, SYN_BIT_ABSOLUTE_MODE |
 	                                 SYN_BIT_HIGH_RATE |
