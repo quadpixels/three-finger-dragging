@@ -306,6 +306,18 @@ FAQ
 
     Yes, see the README.alps file for more information.
 
+* The driver says "reset failed" and the touchpad doesn't work. What
+  can I do?
+
+    This problem has been reported for some Compaq models. It's
+    currently not known why it happens, but removing the reset command
+    from the driver appears to make it work. If you use a 2.4 linux
+    kernel, replace the contents of the ps2_synaptics_reset() function
+    in ps2comm.c with a "return TRUE;" statement. If you use a 2.6
+    linux kernel, remove the while loop in synaptics_query_hardware()
+    in the file drivers/input/mouse/synaptics.c in the linux kernel
+    source code.
+
 
 Authors
 -------
