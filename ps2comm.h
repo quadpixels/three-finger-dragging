@@ -29,7 +29,7 @@
 #define SYN_CAP_MULTI_BUTTON_NO(ec) ((ec&0x00f000)>>12)
 
 /* synaptics modes query bits */
-#define SYN_MODE_ABSOLUTE(m) (m&(1<<7)) 
+#define SYN_MODE_ABSOLUTE(m) (m&(1<<7))
 #define SYN_MODE_RATE(m) (m&(1<<6))
 #define SYN_MODE_BAUD_SLEEP(m) (m&(1<<3))
 #define SYN_MODE_DISABLE_GESTURE(m) (m&(1<<2))
@@ -57,8 +57,8 @@ synaptics_capability(int fd, unsigned long int *capability, unsigned long int *e
 Bool
 synaptics_identify(int fd, unsigned long int *ident);
 
-Bool 
-synaptics_set_mode(int fd, byte cmd); 
+Bool
+synaptics_set_mode(int fd, byte cmd);
 
 Bool
 synaptics_read_mode(int fd, unsigned char *mode);

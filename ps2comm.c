@@ -1,5 +1,5 @@
 /* Copyright (C) 2001 Stefan Gmeiner <riddlebox@freesurf.ch>
- * 
+ *
  *   Copyright (c) 1997 C. Scott Ananian <cananian@alumni.priceton.edu>
  *   Copyright (c) 1998-2000 Bruce Kalk <kall@compass.com>
  *     code für the special synaptics commands (from the tpconfig-source)
@@ -73,11 +73,11 @@
  *     Many parts adapted from tpconfig.c by C. Scott Ananian
  ****************************************************************************/
 
-/* 
+/*
  * Read a byte from the ps/2 port
  */
-static Bool 
-ps2_getbyte(int fd, byte *b) 
+static Bool
+ps2_getbyte(int fd, byte *b)
 {
 	if(xf86WaitForInput(fd, 50000) > 0) {
 		if(xf86ReadSerial(fd, b, 1) != 1) {
@@ -94,14 +94,14 @@ ps2_getbyte(int fd, byte *b)
 #ifdef DEBUG
 	ErrorF("ps2_getbyte: timeout xf86WaitForInput\n");
 #endif
-	return !Success;		
+	return !Success;
 }
 
 /*
- * Write a byte to the ps/2 port, wair for ACK 
+ * Write a byte to the ps/2 port, wair for ACK
  */
-static Bool 
-ps2_putbyte(int fd, byte b) 
+static Bool
+ps2_putbyte(int fd, byte b)
 {
 	byte ack;
 
@@ -128,13 +128,13 @@ ps2_putbyte(int fd, byte b)
 }
 
 /*
- * Use the Synaptics extended ps/2 syntax to write a special command byte. Needed by 
- * ps2_send_cmd and ps2_set_mode. 
+ * Use the Synaptics extended ps/2 syntax to write a special command byte. Needed by
+ * ps2_send_cmd and ps2_set_mode.
  * special command: 0xE8 rr 0xE8 ss 0xE8 tt 0xE8 uu where (rr*64)+(ss*16)+(tt*4)+uu
  *                  is the command. A 0xF3 or 0xE9 must follow (see ps2_send_cmd, ps2_set_mode)
  */
-static Bool 
-ps2_special_cmd(int fd, byte cmd) 
+static Bool
+ps2_special_cmd(int fd, byte cmd)
 {
 	int i;
 
@@ -154,7 +154,7 @@ ps2_special_cmd(int fd, byte cmd)
 
 /*
  * Send a command to the synpatics touchpad by special commands
- */ 
+ */
 static Bool
 ps2_send_cmd(int fd, byte c)
 {
@@ -171,8 +171,8 @@ ps2_send_cmd(int fd, byte c)
 /*
  * Set the synaptics touchpad mode byte by special commands
  */
-Bool 
-synaptics_set_mode(int fd, byte mode) 
+Bool
+synaptics_set_mode(int fd, byte mode)
 {
 #ifdef DEBUG
 	ErrorF("set mode byte to: 0x%02X\n", mode);
@@ -181,9 +181,9 @@ synaptics_set_mode(int fd, byte mode)
 	       ps2_putbyte(fd, PS2_CMD_SET_SAMPLE_RATE) ||
 	       ps2_putbyte(fd, 0x14));
 }
- 
-/* 
- * reset the touchpad 
+
+/*
+ * reset the touchpad
  */
 Bool
 synaptics_reset(int fd)
@@ -198,10 +198,10 @@ synaptics_reset(int fd)
 #ifdef DEBUG
 		ErrorF("...failed\n");
 #endif
-		return !Success; 
+		return !Success;
 	}
 	xf86WaitForInput(fd, 4000000);
-	if((ps2_getbyte(fd, &r[0]) == Success) && 
+	if((ps2_getbyte(fd, &r[0]) == Success) &&
 	   (ps2_getbyte(fd, &r[1]) == Success)) {
 		if(r[0] == 0xAA && r[1] == 0x00) {
 #ifdef DEBUG
@@ -221,7 +221,7 @@ synaptics_reset(int fd)
 	return !Success;
 }
 
-/* 
+/*
  * Read the model-id bytes from the touchpad
  * see also SYN_MODEL_* macros
  */
@@ -234,11 +234,11 @@ synaptics_model_id(int fd, unsigned long int *model_id)
 	ErrorF("Read mode id...\n");
 #endif
 
-	if((ps2_send_cmd(fd, SYN_QUE_MODEL) == Success) && 
+	if((ps2_send_cmd(fd, SYN_QUE_MODEL) == Success) &&
 	   (ps2_getbyte(fd, &mi[0]) == Success) &&
 	   (ps2_getbyte(fd, &mi[1]) == Success) &&
    	   (ps2_getbyte(fd, &mi[2]) == Success)) {
-		*model_id = (mi[0]<<16) | (mi[1]<<8) | mi[2]; 
+		*model_id = (mi[0]<<16) | (mi[1]<<8) | mi[2];
 #ifdef DEBUG
 		ErrorF("mode-id %06X\n", *model_id);
 #endif
@@ -246,7 +246,7 @@ synaptics_model_id(int fd, unsigned long int *model_id)
 		ErrorF("...done.\n");
 #endif
 		return Success;
-	} 
+	}
 #ifdef DEBUG
 		ErrorF("...failed.\n");
 #endif
@@ -270,7 +270,7 @@ synaptics_capability(int fd, unsigned long int *capability, unsigned long int *e
 	if((ps2_send_cmd(fd, SYN_QUE_CAPABILITIES) == Success) &&
 	   (ps2_getbyte(fd, &cap[0]) == Success) &&
 	   (ps2_getbyte(fd, &cap[1]) == Success) &&
-	   (ps2_getbyte(fd, &cap[2]) == Success)) { 
+	   (ps2_getbyte(fd, &cap[2]) == Success)) {
 		*capability = (cap[0]<<16) | (cap[1]<<8) | cap[2];
 #ifdef DEBUG
 		ErrorF("capability %06X\n", *capability);
@@ -302,7 +302,7 @@ synaptics_capability(int fd, unsigned long int *capability, unsigned long int *e
 }
 
 /*
- * Identify Touchpad 
+ * Identify Touchpad
  * See also the SYN_ID_* macros
  */
 Bool
@@ -317,7 +317,7 @@ synaptics_identify(int fd, unsigned long int *ident)
 	if((ps2_send_cmd(fd, SYN_QUE_IDENTIFY) == Success) &&
 	   (ps2_getbyte(fd, &id[0]) == Success) &&
 	   (ps2_getbyte(fd, &id[1]) == Success) &&
-	   (ps2_getbyte(fd, &id[2]) == Success)) { 
+	   (ps2_getbyte(fd, &id[2]) == Success)) {
 		*ident = (id[0]<<16) | (id[1]<<8) | id[2];
 #ifdef DEBUG
 		ErrorF("ident %06X\n", *ident);
@@ -351,7 +351,7 @@ synaptics_read_mode(int fd, unsigned char *mode)
 	   (ps2_getbyte(fd, &modes[0]) == Success) &&
 	   (ps2_getbyte(fd, &modes[1]) == Success) &&
 	   (ps2_getbyte(fd, &modes[2]) == Success)) {
-	   
+
 		*mode = modes[2];
 #ifdef DEBUG
 		ErrorF("modes byte %02X%02X%02X\n", modes[0], modes[1], modes[2]);
@@ -392,7 +392,6 @@ QueryIsSynaptics(int fd)
 /* Local Variables: */
 /* tab-width: 4 */
 /* End: */
-/* 
+/*
  * vim: ts=4 sw=4 cindent
  */
-
