@@ -307,6 +307,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->finger_high = xf86SetIntOption(local->options, "FingerHigh", 30);
     pars->tap_time = xf86SetIntOption(local->options, "MaxTapTime", 180);
     pars->tap_move = xf86SetIntOption(local->options, "MaxTapMove", 220);
+    pars->tap_time_2 = xf86SetIntOption(local->options, "MaxDoubleTapTime", 180);
+    pars->click_time = xf86SetIntOption(local->options, "ClickTime", 100);
     pars->emulate_mid_button_time = xf86SetIntOption(local->options,
 							      "EmulateMidButtonTime", 75);
     pars->scroll_dist_vert = xf86SetIntOption(local->options, "VertScrollDelta", 100);
@@ -859,6 +861,18 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
 	priv->tap_button_state = TBS_BUTTON_UP;
 	priv->tap_max_fingers = 0;
 	break;
+    case TS_1:
+    case TS_2A:
+    case TS_2B:
+	priv->tap_button_state = TBS_BUTTON_UP;
+	break;
+    case TS_3:
+	priv->tap_button_state = TBS_BUTTON_DOWN;
+	break;
+    case TS_SINGLETAP:
+	priv->tap_button_state = TBS_BUTTON_DOWN;
+	priv->touch_on.millis = millis;
+	break;
     default:
 	break;
     }
@@ -866,12 +880,32 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
 }
 
 static int
+GetTimeOut(SynapticsPrivate *priv)
+{
+    SynapticsSHM *para = priv->synpara;
+
+    switch (priv->tap_state) {
+    case TS_1:
+    case TS_2A:
+    case TS_3:
+    case TS_5:
+	return para->tap_time;
+    case TS_SINGLETAP:
+	return para->click_time;
+    case TS_2B:
+	return para->tap_time_2;
+    default:
+	return -1;			    /* No timeout */
+    }
+}
+
+static int
 HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		    edge_type edge, Bool finger)
 {
     SynapticsSHM *para = priv->synpara;
-    Bool touch, release, timeout, move;
-    long timeleft;
+    Bool touch, release, is_timeout, move;
+    long timeleft, timeout;
     long delay = 1000000000;
 
     if (priv->palm)
@@ -892,10 +926,9 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     }
     if (priv->tap_max_fingers < hw->numFingers)
 	priv->tap_max_fingers = hw->numFingers;
-    timeleft = TIME_DIFF(priv->touch_on.millis + para->tap_time, hw->millis);
-    if (timeleft > 0)
-	delay = MIN(delay, timeleft);
-    timeout = timeleft <= 0;
+    timeout = GetTimeOut(priv);
+    timeleft = TIME_DIFF(priv->touch_on.millis + timeout, hw->millis);
+    is_timeout = timeleft <= 0;
 
  restart:
     switch (priv->tap_state) {
@@ -904,35 +937,44 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    SetTapState(priv, TS_1, hw->millis);
 	break;
     case TS_1:
-	if (timeout || move) {
+	if (is_timeout || move) {
 	    SetTapState(priv, TS_MOVE, hw->millis);
 	    goto restart;
 	} else if (release) {
 	    SelectTapButton(priv, edge);
-	    SetTapState(priv, TS_2, hw->millis);
+	    SetTapState(priv, TS_2A, hw->millis);
 	}
 	break;
     case TS_MOVE:
 	if (release)
 	    SetTapState(priv, TS_START, hw->millis);
 	break;
-    case TS_2:
-	if (touch) {
-	    priv->tap_button_state = TBS_BUTTON_DOWN;
+    case TS_2A:
+	if (touch)
 	    SetTapState(priv, TS_3, hw->millis);
-	} else if (timeout) {
+	else if (is_timeout)
+	    SetTapState(priv, TS_SINGLETAP, hw->millis);
+	break;
+    case TS_2B:
+	if (touch) {
+	    SetTapState(priv, TS_3, hw->millis);
+	} else if (is_timeout) {
 	    SetTapState(priv, TS_START, hw->millis);
 	    priv->tap_button_state = TBS_BUTTON_DOWN_UP;
 	}
 	break;
+    case TS_SINGLETAP:
+	if (touch)
+	    SetTapState(priv, TS_1, hw->millis);
+	else if (is_timeout)
+	    SetTapState(priv, TS_START, hw->millis);
+	break;
     case TS_3:
-	if (timeout || move) {
+	if (is_timeout || move) {
 	    SetTapState(priv, TS_DRAG, hw->millis);
 	    goto restart;
-	} else if (release) {
-	    priv->tap_button_state = TBS_BUTTON_UP;
-	    SetTapState(priv, TS_2, hw->millis);
-	}
+	} else if (release)
+	    SetTapState(priv, TS_2B, hw->millis);
 	break;
     case TS_DRAG:
 	if (release) {
@@ -947,13 +989,18 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    SetTapState(priv, TS_5, hw->millis);
 	break;
     case TS_5:
-	if (timeout || move) {
+	if (is_timeout || move) {
 	    SetTapState(priv, TS_DRAG, hw->millis);
 	    goto restart;
-	} else if (release) {
+	} else if (release)
 	    SetTapState(priv, TS_START, hw->millis);
-	}
 	break;
+    }
+
+    timeout = GetTimeOut(priv);
+    if (timeout >= 0) {
+	timeleft = TIME_DIFF(priv->touch_on.millis + timeout, hw->millis);
+	delay = clamp(timeleft, 1, delay);
     }
     return delay;
 }

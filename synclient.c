@@ -73,6 +73,8 @@ static struct Parameter params[] = {
     DEFINE_PAR("FingerHigh",           finger_high,             PT_INT,    0, 255),
     DEFINE_PAR("MaxTapTime",           tap_time,                PT_INT,    0, 1000),
     DEFINE_PAR("MaxTapMove",           tap_move,                PT_INT,    0, 2000),
+    DEFINE_PAR("MaxDoubleTapTime",     tap_time_2,              PT_INT,    0, 1000),
+    DEFINE_PAR("ClickTime",            click_time,              PT_INT,    0, 1000),
     DEFINE_PAR("EmulateMidButtonTime", emulate_mid_button_time, PT_INT,    0, 1000),
     DEFINE_PAR("VertScrollDelta",      scroll_dist_vert,        PT_INT,    0, 1000),
     DEFINE_PAR("HorizScrollDelta",     scroll_dist_horiz,       PT_INT,    0, 1000),

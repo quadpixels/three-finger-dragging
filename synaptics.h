@@ -48,7 +48,9 @@ typedef struct _SynapticsSHM
     int	left_edge, right_edge, top_edge, bottom_edge; /* edge coordinates absolute */
     int	finger_low, finger_high;	    /* finger detection values in Z-values */
     unsigned long tap_time;
-    int tap_move;			    /* max. tapping-time and movement in packets and coord. */
+    int tap_move;			    /* max. tapping time and movement in packets and coord. */
+    unsigned long tap_time_2;		    /* max. tapping time for double taps */
+    unsigned long click_time;		    /* The duration of a single click */
     int emulate_mid_button_time;	    /* Max time between left and right button presses to
 					       emulate a middle button press. */
     int	scroll_dist_vert;		    /* Scrolling distance in absolute coordinates */
@@ -118,7 +120,9 @@ enum TapState {
     TS_START,			/* No tap/drag in progress */
     TS_1,			/* After first touch */
     TS_MOVE,			/* Pointer movement enabled */
-    TS_2,			/* After first release */
+    TS_2A,			/* After first release */
+    TS_2B,			/* After second/third/... release */
+    TS_SINGLETAP,		/* After timeout after first release */
     TS_3,			/* After second touch */
     TS_DRAG,			/* Pointer drag enabled */
     TS_4,			/* After release when "locked drags" enabled */
