@@ -310,7 +310,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
 	if (local->fd != -1) 
 	{ 
-		RemoveEnabledDevice (local->fd);
+		xf86RemoveEnabledDevice (local);
 		if (priv->buffer) 
 		{
 			XisbFree(priv->buffer);
@@ -318,7 +318,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		}
 		xf86CloseSerial(local->fd);
 	}
-	RemoveEnabledDevice (local->fd);
 	local->fd = -1;
 	return (local);
 
@@ -425,12 +424,11 @@ DeviceOn (DeviceIntPtr dev)
 		}
 
 	xf86FlushInput(local->fd);
-	/*xf86AddEnabledDevice (local);*/
-	dev->public.on = TRUE;
 
 	/* reinit the pad */
 	QueryHardware(local);
 	xf86AddEnabledDevice (local);
+	dev->public.on = TRUE;
 
 	return (Success);
 }
@@ -451,8 +449,6 @@ DeviceOff(DeviceIntPtr dev)
 		}
 		xf86CloseSerial(local->fd);
 	}
-
-	RemoveEnabledDevice (local->fd);
 	dev->public.on = FALSE;
 	return (Success);
 }
