@@ -1,3 +1,5 @@
+VERSION=0.12.3
+
 INSTALLED_X = $(DESTDIR)/usr/X11R6
 LOCAL_X = Xincludes/usr/X11R6
 BINDIR = $(DESTDIR)/usr/local/bin
@@ -28,7 +30,7 @@ check_gcc = $(shell if $(CC) $(1) -S -o /dev/null -xc /dev/null > /dev/null 2>&1
 CCOPTIONS = -pedantic -Wall -Wpointer-arith
 CCOPTIONS += $(call check_gcc,-fno-merge-constants,)
 CDEBUGFLAGS = -O2
-CFLAGS = $(CDEBUGFLAGS) $(CCOPTIONS) $(ALLDEFINES)
+CFLAGS = $(CDEBUGFLAGS) $(CCOPTIONS) $(ALLDEFINES) -DVERSION="\"$(VERSION)\""
 CFLAGSCLIENT = $(CDEBUGFLAGS) $(CCOPTIONS) -I$(X_INCLUDES_ROOT)/include
 
 CC = gcc
@@ -82,7 +84,7 @@ syndaemon	: syndaemon.o
 testprotokoll: testprotokoll.c
 	$(CC) -o testprotokoll testprotokoll.c
 
-synaptics.o : synaptics.h ps2comm.h linux_input.h
+synaptics.o : synaptics.h ps2comm.h linux_input.h Makefile
 ps2comm.o   : ps2comm.h
 synclient.o : synaptics.h
 syndeamon.o : synaptics.h
@@ -95,3 +97,26 @@ tags::
 
 uninstall::
 	$(RM) $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/lib/modules/input/synaptics_drv.o $(MANDIR)/synclient.1 $(MANDIR)/syndaemon.1
+
+distribution : synaptics-$(VERSION).tar.bz2
+
+ALLFILES = COMPATIBILITY FILES INSTALL INSTALL.DE INSTALL.FR LICENSE Makefile \
+	NEWS README README.alps TODO Xincludes/ alps.patch linux_input.h \
+	pc_keyb.c.diff.2.4.3 \
+	ps2comm.c ps2comm.h synaptics.c synaptics.h synaptics.spec \
+	synclient.c syndaemon.c testprotokoll.c
+
+DST=synaptics-$(VERSION)
+
+synaptics-$(VERSION).tar.bz2 : $(ALLFILES)
+	rm -f $(DST).tar.bz2
+	rm -rf $(DST)
+	mkdir $(DST) $(DST)/manpages $(DST)/script $(DST)/test
+	cp -a $(ALLFILES) $(DST)
+	cp -a manpages/{synclient.1,syndaemon.1} $(DST)/manpages/
+	cp -a script/usbmouse $(DST)/script/
+	cp -a test/test-pad.c $(DST)/test/
+	chmod u+w $(DST)/*
+	tar cf $(DST).tar $(DST)
+	rm -rf $(DST)
+	bzip2 $(DST).tar
