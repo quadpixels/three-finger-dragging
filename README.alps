@@ -1,61 +1,41 @@
-It is possible to use the driver with an ALPS Glidepoint device, but
-you probably have to change some parameter values. One user reported
-success with the following settings:
+It is possible to use this driver with an ALPS Glidepoint device. If
+you use a 2.6 linux kernel, you need to apply the ALPS kernel patch 
+in the alps.patch file.
 
-    LeftEdge             = 60
-    RightEdge            = 830
-    TopEdge              = 70
-    BottomEdge           = 650
-    FingerLow            = 25
-    FingerHigh           = 30
-    MaxTapTime           = 180
-    MaxTapMove           = 110
-    EmulateMidButtonTime = 75
-    VertScrollDelta      = 50
-    HorizScrollDelta     = 50
-    MinSpeed             = 0.2
-    MaxSpeed             = 0.5
-    AccelFactor          = 0.01
-    EdgeMotionSpeed      = 40
-    UpDownScrolling      = 1
-    TouchpadOff          = 0
-
-If you use a 2.6 linux kernel, you need to apply the ALPS kernel patch
-in the alps.patch file. Note also that the auto-dev protocol option
-doesn't work for ALPS devices, so you have to use the "event" protocol
-instead and set the device option to the correct event device. (Look
-for a mouse device in /proc/bus/input/devices and see which event
-device it is connected to.) Here is an example InputDevice section for
-the XF86Config file.
+Since ALPS touchpads don't have the same resolution as Synaptics
+touchpads, you probably have to change some parameter values. Here is
+an example InputDevice section for the X configuration file.
 
 Section "InputDevice"
   Driver  	"synaptics"
   Identifier  	"Mouse[1]"
-  Option	"Device"  		"/dev/input/event1"
-  Option	"Protocol"		"event"
-  Option	"LeftEdge"		"60"
+  Option	"Device"  		"/dev/psaux"
+  Option	"Protocol"		"auto-dev"
+  Option	"LeftEdge"		"120"
   Option	"RightEdge"		"830"
-  Option	"TopEdge"		"70"
+  Option	"TopEdge"		"120"
   Option	"BottomEdge"		"650"
-  Option	"FingerLow"		"25"
-  Option	"FingerHigh"		"30"
+  Option	"FingerLow"		"14"
+  Option	"FingerHigh"		"15"
   Option	"MaxTapTime"		"180"
   Option	"MaxTapMove"		"110"
   Option	"EmulateMidButtonTime"	"75"
-  Option	"VertScrollDelta"	"50"
-  Option	"HorizScrollDelta"	"50"
+  Option	"VertScrollDelta"	"20"
+  Option	"HorizScrollDelta"	"20"
   Option	"MinSpeed"		"0.2"
   Option	"MaxSpeed"		"0.5"
   Option	"AccelFactor"		"0.01"
-  Option	"EdgeMotionSpeed"	"40"
+  Option	"EdgeMotionMinSpeed"	"15"
+  Option	"EdgeMotionMaxSpeed"	"15"
   Option	"UpDownScrolling"	"1"
-  Option	"TouchpadOff"		"0"
+  Option	"CircularScrolling"	"1"
+  Option	"CircScrollDelta"	"0.1"
+  Option	"CircScrollTrigger"	"2"
 EndSection
 
 If you use a 2.4 linux kernel, you don't need to patch the kernel, but
 you should instead set "Device" and "Protocol" like this:
 
-  Option	"Device"  		"/dev/psaux"
   Option	"Protocol"		"alps"
 
 
