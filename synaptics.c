@@ -196,6 +196,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->synpara->tap_time = xf86SetIntOption(local->options, "MaxTapTime", 20);
 	priv->synpara->tap_move = xf86SetIntOption(local->options, "MaxTapMove", 220);
 	priv->synpara->scroll_dist_vert = xf86SetIntOption(local->options, "VertScrollDelta", 100);
+	priv->synpara->scroll_dist_horiz = xf86SetIntOption(local->options, "HorizScrollDelta", 100);
 	priv->synpara->edge_motion_speed = xf86SetIntOption(local->options, "EdgeMotionSpeed", 40);
 	priv->synpara->repeater = xf86SetStrOption(local->options, "Repeater", NULL);
 	s = xf86FindOptionValue(local->options, "MinSpeed");
@@ -370,14 +371,14 @@ static Bool
 DeviceInit(DeviceIntPtr dev)
 {
 	LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
-	unsigned char map[] = {0, 1, 2, 3, 4, 5};
+	unsigned char map[] = {0, 1, 2, 3, 4, 5, 6, 7};
 
 	ErrorF("Synaptics DeviceInit called\n");
 
 	dev->public.on = FALSE;
 
 	InitPointerDeviceStruct((DevicePtr)dev, map,
-			5,
+			7,
 			miPointerGetMotionEvents, SynapticsCtrl,
 			miPointerGetMotionBufferSize());
 
@@ -464,7 +465,7 @@ ReadInput(LocalDevicePtr local)
 	Bool left, mid, right, up, down;
 	double speed, integral;
 	int change;
-	int scroll_up, scroll_down;
+	int scroll_up, scroll_down, scroll_left, scroll_right;
 
 	/* 
 	 * set blocking to -1 on the first call because we know there is data to
@@ -681,12 +682,21 @@ ReadInput(LocalDevicePtr local)
 			if(edge & RIGHT_EDGE) {
 				priv->vert_scroll_on = TRUE;
 				priv->scroll_y = y;
-				DBG(7, ErrorF("edge scroll detected on right edge\n"));
+				DBG(7, ErrorF("vert edge scroll detected on right edge\n"));
+			}
+			if(edge & BOTTOM_EDGE) {
+				priv->horiz_scroll_on = TRUE;
+				priv->scroll_x = x;
+				DBG(7, ErrorF("horiz edge scroll detected on bottom edge\n"));
 			}
 		}
 		if(priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger || priv->palm)) {
-			DBG(7, ErrorF("edge scroll off\n"));
+			DBG(7, ErrorF("vert edge scroll off\n"));
 			priv->vert_scroll_on = FALSE;	
+		}
+		if(priv->horiz_scroll_on && (!(edge & BOTTOM_EDGE) || !finger || priv->palm)) {
+			DBG(7, ErrorF("horiz edge scroll off\n"));
+			priv->horiz_scroll_on = FALSE;
 		}
 
 		/* scroll processing */
@@ -703,9 +713,23 @@ ReadInput(LocalDevicePtr local)
 				priv->scroll_y -= para->scroll_dist_vert;
 			}
 		}
+		scroll_left = 0;
+		scroll_right = 0;
+		if(priv->horiz_scroll_on) {
+			/* + = right, - = left */
+			while(x - priv->scroll_x > para->scroll_dist_horiz) {
+				scroll_right++;
+				priv->scroll_x += para->scroll_dist_horiz;
+			}
+			while(x - priv->scroll_x < -para->scroll_dist_horiz) {
+				scroll_left++;
+				priv->scroll_x -= para->scroll_dist_horiz;
+			}
+		}
 
 		/* movement */
-		if(finger && !priv->vert_scroll_on && !priv->finger_count && !priv->palm) {
+		if(finger && !priv->vert_scroll_on && !priv->horiz_scroll_on &&
+		   !priv->finger_count && !priv->palm) {
 			if(priv->count_packet_finger > 3) { /* min. 3 packets */
 				dy = (1 * 
 				   (((priv->move_hist[MOVE_HIST(1)].y + priv->move_hist[MOVE_HIST(2)].y) / 2) - 
@@ -795,6 +819,14 @@ ReadInput(LocalDevicePtr local)
 		while(scroll_down-- > 0) {
 			xf86PostButtonEvent(local->dev, FALSE, 5, !down, 0, 0);
 			xf86PostButtonEvent(local->dev, FALSE, 5, down, 0, 0);
+		}
+		while(scroll_left-- > 0) {
+			xf86PostButtonEvent(local->dev, FALSE, 6, TRUE, 0, 0);
+			xf86PostButtonEvent(local->dev, FALSE, 6, FALSE, 0, 0);
+		}
+		while(scroll_right-- > 0) {
+			xf86PostButtonEvent(local->dev, FALSE, 7, TRUE, 0, 0);
+			xf86PostButtonEvent(local->dev, FALSE, 7, FALSE, 0, 0);
 		}
 	}
 }

@@ -34,6 +34,7 @@ typedef struct _SynapticsSHM {
 	int	finger_low, finger_high;		/* finger detection values in Z-values */
 	int	tap_time, tap_move;				/* max. tapping-time and movement in packets and coord. */
 	int	scroll_dist_vert;				/* Scrolling distance in absolute coordinates */
+	int	scroll_dist_horiz;				/* Scrolling distance in absolute coordinates */
 	double min_speed, max_speed, accl;  /* movement parameters */
 	int edge_motion_speed;				/* Edge motion speed when dragging */
 	char* repeater;						/* Repeater on or off */
@@ -61,6 +62,7 @@ typedef struct _SynapticsPrivateRec
 	SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY];
 										/* movement history */
 	int scroll_y;						/* last y-scroll position */
+	int scroll_x;						/* last x-scroll position */
 	unsigned int count_packet_finger;	/* packet counter with finger on the touchpad */
 	unsigned int count_packet;			/* packet counter */
 	unsigned int count_packet_tapping;	/* packet counter for tapping */
@@ -69,6 +71,7 @@ typedef struct _SynapticsPrivateRec
 	Bool tap, drag, doubletap;			/* feature flags */
 	Bool tap_left, tap_mid, tap_right;	/* tapping buttons */
 	Bool vert_scroll_on;				/* scrolling flag */
+	Bool horiz_scroll_on;				/* scrolling flag */
 	double frac_x, frac_y;				/* absoulte -> relative fraction */
 	Bool third_button;					/* emulated 3rd button */
 	OsTimerPtr repeat_timer;			/* for up/down-button repeat */
