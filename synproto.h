@@ -67,7 +67,8 @@ struct CommData {
 enum SynapticsProtocol {
     SYN_PROTO_PSAUX,		/* Raw psaux device */
     SYN_PROTO_EVENT,		/* Linux kernel event interface */
-    SYN_PROTO_PSM		/* FreeBSD psm driver */
+    SYN_PROTO_PSM,		/* FreeBSD psm driver */
+    SYN_PROTO_ALPS		/* ALPS touchpad protocol */
 };
 
 struct SynapticsHwInfo;
@@ -86,6 +87,7 @@ struct SynapticsProtocolOperations {
 extern struct SynapticsProtocolOperations psaux_proto_operations;
 extern struct SynapticsProtocolOperations event_proto_operations;
 extern struct SynapticsProtocolOperations psm_proto_operations;
+extern struct SynapticsProtocolOperations alps_proto_operations;
 
 
 #endif /* _SYNPROTO_H_ */

@@ -177,6 +177,8 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 	proto = SYN_PROTO_EVENT;
     } else if (str_par && !strcmp(str_par, "psm")) {
 	proto = SYN_PROTO_PSM;
+    } else if (str_par && !strcmp(str_par, "alps")) {
+	proto = SYN_PROTO_ALPS;
     } else { /* default to auto-dev */
 	if (event_proto_operations.AutoDevProbe(local))
 	    proto = SYN_PROTO_EVENT;
@@ -190,6 +192,9 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 	break;
     case SYN_PROTO_PSM:
 	priv->proto_ops = &psm_proto_operations;
+	break;
+    case SYN_PROTO_ALPS:
+	priv->proto_ops = &alps_proto_operations;
 	break;
     }
 }

@@ -380,13 +380,13 @@ ps2_synaptics_identify(int fd, struct SynapticsHwInfo *synhw)
     return FALSE;
 }
 
-static Bool
+Bool
 ps2_synaptics_enable_device(int fd)
 {
     return ps2_putbyte(fd, PS2_CMD_ENABLE);
 }
 
-static Bool
+Bool
 ps2_synaptics_disable_device(int fd)
 {
     xf86FlushInput(fd);

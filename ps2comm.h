@@ -51,6 +51,9 @@
 typedef unsigned char byte;
 
 
+Bool ps2_synaptics_enable_device(int fd);
+Bool ps2_synaptics_disable_device(int fd);
+
 struct SynapticsHwInfo;
 void ps2_print_ident(const struct SynapticsHwInfo *synhw);
 
