@@ -9,9 +9,9 @@ XF86PCIINCLUDE = $(TOP)/programs/Xserver/hw/xfree86/os-support/bus
 TOP_X_INCLUDES = -I$(TOP)/exports/include
 TOP_INCLUDES = -I$(TOP) $(TOP_X_INCLUDES)
 
-INSTALLED_X = /usr/X11R6
-BINDIR = /usr/local/bin
-MANDIR = /usr/local/man/man1
+INSTALLED_X = $(DESTDIR)/usr/X11R6
+BINDIR = $(DESTDIR)/usr/local/bin
+MANDIR = $(DESTDIR)/usr/local/man/man1
 
 XF86SRC = $(SERVERSRC)/hw/xfree86
 XF86COMSRC = $(XF86SRC)/common
@@ -54,19 +54,19 @@ install: $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/lib/modules/inpu
 install-man: $(MANDIR)/synclient.1 $(MANDIR)/syndaemon.1
 
 $(MANDIR)/synclient.1: manpages/synclient.1
-	install -D $< $(DESTDIR)/$@
+	install -D $< $@
 
 $(MANDIR)/syndaemon.1: manpages/syndaemon.1
-	install -D $< $(DESTDIR)/$@
+	install -D $< $@
 
 $(BINDIR)/synclient : synclient
-	cp $< $@
+	install -D $< $@
 
 $(BINDIR)/syndaemon : syndaemon
-	cp $< $@
+	install -D $< $@
 
 $(INSTALLED_X)/lib/modules/input/synaptics_drv.o : synaptics_drv.o
-	cp $< $@
+	install -D $< $@
 
 synaptics_drv.o: $(OBJS)
 	$(RM) $@
