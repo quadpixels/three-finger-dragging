@@ -46,7 +46,7 @@ Section "InputDevice"
 EndSection
 
 Change the Identifier to the same name as in the ServerLayout-section.
-The Option "Repeater" und "SHMConfig" are at the moment for testing.
+The Option "Repeater" is at the moment for testing.
 
 6. Add the "CorePointer" option to the InputDevice line at the ServerLayout section:
 
