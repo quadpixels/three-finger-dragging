@@ -225,6 +225,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->synpara->scroll_dist_horiz = xf86SetIntOption(local->options, "HorizScrollDelta", 100);
 	priv->synpara->edge_motion_speed = xf86SetIntOption(local->options, "EdgeMotionSpeed", 40);
 	priv->synpara->repeater = xf86SetStrOption(local->options, "Repeater", NULL);
+	priv->synpara->updown_button_scrolling = xf86SetBoolOption(local->options, "UpDownScrolling", TRUE);
+
 	str_par = xf86FindOptionValue(local->options, "MinSpeed");
 	if((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->min_speed) != 1))
 		priv->synpara->min_speed=0.02;
@@ -582,6 +584,32 @@ ReadInput(LocalDevicePtr local)
 			left = right = FALSE;
 		}
 
+		/* Up/Down-button scrolling or middle/double-click */
+		if (!para->updown_button_scrolling)
+		{
+			if (down)
+			{ /* map down-button to middle-button */
+				mid = TRUE;
+			}
+
+			if (up)
+			{ /* up-button generates double-click */
+				switch (DIFF_TIME(priv->count_packet, priv->count_double_click))
+				{ /* double click sequenz */
+					case 1: left = TRUE; break;
+					case 2: left = FALSE; break;
+					case 3: left = TRUE; break;
+					default: left = FALSE;	
+				}
+			}
+			else
+			{
+				priv->count_double_click = priv->count_packet;
+			}
+			/* reset up/down button events */
+			up = down = FALSE;
+		}
+
 		/* finger detection thru pressure an threshold */
 		finger = (((z > para->finger_high) && !priv->finger_flag) ||
 		          ((z > para->finger_low)  &&  priv->finger_flag));
@@ -878,7 +906,7 @@ ReadInput(LocalDevicePtr local)
 		/* repeat timer for up/down buttons */
 		/* when you press a button the packets will only send for a second, so
 		   we have to use a timer for repeating */
-		if(up || down)
+		if((up || down) && para->updown_button_scrolling) 
 		{
 			if(!priv->repeat_timer) 
 			{

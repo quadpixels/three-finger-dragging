@@ -14,3 +14,6 @@ Repeater		String	repeater device
 MinSpeed		Float	min. Speed-factor
 MaxSpeed		Float	max. Speed-factor
 AccelFactor		Float	acceleration-factor
+UpDownScrolling		Bool	If on, the up/down buttons generate button 4/5 events.
+				If off, the up button generates a double click and
+				the down button generates a button 2 event.

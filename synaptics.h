@@ -40,6 +40,7 @@ typedef struct _SynapticsSHM {
 	double min_speed, max_speed, accl;  /* movement parameters */
 	int edge_motion_speed;				/* Edge motion speed when dragging */
 	char* repeater;						/* Repeater on or off */
+	Bool updown_button_scrolling;		/* Up/Down-Button scrolling or middle/double-click */
 } SynapticsSHM, *SynapticsSHMPtr;
 
 typedef struct _SynapticsPrivateRec
@@ -69,6 +70,7 @@ typedef struct _SynapticsPrivateRec
 	unsigned int count_packet;			/* packet counter */
 	unsigned int count_packet_tapping;	/* packet counter for tapping */
 	unsigned int count_button_delay;	/* button delay for 3rd button emulation */
+	unsigned int count_double_click;	/* counter for double click */
 	Bool finger_flag;					/* previous finger */
 	Bool tap, drag, doubletap;			/* feature flags */
 	Bool tap_left, tap_mid, tap_right;	/* tapping buttons */
