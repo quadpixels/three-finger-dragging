@@ -21,6 +21,11 @@
  *     absolute to relative translation code (from the gpm source)
  *     and some other ideas
  *
+ *   Synaptics Passthrough Support
+ *   Copyright (c) 2002 Linuxcare Inc. David Kennedy <dkennedy@linuxcare.com>
+ *   adapted to version 0.12.1
+ *   Copyright (c) 2003 Fred Hucht <fred@thp.Uni-Duisburg.de>
+ *
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU General Public License
  *   as published by the Free Software Foundation; either version 2
@@ -281,6 +286,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->tapping_millis = now;
     priv->button_delay_millis = now;
     priv->touch_on.millis = now;
+    priv->hasGuest = FALSE;
 
     /* install shared memory or normal memory for parameter */
     priv->shm_config = FALSE;
@@ -793,6 +799,11 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     para->down = hw->down;
     for (i = 0; i < 8; i++)
 	para->multi[i] = hw->multi[i];
+    para->guest_left = hw->guest_left;
+    para->guest_mid = hw->guest_mid;
+    para->guest_right = hw->guest_right;
+    para->guest_dx = hw->guest_dx;
+    para->guest_dy = hw->guest_dy;
 
     /* If touchpad is switched off, we skip the whole thing and return delay */
     if (para->touchpad_off == TRUE)
@@ -1044,6 +1055,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     buttons = ((hw->left     ? 0x01 : 0) |
 	       (mid          ? 0x02 : 0) |
 	       (hw->right    ? 0x04 : 0) |
+	       (hw->guest_left  ? 0x01 : 0) |
+	       (hw->guest_mid   ? 0x02 : 0) |
+	       (hw->guest_right ? 0x04 : 0) |
 	       (hw->up       ? 0x08 : 0) |
 	       (hw->down     ? 0x10 : 0) |
 	       (hw->multi[2] ? 0x20 : 0) |
@@ -1055,6 +1069,10 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     /* generate a history of the absolute positions */
     MOVE_HIST(0).y = hw->y;
     MOVE_HIST(0).x = hw->x;
+
+    /* Add guest device movements */
+    dx += hw->guest_dx;
+    dy += hw->guest_dy;
 
     /* Post events */
     if (dx || dy)
@@ -1229,6 +1247,21 @@ QueryHardware (LocalDevicePtr local)
 	mode |= SYN_BIT_W_MODE;
     if (synaptics_set_mode(local->fd, mode) != Success)
 	return !Success;
+
+    /* Check to see if the host mouse supports a guest */
+    if (SYN_CAP_PASSTHROUGH(priv->capabilities)) {
+        priv->hasGuest = TRUE;
+
+	/* Enable the guest mouse.  Set it to relative mode, three byte
+	 * packets */
+
+	/* Disable the host to talk to the guest */
+	SynapticsDisableDevice(local->fd);
+	/* Reset it, set defaults, streaming and enable it */
+	if ((SynapticsResetPassthrough(local->fd)) != Success) {
+	    priv->hasGuest = FALSE;
+	}
+    }
 
     SynapticsEnableDevice(local->fd);
 
@@ -1422,6 +1455,21 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 		}
 	    }
 	}
+
+	if (priv->hasGuest) {
+	    static int guest_buttons = 0;
+	    /* Check to see if w is 0x03. If it is, then it is a guest packet */
+	    if (w == 0x03) {
+		guest_buttons = buf[1] & 0x07;
+		if (buf[4] != 0)
+		    hw->guest_dx =   buf[4] - ((buf[1] & 0x10) ? 256 : 0);
+		if (buf[5] != 0)
+		    hw->guest_dy = -(buf[5] - ((buf[1] & 0x20) ? 256 : 0));
+	    }
+	    hw->guest_left  = (guest_buttons & 0x01) ? TRUE : FALSE;
+	    hw->guest_mid   = (guest_buttons & 0x04) ? TRUE : FALSE;
+	    hw->guest_right = (guest_buttons & 0x02) ? TRUE : FALSE;
+	}
     } else {			    /* old proto...*/
 	DBG(7, ErrorF("using old protocol\n"));
 	hw->x = (((buf[1] & 0x1F) << 8) |
@@ -1610,5 +1658,7 @@ PrintIdent(SynapticsPrivate *priv)
 	    xf86Msg(X_PROBED, " -> multifinger detection\n");
 	if (SYN_CAP_PALMDETECT(priv->capabilities))
 	    xf86Msg(X_PROBED, " -> palm detection\n");
+	if (SYN_CAP_PASSTHROUGH(priv->capabilities))
+	    xf86Msg(X_PROBED, " -> pass-through port\n");
     }
 }

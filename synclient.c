@@ -142,11 +142,17 @@ static int is_equal(SynapticsSHM* s1, SynapticsSHM* s2)
 	    (s1->left        == s2->left) &&
 	    (s1->right       == s2->right) &&
 	    (s1->up          == s2->up) &&
-	    (s1->down        == s2->down));
+	    (s1->down        == s2->down) &&
+	    (s1->guest_left  == s2->guest_left) &&
+	    (s1->guest_mid   == s2->guest_mid) &&
+	    (s1->guest_right == s2->guest_right) &&
+	    (s1->guest_dx    == s2->guest_dx) &&
+	    (s1->guest_dy    == s2->guest_dy));
 }
 
 static void monitor(SynapticsSHM* synshm, int delay)
 {
+    int header = 0;
     SynapticsSHM old;
     memset(&old, 0, sizeof(SynapticsSHM));
     old.x = -1;				    /* Force first equality test to fail */
@@ -154,12 +160,22 @@ static void monitor(SynapticsSHM* synshm, int delay)
     while(1) {
 	SynapticsSHM cur = *synshm;
 	if (!is_equal(&old, &cur)) {
-	    printf("x:%4d y:%4d z:%3d f:%1d w:%2d left:%d right:%d up:%d down:%d "
-		   "multi:%d %d %d %d %d %d %d %d\n",
+	    if (!header) {
+		printf("%4s %4s %3s %s %2s %2s %s %s %s  %8s  "
+		       "%2s %2s %2s %3s %3s\n",
+		       "x", "y", "z", "f", "w", "l", "r", "u", "d", "multi",
+		       "gl", "gm", "gr", "gdx", "gdy");
+		header = 20;
+	    }
+	    header--;
+	    printf("%4d %4d %3d %d %2d %2d %d %d %d  %d%d%d%d%d%d%d%d  "
+		   "%2d %2d %2d %3d %3d\n",
 		   cur.x, cur.y, cur.z, cur.numFingers, cur.fingerWidth,
 		   cur.left, cur.right, cur.up, cur.down,
 		   cur.multi[0], cur.multi[1], cur.multi[2], cur.multi[3],
-		   cur.multi[4], cur.multi[5], cur.multi[6], cur.multi[7]);
+		   cur.multi[4], cur.multi[5], cur.multi[6], cur.multi[7],
+		   cur.guest_left, cur.guest_mid, cur.guest_right,
+		   cur.guest_dx, cur.guest_dy);
 	    fflush(stdout);
 	    old = cur;
 	}

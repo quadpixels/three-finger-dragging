@@ -20,6 +20,7 @@
 
 /* synaptics capability bits */
 #define SYN_CAP_EXTENDED(c)		((c) & (1 << 23))
+#define SYN_CAP_PASSTHROUGH(c)		((c) & (1 << 7))
 #define SYN_CAP_SLEEP(c)		((c) & (1 << 4))
 #define SYN_CAP_FOUR_BUTTON(c)		((c) & (1 << 3))
 #define SYN_CAP_MULTIFINGER(c)		((c) & (1 << 1))
@@ -64,9 +65,15 @@ Bool
 synaptics_read_mode(int fd, unsigned char *mode);
 
 Bool
+SynapticsDisableDevice(int fd);
+
+Bool
 SynapticsEnableDevice(int fd);
 
 Bool
 QueryIsSynaptics(int fd);
+
+Bool
+SynapticsResetPassthrough(int fd);
 
 #endif /* _PS2COMM_H_ */

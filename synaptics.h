@@ -17,6 +17,8 @@ typedef struct _SynapticsSHM
     int fingerWidth;			    /* finger width value */
     int left, right, up, down;		    /* left/right/up/down buttons */
     Bool multi[8];
+    int guest_left, guest_mid, guest_right; /* guest device buttons */
+    int guest_dx, guest_dy; 		    /* guest device movement */
 
     /* Probed hardware properties */
     unsigned long int model_id;		    /* Model-ID */
@@ -66,6 +68,12 @@ struct SynapticsHwState {
     Bool down;
 
     Bool multi[8];
+
+    Bool guest_left;		/* guest device */
+    Bool guest_mid;
+    Bool guest_right;
+    int  guest_dx;
+    int  guest_dy;
 };
 
 typedef struct _SynapticsTapRec
@@ -108,6 +116,7 @@ typedef struct _SynapticsPrivateRec
     unsigned long int ext_cap;		/* Extended Capabilities */
     unsigned long int identity;		/* Identification */
     Bool isSynaptics;			/* Synaptics touchpad active */
+    Bool hasGuest;			/* Has a guest mouse */
     Bool shm_config;			/* True when shared memory area allocated */
 
     OsTimerPtr timer;			/* for up/down-button repeat, tap processing, etc */

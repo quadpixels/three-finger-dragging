@@ -90,6 +90,8 @@ static int touchpad_buttons_active()
     for (i = 0; i < 8; i++)
 	if (synshm->multi[i])
 	    return 1;
+    if (synshm->guest_left || synshm->guest_mid || synshm->guest_right)
+        return 1;
     return 0;
 }
 
@@ -108,7 +110,7 @@ static void main_loop(Display *display, double idle_time)
 
     pad_disabled = 0;
     keyboard_activity(display);
-	
+
     for (;;) {
 	current_time = get_time();
 	if (keyboard_activity(display))

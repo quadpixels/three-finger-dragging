@@ -4,6 +4,11 @@
  *   Copyright (c) 1998-2000 Bruce Kalk <kall@compass.com>
  *     code für the special synaptics commands (from the tpconfig-source)
  *
+ *   Synaptics Passthrough Support
+ *   Copyright (c) 2002 Linuxcare Inc. David Kennedy <dkennedy@linuxcare.com>
+ *   adapted to version 0.12.1
+ *   Copyright (c) 2003 Fred Hucht <fred@thp.Uni-Duisburg.de>
+ *
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU General Public License
  *   as published by the Free Software Foundation; either version 2
@@ -157,6 +162,61 @@ ps2_send_cmd(int fd, byte c)
 }
 
 /*****************************************************************************
+ *	Synaptics passthrough functions
+ ****************************************************************************/
+
+static Bool
+ps2_getbyte_passthrough(int fd, byte *response)
+{
+    byte ack;
+    int timeout_count;
+#define MAX_RETRY_COUNT 30
+
+    /* Getting a response back through the passthrough could take some time.
+     * Spin a little for the first byte */
+    for (timeout_count = 0;
+	 (ps2_getbyte(fd, &ack) != Success) && timeout_count <= MAX_RETRY_COUNT;
+	 timeout_count++)
+	;
+    /* Do some sanity checking */
+    if ((ack & 0xfc) != 0x84) {
+	DBG(ErrorF("ps2_getbyte_passthrough: expected 0x84 and got: %02x\n",
+		   (ack & 0xfc)));
+	return !Success;
+    }
+
+    ps2_getbyte(fd, response);
+    ps2_getbyte(fd, &ack);
+    ps2_getbyte(fd, &ack);
+    if ((ack & 0xcc) != 0xc4) {
+	DBG(ErrorF("ps2_getbyte_passthrough: expected 0xc4 and got: %02x\n",
+		   (ack & 0xcc)));
+	return !Success;
+    }
+    ps2_getbyte(fd, &ack);
+    ps2_getbyte(fd, &ack);
+
+    return Success;
+}
+
+static Bool
+ps2_putbyte_passthrough(int fd, byte c)
+{
+    byte ack;
+
+    ps2_special_cmd(fd, c);
+    ps2_putbyte(fd, 0xF3);
+    ps2_putbyte(fd, 0x28);
+
+    ps2_getbyte_passthrough(fd, &ack);
+    if (ack != PS2_ACK) {
+	DBG(ErrorF("ps2_putbyte_passthrough: wrong acknowledge 0x%02x\n", ack));
+	return !Success;
+    }
+    return Success;
+}
+
+/*****************************************************************************
  *	Synaptics communications functions
  ****************************************************************************/
 
@@ -199,6 +259,30 @@ synaptics_reset(int fd)
     }
     DBG(ErrorF("...failed\n"));
     return !Success;
+}
+
+Bool
+SynapticsResetPassthrough(int fd)
+{
+    byte ack;
+
+    /* send reset */
+    ps2_putbyte_passthrough(fd, 0xff);
+    ps2_getbyte_passthrough(fd, &ack);
+    if (ack != 0xaa) {
+	DBG(ErrorF("SynapticsResetPassthrough: ack was %02x not 0xaa\n", ack));
+	return !Success;
+    }
+    ps2_getbyte_passthrough(fd, &ack);
+    if (ack != 0x00) {
+	DBG(ErrorF("SynapticsResetPassthrough: ack was %02x not 0x00\n", ack));
+	return !Success;
+    }
+
+    /* set defaults, turn on streaming, and enable the mouse */
+    return (ps2_putbyte_passthrough(fd, 0xf6) ||
+	    ps2_putbyte_passthrough(fd, 0xea) ||
+	    ps2_putbyte_passthrough(fd, 0xf4));
 }
 
 /*
