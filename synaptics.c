@@ -280,7 +280,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     SynapticsSHM *pars;
     char *repeater;
 
-    /* allocate memory for SynaticsPrivateRec */
+    /* allocate memory for SynapticsPrivateRec */
     priv = xcalloc(1, sizeof(SynapticsPrivate));
     if (!priv)
 	return NULL;

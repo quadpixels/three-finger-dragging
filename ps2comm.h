@@ -26,7 +26,7 @@
 #define PS2_CMD_SET_SCALING_2_1		0xE7
 #define PS2_CMD_SET_SCALING_1_1		0xE6
 
-/* synatics modes */
+/* synaptics modes */
 #define SYN_BIT_ABSOLUTE_MODE		(1 << 7)
 #define SYN_BIT_HIGH_RATE		(1 << 6)
 #define SYN_BIT_SLEEP_MODE		(1 << 3)
