@@ -81,7 +81,7 @@ typedef enum {
 #define MAX(a, b) (((a)>(b))?(a):(b))
 #define DIFF_TIME(a, b) (((a)>(b))?(a)-(b):(b)-(a))
 
-#define VERSION "0.11.3p1"
+#define VERSION "0.11.3p2"
 
 /*****************************************************************************
  * Forward declaration
@@ -529,9 +529,10 @@ ReadInput(LocalDevicePtr local)
 	SynapticsPrivatePtr priv = (SynapticsPrivatePtr) (local->private);
 	SynapticsSHMPtr para = priv->synpara;
 	Bool finger;
-	int x, y, z, w, dist, dx, dy, buttons, id;
+	struct SynapticsHwState hw;
+	int dist, dx, dy, buttons, id;
 	edge_type edge;
-	Bool left, mid, right, up, down, cbLeft, cbRight;
+	Bool mid;
 	double speed, integral;
 	int change;
 	int scroll_up, scroll_down, scroll_left, scroll_right;
@@ -545,67 +546,23 @@ ReadInput(LocalDevicePtr local)
 	 * read from blocking indefinately.
 	 */
 	XisbBlockDuration(priv->buffer, -1);
-	while(SynapticsGetPacket(local, priv) == Success)
+	while(SynapticsGetHwState(local, priv, &hw) == Success)
 	{
-		/* process input data */
-		x = ((priv->protoBuf[3] & 0x10) << 8) | 
-		    ((priv->protoBuf[1] & 0x0f) << 8) | 
-		      priv->protoBuf[4];
-		y = ((priv->protoBuf[3] & 0x20) << 7) | 
-		    ((priv->protoBuf[1] & 0xf0) << 4) | 
-		      priv->protoBuf[5];
-
-		/* pressure */
-		z = priv->protoBuf[2];
-		w = ((priv->protoBuf[0] & 0x30) >> 2) | 
-		    ((priv->protoBuf[0] & 0x04) >> 1) | 
-		    ((priv->protoBuf[3] & 0x04) >> 2);
-
-		left  = (priv->protoBuf[0] & 0x01) ? TRUE : FALSE;
 		mid   = FALSE;
-		right = (priv->protoBuf[0] & 0x2) ? TRUE : FALSE;
-		up    = FALSE;
-		down  = FALSE;
-		if (!priv->six_buttons)
-		{
-			if(SYN_CAP_EXTENDED(priv->capabilities) &&
-			   (SYN_CAP_FOUR_BUTTON(priv->capabilities))) {
-				up = ((priv->protoBuf[3] & 0x01)) ? TRUE : FALSE;
-				if (left)
-					up = !up;
-				down = ((priv->protoBuf[3] & 0x02)) ? TRUE : FALSE;
-				if (right)
-					down = !down;
-			}
-		}
-		else
-		{ /* type with 6 buttons */
-			if (priv->protoBuf[3] == 0xC2) 
-			{
-				cbLeft  = (priv->protoBuf[4] & 0x02) ? TRUE : FALSE;
-				cbRight = (priv->protoBuf[5] & 0x02) ? TRUE : FALSE;
-				up      = (priv->protoBuf[4] & 0x01) ? TRUE : FALSE;
-				down    = (priv->protoBuf[5] & 0x01) ? TRUE : FALSE;
-			}
-			else
-			{
-				cbLeft = cbRight = up = down = FALSE;
-			}
-		}
 
-		edge = edge_detection(priv, x, y);
+		edge = edge_detection(priv, hw.x, hw.y);
 
 		dx = dy = 0;
 
 		/* update finger position in shared memory */
-		para->x = x;
-		para->y = y;
-		para->z = z;
-		para->w = w;
-		para->left = left;
-		para->right = right;
-		para->up = up;
-		para->down = down;
+		para->x = hw.x;
+		para->y = hw.y;
+		para->z = hw.z;
+		para->w = hw.w;
+		para->left = hw.left;
+		para->right = hw.right;
+		para->up = hw.up;
+		para->down = hw.down;
 
 		/* 3rd button emulation */
 		done = FALSE;
@@ -613,9 +570,9 @@ ReadInput(LocalDevicePtr local)
 			Bool timeout;
 			switch (priv->mid_emu_state) {
 			case MBE_OFF:
-				if (left) {
+				if (hw.left) {
 					priv->mid_emu_state = MBE_LEFT;
-				} else if (right) {
+				} else if (hw.right) {
 					priv->mid_emu_state = MBE_RIGHT;
 				} else {
 					priv->count_button_delay = priv->count_packet;
@@ -625,37 +582,37 @@ ReadInput(LocalDevicePtr local)
 			case MBE_LEFT:
 				timeout = DIFF_TIME(priv->count_packet, priv->count_button_delay) >=
 					para->emulate_mid_button_time;
-				if (!left || timeout) {
-					left = TRUE;
+				if (!hw.left || timeout) {
+					hw.left = TRUE;
 					priv->mid_emu_state = MBE_OFF;
 					done = TRUE;
-				} else if (right) {
+				} else if (hw.right) {
 					priv->mid_emu_state = MBE_MID;
 				} else {
-					left = FALSE;
+					hw.left = FALSE;
 					done = TRUE;
 				}
 				break;
 			case MBE_RIGHT:
 				timeout = DIFF_TIME(priv->count_packet, priv->count_button_delay) >=
 					para->emulate_mid_button_time;
-				if (!right || timeout) {
-					right = TRUE;
+				if (!hw.right || timeout) {
+					hw.right = TRUE;
 					priv->mid_emu_state = MBE_OFF;
 					done = TRUE;
-				} else if (left) {
+				} else if (hw.left) {
 					priv->mid_emu_state = MBE_MID;
 				} else {
-					right = FALSE;
+					hw.right = FALSE;
 					done = TRUE;
 				}
 				break;
 			case MBE_MID:
-				if (!left && !right) {
+				if (!hw.left && !hw.right) {
 					priv->mid_emu_state = MBE_OFF;
 				} else {
 					mid = TRUE;
-					left = right = FALSE;
+					hw.left = hw.right = FALSE;
 					done = TRUE;
 				}
 				break;
@@ -666,56 +623,56 @@ ReadInput(LocalDevicePtr local)
 		double_click = FALSE;
 		if (!para->updown_button_scrolling)
 		{
-			if (down)
+			if (hw.down)
 			{ /* map down-button to middle-button */
 				mid = TRUE;
 			}
 
-			if (up)
+			if (hw.up)
 			{ /* up-button generates double-click */
 				if (!priv->prev_up)
 					double_click = TRUE;
 			}
-			priv->prev_up = up;
+			priv->prev_up = hw.up;
 
 			/* reset up/down button events */
-			up = down = FALSE;
+			hw.up = hw.down = FALSE;
 		}
 
 		/* finger detection thru pressure an threshold */
-		finger = (((z > para->finger_high) && !priv->finger_flag) ||
-		          ((z > para->finger_low)  &&  priv->finger_flag));
+		finger = (((hw.z > para->finger_high) && !priv->finger_flag) ||
+		          ((hw.z > para->finger_low)  &&  priv->finger_flag));
 
  		/* palm detection */
  		if(SYN_CAP_EXTENDED(priv->capabilities) && SYN_CAP_PALMDETECT(priv->capabilities)) {
  			if(finger) {
- 				if((z > 200) && (w > 10))
+ 				if((hw.z > 200) && (hw.w > 10))
  					priv->palm = TRUE;
  			} else {
  				priv->palm = FALSE;
  			}
- 			if(x == 0)
+ 			if(hw.x == 0)
  				priv->avg_w = 0;
  			else
- 				priv->avg_w += (w - priv->avg_w + 1) / 2;
+ 				priv->avg_w += (hw.w - priv->avg_w + 1) / 2;
  			if(finger && !priv->finger_flag) {
- 				int safe_w = MAX(w, priv->avg_w);
- 				if(w < 2)
+ 				int safe_w = MAX(hw.w, priv->avg_w);
+ 				if(hw.w < 2)
  					finger = TRUE;				/* more than one finger -> not a palm */
  				else if((safe_w < 6) && (priv->prev_z < para->finger_high))
  					finger = TRUE;				/* thin finger, distinct touch -> not a palm */
  				else if((safe_w < 7) && (priv->prev_z < para->finger_high / 2))
  					finger = TRUE;				/* thin finger, distinct touch -> not a palm */
- 				else if(z > priv->prev_z + 1)	/* z not stable, may be a palm */
+ 				else if(hw.z > priv->prev_z + 1) /* z not stable, may be a palm */
  					finger = FALSE;
- 				else if(z < priv->prev_z - 5)	/* z not stable, may be a palm */
+ 				else if(hw.z < priv->prev_z - 5) /* z not stable, may be a palm */
  					finger = FALSE;
- 				else if(z > 200)				/* z too large -> probably palm */
+ 				else if(hw.z > 200)				/* z too large -> probably palm */
  					finger = FALSE;
- 				else if(w > 10)					/* w too large -> probably palm */
+ 				else if(hw.w > 10)				/* w too large -> probably palm */
  					finger = FALSE;
  			}
- 			priv->prev_z = z;
+ 			priv->prev_z = hw.z;
  		}
  
   		/* tap and drag detection */
@@ -723,26 +680,26 @@ ReadInput(LocalDevicePtr local)
  			/* Palm detected, skip tap/drag processing */
  		} else if(finger && !priv->finger_flag) 
 		{ /* touched */
-			DBG(7, ErrorF("touched - x:%d, y:%d packet:%lu\n", x, y, priv->count_packet));
+			DBG(7, ErrorF("touched - x:%d, y:%d packet:%lu\n", hw.x, hw.y, priv->count_packet));
 			if(priv->tap) 
 			{
 				DBG(7, ErrorF("drag detected - tap time:%lu\n", priv->count_packet_tapping));
 				priv->drag = TRUE; /* drag gesture */
 			}
-			priv->touch_on.x = x;
-			priv->touch_on.y = y;
+			priv->touch_on.x = hw.x;
+			priv->touch_on.y = hw.y;
 			priv->touch_on.packet = priv->count_packet;
 		} 
 		else if(!finger && priv->finger_flag) 
 		{ /* untouched */
 			DBG(7, ErrorF("untouched - x:%d, y:%d packet:%lu finger:%d\n", 
-			              x, y, priv->count_packet, priv->finger_count));
+			              hw.x, hw.y, priv->count_packet, priv->finger_count));
 			/* check if
 			   1. the tap is in tap_time
 			   2. the max movement is in tap_move or more than one finger are tapped */
 			if((DIFF_TIME(priv->count_packet, priv->touch_on.packet) < para->tap_time) && 
-				(((abs(x - priv->touch_on.x) < para->tap_move) &&     
-				  (abs(y - priv->touch_on.y) < para->tap_move)) || 
+				(((abs(hw.x - priv->touch_on.x) < para->tap_move) &&     
+				  (abs(hw.y - priv->touch_on.y) < para->tap_move)) || 
 				   priv->finger_count)) 
 			{
 					if(priv->drag) 
@@ -806,9 +763,9 @@ ReadInput(LocalDevicePtr local)
 		   (DIFF_TIME(priv->count_packet, priv->touch_on.packet) < para->tap_time) && /* tap time is not succeeded */
 		   SYN_CAP_MULTIFINGER(priv->capabilities)) /* touchpad has multifinger capabilities */
 		{ /* count fingers when reported */
-			if((w == 0) && (priv->finger_count == 0))
+			if((hw.w == 0) && (priv->finger_count == 0))
 				priv->finger_count = 2;
-			if(w == 1)
+			if(hw.w == 1)
 				priv->finger_count = 3;
 		} 
 		else
@@ -826,9 +783,9 @@ ReadInput(LocalDevicePtr local)
 		if(priv->tap && 
 		   (DIFF_TIME(priv->count_packet, priv->count_packet_tapping) < para->tap_time)) 
 		{
-			left  |= priv->tap_left;
-			mid   |= priv->tap_mid;
-			right |= priv->tap_right;
+			hw.left  |= priv->tap_left;
+			mid      |= priv->tap_mid;
+			hw.right |= priv->tap_right;
 		} 
 		else 
 		{
@@ -838,17 +795,17 @@ ReadInput(LocalDevicePtr local)
 		/* drag processing */
 		if(priv->drag) 
 		{
-			left  |= priv->tap_left;
-			mid   |= priv->tap_mid;
-			right |= priv->tap_right;
+			hw.left  |= priv->tap_left;
+			mid      |= priv->tap_mid;
+			hw.right |= priv->tap_right;
 		}
 
 		/* double tap processing */
 		if(priv->doubletap && !priv->finger_flag) 
 		{
-			left  |= priv->tap_left;
-			mid   |= priv->tap_mid;
-			right |= priv->tap_right;
+			hw.left  |= priv->tap_left;
+			mid      |= priv->tap_mid;
+			hw.right |= priv->tap_right;
 			priv->doubletap = FALSE;
 		}
 
@@ -858,12 +815,12 @@ ReadInput(LocalDevicePtr local)
 			if(edge & RIGHT_EDGE) 
 			{
 				priv->vert_scroll_on = TRUE;
-				priv->scroll_y = y;
+				priv->scroll_y = hw.y;
 				DBG(7, ErrorF("vert edge scroll detected on right edge\n"));
 			}
  			if(edge & BOTTOM_EDGE) {
  				priv->horiz_scroll_on = TRUE;
- 				priv->scroll_x = x;
+ 				priv->scroll_x = hw.x;
  				DBG(7, ErrorF("horiz edge scroll detected on bottom edge\n"));
  			}
 		}
@@ -884,11 +841,11 @@ ReadInput(LocalDevicePtr local)
 		if(priv->vert_scroll_on) 
 		{
  			/* + = up, - = down */
- 			while(y - priv->scroll_y > para->scroll_dist_vert) {
+ 			while(hw.y - priv->scroll_y > para->scroll_dist_vert) {
  				scroll_up++;
 				priv->scroll_y += para->scroll_dist_vert;
 			}
- 			while(y - priv->scroll_y < -para->scroll_dist_vert) {
+ 			while(hw.y - priv->scroll_y < -para->scroll_dist_vert) {
  				scroll_down++;
 				priv->scroll_y -= para->scroll_dist_vert;
 			}
@@ -897,11 +854,11 @@ ReadInput(LocalDevicePtr local)
  		scroll_right = 0;
  		if(priv->horiz_scroll_on) {
  			/* + = right, - = left */
- 			while(x - priv->scroll_x > para->scroll_dist_horiz) {
+ 			while(hw.x - priv->scroll_x > para->scroll_dist_horiz) {
  				scroll_right++;
  				priv->scroll_x += para->scroll_dist_horiz;
  			}
- 			while(x - priv->scroll_x < -para->scroll_dist_horiz) {
+ 			while(hw.x - priv->scroll_x < -para->scroll_dist_horiz) {
  				scroll_left++;
  				priv->scroll_x -= para->scroll_dist_horiz;
  			}
@@ -915,10 +872,10 @@ ReadInput(LocalDevicePtr local)
 			{ /* min. 3 packets */
 				dy = (1 * 
 				   (((priv->move_hist[MOVE_HIST(1)].y + priv->move_hist[MOVE_HIST(2)].y) / 2) - 
-					((y 		                      + priv->move_hist[MOVE_HIST(1)].y) / 2)));
+					((hw.y 		                      + priv->move_hist[MOVE_HIST(1)].y) / 2)));
 				dx = (-1 * 
 				   (((priv->move_hist[MOVE_HIST(1)].x + priv->move_hist[MOVE_HIST(2)].x) / 2) - 
-					((x                           	  + priv->move_hist[MOVE_HIST(1)].x) / 2)));
+					((hw.x							  + priv->move_hist[MOVE_HIST(1)].x) / 2)));
 
  				if (priv->drag) {
  					if (edge & RIGHT_EDGE) {
@@ -960,11 +917,11 @@ ReadInput(LocalDevicePtr local)
 		}
 
 
-		buttons = ((left  ? 0x01 : 0) |
-		           (mid   ? 0x02 : 0) |
-		           (right ? 0x04 : 0) |
-		           (up    ? 0x08 : 0) |
-		           (down  ? 0x10 : 0));		
+		buttons = ((hw.left  ? 0x01 : 0) |
+		           (mid      ? 0x02 : 0) |
+		           (hw.right ? 0x04 : 0) |
+		           (hw.up    ? 0x08 : 0) |
+		           (hw.down  ? 0x10 : 0));		
 
 		priv->count_packet++;
 
@@ -972,13 +929,13 @@ ReadInput(LocalDevicePtr local)
 		priv->finger_flag = finger;
 
 		/* generate a history of the absolute positions */
-		priv->move_hist[MOVE_HIST(0)].y = y;
-		priv->move_hist[MOVE_HIST(0)].x = x;
+		priv->move_hist[MOVE_HIST(0)].y = hw.y;
+		priv->move_hist[MOVE_HIST(0)].x = hw.x;
 
 		/* repeat timer for up/down buttons */
 		/* when you press a button the packets will only send for a second, so
 		   we have to use a timer for repeating */
-		if((up || down) && para->updown_button_scrolling) 
+		if((hw.up || hw.down) && para->updown_button_scrolling) 
 		{
 			if(!priv->repeat_timer) 
 			{
@@ -1008,12 +965,12 @@ ReadInput(LocalDevicePtr local)
 		priv->lastButtons = buttons;
  
  		while(scroll_up-- > 0) {
- 			xf86PostButtonEvent(local->dev, FALSE, 4, !up, 0, 0);
- 			xf86PostButtonEvent(local->dev, FALSE, 4, up, 0, 0);
+ 			xf86PostButtonEvent(local->dev, FALSE, 4, !hw.up, 0, 0);
+ 			xf86PostButtonEvent(local->dev, FALSE, 4, hw.up, 0, 0);
  		}
  		while(scroll_down-- > 0) {
- 			xf86PostButtonEvent(local->dev, FALSE, 5, !down, 0, 0);
- 			xf86PostButtonEvent(local->dev, FALSE, 5, down, 0, 0);
+ 			xf86PostButtonEvent(local->dev, FALSE, 5, !hw.down, 0, 0);
+ 			xf86PostButtonEvent(local->dev, FALSE, 5, hw.down, 0, 0);
  		}
  		while(scroll_left-- > 0) {
  			xf86PostButtonEvent(local->dev, FALSE, 6, TRUE, 0, 0);
@@ -1026,8 +983,8 @@ ReadInput(LocalDevicePtr local)
 		if (double_click) {
 			int i;
 			for (i = 0; i < 2; i++) {
-				xf86PostButtonEvent(local->dev, FALSE, 1, !left, 0, 0);
-				xf86PostButtonEvent(local->dev, FALSE, 1, left, 0, 0);
+				xf86PostButtonEvent(local->dev, FALSE, 1, !hw.left, 0, 0);
+				xf86PostButtonEvent(local->dev, FALSE, 1, hw.left, 0, 0);
 			}
 		}
 	}
@@ -1141,6 +1098,60 @@ QueryHardware (LocalDevicePtr local)
 	PrintIdent(priv);
 
 	return Success;	
+}
+
+static Bool
+SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivatePtr priv,
+					struct SynapticsHwState *hw)
+{
+	Bool ret = SynapticsGetPacket(local, priv);
+	unsigned char *buf;
+
+	if (ret != Success)
+		return ret;
+
+	buf = priv->protoBuf;
+
+	hw->x = (((buf[3] & 0x10) << 8) |
+			 ((buf[1] & 0x0f) << 8) |
+			 buf[4]);
+	hw->y = (((buf[3] & 0x20) << 7) |
+			 ((buf[1] & 0xf0) << 4) |
+			 buf[5]);
+
+	hw->z = buf[2];
+	hw->w = (((buf[0] & 0x30) >> 2) |
+			 ((buf[0] & 0x04) >> 1) |
+			 ((buf[3] & 0x04) >> 2));
+
+	hw->left  = (buf[0] & 0x01) ? 1 : 0;
+	hw->right = (buf[0] & 0x2) ? 1 : 0;
+	hw->up    = 0;
+	hw->down  = 0;
+
+	if (!priv->six_buttons) {
+		if (SYN_CAP_EXTENDED(priv->capabilities) &&
+			(SYN_CAP_FOUR_BUTTON(priv->capabilities))) {
+			hw->up = ((buf[3] & 0x01)) ? 1 : 0;
+			if (hw->left)
+				hw->up = !hw->up;
+			hw->down = ((buf[3] & 0x02)) ? 1 : 0;
+			if (hw->right)
+				hw->down = !hw->down;
+		}
+	} else {
+		/* type with 6 buttons */
+		if (priv->protoBuf[3] == 0xC2) {
+			hw->cbLeft  = (priv->protoBuf[4] & 0x02) ? TRUE : FALSE;
+			hw->cbRight = (priv->protoBuf[5] & 0x02) ? TRUE : FALSE;
+			hw->up      = (priv->protoBuf[4] & 0x01) ? TRUE : FALSE;
+			hw->down    = (priv->protoBuf[5] & 0x01) ? TRUE : FALSE;
+		} else {
+			hw->cbLeft = hw->cbRight = hw->up = hw->down = FALSE;
+		}
+	}
+
+	return Success;
 }
 
 static Bool

@@ -42,6 +42,22 @@ typedef struct _SynapticsSHM
  *****************************************************************************/
 #define SYNAPTICS_MOVE_HISTORY	5
 
+/*
+ * A structure to describe the state of the touchpad hardware (buttons and pad)
+ */
+struct SynapticsHwState {
+	int x;
+	int y;
+	int z;
+	int w;
+	Bool left;
+	Bool right;
+	Bool up;
+	Bool down;
+	Bool cbLeft;
+	Bool cbRight;
+};
+
 typedef struct _SynapticsTapRec 
 {
 	int x, y;
@@ -122,6 +138,8 @@ static Bool DeviceInit(DeviceIntPtr);
 static Bool DeviceOn(DeviceIntPtr);
 static Bool DeviceOff(DeviceIntPtr);
 static Bool DeviceInit(DeviceIntPtr);
+static Bool SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivatePtr priv,
+								struct SynapticsHwState *hw);
 static Bool SynapticsGetPacket(LocalDevicePtr, SynapticsPrivatePtr);
 static void PrintIdent(SynapticsPrivatePtr);
 
