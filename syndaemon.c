@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
     int shmid;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "i:")) != EOF) {
+    while ((c = getopt(argc, argv, "i:?")) != EOF) {
 	switch(c) {
 	case 'i':
 	    idle_time = atof(optarg);
