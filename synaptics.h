@@ -18,7 +18,7 @@ typedef struct _SynapticsSHM
 	unsigned long int model_id;			/* Model-ID */
 	unsigned long int capabilities; 	/* Capabilities */
 	unsigned long int identity;			/* Identification */
-	Bool isSynaptics;					/* Synaptics touchpad aktiv */
+	Bool isSynaptics;					/* Synaptics touchpad active */
 
 	/* Parameter data */
 	int	left_edge, right_edge, top_edge, bottom_edge;
@@ -70,7 +70,8 @@ typedef struct _SynapticsPrivateRec
 	unsigned long int model_id;			/* Model-ID */
 	unsigned long int capabilities; 	/* Capabilities */
 	unsigned long int identity;			/* Identification */
-	Bool isSynaptics;					/* Synaptics touchpad aktiv */
+	Bool isSynaptics;					/* Synaptics touchpad active */
+	Bool six_buttons;					/*  */
 
 	/* Data for normal processing */
 	XISBuffer *buffer;

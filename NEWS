@@ -1,2 +1,6 @@
+09.06.02 - Version 0.11.1
+- new packet format for Firmware 5.8 and others; solves problems with some
+  models with 6 buttons (S. Lehner <sam_x@bluemail.ch>)
+
 13.10.01 - Version 0.10
 - multifinger taps

@@ -3,6 +3,9 @@
  *     patches for fast scrolling, plam detection, dege motion, 
  *     hozizontal scrolling
  *
+ *   2002 S. Lehner <sam_x@bluemail.ch>
+ *     for newer Firmware (5.8) protocol changes for 3rd to 6th button 
+ *
  *	 Copyright (C) 2001 Stefan Gmeiner <riddlebox@freesurf.ch>
  *     start merging tpconfig and gpm code to a xfree-input modul
  *     adding some changes and extensions (ex. 3rd and 4th button)
@@ -510,7 +513,7 @@ ReadInput(LocalDevicePtr local)
 	Bool finger;
 	int x, y, z, w, dist, dx, dy, buttons, id;
 	edge_type edge;
-	Bool left, mid, right, up, down;
+	Bool left, mid, right, up, down, cbLeft, cbRight;
 	double speed, integral;
 	int change;
 	int scroll_up, scroll_down, scroll_left, scroll_right;
@@ -545,14 +548,31 @@ ReadInput(LocalDevicePtr local)
 		right = (priv->protoBuf[0] & 0x2) ? TRUE : FALSE;
 		up    = FALSE;
 		down  = FALSE;
-		if(SYN_CAP_EXTENDED(priv->capabilities) &&
-		   (SYN_CAP_FOUR_BUTTON(priv->capabilities))) {
-			up = ((priv->protoBuf[3] & 0x01)) ? TRUE : FALSE;
-			if (left)
-				up = !up;
-			down = ((priv->protoBuf[3] & 0x02)) ? TRUE : FALSE;
-			if (right)
-				down = !down;
+		if (!priv->six_buttons)
+		{
+			if(SYN_CAP_EXTENDED(priv->capabilities) &&
+			   (SYN_CAP_FOUR_BUTTON(priv->capabilities))) {
+				up = ((priv->protoBuf[3] & 0x01)) ? TRUE : FALSE;
+				if (left)
+					up = !up;
+				down = ((priv->protoBuf[3] & 0x02)) ? TRUE : FALSE;
+				if (right)
+					down = !down;
+			}
+		}
+		else
+		{ /* type with 6 buttons */
+			if (priv->protoBuf[3] == 0xC2) 
+			{
+				cbLeft  = (priv->protoBuf[4] & 0x02) ? TRUE : FALSE;
+				cbRight = (priv->protoBuf[5] & 0x02) ? TRUE : FALSE;
+				up      = (priv->protoBuf[4] & 0x01) ? TRUE : FALSE;
+				down    = (priv->protoBuf[5] & 0x01) ? TRUE : FALSE;
+			}
+			else
+			{
+				cbLeft = cbRight = up = down = FALSE;
+			}
 		}
 
 		edge = edge_detection(priv, x, y);
@@ -1086,6 +1106,14 @@ QueryHardware (LocalDevicePtr local)
 	                                 SYN_BIT_W_MODE) != Success)
 		return !Success;
 
+	priv->six_buttons = FALSE;
+	if ((SYN_ID_MAJOR(priv->identity) > 5) ||
+		((SYN_ID_MAJOR(priv->identity) == 5) && (SYN_ID_MINOR(priv->identity) >= 8)))
+	{
+		xf86Msg(X_PROBED, "Using 6 button protocol\n");
+		priv->six_buttons = TRUE;
+	}
+
 	SynapticsEnableDevice(local->fd);
 
 	PrintIdent(priv);
@@ -1167,8 +1195,8 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 }
 
 static void
-PrintIdent(SynapticsPrivatePtr priv) {
-
+PrintIdent(SynapticsPrivatePtr priv)
+{
 	xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(priv->identity));
 	xf86Msg(X_PROBED, " Firware: %d.%d\n", SYN_ID_MAJOR(priv->identity), SYN_ID_MINOR(priv->identity));
 
