@@ -1,7 +1,7 @@
 0.14.1 (2005-03-15)
 - Fix for build problems on Gentoo amd64 systems.
 - Added -p switch to syndaemon to make it record its pid in a pid
-  file. This simplifies init scripts. Based on a patch from maximilian
+  file. This simplifies init scripts. Based on a patch from Maximilian
   Attems.
 - Made the event auto device detection work even if some
   /dev/input/event nodes are missing, which can happen when using a
