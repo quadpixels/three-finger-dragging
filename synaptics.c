@@ -909,7 +909,6 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    goto restart;
 	} else if (release) {
 	    SelectTapButton(priv, edge);
-	    priv->tap_button_state = TBS_BUTTON_DOWN;
 	    SetTapState(priv, TS_2, hw->millis);
 	}
 	break;
@@ -918,17 +917,20 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    SetTapState(priv, TS_START, hw->millis);
 	break;
     case TS_2:
-	if (touch)
+	if (touch) {
+	    priv->tap_button_state = TBS_BUTTON_DOWN;
 	    SetTapState(priv, TS_3, hw->millis);
-	else if (timeout)
+	} else if (timeout) {
 	    SetTapState(priv, TS_START, hw->millis);
+	    priv->tap_button_state = TBS_BUTTON_DOWN_UP;
+	}
 	break;
     case TS_3:
 	if (timeout || move) {
 	    SetTapState(priv, TS_DRAG, hw->millis);
 	    goto restart;
 	} else if (release) {
-	    priv->tap_button_state = TBS_BUTTON_UP_DOWN;
+	    priv->tap_button_state = TBS_BUTTON_UP;
 	    SetTapState(priv, TS_2, hw->millis);
 	}
 	break;
@@ -1274,13 +1276,12 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 
     if (priv->tap_button > 0) {
 	int tap_mask = 1 << (priv->tap_button - 1);
-	if (priv->tap_button_state == TBS_BUTTON_UP_DOWN) {
-	    if ((buttons & tap_mask) != (priv->lastButtons & tap_mask)) {
-		xf86PostButtonEvent(local->dev, FALSE, priv->tap_button, buttons & tap_mask, 0, 0);
-		priv->lastButtons &= ~tap_mask;
-		priv->lastButtons |= buttons & tap_mask;
+	if (priv->tap_button_state == TBS_BUTTON_DOWN_UP) {
+	    if (tap_mask != (priv->lastButtons & tap_mask)) {
+		xf86PostButtonEvent(local->dev, FALSE, priv->tap_button, TRUE, 0, 0);
+		priv->lastButtons |= tap_mask;
 	    }
-	    priv->tap_button_state = TBS_BUTTON_DOWN;
+	    priv->tap_button_state = TBS_BUTTON_UP;
 	}
 	if (priv->tap_button_state == TBS_BUTTON_DOWN)
 	    buttons |= tap_mask;
