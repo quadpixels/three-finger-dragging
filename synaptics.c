@@ -107,7 +107,7 @@ typedef enum {
 #define DEV_INPUT_EVENT "/dev/input"
 #define EVENT_DEV_NAME "event"
 
-#define VERSION "0.11.7"
+#define VERSION "0.11.8"
 
 /*****************************************************************************
  * Forward declaration

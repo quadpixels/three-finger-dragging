@@ -1,3 +1,11 @@
+0.11.8 (2003-10-08)
+- Initialize the id variable in QueryIsSynaptics(), so that we don't
+  print out garbage if the identification fails.
+- Added "Sharp Actius MM10" to the compatibility list.
+- Added X include files so that the driver can be compiled without an
+  external XFree86 source tree.
+- Some documentation updates.
+
 0.11.7 (2003-09-28)
 - Added "Acer TravelMate 234LC" to the compatibility list.
 - Added "Gateway 600S" to the compatibility list.
