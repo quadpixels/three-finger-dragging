@@ -71,7 +71,7 @@ typedef struct _SynapticsPrivateRec
 	unsigned long int capabilities; 	/* Capabilities */
 	unsigned long int identity;			/* Identification */
 	Bool isSynaptics;					/* Synaptics touchpad active */
-	Bool six_buttons;					/*  */
+	Bool six_buttons;					/* Use six button protocol */
 
 	/* Data for normal processing */
 	XISBuffer *buffer;
