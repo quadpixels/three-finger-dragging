@@ -1429,7 +1429,7 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 			 ((buf[3] & 0x04) >> 2));
 
 	hw->left  = (buf[0] & 0x01) ? 1 : 0;
-	hw->right = (buf[0] & 0x2) ? 1 : 0;
+	hw->right = (buf[0] & 0x02) ? 1 : 0;
 	hw->up    = 0;
 	hw->down  = 0;
 
@@ -1444,13 +1444,13 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 		}
 		if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap)) {
 			/* aka. type with 6 buttons */
-			if (priv->protoBuf[3] == 0xC2) {
+			if (buf[3] == 0xC2) {
 				if (SYN_CAP_MULTI_BUTTON_NO(priv->ext_cap) > 2) {
-					hw->cbLeft  = (priv->protoBuf[4] & 0x02) ? TRUE : FALSE;
-					hw->cbRight = (priv->protoBuf[5] & 0x02) ? TRUE : FALSE;
+					hw->cbLeft  = (buf[4] & 0x02) ? TRUE : FALSE;
+					hw->cbRight = (buf[5] & 0x02) ? TRUE : FALSE;
 				}
-				hw->up      = (priv->protoBuf[4] & 0x01) ? TRUE : FALSE;
-				hw->down    = (priv->protoBuf[5] & 0x01) ? TRUE : FALSE;
+				hw->up      = (buf[4] & 0x01) ? TRUE : FALSE;
+				hw->down    = (buf[5] & 0x01) ? TRUE : FALSE;
 			} else {
 				hw->cbLeft = hw->cbRight = hw->up = hw->down = FALSE;
 			}
@@ -1487,9 +1487,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 {
 	int count = 0;
 	int c;
-	unsigned char *pBuf, u;
-
-	pBuf = priv->protoBuf;
+	unsigned char u;
 
 	while((c = XisbRead(priv->buffer)) >= 0) {
 		u = (unsigned char)c;
@@ -1522,7 +1520,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 			return (!Success);
 		}
 
-		pBuf[priv->protoBufTail++] = u;
+		priv->protoBuf[priv->protoBufTail++] = u;
 
 		/* check first byte */
 		if((priv->protoBufTail == 1) && ((u & 0xC8) != 0x80))
