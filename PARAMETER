@@ -17,3 +17,4 @@ AccelFactor		Float	acceleration-factor
 UpDownScrolling		Bool	If on, the up/down buttons generate button 4/5 events.
 				If off, the up button generates a double click and
 				the down button generates a button 2 event.
+EmulateMidButtonTime	Int	max time (time of 1/80s) for middle button emulation.

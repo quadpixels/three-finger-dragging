@@ -20,11 +20,13 @@ typedef struct _SynapticsMoveHist
 } SynapticsMoveHistRec;
 
 typedef struct _SynapticsSHM {
+	/* Current device state */
 	int x, y;							/* actual x, y Coordinates */
 	int z;								/* pressure value */
 	int w;								/* finger width value */
 	int left, right, up, down;			/* left/right/up/down buttons */
 
+	/* Probed hardware properties */
 	unsigned long int model_id;			/* Model-ID */
 	unsigned long int capabilities; 	/* Capabilities */
 	unsigned long int identity;			/* Identification */
@@ -35,6 +37,8 @@ typedef struct _SynapticsSHM {
 										/* edge coordinates absolute */
 	int	finger_low, finger_high;		/* finger detection values in Z-values */
 	int	tap_time, tap_move;				/* max. tapping-time and movement in packets and coord. */
+	int emulate_mid_button_time;		/* Max time between left and right button presses to
+										   emulate a middle button press. */
 	int	scroll_dist_vert;				/* Scrolling distance in absolute coordinates */
 	int	scroll_dist_horiz;				/* Scrolling distance in absolute coordinates */
 	double min_speed, max_speed, accl;  /* movement parameters */

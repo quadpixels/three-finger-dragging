@@ -221,6 +221,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->synpara->finger_high = xf86SetIntOption(local->options, "FingerHigh", 30);
 	priv->synpara->tap_time = xf86SetIntOption(local->options, "MaxTapTime", 20);
 	priv->synpara->tap_move = xf86SetIntOption(local->options, "MaxTapMove", 220);
+	priv->synpara->emulate_mid_button_time = xf86SetIntOption(local->options,
+															  "EmulateMidButtonTime", 6);
 	priv->synpara->scroll_dist_vert = xf86SetIntOption(local->options, "VertScrollDelta", 100);
 	priv->synpara->scroll_dist_horiz = xf86SetIntOption(local->options, "HorizScrollDelta", 100);
 	priv->synpara->edge_motion_speed = xf86SetIntOption(local->options, "EdgeMotionSpeed", 40);
@@ -570,11 +572,11 @@ ReadInput(LocalDevicePtr local)
 			priv->count_button_delay = priv->count_packet;
 			priv->third_button = FALSE;
 		} 
-		else if(DIFF_TIME(priv->count_packet, priv->count_button_delay) < 6) 
+		else if(DIFF_TIME(priv->count_packet, priv->count_button_delay) < para->emulate_mid_button_time)
 		{
 			left = right = FALSE;
 		} 
-		else if(DIFF_TIME(priv->count_packet, priv->count_button_delay) == 6) 
+		else if(DIFF_TIME(priv->count_packet, priv->count_button_delay) == para->emulate_mid_button_time)
 		{
 			priv->third_button = left && right;
 		}
