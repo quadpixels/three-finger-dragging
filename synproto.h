@@ -78,6 +78,7 @@ struct SynapticsProtocolOperations {
     void (*DeviceOffHook)(LocalDevicePtr local);
     Bool (*QueryHardware)(LocalDevicePtr local, struct SynapticsHwInfo *synhw);
     Bool (*ReadHwState)(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
+			struct SynapticsProtocolOperations *proto_ops,
 			struct CommData *comm, struct SynapticsHwState *hwRet);
     Bool (*autoDevProbe)(LocalDevicePtr local);
 };

@@ -149,9 +149,10 @@ PSMQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 
 static Bool
 PSMReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
+	       struct SynapticsProtocolOperations *proto_ops,
 	       struct CommData *comm, struct SynapticsHwState *hwRet)
 {
-    return psaux_proto_operations.ReadHwState(local, synhw, comm, hwRet);
+    return psaux_proto_operations.ReadHwState(local, synhw, proto_ops, comm, hwRet);
 }
 
 static Bool PSMAutoDevProbe(LocalDevicePtr local)

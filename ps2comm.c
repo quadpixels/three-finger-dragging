@@ -550,6 +550,7 @@ ps2_packet_ok(struct SynapticsHwInfo *synhw, struct CommData *comm)
 
 static Bool
 ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
+			 struct SynapticsProtocolOperations *proto_ops,
 			 struct CommData *comm)
 {
     int count = 0;
@@ -563,7 +564,7 @@ ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 	if ((c == 0x00) && (comm->lastByte == 0xAA)) {
 	    if (xf86WaitForInput(local->fd, 50000) == 0) {
 		DBG(7, ErrorF("Reset received\n"));
-		PS2QueryHardware(local, synhw);
+		proto_ops->QueryHardware(local, synhw);
 	    } else
 		DBG(3, ErrorF("faked reset received\n"));
 	}
@@ -589,7 +590,7 @@ ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 		if (comm->outOfSync > MAX_UNSYNC_PACKETS) {
 		    comm->outOfSync = 0;
 		    DBG(3, ErrorF("Synaptics synchronization lost too long -> reset touchpad.\n"));
-		    PS2QueryHardware(local, synhw); /* including a reset */
+		    proto_ops->QueryHardware(local, synhw); /* including a reset */
 		    continue;
 		}
 	    }
@@ -610,6 +611,7 @@ ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 
 static Bool
 PS2ReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
+	       struct SynapticsProtocolOperations *proto_ops,
 	       struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     int newabs = SYN_MODEL_NEWABS(*synhw);
@@ -617,7 +619,7 @@ PS2ReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
     struct SynapticsHwState *hw = &(comm->hwState);
     int w, i;
 
-    if (!ps2_synaptics_get_packet(local, synhw, comm))
+    if (!ps2_synaptics_get_packet(local, synhw, proto_ops, comm))
 	return FALSE;
 
     /* Handle guest packets */

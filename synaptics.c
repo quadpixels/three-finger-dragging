@@ -657,7 +657,8 @@ SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivate *priv,
 	}
 	return FALSE;
     }
-    return priv->proto_ops->ReadHwState(local, &priv->synhw, &priv->comm, hw);
+    return priv->proto_ops->ReadHwState(local, &priv->synhw, priv->proto_ops,
+					&priv->comm, hw);
 }
 
 /*

@@ -72,6 +72,7 @@ SynapticsReadEvent(struct CommData *comm, struct input_event *ev)
 
 static Bool
 EventReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
+		 struct SynapticsProtocolOperations *proto_ops,
 		 struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     struct input_event ev;
