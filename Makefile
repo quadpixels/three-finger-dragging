@@ -5,6 +5,7 @@ EXTINCSRC = $(XTOP)/include/extensions
 INCLUDESRC = $(BUILDINCROOT)/include
 XINCLUDESRC = $(INCLUDESRC)/X11
 SERVERSRC = $(XTOP)/programs/Xserver
+XF86PCIINCLUDE = $(TOP)/programs/Xserver/hw/xfree86/os-support/bus
 TOP_X_INCLUDES = -I$(TOP)/exports/include
 TOP_INCLUDES = -I$(TOP) $(TOP_X_INCLUDES)
 
@@ -15,7 +16,7 @@ XF86COMSRC = $(XF86SRC)/common
 XF86OSSRC = $(XF86SRC)/os-support
 
 
-INCLUDES = -I. -I$(XF86COMSRC) -I$(SERVERSRC)/hw/xfree86/loader -I$(XF86OSSRC) -I$(SERVERSRC)/mi -I$(SERVERSRC)/include -I$(XINCLUDESRC) -I$(EXTINCSRC) -I$(TOP)/include -I$(SERVERSRC)/hw/xfree86 -I$(SERVERSRC)/hw/xfree86/parser
+INCLUDES = -I. -I$(XF86COMSRC) -I$(SERVERSRC)/hw/xfree86/loader -I$(XF86OSSRC) -I$(SERVERSRC)/mi -I$(SERVERSRC)/include -I$(XINCLUDESRC) -I$(EXTINCSRC) -I$(TOP)/include -I$(SERVERSRC)/hw/xfree86 -I$(SERVERSRC)/hw/xfree86/parser -I$(XF86PCIINCLUDE)
 
 ALLINCLUDES = $(INCLUDES) $(TOP_INCLUDES)
 
