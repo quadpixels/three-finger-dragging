@@ -241,7 +241,7 @@ synaptics_set_mode(int fd, byte mode)
 /*
  * reset the touchpad
  */
-Bool
+static Bool
 synaptics_reset(int fd)
 {
     byte r[2];
@@ -382,7 +382,7 @@ synaptics_identify(int fd, struct synapticshw *synhw)
     return FALSE;
 }
 
-Bool
+static Bool
 SynapticsEnableDevice(int fd)
 {
     return ps2_putbyte(fd, PS2_CMD_ENABLE);
@@ -460,7 +460,8 @@ PS2DeviceOnHook(LocalDevicePtr local)
 static void
 PS2DeviceOffHook(LocalDevicePtr local)
 {
-    synaptics_set_mode(local->fd, 0);
+    synaptics_reset(local->fd);
+    SynapticsEnableDevice(local->fd);
 }
 
 static Bool

@@ -75,7 +75,6 @@
  ****************************************************************************/
 #define SYNAPTICS_PRIVATE
 #include "synaptics.h"
-#include "ps2comm.h"
 
 /*****************************************************************************
  *	Variables without includable headers
@@ -1413,7 +1412,6 @@ QueryHardware(LocalDevicePtr local)
 	return FALSE;
     }
     xf86Msg(X_PROBED, "%s no synaptics touchpad, data piped to repeater fifo\n", local->name);
-    synaptics_reset(local->fd);
-    SynapticsEnableDevice(local->fd);
+    priv->proto_ops->DeviceOffHook(local);
     return TRUE;
 }

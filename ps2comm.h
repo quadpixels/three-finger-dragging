@@ -50,10 +50,4 @@
 
 typedef unsigned char byte;
 
-Bool
-synaptics_reset(int fd);
-
-Bool
-SynapticsEnableDevice(int fd);
-
 #endif /* _PS2COMM_H_ */
