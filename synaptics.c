@@ -373,8 +373,13 @@ DeviceOn (DeviceIntPtr dev)
 		}
 
 	xf86FlushInput(local->fd);
-	xf86AddEnabledDevice (local);
+	/*xf86AddEnabledDevice (local);*/
 	dev->public.on = TRUE;
+
+	/* reinit the pad */
+	QueryHardware(local);
+	xf86AddEnabledDevice (local);
+
 	return (Success);
 }
 
@@ -698,7 +703,8 @@ ReadInput(LocalDevicePtr local)
 
 		/* detecting 2 and 3 fingers */
 		if(finger && /* finger is on the surface */
-		   (DIFF_TIME(priv->count_packet, priv->touch_on.packet) < para->tap_time))
+		   (DIFF_TIME(priv->count_packet, priv->touch_on.packet) < para->tap_time) && /* tap time is not succeeded */
+		   SYN_CAP_MULTIFINGER(priv->capabilities)) /* touchpad has multifinger capabilities */
 		{ /* count fingers when reported */
 			if((w == 0) && (priv->finger_count == 0))
 				priv->finger_count = 2;
@@ -971,7 +977,7 @@ QueryHardware (LocalDevicePtr local)
 	SynapticsSHMPtr para = priv->synpara;
 	int retries;
 	
-	xf86Msg(X_INFO, "synaptics touchpad driver %s\n", VERSION);
+	xf86Msg(X_INFO, "xfree driver for the synaptics touchpad %s\n", VERSION);
 
 	/* is the synaptics touchpad active? */
 	priv->isSynaptics = QueryIsSynaptics(local->fd);
@@ -1010,6 +1016,8 @@ QueryHardware (LocalDevicePtr local)
 	                                 SYN_BIT_DISABLE_GESTURE |
 	                                 SYN_BIT_W_MODE) != Success)
 		return !Success;
+
+	SynapticsEnableDevice(local->fd);
 
 	PrintIdent(priv);
 
