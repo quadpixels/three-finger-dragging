@@ -29,9 +29,9 @@
 static void
 ALPS_sync(int fd)
 {
-    byte buffer[4];
+    byte buffer[64];
     while (xf86WaitForInput(fd, 250000) > 0) {
-	xf86ReadSerial(fd, &buffer, 1);
+	xf86ReadSerial(fd, &buffer, 64);
     }
 }
 
@@ -118,7 +118,8 @@ ALPS_get_packet(struct CommData *comm, LocalDevicePtr local)
 	    comm->protoBufTail = 0;
 	    if (ALPS_packet_ok(comm))
 		return TRUE;
-	    ALPS_sync(local->fd);  /* If packet is invalid, re-sync */
+	    while ((c = XisbRead(comm->buffer)) >= 0)
+		;		   /* If packet is invalid, re-sync */
 	}
     }
 
