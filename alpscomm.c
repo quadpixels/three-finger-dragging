@@ -116,8 +116,8 @@ ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
     int x, y, z;
     int left = 0, right = 0, middle = 0;
 
-    x = (packet[1] & 0x7f) | ((packet[2] & 0x78)<<(7-3));
-    y = (packet[4] & 0x7f) | ((packet[3] & 0x70)<<(7-4));
+    x = (packet[1] & 0x7f) | ((packet[2] & 0x78) << (7-3));
+    y = (packet[4] & 0x7f) | ((packet[3] & 0x70) << (7-4));
     z = packet[5];
 
     if (z > 0) {
