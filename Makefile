@@ -96,9 +96,6 @@ syndaemon.o	: syndaemon.c
 syndaemon	: syndaemon.o
 	$(CC) -o $@ $< -lm -L$(INSTALLED_X)/lib -lXext -lX11
 
-testprotokoll: testprotokoll.c
-	$(CC) -o testprotokoll testprotokoll.c
-
 synaptics.o : synaptics.h ps2comm.h synproto.h Makefile
 ps2comm.o   : ps2comm.h synproto.h
 eventcomm.o : eventcomm.h synproto.h linux_input.h
@@ -121,7 +118,7 @@ ALLFILES = COMPATIBILITY FILES INSTALL INSTALL.DE INSTALL.FR LICENSE Makefile \
 	pc_keyb.c.diff.2.4.3 \
 	synproto.h ps2comm.c ps2comm.h eventcomm.c eventcomm.h \
 	synaptics.c synaptics.h synaptics.spec \
-	synclient.c syndaemon.c testprotokoll.c
+	synclient.c syndaemon.c
 
 DST=synaptics-$(VERSION)
 
@@ -132,7 +129,7 @@ synaptics-$(VERSION).tar.bz2 : $(ALLFILES)
 	cp -a $(ALLFILES) $(DST)
 	cp -a manpages/{synclient.1,syndaemon.1} $(DST)/manpages/
 	cp -a script/usbmouse $(DST)/script/
-	cp -a test/test-pad.c $(DST)/test/
+	cp -a test/{test-pad.c,testprotocol.c} $(DST)/test/
 	cp -a docs/tapndrag.dia $(DST)/docs/
 	chmod u+w $(DST)/*
 	tar cf $(DST).tar $(DST)
