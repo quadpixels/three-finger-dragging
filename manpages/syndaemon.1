@@ -22,6 +22,11 @@ Start as a daemon, ie in the background.
 .TP
 \fBDISPLAY\fP
 Specifies the X server to contact.
+.SH "CAVEATS"
+.LP
+It doesn't make much sense to connect to a remote X server, because
+the daemon will then monitor the remote server for keyboard activity,
+but will disable the touchpad on the local machine.
 .SH "AUTHORS"
 .LP
 Peter Osterlund <petero2@telia.com>.
