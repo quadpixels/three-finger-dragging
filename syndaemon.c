@@ -44,7 +44,7 @@ usage()
     fprintf(stderr, "  -i How many seconds to wait after the last key press before\n");
     fprintf(stderr, "     enabling the touchpad. (default is 2.0s)\n");
     fprintf(stderr, "  -d Start as a daemon, ie in the background.\n");
-    fprintf(stderr, "  -p Specify the file name for the pid file.\n");
+    fprintf(stderr, "  -p Create a pid file with the specified name.\n");
     fprintf(stderr, "  -t Only disable tapping, not mouse movements.\n");
     exit(1);
 }
