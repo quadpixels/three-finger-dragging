@@ -100,6 +100,19 @@ coordinates are less than MaxTapMove units apart. A "touch" event
 happens when the Z value goes above FingerHigh, and an "untouch" event
 happens when the Z value goes below FingerLow.
 
+The MinSpeed, MaxSpeed and AccelFactor parameters control the pointer
+motion speed. The speed value defines the scaling between touchpad
+coordinates and screen coordinates. When moving the finger very
+slowly, the MinSpeed value is used, when moving very fast the MaxSpeed
+value is used. When moving the finger at moderate speed, you get a
+pointer motion speed somewhere between MinSpeed and MaxSpeed. If you
+don't want any acceleration, set MinSpeed and MaxSpeed to the same
+value.
+
+The MinSpeed, MaxSpeed and AccelFactor parameters don't have any
+effect on scrolling speed. Scrolling speed is determined solely from
+the VertScrollDelta and HorizScrollDelta parameters.
+
 
 FAQ
 ---
