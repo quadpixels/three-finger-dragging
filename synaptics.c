@@ -381,7 +381,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     str_par = xf86FindOptionValue(local->options, "MinSpeed");
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->min_speed) != 1))
-	pars->min_speed=0.02;
+	pars->min_speed=0.09;
     str_par = xf86FindOptionValue(local->options, "MaxSpeed");
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->max_speed) != 1))
 	pars->max_speed=0.18;
