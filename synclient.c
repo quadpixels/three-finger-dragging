@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <string.h>
 #include <stddef.h>
@@ -157,10 +158,19 @@ static int is_equal(SynapticsSHM* s1, SynapticsSHM* s2)
 	    (s1->guest_dy    == s2->guest_dy));
 }
 
+static double get_time()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec + tv.tv_usec / 1000000.0;
+}
+
 static void monitor(SynapticsSHM* synshm, int delay)
 {
     int header = 0;
     SynapticsSHM old;
+    double t0 = get_time();
+
     memset(&old, 0, sizeof(SynapticsSHM));
     old.x = -1;				    /* Force first equality test to fail */
 
@@ -168,15 +178,16 @@ static void monitor(SynapticsSHM* synshm, int delay)
 	SynapticsSHM cur = *synshm;
 	if (!is_equal(&old, &cur)) {
 	    if (!header) {
-		printf("%4s %4s %3s %s %2s %2s %s %s %s  %8s  "
+		printf("%8s  %4s %4s %3s %s %2s %2s %s %s %s  %8s  "
 		       "%2s %2s %2s %3s %3s\n",
-		       "x", "y", "z", "f", "w", "l", "r", "u", "d", "multi",
-		       "gl", "gm", "gr", "gdx", "gdy");
+		       "time", "x", "y", "z", "f", "w", "l", "r", "u", "d",
+		       "multi", "gl", "gm", "gr", "gdx", "gdy");
 		header = 20;
 	    }
 	    header--;
-	    printf("%4d %4d %3d %d %2d %2d %d %d %d  %d%d%d%d%d%d%d%d  "
+	    printf("%8.3f  %4d %4d %3d %d %2d %2d %d %d %d  %d%d%d%d%d%d%d%d  "
 		   "%2d %2d %2d %3d %3d\n",
+		   get_time() - t0,
 		   cur.x, cur.y, cur.z, cur.numFingers, cur.fingerWidth,
 		   cur.left, cur.right, cur.up, cur.down,
 		   cur.multi[0], cur.multi[1], cur.multi[2], cur.multi[3],
