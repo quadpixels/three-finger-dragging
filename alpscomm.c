@@ -36,7 +36,7 @@ ALPS_sync(int fd)
 }
 
 /*
- * send the ALPSinit sequence, ie 4 consecutive "disable"s before the "enable"
+ * send the ALPS init sequence, ie 4 consecutive "disable"s before the "enable"
  */
 static void
 ALPS_initialize(int fd)
