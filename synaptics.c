@@ -178,7 +178,7 @@ SetDeviceAndProtocol(LocalDevicePtr local)
     } else if (str_par && !strcmp(str_par, "psm")) {
 	proto = SYN_PROTO_PSM;
     } else { /* default to auto-dev */
-	if (event_proto_operations.autoDevProbe(local))
+	if (event_proto_operations.AutoDevProbe(local))
 	    proto = SYN_PROTO_EVENT;
     }
     switch (proto) {

@@ -80,7 +80,7 @@ struct SynapticsProtocolOperations {
     Bool (*ReadHwState)(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 			struct SynapticsProtocolOperations *proto_ops,
 			struct CommData *comm, struct SynapticsHwState *hwRet);
-    Bool (*autoDevProbe)(LocalDevicePtr local);
+    Bool (*AutoDevProbe)(LocalDevicePtr local);
 };
 
 extern struct SynapticsProtocolOperations psaux_proto_operations;
