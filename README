@@ -258,7 +258,7 @@ FAQ
 
 	xmodmap -pp
 
-* Horizontal scrolling doesn't work in some programs? Is it a driver
+* Horizontal scrolling doesn't work in some programs. Is it a driver
   bug?
 
     No, probably not. Support for horizontal scroll events must be
