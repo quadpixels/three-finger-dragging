@@ -1141,14 +1141,14 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	    if (priv->drag || priv->draglock) {
 		int edge_speed = para->edge_motion_speed;
 		if (edge & RIGHT_EDGE) {
-		    dx += clamp(edge_speed - dx, 0, i);
+		    dx += clamp(edge_speed - dx, 0, edge_speed);
 		} else if (edge & LEFT_EDGE) {
-		    dx -= clamp(edge_speed + dx, 0, i);
+		    dx -= clamp(edge_speed + dx, 0, edge_speed);
 		}
 		if (edge & TOP_EDGE) {
-		    dy -= clamp(edge_speed + dy, 0, i);
+		    dy -= clamp(edge_speed + dy, 0, edge_speed);
 		} else if (edge & BOTTOM_EDGE) {
-		    dy += clamp(edge_speed - dy, 0, i);
+		    dy += clamp(edge_speed - dy, 0, edge_speed);
 		}
 	    }
 
