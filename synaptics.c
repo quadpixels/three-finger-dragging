@@ -705,7 +705,7 @@ ReadInput(LocalDevicePtr local)
 		/* repeat timer for up/down buttons */
 		/* when you press a button the packets will only send for a second, so
 		   we have to use a timer for repeating */
-		if((up || down) && !priv->vert_scroll_on) {
+		if(up || down) {
 			if(!priv->repeat_timer) {
 				priv->repeatButtons = buttons & 0x18;
 				priv->repeat_timer = TimerSet(priv->repeat_timer, 
