@@ -173,6 +173,7 @@ static int is_equal(SynapticsSHM* s1, SynapticsSHM* s2)
 	    (s1->right       == s2->right) &&
 	    (s1->up          == s2->up) &&
 	    (s1->down        == s2->down) &&
+	    (s1->middle      == s2->middle) &&
 	    (s1->guest_left  == s2->guest_left) &&
 	    (s1->guest_mid   == s2->guest_mid) &&
 	    (s1->guest_right == s2->guest_right) &&
@@ -200,18 +201,18 @@ static void monitor(SynapticsSHM* synshm, int delay)
 	SynapticsSHM cur = *synshm;
 	if (!is_equal(&old, &cur)) {
 	    if (!header) {
-		printf("%8s  %4s %4s %3s %s %2s %2s %s %s %s  %8s  "
+		printf("%8s  %4s %4s %3s %s %2s %2s %s %s %s %s  %8s  "
 		       "%2s %2s %2s %3s %3s\n",
-		       "time", "x", "y", "z", "f", "w", "l", "r", "u", "d",
+		       "time", "x", "y", "z", "f", "w", "l", "r", "u", "d", "m",
 		       "multi", "gl", "gm", "gr", "gdx", "gdy");
 		header = 20;
 	    }
 	    header--;
-	    printf("%8.3f  %4d %4d %3d %d %2d %2d %d %d %d  %d%d%d%d%d%d%d%d  "
+	    printf("%8.3f  %4d %4d %3d %d %2d %2d %d %d %d %d  %d%d%d%d%d%d%d%d  "
 		   "%2d %2d %2d %3d %3d\n",
 		   get_time() - t0,
 		   cur.x, cur.y, cur.z, cur.numFingers, cur.fingerWidth,
-		   cur.left, cur.right, cur.up, cur.down,
+		   cur.left, cur.right, cur.up, cur.down, cur.middle,
 		   cur.multi[0], cur.multi[1], cur.multi[2], cur.multi[3],
 		   cur.multi[4], cur.multi[5], cur.multi[6], cur.multi[7],
 		   cur.guest_left, cur.guest_mid, cur.guest_right,

@@ -864,6 +864,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     para->down = hw->down;
     for (i = 0; i < 8; i++)
 	para->multi[i] = hw->multi[i];
+    para->middle = hw->middle;
     para->guest_left = hw->guest_left;
     para->guest_mid = hw->guest_mid;
     para->guest_right = hw->guest_right;
@@ -880,6 +881,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 
     /* 3rd button emulation */
     mid = HandleMidButtonEmulation(priv, hw, &delay);
+    mid |= hw->middle;
 
     /* Up/Down button scrolling or middle/double click */
     double_click = FALSE;
@@ -1436,6 +1438,9 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivate *priv,
 	    case BTN_RIGHT:
 		hw->right = v;
 		break;
+	    case BTN_MIDDLE:
+		hw->middle = v;
+		break;
 	    case BTN_FORWARD:
 		hw->up = v;
 		break;
@@ -1548,7 +1553,7 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 
     /* Handle normal packets */
     hw->x = hw->y = hw->z = hw->numFingers = hw->fingerWidth = 0;
-    hw->left = hw->right = hw->up = hw->down = FALSE;
+    hw->left = hw->right = hw->up = hw->down = hw->middle = FALSE;
     for (i = 0; i < 8; i++)
 	hw->multi[i] = FALSE;
 
