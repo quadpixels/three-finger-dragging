@@ -1400,16 +1400,38 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 {
     Bool ret = SynapticsGetPacket(local, priv);
     int newabs = SYN_MODEL_NEWABS(priv->model_id);
-    unsigned char *buf;
-    int w;
+    unsigned char *buf = priv->protoBuf;
     struct SynapticsHwState *hw = &(priv->hwState);
+    int w, i;
 
     if (ret != Success)
 	return ret;
 
-    memset(hw, 0, sizeof(*hw));
+    /* Handle guest packets */
+    hw->guest_dx = hw->guest_dy = 0;
+    if (priv->hasGuest) {
+	w = (((buf[0] & 0x30) >> 2) |
+	     ((buf[0] & 0x04) >> 1) |
+	     ((buf[3] & 0x04) >> 2));
+	if (w == 3) {	       /* If w is 3, this is a guest packet */
+	    if (buf[4] != 0)
+		hw->guest_dx =   buf[4] - ((buf[1] & 0x10) ? 256 : 0);
+	    if (buf[5] != 0)
+		hw->guest_dy = -(buf[5] - ((buf[1] & 0x20) ? 256 : 0));
+	    hw->guest_left  = (buf[1] & 0x01) ? TRUE : FALSE;
+	    hw->guest_mid   = (buf[1] & 0x04) ? TRUE : FALSE;
+	    hw->guest_right = (buf[1] & 0x02) ? TRUE : FALSE;
+	    *hwRet = *hw;
+	    return Success;
+	}
+    }
 
-    buf = priv->protoBuf;
+    /* Handle normal packets */
+    hw->x = hw->y = hw->z = hw->numFingers = hw->fingerWidth = 0;
+    hw->left = hw->right = hw->up = hw->down = FALSE;
+    for (i = 0; i < 8; i++)
+	hw->multi[i] = FALSE;
+
     if (newabs) {			    /* newer protos...*/
 	DBG(7, ErrorF("using new protocols\n"));
 	hw->x = (((buf[3] & 0x10) << 8) |
@@ -1457,21 +1479,6 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 		}
 	    }
 	}
-
-	if (priv->hasGuest) {
-	    static int guest_buttons = 0;
-	    /* Check to see if w is 0x03. If it is, then it is a guest packet */
-	    if (w == 0x03) {
-		guest_buttons = buf[1] & 0x07;
-		if (buf[4] != 0)
-		    hw->guest_dx =   buf[4] - ((buf[1] & 0x10) ? 256 : 0);
-		if (buf[5] != 0)
-		    hw->guest_dy = -(buf[5] - ((buf[1] & 0x20) ? 256 : 0));
-	    }
-	    hw->guest_left  = (guest_buttons & 0x01) ? TRUE : FALSE;
-	    hw->guest_mid   = (guest_buttons & 0x04) ? TRUE : FALSE;
-	    hw->guest_right = (guest_buttons & 0x02) ? TRUE : FALSE;
-	}
     } else {			    /* old proto...*/
 	DBG(7, ErrorF("using old protocol\n"));
 	hw->x = (((buf[1] & 0x1F) << 8) |
@@ -1489,9 +1496,6 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
     }
 
     hw->y = YMAX_NOMINAL + YMIN_NOMINAL - hw->y;
-
-    hw->numFingers = 0;
-    hw->fingerWidth = 0;
 
     if (hw->z > 0) {
 	int w_ok = 0;
@@ -1529,7 +1533,6 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
     }
 
     *hwRet = *hw;
-
     return Success;
 }
 
