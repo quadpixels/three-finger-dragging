@@ -1,3 +1,6 @@
+0.11.3p9: (2003-07029)
+- Added support for the old synaptics protocol. By Hartwig Felger.
+
 0.11.3p8: (2003-07-20)
 - From Hartwig Felger:
   * Added "multi-buttons" to the FEATURES list.
