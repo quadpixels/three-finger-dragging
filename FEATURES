@@ -9,5 +9,5 @@ The touchpad driver has the following functions (some function requires features
 - Adjustable finger detection (Option: Finger)
 - Ext Mouse repeater support - Alpha! (Option: Repeater)
 - Multifinger taps: two finger for middle button and three finger for right button events
-- Online configuration through short-memory (in development) (Option: SHMConfig)
+- Online configuration through shared memory (Option: SHMConfig)
 
