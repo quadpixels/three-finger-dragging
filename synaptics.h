@@ -53,6 +53,14 @@ typedef struct _SynapticsMoveHist
 	int x, y;
 } SynapticsMoveHistRec;
 
+enum MidButtonEmulation {
+	MBE_OFF,							/* No button pressed */
+	MBE_LEFT,							/* Left button pressed, waiting for right button or timeout */
+	MBE_RIGHT,							/* Right button pressed, waiting for left button or timeout */
+	MBE_MID								/* Left and right buttons pressed, waiting for both buttons
+										   to be released */
+};
+
 typedef struct _SynapticsPrivateRec
 {
 	/* shared memory pointer */
@@ -87,7 +95,7 @@ typedef struct _SynapticsPrivateRec
 	Bool vert_scroll_on;				/* scrolling flag */
 	Bool horiz_scroll_on;				/* scrolling flag */
 	double frac_x, frac_y;				/* absoulte -> relative fraction */
-	Bool third_button;					/* emulated 3rd button */
+	enum MidButtonEmulation mid_emu_state;	/* emulated 3rd button */
 	OsTimerPtr repeat_timer;			/* for up/down-button repeat */
 	int repeatButtons;					/* buttons for repeat */
 	int lastButtons;					/* last State of the buttons */

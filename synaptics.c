@@ -514,7 +514,7 @@ ReadInput(LocalDevicePtr local)
 	double speed, integral;
 	int change;
 	int scroll_up, scroll_down, scroll_left, scroll_right;
-	int double_click;
+	int double_click, done;
 
 	/* 
 	 * set blocking to -1 on the first call because we know there is data to
@@ -569,24 +569,58 @@ ReadInput(LocalDevicePtr local)
 		para->down = down;
 
 		/* 3rd button emulation */
-		if(!left && !right) 
-		{
-			priv->count_button_delay = priv->count_packet;
-			priv->third_button = FALSE;
-		} 
-		else if(DIFF_TIME(priv->count_packet, priv->count_button_delay) < para->emulate_mid_button_time)
-		{
-			left = right = FALSE;
-		} 
-		else if(DIFF_TIME(priv->count_packet, priv->count_button_delay) == para->emulate_mid_button_time)
-		{
-			priv->third_button = left && right;
-		}
-
-		if(priv->third_button) 
-		{
-			mid = TRUE;
-			left = right = FALSE;
+		done = FALSE;
+		while (!done) {
+			Bool timeout;
+			switch (priv->mid_emu_state) {
+			case MBE_OFF:
+				if (left) {
+					priv->mid_emu_state = MBE_LEFT;
+				} else if (right) {
+					priv->mid_emu_state = MBE_RIGHT;
+				} else {
+					priv->count_button_delay = priv->count_packet;
+					done = TRUE;
+				}
+				break;
+			case MBE_LEFT:
+				timeout = DIFF_TIME(priv->count_packet, priv->count_button_delay) >=
+					para->emulate_mid_button_time;
+				if (!left || timeout) {
+					left = TRUE;
+					priv->mid_emu_state = MBE_OFF;
+					done = TRUE;
+				} else if (right) {
+					priv->mid_emu_state = MBE_MID;
+				} else {
+					left = FALSE;
+					done = TRUE;
+				}
+				break;
+			case MBE_RIGHT:
+				timeout = DIFF_TIME(priv->count_packet, priv->count_button_delay) >=
+					para->emulate_mid_button_time;
+				if (!right || timeout) {
+					right = TRUE;
+					priv->mid_emu_state = MBE_OFF;
+					done = TRUE;
+				} else if (left) {
+					priv->mid_emu_state = MBE_MID;
+				} else {
+					right = FALSE;
+					done = TRUE;
+				}
+				break;
+			case MBE_MID:
+				if (!left && !right) {
+					priv->mid_emu_state = MBE_OFF;
+				} else {
+					mid = TRUE;
+					left = right = FALSE;
+					done = TRUE;
+				}
+				break;
+			}
 		}
 
 		/* Up/Down-button scrolling or middle/double-click */
