@@ -70,7 +70,7 @@ typedef struct _SynapticsPrivateRec
 	unsigned int count_packet;			/* packet counter */
 	unsigned int count_packet_tapping;	/* packet counter for tapping */
 	unsigned int count_button_delay;	/* button delay for 3rd button emulation */
-	unsigned int count_double_click;	/* counter for double click */
+	unsigned int prev_up;				/* Previous up button value, for double click emulation */
 	Bool finger_flag;					/* previous finger */
 	Bool tap, drag, doubletap;			/* feature flags */
 	Bool tap_left, tap_mid, tap_right;	/* tapping buttons */

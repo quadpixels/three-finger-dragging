@@ -510,6 +510,7 @@ ReadInput(LocalDevicePtr local)
 	double speed, integral;
 	int change;
 	int scroll_up, scroll_down, scroll_left, scroll_right;
+	int double_click;
 
 	/* 
 	 * set blocking to -1 on the first call because we know there is data to
@@ -585,6 +586,7 @@ ReadInput(LocalDevicePtr local)
 		}
 
 		/* Up/Down-button scrolling or middle/double-click */
+		double_click = FALSE;
 		if (!para->updown_button_scrolling)
 		{
 			if (down)
@@ -594,18 +596,11 @@ ReadInput(LocalDevicePtr local)
 
 			if (up)
 			{ /* up-button generates double-click */
-				switch (DIFF_TIME(priv->count_packet, priv->count_double_click))
-				{ /* double click sequenz */
-					case 1: left = TRUE; break;
-					case 2: left = FALSE; break;
-					case 3: left = TRUE; break;
-					default: left = FALSE;	
-				}
+				if (!priv->prev_up)
+					double_click = TRUE;
 			}
-			else
-			{
-				priv->count_double_click = priv->count_packet;
-			}
+			priv->prev_up = up;
+
 			/* reset up/down button events */
 			up = down = FALSE;
 		}
@@ -951,6 +946,13 @@ ReadInput(LocalDevicePtr local)
  			xf86PostButtonEvent(local->dev, FALSE, 7, TRUE, 0, 0);
  			xf86PostButtonEvent(local->dev, FALSE, 7, FALSE, 0, 0);
  		}
+		if (double_click) {
+			int i;
+			for (i = 0; i < 2; i++) {
+				xf86PostButtonEvent(local->dev, FALSE, 1, !left, 0, 0);
+				xf86PostButtonEvent(local->dev, FALSE, 1, left, 0, 0);
+			}
+		}
 	}
 }
 
