@@ -33,7 +33,7 @@
 static SynapticsSHM *synshm;
 static int pad_disabled;
 static int disable_taps_only;
-static int background = 0;
+static int background;
 static const char *pid_file;
 
 
