@@ -1,3 +1,24 @@
+0.13.0 (2004-04-24)
+- Added back support for the TOP Makefile variable. (Needed when
+  compiling for XFree86 < 4.2).
+- Fixed "double tap and drag", which is needed for word selection from
+  an xterm.
+- Made it possible to bind the CornerButton and TapButton parameters
+  to button values > 3.
+- Locked drags incorrectly generated extra button events in some
+  cases.
+- Handle synaptics touchpads with a middle mouse button. Based on a
+  2.6 kernel patch from Dmitry Torokhov.
+- Added (untested) support for the FreeBSD psm mouse driver.
+- If the evdev kernel module seems to be missing, say so in the log
+  file. (Very common error situation when using 2.6 kernels.)
+- Added support for ALPS touchpads using the 2.4 linux kernel.
+- Removed "repeater" from the shared memory segment. It's not possible
+  to share pointers between different address spaces.
+- Added more models to the compatibility list.
+- Various documentation updates.
+- Some code cleanups.
+
 0.12.5 (2004-03-04)
 - Added more models to the compatibility list.
 - Added support for physical (ie not emulated) middle mouse buttons.
