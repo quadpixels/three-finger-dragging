@@ -194,7 +194,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	/* install shared memory or normal memory for parameter */
 	if(xf86SetBoolOption(local->options, "SHMConfig", FALSE)) 
 	{
-		xf86shmctl(SHM_SYNAPTICS, XF86IPC_RMID, NULL);
+		if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
+			xf86shmctl(shmid, XF86IPC_RMID, NULL);
 		if((shmid = xf86shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0777 | XF86IPC_CREAT)) == -1) 
 		{
 			xf86Msg(X_ERROR, "%s error shmget\n", local->name);
