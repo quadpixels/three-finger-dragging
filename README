@@ -241,8 +241,8 @@ FAQ
 
 * Gnome scrollbars scroll too much when using tap-to-click. Why?
 
-    The MaxTapTime parameter is probably too big. Try setting it to
-    180. Gnome scrollbars use auto repeat, ie if you press the left
+    The ClickTime parameter is probably too big. Try setting it to
+    100. Gnome scrollbars use auto repeat, ie if you press the left
     mouse button and keep it pressed, the scroll bar will move until
     you release the button. This will lead to problems if the tap time
     is longer than the delay before auto repeat starts.
