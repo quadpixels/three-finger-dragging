@@ -24,7 +24,9 @@ One user reported success with the following parameter settings:
 
 Note though that the auto-dev protocol option doesn't work for ALPS
 devices, so you have to use the "event" protocol instead and set the
-device option to the correct event device, something like this:
+device option to the correct event device. (Look for a mouse device in
+/proc/bus/input/devices and see which event device it is connected
+to.) Here is an example InputDevice section for the XF86Config file.
 
 Section "InputDevice"
   Driver  	"synaptics"
