@@ -26,6 +26,7 @@ struct input_id {
 
 #define EVIOCGID		_IOR('E', 0x02, struct input_id)	/* get device ID */
 #define EVIOCGRAB		_IOW('E', 0x90, int)			/* Grab/Release device */
+#define EVIOCGBIT(ev,len)	_IOC(_IOC_READ, 'E', 0x20 + ev, len)	/* get event bits */
 
 
 #define EV_SYN			0x00
@@ -33,6 +34,7 @@ struct input_id {
 #define EV_REL			0x02
 #define EV_ABS			0x03
 #define EV_MSC			0x04
+#define EV_MAX			0x1f
 
 #define SYN_REPORT		0
 
@@ -54,6 +56,8 @@ struct input_id {
 #define BTN_TOOL_FINGER		0x145
 #define BTN_TOOL_DOUBLETAP	0x14d
 #define BTN_TOOL_TRIPLETAP	0x14e
+
+#define KEY_MAX			0x1ff
 
 #define REL_X			0x00
 #define REL_Y			0x01

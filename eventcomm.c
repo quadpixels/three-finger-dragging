@@ -23,20 +23,13 @@
 #include <xf86.h>
 
 
-
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
-/* list of supported devices */
-static struct device_id_table {
-    unsigned short bustype;
-    unsigned short vendor;
-    unsigned short product;
-} device_id_table[] = {
-    { BUS_I8042, 0x0002, PSMOUSE_SYNAPTICS },
-    { BUS_USB, USB_VENDOR_ID_SYNAPTICS, USB_DEVICE_ID_CPAD },
-    { 0, 0, 0 }
-};
-
+#define LONG_BITS (sizeof(long) * 8)
+#define NBITS(x) (((x) + LONG_BITS - 1) / LONG_BITS)
+#define OFF(x)   ((x) % LONG_BITS)
+#define LONG(x)  ((x) / LONG_BITS)
+#define TEST_BIT(bit, array) (array[LONG(bit)] & (1 << OFF(bit)))
 
 /*****************************************************************************
  *	Function Definitions
@@ -60,52 +53,47 @@ EventDeviceOffHook(LocalDevicePtr local)
 }
 
 static Bool
-event_query_is_synaptics(int fd)
+event_query_is_touchpad(int fd)
 {
-    struct input_id id;
-    int ret, i;
-
-    SYSCALL(ret = ioctl(fd, EVIOCGID, &id));
-    if (ret >= 0) {
-	for (i = 0; device_id_table[i].bustype; i++) {
-	    if ((id.bustype == device_id_table[i].bustype) &&
-		(id.vendor == device_id_table[i].vendor) &&
-		(id.product == device_id_table[i].product)) {
-		return TRUE;
-	    }
-	}
-    }
-    return FALSE;
-}
-
-static Bool
-event_query_is_alps(int fd)
-{
-    struct input_id id;
     int ret;
+    unsigned long evbits[NBITS(KEY_MAX)];
 
-    SYSCALL(ret = ioctl(fd, EVIOCGID, &id));
-    if (ret >= 0) {
-	if ((id.bustype == BUS_I8042) &&
-	    (id.vendor == 0x0002) &&
-	    (id.product == PSMOUSE_ALPS)) {
-	    return TRUE;
-	}
-    }
+    /* Check for ABS_X, ABS_Y, ABS_PRESSURE and BTN_TOOL_FINGER */
 
-    return FALSE;
+    SYSCALL(ret = ioctl(fd, EVIOCGBIT(0, EV_MAX), evbits));
+    if (ret < 0)
+	return FALSE;
+    if (!TEST_BIT(EV_SYN, evbits) ||
+	!TEST_BIT(EV_ABS, evbits) ||
+	!TEST_BIT(EV_KEY, evbits))
+	return FALSE;
+
+    SYSCALL(ret = ioctl(fd, EVIOCGBIT(EV_ABS, KEY_MAX), evbits));
+    if (ret < 0)
+	return FALSE;
+    if (!TEST_BIT(ABS_X, evbits) ||
+	!TEST_BIT(ABS_Y, evbits) ||
+	!TEST_BIT(ABS_PRESSURE, evbits))
+	return FALSE;
+
+    SYSCALL(ret = ioctl(fd, EVIOCGBIT(EV_KEY, KEY_MAX), evbits));
+    if (ret < 0)
+	return FALSE;
+    if (!TEST_BIT(BTN_TOOL_FINGER, evbits))
+	return FALSE;
+
+    return TRUE;
 }
 
 static Bool
 EventQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 {
-    if (event_query_is_synaptics(local->fd))
-	xf86Msg(X_PROBED, "%s synaptics touchpad found\n", local->name);
-    else if (event_query_is_alps(local->fd))
-	xf86Msg(X_PROBED, "%s ALPS touchpad found\n", local->name);
+    if (event_query_is_touchpad(local->fd)) {
+	xf86Msg(X_PROBED, "%s touchpad found\n", local->name);
+	return TRUE;
+    }
 
-    /* Always return true. The device could be an ALPS touchpad in disguise. */
-    return TRUE;
+    return FALSE;
 }
 
 static Bool
@@ -263,8 +251,7 @@ EventAutoDevProbe(LocalDevicePtr local)
 	    }
 	}
 	have_evdev = TRUE;
-	is_touchpad = (event_query_is_synaptics(fd) ||
-		       event_query_is_alps(fd));
+	is_touchpad = event_query_is_touchpad(fd);
 	SYSCALL(close(fd));
 	if (is_touchpad) {
 	    xf86Msg(X_PROBED, "%s auto-dev sets device to %s\n",
