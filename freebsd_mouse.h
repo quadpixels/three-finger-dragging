@@ -23,11 +23,7 @@ typedef struct mousehw {
 #define MOUSE_SETVARS        _IOW('M', 7, mousevar_t)
 #define MOUSE_READSTATE      _IOWR('M', 8, mousedata_t)
 #define MOUSE_READDATA       _IOWR('M', 9, mousedata_t)
-#define MOUSE_SYNGETHWINFO   _IOR('M', 10, synapticshw_t)
-
-#define MOUSE_SYNAPTICS_CMD	_IOW('M', 10, char)
-#define MOUSE_SYNAPTICS_INFO _IOW('M', 11, char)
-#define MOUSE_SYNAPTICS_ENABLE_PASSTHROUGH _IOW('M', 12, char)
+#define MOUSE_SYN_GETHWINFO  _IOR('M', 100, synapticshw_t)
 
 
 typedef struct synapticshw {
