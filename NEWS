@@ -1,3 +1,21 @@
+0.12.5 (2004-03-04)
+- Added more models to the compatibility list.
+- Added support for physical (ie not emulated) middle mouse buttons.
+  Some ALPS models have middle mouse buttons.
+- The is_equal() function in synclient.c forgot to check
+  multibuttons.
+- Reverted ALPS gesture bit handling to the 0.12.1 state, as the code
+  in 0.12.2 breaks tap-and-drag operations on some ALPS touchpads.
+- Added pressure dependent edge motion speed. From Matthias Ihmig.
+- Made it possible to use "edge motion" also when not dragging. From
+  Matthias Ihmig.
+- Made it possible to disable vertical and horizontal scrolling by
+  setting the corresponding parameter to zero. From Matthias Ihmig.
+- Made it possible to have both circular scrolling and
+  vertical/horizontal scrolling enabled at the same time. From
+  Matthias Ihmig.
+- Minor documentation updates.
+
 0.12.4 (2004-02-10)
 - Changed suggested default values in the INSTALL file, to get more
   reasonable speed settings and edge parameters.
