@@ -1,4 +1,4 @@
-TOP = /usr/src/redhat/BUILD/XFree86-4.2.0/xc
+TOP = Xincludes/xc
 XTOP = $(TOP)
 BUILDINCROOT = $(TOP)/exports
 EXTINCSRC = $(XTOP)/include/extensions
