@@ -515,6 +515,8 @@ DeviceOff(DeviceIntPtr dev)
     DBG(3, ErrorF("Synaptics DeviceOff called\n"));
 
     if (local->fd != -1) {
+	TimerFree(priv->timer);
+	priv->timer = NULL;
 	xf86RemoveEnabledDevice(local);
 	priv->proto_ops->DeviceOffHook(local);
 	if (priv->comm.buffer) {
