@@ -183,13 +183,11 @@ FAQ
 
 * How do I use this driver with Linux kernel 2.6.x?
 
-    You need kernel 2.6.0-test6 or later and version 0.11.7 or later
-    of the XFree86 driver. You need to have the "evdev" driver loaded
-    or compiled into the kernel (CONFIG_INPUT_EVDEV). Set the
-    "Protocol" parameter in the X configuration file to
-    "auto-dev". Also, if you set the "Device" parameter to
-    "/dev/psaux", the same X configuration file should work for a
-    2.4.x kernel.
+    You need to have the "evdev" driver loaded or compiled into the
+    kernel (CONFIG_INPUT_EVDEV). Set the "Protocol" parameter in the X
+    configuration file to "auto-dev". Also, if you set the "Device"
+    parameter to "/dev/psaux", the same X configuration file should
+    work for a 2.4.x kernel.
 
     When configuring the kernel, enable PS/2 mouse support
     (CONFIG_MOUSE_PS2).
