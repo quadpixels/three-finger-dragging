@@ -541,7 +541,7 @@ ReadInput(LocalDevicePtr local)
 	/* 
 	 * set blocking to -1 on the first call because we know there is data to
 	 * read. Xisb automatically clears it after one successful read so that
-	 * succeeding reads are preceeded buy a select with a 0 timeout to prevent
+	 * succeeding reads are preceeded by a select with a 0 timeout to prevent
 	 * read from blocking indefinately.
 	 */
 	XisbBlockDuration(priv->buffer, -1);
