@@ -607,25 +607,25 @@ ReadInput(LocalDevicePtr local)
 		/* tap processing */
 		if(priv->tap && 
 		   (DIFF_TIME(priv->count_packet, priv->count_packet_tapping) < para->tap_time)) {
-			left  = priv->tap_left;
-			mid   = priv->tap_mid;
-			right = priv->tap_right;
+			left  |= priv->tap_left;
+			mid   |= priv->tap_mid;
+			right |= priv->tap_right;
 		} else {
 			priv->tap = FALSE;
 		}
 
 		/* drag processing */
 		if(priv->drag) {
-			left  = priv->tap_left;
-			mid   = priv->tap_mid;
-			right = priv->tap_right;
+			left  |= priv->tap_left;
+			mid   |= priv->tap_mid;
+			right |= priv->tap_right;
 		}
 
 		/* double tap processing */
 		if(priv->doubletap && !priv->finger_flag) {
-			left = priv->tap_left;
-			mid = priv->tap_mid;
-			right = priv->tap_right;
+			left  |= priv->tap_left;
+			mid   |= priv->tap_mid;
+			right |= priv->tap_right;
 			priv->doubletap = FALSE;
 		}
 
