@@ -47,7 +47,6 @@ typedef struct _SynapticsSHM
     /* Parameter data */
     int	left_edge, right_edge, top_edge, bottom_edge; /* edge coordinates absolute */
     int	finger_low, finger_high;	    /* finger detection values in Z-values */
-    Bool palm_detection;		    /* Enable palm detection heuristics */
     unsigned long tap_time;
     int tap_move;			    /* max. tapping time and movement in packets and coord. */
     unsigned long tap_time_2;		    /* max. tapping time for double taps */
@@ -73,6 +72,9 @@ typedef struct _SynapticsSHM
     double scroll_dist_circ;		    /* Scrolling angle radians */
     int circular_trigger;		    /* Trigger area for circular scrolling */
     Bool circular_pad;			    /* Edge has an oval or circular shape */
+    Bool palm_detect;			    /* Enable Palm Detection */
+    int palm_min_width;			    /* Palm detection width */
+    int palm_min_z;			    /* Palm detection depth */
 } SynapticsSHM;
 
 /*

@@ -308,7 +308,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->bottom_edge = xf86SetIntOption(local->options, "BottomEdge", 4000);
     pars->finger_low = xf86SetIntOption(local->options, "FingerLow", 25);
     pars->finger_high = xf86SetIntOption(local->options, "FingerHigh", 30);
-    pars->palm_detection = xf86SetBoolOption(local->options, "PalmDetection", TRUE);
     pars->tap_time = xf86SetIntOption(local->options, "MaxTapTime", 180);
     pars->tap_move = xf86SetIntOption(local->options, "MaxTapMove", 220);
     pars->tap_time_2 = xf86SetIntOption(local->options, "MaxDoubleTapTime", 180);
@@ -338,6 +337,9 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->circular_scrolling = xf86SetBoolOption(local->options, "CircularScrolling", FALSE);
     pars->circular_trigger   = xf86SetIntOption(local->options, "CircScrollTrigger", 0);
     pars->circular_pad       = xf86SetBoolOption(local->options, "CircularPad", FALSE);
+    pars->palm_detect        = xf86SetBoolOption(local->options, "PalmDetect", TRUE);
+    pars->palm_min_width     = xf86SetIntOption(local->options, "PalmMinWidth", 10);
+    pars->palm_min_z         = xf86SetIntOption(local->options, "PalmMinZ", 200);
 
     str_par = xf86FindOptionValue(local->options, "MinSpeed");
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->min_speed) != 1))
@@ -821,12 +823,12 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
     finger = (((hw->z > para->finger_high) && !priv->finger_flag) ||
 	      ((hw->z > para->finger_low)  &&  priv->finger_flag));
 
-    if (!para->palm_detection)
-	return finger;
+    if (!para->palm_detect)
+        return finger;
 
     /* palm detection */
     if (finger) {
-	if ((hw->z > 200) && (hw->fingerWidth > 10))
+	if ((hw->z > para->palm_min_z) && (hw->fingerWidth > para->palm_min_width))
 	    priv->palm = TRUE;
     } else {
 	priv->palm = FALSE;
@@ -847,9 +849,9 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 	    finger = FALSE;
 	else if (hw->z < priv->prev_z - 5)	/* z not stable, may be a palm */
 	    finger = FALSE;
-	else if (hw->z > 200)			/* z too large -> probably palm */
+	else if (hw->z > para->palm_min_z)	/* z too large -> probably palm */
 	    finger = FALSE;
-	else if (hw->fingerWidth > 10)		/* finger width too large -> probably palm */
+	else if (hw->fingerWidth > para->palm_min_width) /* finger width too large -> probably palm */
 	    finger = FALSE;
     }
     priv->prev_z = hw->z;
