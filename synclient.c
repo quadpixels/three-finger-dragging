@@ -160,7 +160,7 @@ static void monitor(SynapticsSHM* synshm, int delay)
 static void usage()
 {
 	fprintf(stderr, "Usage: synclient [-m interval] [-h] [-l] [-?] [var1=value1 [var2=value2] ...]\n");
-	fprintf(stderr, "  -m monitor changes to the touchpad state. interval specifies how often\n"
+	fprintf(stderr, "  -m monitor changes to the touchpad state.\n"
 					"     interval specifies how often (in ms) to poll the touchpad state\n");
 	fprintf(stderr, "  -h Show detected hardware properties\n");
 	fprintf(stderr, "  -l List current user settings\n");
