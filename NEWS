@@ -1,3 +1,22 @@
+0.11.4 (2003-09-22)
+- Reset the touchpad if it has been out of sync for too long. (By
+  Hartwig Felger, cleaned up somewhat by me.) The synaptics manual
+  explains that the touchpad can revert to relative mode after a power
+  glitch or electrostatic discharge.
+- Created a helper macro to get rid of all the ugly "#ifdef DEBUG" in
+  ps2comm.c.
+- Made "make tags" work for emacs.
+- Changed tab size from 4 to the standard value 8. Reindented code so
+  that it still looks sane.
+- Fixed spelling errors.
+- synaptics: Added "Acer 661 LCi" to the compatibility list.
+- Made it possible to disable the touchpad at runtime. (Patch from
+  Jörg Bösner.
+- Clarified description of FingerLow/FingerHigh parameters.
+- Added "DELL Latitude CPi" to the compatibility list.
+- Changed the identifier for the synaptics protocol to match kernel
+  2.6.0-test5-bk8.
+
 0.11.3p11 (2003-07-31)
 - When setting the mode byte, don't set bits that the touchpad doesn't
   understand. Those bits are reserved and setting them can lead to
