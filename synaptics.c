@@ -1130,6 +1130,16 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
 #define HIST(a) (priv->move_hist[((priv->count_packet_finger-(a))%SYNAPTICS_MOVE_HISTORY)])
 
+/*
+ * Estimate the slope for the data sequence [x3, x2, x1, x0] by using
+ * linear regression to fit a line to the data and use the slope of the
+ * line.
+ */
+static double estimate_delta(double x0, double x1, double x2, double x3)
+{
+    return x0 * 0.3 + x1 * 0.1 - x2 * 0.1 - x3 * 0.3;
+}
+
 static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 			  edge_type edge, int *dxP, int *dyP)
 {
@@ -1165,8 +1175,8 @@ static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    int x_edge_speed = 0;
 	    int y_edge_speed = 0;
 	    double dtime = (hw->millis - HIST(1).millis) / 1000.0;
-	    dx = hw->x * 0.3 + HIST(1).x * 0.1 - HIST(2).x * 0.1 - HIST(3).x * 0.3;
-	    dy = hw->y * 0.3 + HIST(1).y * 0.1 - HIST(2).y * 0.1 - HIST(3).y * 0.3;
+	    dx = estimate_delta(hw->x, HIST(0).x, HIST(1).x, HIST(2).x);
+	    dy = estimate_delta(hw->y, HIST(0).y, HIST(1).y, HIST(2).y);
 
 	    if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always) {
 		int minZ = para->edge_motion_min_z;
