@@ -52,26 +52,7 @@ typedef unsigned char byte;
 Bool
 synaptics_reset(int fd);
 
-struct synapticshw;
-Bool
-synaptics_get_hwinfo(int fd, struct synapticshw *synhw);
-
-Bool
-synaptics_set_mode(int fd, byte cmd);
-
-Bool
-synaptics_read_mode(int fd, unsigned char *mode);
-
-Bool
-SynapticsDisableDevice(int fd);
-
 Bool
 SynapticsEnableDevice(int fd);
-
-Bool
-QueryIsSynaptics(int fd);
-
-Bool
-SynapticsResetPassthrough(int fd);
 
 #endif /* _PS2COMM_H_ */

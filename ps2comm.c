@@ -224,7 +224,7 @@ ps2_putbyte_passthrough(int fd, byte c)
 /*
  * Set the synaptics touchpad mode byte by special commands
  */
-Bool
+static Bool
 synaptics_set_mode(int fd, byte mode)
 {
     PS2DBG(ErrorF("set mode byte to: 0x%02X\n", mode));
@@ -262,7 +262,7 @@ synaptics_reset(int fd)
     return !Success;
 }
 
-Bool
+static Bool
 SynapticsResetPassthrough(int fd)
 {
     byte ack;
@@ -376,7 +376,7 @@ synaptics_identify(int fd, struct synapticshw *synhw)
     return !Success;
 }
 
-Bool
+static Bool
 synaptics_get_hwinfo(int fd, struct synapticshw *synhw)
 {
     if (synaptics_identify(fd, synhw) != Success)
@@ -391,46 +391,20 @@ synaptics_get_hwinfo(int fd, struct synapticshw *synhw)
     return Success;
 }
 
-/*
- * read mode byte
- */
-Bool
-synaptics_read_mode(int fd, unsigned char *mode)
-{
-    byte modes[3];
-
-    PS2DBG(ErrorF("Read mode byte...\n"));
-
-    if ((ps2_send_cmd(fd, SYN_QUE_MODES) == Success) &&
-	(ps2_getbyte(fd, &modes[0]) == Success) &&
-	(ps2_getbyte(fd, &modes[1]) == Success) &&
-	(ps2_getbyte(fd, &modes[2]) == Success)) {
-
-	*mode = modes[2];
-	PS2DBG(ErrorF("modes byte %02X%02X%02X\n", modes[0], modes[1], modes[2]));
-	if ((modes[0] == 0x3B) && (modes[1] == 0x47)) {
-	    PS2DBG(ErrorF("...done.\n"));
-	    return Success;
-	}
-    }
-    PS2DBG(ErrorF("...failed.\n"));
-    return !Success;
-}
-
 Bool
 SynapticsEnableDevice(int fd)
 {
     return ps2_putbyte(fd, PS2_CMD_ENABLE);
 }
 
-Bool
+static Bool
 SynapticsDisableDevice(int fd)
 {
     xf86FlushInput(fd);
     return ps2_putbyte(fd, PS2_CMD_DISABLE);
 }
 
-Bool
+static Bool
 QueryIsSynaptics(int fd)
 {
     struct synapticshw synhw;
