@@ -89,6 +89,7 @@ static struct Parameter params[] = {
     DEFINE_PAR("PalmDetect",           palm_detect,             PT_BOOL,   0, 1),
     DEFINE_PAR("PalmMinWidth",         palm_min_width,          PT_INT,    0, 15),
     DEFINE_PAR("PalmMinZ",             palm_min_z,              PT_INT,    0, 255),
+    DEFINE_PAR("CoastingSpeed",        coasting_speed,          PT_DOUBLE, 0, 20),
     { 0, 0, 0, 0, 0 }
 };
 

@@ -394,6 +394,9 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     str_par = xf86FindOptionValue(local->options, "CircScrollDelta");
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->scroll_dist_circ) != 1))
 	pars->scroll_dist_circ = 0.1;
+    str_par = xf86FindOptionValue(local->options, "CoastingSpeed");
+    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->coasting_speed) != 1))
+	pars->coasting_speed = 0.0;
 
     if (pars->circular_trigger < 0 || pars->circular_trigger > 8) {
 	xf86Msg(X_WARNING, "Unknown circular scrolling trigger, using 0 (edges)");
@@ -1274,15 +1277,51 @@ struct ScrollData {
 };
 
 static void
+start_coasting(SynapticsPrivate *priv, edge_type edge)
+{
+    SynapticsSHM *para = priv->synpara;
+
+    if ((priv->scroll_packet_count > 3) && (para->coasting_speed > 0.0)) {
+	double pkt_time = (HIST(0).millis - HIST(3).millis) / 1000.0;
+	if (priv->vert_scroll_on ||
+	    (priv->circ_scroll_on && priv->circ_scroll_vert)) {
+	    double dy = estimate_delta(HIST(0).y, HIST(1).y, HIST(2).y, HIST(3).y);
+	    int sdelta = para->scroll_dist_vert;
+	    if ((edge & RIGHT_EDGE) && pkt_time > 0 && sdelta > 0) {
+		double scrolls_per_sec = dy / pkt_time / sdelta;
+		if (fabs(scrolls_per_sec) >= para->coasting_speed)
+		    priv->autoscroll_yspd = scrolls_per_sec;
+	    }
+	} else {
+	    double dx = estimate_delta(HIST(0).x, HIST(1).x, HIST(2).x, HIST(3).x);
+	    int sdelta = para->scroll_dist_horiz;
+	    if ((edge & BOTTOM_EDGE) && pkt_time > 0 && sdelta > 0) {
+		double scrolls_per_sec = dx / pkt_time / sdelta;
+		if (fabs(scrolls_per_sec) >= para->coasting_speed)
+		    priv->autoscroll_xspd = scrolls_per_sec;
+	    }
+	}
+    }
+    priv->scroll_packet_count = 0;
+    priv->autoscroll_y = 0.0;
+    priv->autoscroll_x = 0.0;
+}
+
+static int
 HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		edge_type edge, Bool finger, struct ScrollData *sd)
 {
     SynapticsSHM *para = priv->synpara;
+    Bool scroll_stop = FALSE;
+    int delay = 1000000000;
 
     sd->left = sd->right = sd->up = sd->down = 0;
 
     /* scroll detection */
     if (finger && !priv->finger_flag) {
+	priv->autoscroll_xspd = 0;
+	priv->autoscroll_yspd = 0;
+	priv->scroll_packet_count = 0;
 	if (para->circular_scrolling) {
 	    if ((para->circular_trigger == 0 && edge) ||
 		(para->circular_trigger == 1 && edge & TOP_EDGE) ||
@@ -1315,14 +1354,20 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     if (priv->circ_scroll_on && !finger) {
 	/* circular scroll locks in until finger is raised */
 	DBG(7, ErrorF("cicular scroll off\n"));
-	priv->circ_scroll_on = FALSE;
+	scroll_stop = TRUE;
     }
     if (priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger)) {
 	DBG(7, ErrorF("vert edge scroll off\n"));
-	priv->vert_scroll_on = FALSE;
+	scroll_stop = TRUE;
     }
     if (priv->horiz_scroll_on && (!(edge & BOTTOM_EDGE) || !finger)) {
 	DBG(7, ErrorF("horiz edge scroll off\n"));
+	scroll_stop = TRUE;
+    }
+    if (scroll_stop) {
+	start_coasting(priv, edge);
+	priv->circ_scroll_on = FALSE;
+	priv->vert_scroll_on = FALSE;
 	priv->horiz_scroll_on = FALSE;
     }
 
@@ -1347,6 +1392,9 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    DBG(7, ErrorF("switching to circular scrolling\n"));
 	}
     }
+
+    if (priv->vert_scroll_on || priv->horiz_scroll_on || priv->circ_scroll_on)
+	priv->scroll_packet_count++;
 
     if (priv->vert_scroll_on) {
 	/* + = down, - = up */
@@ -1400,6 +1448,35 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    }
 	}
     }
+
+    if (priv->autoscroll_yspd) {
+	double dtime = (hw->millis - HIST(0).millis) / 1000.0;
+	priv->autoscroll_y += priv->autoscroll_yspd * dtime;
+	delay = MIN(delay, 20);
+	while (priv->autoscroll_y > 1.0) {
+	    sd->down++;
+	    priv->autoscroll_y -= 1.0;
+	}
+	while (priv->autoscroll_y < -1.0) {
+	    sd->up++;
+	    priv->autoscroll_y += 1.0;
+	}
+    }
+    if (priv->autoscroll_xspd) {
+	double dtime = (hw->millis - HIST(0).millis) / 1000.0;
+	priv->autoscroll_x += priv->autoscroll_xspd * dtime;
+	delay = MIN(delay, 20);
+	while (priv->autoscroll_x > 1.0) {
+	    sd->right++;
+	    priv->autoscroll_x -= 1.0;
+	}
+	while (priv->autoscroll_x < -1.0) {
+	    sd->left++;
+	    priv->autoscroll_x += 1.0;
+	}
+    }
+
+    return delay;
 }
 
 /*
@@ -1497,7 +1574,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     if (timeleft > 0)
 	delay = MIN(delay, timeleft);
 
-    HandleScrolling(priv, hw, edge, finger, &scroll);
+    timeleft = HandleScrolling(priv, hw, edge, finger, &scroll);
+    if (timeleft > 0)
+	delay = MIN(delay, timeleft);
 
     timeleft = ComputeDeltas(priv, hw, edge, &dx, &dy);
     delay = MIN(delay, timeleft);

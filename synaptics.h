@@ -81,6 +81,7 @@ typedef struct _SynapticsSHM
     Bool palm_detect;			    /* Enable Palm Detection */
     int palm_min_width;			    /* Palm detection width */
     int palm_min_z;			    /* Palm detection depth */
+    double coasting_speed;		    /* Coasting threshold scrolling speed */
 } SynapticsSHM;
 
 /*
@@ -181,6 +182,11 @@ typedef struct _SynapticsPrivateRec
     Bool circ_scroll_on;		/* scrolling flag */
     Bool circ_scroll_vert;		/* True: Generate vertical scroll events
 					   False: Generate horizontal events */
+    double autoscroll_xspd;		/* Horizontal coasting speed */
+    double autoscroll_yspd;		/* Vertical coasting speed */
+    double autoscroll_x;		/* Accumulated horizontal coasting scroll */
+    double autoscroll_y;		/* Accumulated vertical coasting scroll */
+    int scroll_packet_count;		/* Scroll duration */
     double frac_x, frac_y;		/* absolute -> relative fraction */
     enum MidButtonEmulation mid_emu_state;	/* emulated 3rd button */
     int repeatButtons;			/* buttons for repeat */

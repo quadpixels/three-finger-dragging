@@ -131,6 +131,7 @@ CircularPad	        Bool	Instead of being a rectangle, the edge is the ellipse
 PalmDetect		Bool	If palm detection should be enabled
 PalmMinWidth		Int	Minimum width at which touch is considered a palm
 PalmMinZ		Int	Minimum finger pressure at which touch is considered a palm
+CoastingSpeed		Float	Coasting threshold scrolling speed. 0 disables coasting.
 
 The LeftEdge, RightEdge, TopEdge and BottomEdge parameters are used to
 define the edge and corner areas of the touchpad. The parameters split
@@ -222,6 +223,16 @@ fast scrolling and large circles for better control. When used
 together with vertical scrolling, hitting the upper or lower right
 corner will seamlessly switch over from vertical to circular
 scrolling.
+
+Coasting is enabled by setting the CoastingSpeed parameter to a
+non-zero value. When coasting is enabled, horizontal/vertical
+scrolling can continue after the finger is released from the
+lower/right edge of the touchpad. The driver computes the scrolling
+speed corresponding to the finger speed immediately before the finger
+leaves the touchpad. If this scrolling speed is larger than the
+CoastingSpeed parameter (measured in scroll events per second), the
+scrolling will continue with the same speed in the same direction
+until the finger touches the touchpad again.
 
 
 FAQ
