@@ -50,4 +50,8 @@
 
 typedef unsigned char byte;
 
+
+struct SynapticsHwInfo;
+void ps2_print_ident(const struct SynapticsHwInfo *synhw);
+
 #endif /* _PS2COMM_H_ */

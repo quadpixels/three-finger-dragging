@@ -31,11 +31,10 @@
 #include "psmcomm.h"
 #include "synproto.h"
 #include "synaptics.h"
+#include "ps2comm.h"			    /* ps2_print_ident() */
 #include <xf86.h>
 
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
-
-void ps2_print_ident(const struct SynapticsHwInfo *synhw);
 
 /*
  * Identify Touchpad
