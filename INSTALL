@@ -67,6 +67,10 @@ Section "ServerLayout"
   InputDevice "Mouse[1]"  "CorePointer"
 ...
 
+   Note! You can not have more than one core pointer, so if you want
+   to use an external mouse too, you have to set all mouse input
+   devices except one to "AlwaysCore" instead of "CorePointer".
+
 7. Start/Restart the X Server. If the touchpad doesn't work:
    a) Check the XFree Logfiles
    b) Try to start the XServer with 'startx -- -logverbose 8' for more
