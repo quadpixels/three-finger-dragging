@@ -1128,14 +1128,15 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     return delay;
 }
 
-#define MOVE_HIST(a) (priv->move_hist[((priv->count_packet_finger-(a))%SYNAPTICS_MOVE_HISTORY)])
+#define HIST(a) (priv->move_hist[((priv->count_packet_finger-(a))%SYNAPTICS_MOVE_HISTORY)])
 
 static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 			  edge_type edge, int *dxP, int *dyP)
 {
     SynapticsSHM *para = priv->synpara;
     Bool moving_state;
-    int dist, dx, dy;
+    int dist;
+    double dx, dy;
     double speed, integral;
     long delay = 1000000000;
 
@@ -1163,9 +1164,9 @@ static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    double tmpf;
 	    int x_edge_speed = 0;
 	    int y_edge_speed = 0;
-	    double dtime = (hw->millis - MOVE_HIST(1).millis) / 1000.0;
-	    dx = (hw->x - MOVE_HIST(2).x) / 2;
-	    dy = (hw->y - MOVE_HIST(2).y) / 2;
+	    double dtime = (hw->millis - HIST(1).millis) / 1000.0;
+	    dx = hw->x * 0.3 + HIST(1).x * 0.1 - HIST(2).x * 0.1 - HIST(3).x * 0.3;
+	    dy = hw->y * 0.3 + HIST(1).y * 0.1 - HIST(2).y * 0.1 - HIST(3).y * 0.3;
 
 	    if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always) {
 		int minZ = para->edge_motion_min_z;
@@ -1236,9 +1237,9 @@ static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     *dyP = dy;
 
     /* generate a history of the absolute positions */
-    MOVE_HIST(0).x = hw->x;
-    MOVE_HIST(0).y = hw->y;
-    MOVE_HIST(0).millis = hw->millis;
+    HIST(0).x = hw->x;
+    HIST(0).y = hw->y;
+    HIST(0).millis = hw->millis;
 
     return delay;
 }
