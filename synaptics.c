@@ -1,7 +1,7 @@
 /* 
  *   2002 Peter Osterlund <petero2@telia.com>
- *     patches for fast scrolling, plam detection, dege motion, 
- *     hozizontal scrolling
+ *     patches for fast scrolling, palm detection, edge motion, 
+ *     horizontal scrolling
  *
  *   2002 S. Lehner <sam_x@bluemail.ch>
  *     for newer Firmware (5.8) protocol changes for 3rd to 6th button 
