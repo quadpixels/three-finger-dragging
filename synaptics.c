@@ -121,7 +121,6 @@ static Bool ConvertProc(LocalDevicePtr, int, int, int, int, int, int, int, int, 
 static Bool DeviceInit(DeviceIntPtr);
 static Bool DeviceOn(DeviceIntPtr);
 static Bool DeviceOff(DeviceIntPtr);
-static Bool DeviceInit(DeviceIntPtr);
 
 
 InputDriverRec SYNAPTICS = {
