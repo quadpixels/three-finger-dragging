@@ -778,6 +778,49 @@ HandleMidButtonEmulation(SynapticsPrivatePtr priv, struct SynapticsHwState* hw, 
 	return mid;
 }
 
+static int
+SynapticsDetectFinger(SynapticsPrivatePtr priv, struct SynapticsHwState* hw)
+{
+	SynapticsSHMPtr para = priv->synpara;
+	int finger;
+
+	/* finger detection thru pressure and threshold */
+	finger = (((hw->z > para->finger_high) && !priv->finger_flag) ||
+			  ((hw->z > para->finger_low)  &&  priv->finger_flag));
+
+	/* palm detection */
+	if(finger) {
+		if((hw->z > 200) && (hw->w > 10))
+			priv->palm = TRUE;
+	} else {
+		priv->palm = FALSE;
+	}
+	if(hw->x == 0)
+		priv->avg_w = 0;
+	else
+		priv->avg_w += (hw->w - priv->avg_w + 1) / 2;
+	if(finger && !priv->finger_flag) {
+		int safe_w = MAX(hw->w, priv->avg_w);
+		if(hw->w < 2)
+			finger = TRUE;				/* more than one finger -> not a palm */
+		else if((safe_w < 6) && (priv->prev_z < para->finger_high))
+			finger = TRUE;				/* thin finger, distinct touch -> not a palm */
+		else if((safe_w < 7) && (priv->prev_z < para->finger_high / 2))
+			finger = TRUE;				/* thin finger, distinct touch -> not a palm */
+		else if(hw->z > priv->prev_z + 1) /* z not stable, may be a palm */
+			finger = FALSE;
+		else if(hw->z < priv->prev_z - 5) /* z not stable, may be a palm */
+			finger = FALSE;
+		else if(hw->z > 200)			/* z too large -> probably palm */
+			finger = FALSE;
+		else if(hw->w > 10)				/* w too large -> probably palm */
+			finger = FALSE;
+	}
+	priv->prev_z = hw->z;
+
+	return finger;
+}
+
 /*
  * React on changes in the hardware state. This function is called every time
  * the hardware state changes. The return value is used to specify how many
@@ -837,39 +880,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 			hw->up = hw->down = FALSE;
 		}
 
-	/* finger detection thru pressure an threshold */
-	finger = (((hw->z > para->finger_high) && !priv->finger_flag) ||
-			  ((hw->z > para->finger_low)  &&  priv->finger_flag));
-
-	/* palm detection */
-	if(finger) {
-		if((hw->z > 200) && (hw->w > 10))
-			priv->palm = TRUE;
-	} else {
-		priv->palm = FALSE;
-	}
-	if(hw->x == 0)
-		priv->avg_w = 0;
-	else
-		priv->avg_w += (hw->w - priv->avg_w + 1) / 2;
-	if(finger && !priv->finger_flag) {
-		int safe_w = MAX(hw->w, priv->avg_w);
-		if(hw->w < 2)
-			finger = TRUE;				/* more than one finger -> not a palm */
-		else if((safe_w < 6) && (priv->prev_z < para->finger_high))
-			finger = TRUE;				/* thin finger, distinct touch -> not a palm */
-		else if((safe_w < 7) && (priv->prev_z < para->finger_high / 2))
-			finger = TRUE;				/* thin finger, distinct touch -> not a palm */
-		else if(hw->z > priv->prev_z + 1) /* z not stable, may be a palm */
-			finger = FALSE;
-		else if(hw->z < priv->prev_z - 5) /* z not stable, may be a palm */
-			finger = FALSE;
-		else if(hw->z > 200)				/* z too large -> probably palm */
-			finger = FALSE;
-		else if(hw->w > 10)				/* w too large -> probably palm */
-			finger = FALSE;
-	}
-	priv->prev_z = hw->z;
+	finger = SynapticsDetectFinger(priv, hw);
 
 	/* tap and drag detection */
 	if(priv->palm) {
