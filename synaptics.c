@@ -70,6 +70,8 @@
  *	Local Variables and Types
  ****************************************************************************/
 
+#define MAX_UNSYNC_PACKETS 10				/* i.e. 10 to 60 bytes */
+
 typedef enum {
 	BOTTOM_EDGE = 1,
 	TOP_EDGE = 2,
@@ -1604,17 +1606,24 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 		if (priv->protoBufTail >= 6) {
 			if (!PacketOk(priv)) {
 				int i;
-				priv->inSync = FALSE;
 				for (i = 0; i < priv->protoBufTail - 1; i++)
 					priv->protoBuf[i] = priv->protoBuf[i + 1];
 				priv->protoBufTail--;
+				priv->outOfSync++;
+				if(priv->outOfSync > MAX_UNSYNC_PACKETS)
+				{
+					priv->outOfSync = 0;
+					DBG(3, ErrorF("Synaptics synchronization lost too long -> reset touchpad.\n"));
+					QueryHardware(local); /* including a reset */
+					continue;
+				}
 			}
 		}
 
 		if(priv->protoBufTail >= 6)
 		{ /* Full packet received */
-			if(!priv->inSync) {
-				priv->inSync = TRUE;
+			if(priv->outOfSync > 0) {
+				priv->outOfSync = 0;
 				DBG(4, ErrorF("Synaptics driver resynced.\n"));
 			}
 			priv->protoBufTail = 0;

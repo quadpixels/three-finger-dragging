@@ -111,7 +111,7 @@ typedef struct _SynapticsPrivateRec
 	XISBuffer *buffer;
 	unsigned char protoBuf[6];			/* Buffer for Packet */
 	unsigned char lastByte;				/* letztes gelesene byte */
-	Bool inSync;						/* Packets in sync */
+	int outOfSync;						/* How many consecutive incorrect packets we have received */
 	int protoBufTail;
 	int fifofd;		 					/* fd for fifo */
 	SynapticsTapRec touch_on;			/* data when the touchpad is touched */
