@@ -1224,10 +1224,16 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
 			case 0x116:						/* BTN_BACK */
 				priv->hwState.down = (ev.value ? TRUE : FALSE);
 				break;
-			case 0x113:						/* BTN_SIDE cb_l */
+			case 0x100:						/* BTN_0 (multi-btn-0) */
+				priv->hwState.up = (ev.value ? TRUE : FALSE);
+				break;
+			case 0x101:						/* BTN_1 (multi-btn-1) */
+				priv->hwState.down = (ev.value ? TRUE : FALSE);
+				break;
+			case 0x102:						/* BTN_2 (multi-btn-2) */
 				priv->hwState.cbLeft = (ev.value ? TRUE : FALSE);
 				break;
-			case 0x114:						/* BTN_EXTRA cb_r */
+			case 0x103:						/* BTN_3 (multi-btn-3) */
 				priv->hwState.cbRight = (ev.value ? TRUE : FALSE);
 				break;
 			}
