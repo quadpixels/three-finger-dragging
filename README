@@ -163,9 +163,9 @@ FAQ
     them manually if they don't exist already. (Look at
     /proc/bus/input/devices to figure out how many nodes you need.)
 
-	     # mkdev /dev/input/event0 c 13 64
-	     # mkdev /dev/input/event1 c 13 65
-	     # mkdev /dev/input/event2 c 13 66
+	     # mknod /dev/input/event0 c 13 64
+	     # mknod /dev/input/event1 c 13 65
+	     # mknod /dev/input/event2 c 13 66
 	     ...
 
 * How can I configure tap-to-click behavior?
