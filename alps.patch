@@ -51,15 +51,15 @@ initial announcement have not been dealt with:
 
 
  linux-petero/drivers/input/mouse/Makefile       |    2 
- linux-petero/drivers/input/mouse/alps.c         |  131 ++++++++++++++++++++++++
- linux-petero/drivers/input/mouse/alps.h         |   17 +++
+ linux-petero/drivers/input/mouse/alps.c         |  140 ++++++++++++++++++++++++
+ linux-petero/drivers/input/mouse/alps.h         |   17 ++
  linux-petero/drivers/input/mouse/psmouse-base.c |    7 +
  linux-petero/drivers/input/mouse/psmouse.h      |    1 
- 5 files changed, 157 insertions(+), 1 deletion(-)
+ 5 files changed, 166 insertions(+), 1 deletion(-)
 
 diff -puN drivers/input/mouse/Makefile~alps drivers/input/mouse/Makefile
---- linux/drivers/input/mouse/Makefile~alps	2003-11-12 16:18:59.000000000 +0100
-+++ linux-petero/drivers/input/mouse/Makefile	2003-11-12 16:18:59.000000000 +0100
+--- linux/drivers/input/mouse/Makefile~alps	2003-11-30 13:43:39.000000000 +0100
++++ linux-petero/drivers/input/mouse/Makefile	2003-12-16 20:17:12.000000000 +0100
 @@ -14,4 +14,4 @@ obj-$(CONFIG_MOUSE_PC9800)	+= 98busmouse
  obj-$(CONFIG_MOUSE_PS2)		+= psmouse.o
  obj-$(CONFIG_MOUSE_SERIAL)	+= sermouse.o
@@ -67,9 +67,9 @@ diff -puN drivers/input/mouse/Makefile~alps drivers/input/mouse/Makefile
 -psmouse-objs  := psmouse-base.o logips2pp.o synaptics.o
 +psmouse-objs  := psmouse-base.o logips2pp.o alps.o synaptics.o
 diff -puN drivers/input/mouse/alps.c~alps drivers/input/mouse/alps.c
---- linux/drivers/input/mouse/alps.c~alps	2003-11-12 16:18:59.000000000 +0100
-+++ linux-petero/drivers/input/mouse/alps.c	2003-11-12 16:18:59.000000000 +0100
-@@ -0,0 +1,131 @@
+--- linux/drivers/input/mouse/alps.c~alps	2003-11-30 13:43:39.000000000 +0100
++++ linux-petero/drivers/input/mouse/alps.c	2003-12-16 20:20:59.000000000 +0100
+@@ -0,0 +1,140 @@
 +/*
 + * ALPS touchpad PS/2 mouse driver
 + *
@@ -132,7 +132,13 @@ diff -puN drivers/input/mouse/alps.c~alps drivers/input/mouse/alps.c
 + *
 + * On a dualpoint, {mid,rig,lef}0 are the stick, 1 are the pad.
 + * We just 'or' them together for now.
-+ * We also send 'ges'ture as BTN_TOUCH
++ *
++ * We used to send 'ges'tures as BTN_TOUCH but this made it impossible
++ * to disable tap events in the synaptics driver since the driver
++ * was unable to distinguish a gesture tap from an actual button click.
++ * A tap gesture now creates an emulated touch that the synaptics
++ * driver can interpret as a tap event, if MaxTapTime=0 and
++ * MaxTapMove=0 then the driver will ignore taps.
 + *
 + * The touchpad on an 'Acer Aspire' has 4 buttons:
 + *   left,right,up,down.
@@ -153,6 +159,10 @@ diff -puN drivers/input/mouse/alps.c~alps drivers/input/mouse/alps.c
 +	y = (packet[4] & 0x7f) | ((packet[3] & 0x70)<<(7-4));
 +	z = packet[5];
 +
++	if (packet[2] & 1) {
++		z = 35;
++	}
++
 +	if (z > 0) {
 +		input_report_abs(dev, ABS_X, x);
 +		input_report_abs(dev, ABS_Y, y);
@@ -163,7 +173,6 @@ diff -puN drivers/input/mouse/alps.c~alps drivers/input/mouse/alps.c
 +	if (z > 30) input_report_key(dev, BTN_TOUCH, 1);
 +	if (z < 25) input_report_key(dev, BTN_TOUCH, 0);
 +
-+	left  |= (packet[2]     ) & 1;
 +	left  |= (packet[3]     ) & 1;
 +	right |= (packet[3] >> 1) & 1;
 +	if (packet[0] == 0xff) {
@@ -202,8 +211,8 @@ diff -puN drivers/input/mouse/alps.c~alps drivers/input/mouse/alps.c
 +	return 0;
 +}
 diff -puN drivers/input/mouse/alps.h~alps drivers/input/mouse/alps.h
---- linux/drivers/input/mouse/alps.h~alps	2003-11-12 16:18:59.000000000 +0100
-+++ linux-petero/drivers/input/mouse/alps.h	2003-11-12 16:18:59.000000000 +0100
+--- linux/drivers/input/mouse/alps.h~alps	2003-11-30 13:43:39.000000000 +0100
++++ linux-petero/drivers/input/mouse/alps.h	2003-11-30 13:43:39.000000000 +0100
 @@ -0,0 +1,17 @@
 +/*
 + * ALPS touchpad PS/2 mouse driver
@@ -223,8 +232,8 @@ diff -puN drivers/input/mouse/alps.h~alps drivers/input/mouse/alps.h
 +int ALPS_process_byte(struct psmouse *psmouse, struct pt_regs *regs);
 +#endif
 diff -puN drivers/input/mouse/psmouse-base.c~alps drivers/input/mouse/psmouse-base.c
---- linux/drivers/input/mouse/psmouse-base.c~alps	2003-11-12 16:18:59.000000000 +0100
-+++ linux-petero/drivers/input/mouse/psmouse-base.c	2003-11-12 16:18:59.000000000 +0100
+--- linux/drivers/input/mouse/psmouse-base.c~alps	2003-11-30 13:43:39.000000000 +0100
++++ linux-petero/drivers/input/mouse/psmouse-base.c	2003-12-16 20:17:12.000000000 +0100
 @@ -21,6 +21,7 @@
  #include "psmouse.h"
  #include "synaptics.h"
@@ -254,8 +263,8 @@ diff -puN drivers/input/mouse/psmouse-base.c~alps drivers/input/mouse/psmouse-ba
  
  /*
 diff -puN drivers/input/mouse/psmouse.h~alps drivers/input/mouse/psmouse.h
---- linux/drivers/input/mouse/psmouse.h~alps	2003-11-12 16:18:59.000000000 +0100
-+++ linux-petero/drivers/input/mouse/psmouse.h	2003-11-12 16:18:59.000000000 +0100
+--- linux/drivers/input/mouse/psmouse.h~alps	2003-11-30 13:43:39.000000000 +0100
++++ linux-petero/drivers/input/mouse/psmouse.h	2003-12-16 20:17:12.000000000 +0100
 @@ -9,6 +9,7 @@
  #define PSMOUSE_CMD_GETID	0x02f2
  #define PSMOUSE_CMD_SETRATE	0x10f3
