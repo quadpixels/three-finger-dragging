@@ -55,12 +55,12 @@ DELL Inspiron 7000
 DELL Inspiron 7500
 DELL Inspiron 8000
 DELL Inspiron 8100
-DELL Inspiron 8600	(Requires 2.6 kernel and the ALPS patch)
+DELL Inspiron 8600		(Requires 2.6 kernel and the ALPS patch)
 DELL Latitude C610
 DELL Latitude C640
 DELL Latitude C800
 DELL Latitude CPi
-Dell Latitude D800	(Requires 2.6 kernel and the ALPS patch)
+Dell Latitude D800		(Requires 2.6 kernel and the ALPS patch)
 DELL Latitude L400
 ECS Desknote i-Buddie A900
 Fujitsu-Siemens AMILO D P4 (FH2)
@@ -102,7 +102,8 @@ PowerPro C 3:16
 Samsung GT8800DXV
 Sharp Actius MM10
 Sharp PC-FS2518
-Sony PCG-TR1A		(Requires 2.6 kernel and the ALPS patch)
+Sony PCG-TR1A			(Requires 2.6 kernel and the ALPS patch)
 SONY VAIO GR7/K
 SONY VAIO GRX570
-Toshiba 1410-303	(Requires 2.6 kernel and the ALPS patch)
+Toshiba 1410-303		(Requires 2.6 kernel and the ALPS patch)
+Toshiba Satellite Pro 2100	(Requires 2.6 kernel and the ALPS patch)
