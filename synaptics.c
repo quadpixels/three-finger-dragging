@@ -62,7 +62,7 @@ typedef enum {
 } edge_type;
 
 #define DIFF_TIME(a, b) (((a)>(b))?(a)-(b):(b)-(a))
-#define VERSION "0.10"
+#define VERSION "0.10p1"
 
 static InputInfoPtr
 SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags);
