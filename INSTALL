@@ -99,6 +99,15 @@ The Option "Repeater" is at the moment for testing.
               Option      "Device" "/dev/input/mice"
       ...
 
+   This also applies if you are using a 2.6 linux kernel and the
+   touchpad contains a "pass through" device. Usually a pass through
+   device is a touch stick located in the middle of the keyboard, but
+   it can also be a separate set of buttons located next to the
+   touchpad. If you want the pass through device to be enabled in X,
+   the second InputDevice is needed. If there is a line in
+   /proc/bus/input/devices that begins with "P: Phys=synaptics-pt" it
+   means that the kernel has found a pass through device.
+
 6. Start/Restart the X Server. If the touchpad doesn't work:
    a) Check the XFree log file. This file is usually called
       /var/log/XFree86.0.log.
