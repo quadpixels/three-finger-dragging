@@ -1,3 +1,20 @@
+0.14.1 (2005-03-15)
+- Fix for build problems on Gentoo amd64 systems.
+- Added -p switch to syndaemon to make it record its pid in a pid
+  file. This simplifies init scripts. Based on a patch from maximilian
+  Attems.
+- Made the event auto device detection work even if some
+  /dev/input/event nodes are missing, which can happen when using a
+  udev based system.
+- Fixed alpscomm.c so that the X server doesn't lock up if you
+  incorrectly configure the driver to read from an event device using
+  protocol "alps".
+- Fixed off by one error in alps_process_byte().
+- Improved the "synclient -h" text when running on a 2.6 linux
+  kernel.
+- Some documentation updates.
+- Updated the compatibility list.
+
 0.14.0 (2005-01-06)
 - Configurable palm detection heuristics. From Sean Dilda.
 - Added FastTaps option to make the driver react faster to tapping.
