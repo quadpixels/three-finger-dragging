@@ -442,13 +442,14 @@ DeviceInit(DeviceIntPtr dev)
 }
 
 static int 
-move_distance(int dx, int dy) {
+move_distance(int dx, int dy)
+{
 	return(xf86sqrt((dx * dx) + (dy * dy)));
 }
 
 static edge_type 
-edge_detection( SynapticsPrivatePtr priv, int x, int y ) {
-
+edge_detection( SynapticsPrivatePtr priv, int x, int y )
+{
 	edge_type edge = 0;
 
 	if(x > priv->synpara->right_edge)
