@@ -7,6 +7,7 @@ INSTALLED_X = $(DESTDIR)/usr/X11R6
 LOCAL_X = Xincludes/usr/X11R6
 BINDIR = $(DESTDIR)/usr/local/bin
 MANDIR = $(DESTDIR)/usr/local/man/man1
+LIBDIR = lib
 
 ifeq ($(TOP),)
   # This hack attempts to check if the needed XFree86 header files are installed.
@@ -62,7 +63,7 @@ OBJS = synaptics.o ps2comm.o eventcomm.o psmcomm.o alpscomm.o
 
 all:: synaptics_drv.o synclient syndaemon
 
-install: $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/lib/modules/input/synaptics_drv.o install-man
+install: $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/$(LIBDIR)/modules/input/synaptics_drv.o install-man
 
 install-man: $(MANDIR)/synclient.1 $(MANDIR)/syndaemon.1
 
@@ -78,7 +79,7 @@ $(BINDIR)/synclient : synclient
 $(BINDIR)/syndaemon : syndaemon
 	install -D $< $@
 
-$(INSTALLED_X)/lib/modules/input/synaptics_drv.o : synaptics_drv.o
+$(INSTALLED_X)/$(LIBDIR)/modules/input/synaptics_drv.o : synaptics_drv.o
 	install -D $< $@
 
 synaptics_drv.o: $(OBJS)
@@ -95,7 +96,7 @@ syndaemon.o	: syndaemon.c
 	$(CC) $(CFLAGSCLIENT) -c -o $@ $<
 
 syndaemon	: syndaemon.o
-	$(CC) -o $@ $< -lm -L$(INSTALLED_X)/lib -lXext -lX11
+	$(CC) -o $@ $< -lm -L$(INSTALLED_X)/$(LIBDIR) -lXext -lX11
 
 synaptics.o : synaptics.h synproto.h Makefile
 ps2comm.o   : ps2comm.h synproto.h synaptics.h
