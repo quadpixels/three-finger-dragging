@@ -25,3 +25,6 @@ UpDownScrolling		Bool	If on, the up/down buttons generate button 4/5 events.
 EmulateMidButtonTime	Int	max time (in milliseconds) for middle button emulation.
 TouchpadOff		Bool	If on, the Touchpad is switched off (useful
 				if an external mouse is connected)
+LockedDrags		Bool	If off, a tap and drag gesture ends when you release
+				the finger. If on, the gesture is active until you
+				tap a second time.

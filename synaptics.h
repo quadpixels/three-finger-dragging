@@ -38,6 +38,7 @@ typedef struct _SynapticsSHM
     char* repeater;			    /* Repeater on or off */
     Bool updown_button_scrolling;	    /* Up/Down-Button scrolling or middle/double-click */
     Bool touchpad_off;			    /* Switches the Touchpad off*/
+    Bool locked_drags;			    /* Enable locked drags */
 } SynapticsSHM, *SynapticsSHMPtr;
 
 #ifdef SYNAPTICS_PRIVATE
@@ -131,6 +132,7 @@ typedef struct _SynapticsPrivateRec
     unsigned int prev_up;		/* Previous up button value, for double click emulation */
     Bool finger_flag;			/* previous finger */
     Bool tap, drag, doubletap;		/* feature flags */
+    Bool draglock;			/* Locked drag active */
     Bool tap_left, tap_mid, tap_right;	/* tapping buttons */
     Bool vert_scroll_on;		/* scrolling flag */
     Bool horiz_scroll_on;		/* scrolling flag */

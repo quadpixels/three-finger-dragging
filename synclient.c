@@ -62,6 +62,7 @@ static struct Parameter params[] = {
     DEFINE_PAR("EdgeMotionSpeed",      edge_motion_speed,       PT_INT,    0, 400),
     DEFINE_PAR("UpDownScrolling",      updown_button_scrolling, PT_BOOL,   0, 1),
     DEFINE_PAR("TouchpadOff",          touchpad_off,            PT_BOOL,   0, 1),
+    DEFINE_PAR("LockedDrags",          locked_drags,            PT_BOOL,   0, 1),
     { 0, 0, 0, 0, 0 }
 };
 

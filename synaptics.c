@@ -318,6 +318,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->synpara->repeater = xf86SetStrOption(local->options, "Repeater", NULL);
     priv->synpara->updown_button_scrolling = xf86SetBoolOption(local->options, "UpDownScrolling", TRUE);
     priv->synpara->touchpad_off = xf86SetBoolOption(local->options, "TouchpadOff", FALSE);
+    priv->synpara->locked_drags = xf86SetBoolOption(local->options, "LockedDrags", FALSE);
 
     str_par = xf86FindOptionValue(local->options, "MinSpeed");
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->min_speed) != 1))
@@ -848,7 +849,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	/* check if
 	   1. the tap is in tap_time
 	   2. the max movement is in tap_move or more than one finger are tapped */
-	if ((TIME_DIFF(hw->millis, priv->touch_on.millis + para->tap_time) < 0) &&
+	timeleft = TIME_DIFF(priv->touch_on.millis + para->tap_time, hw->millis);
+	if (timeleft > 0 &&
 	    (((abs(hw->x - priv->touch_on.x) < para->tap_move) &&
 	      (abs(hw->y - priv->touch_on.y) < para->tap_move)) ||
 	     priv->finger_count)) {
@@ -897,6 +899,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 		}
 	    }
 	} /* tap detection */
+	if ((timeleft <= 0) && priv->drag && para->locked_drags)
+	    priv->draglock = TRUE;
 	priv->drag = FALSE;
     } /* finger lost */
 
@@ -916,7 +920,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     }
 
     /* reset tapping button flags */
-    if (!priv->tap && !priv->drag && !priv->doubletap) {
+    if (!priv->tap && !priv->drag && !priv->doubletap && !priv->draglock) {
 	priv->tap_left = priv->tap_mid = priv->tap_right = FALSE;
     }
 
@@ -929,11 +933,13 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	mid       |= priv->tap_mid;
 	hw->right |= priv->tap_right;
     } else {
+	if (priv->tap)
+	    priv->draglock = FALSE;
 	priv->tap = FALSE;
     }
 
     /* drag processing */
-    if (priv->drag) {
+    if (priv->drag || priv->draglock) {
 	hw->left  |= priv->tap_left;
 	mid       |= priv->tap_mid;
 	hw->right |= priv->tap_right;
@@ -1005,7 +1011,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	    dx = (hw->x - MOVE_HIST(2).x) / 2;
 	    dy = (hw->y - MOVE_HIST(2).y) / 2;
 
-	    if (priv->drag) {
+	    if (priv->drag || priv->draglock) {
 		if (edge & RIGHT_EDGE) {
 		    dx += clamp(para->edge_motion_speed - dx, 0, para->edge_motion_speed);
 		} else if (edge & LEFT_EDGE) {
