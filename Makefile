@@ -97,3 +97,6 @@ clean::
 
 tags::
 	etags -o TAGS *.c *.h
+
+uninstall::
+	$(RM) $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/lib/modules/input/synaptics_drv.o $(MANDIR)/synclient.1 $(MANDIR)/syndaemon.1
