@@ -31,22 +31,6 @@
 #include <X11/Xdefs.h>
 #include "synaptics.h"
 
-static void show_hw_info(SynapticsSHM* synshm)
-{
-    printf("Hardware properties:\n");
-    if (synshm->synhw.model_id) {
-	printf("    Model Id     = %08x\n", synshm->synhw.model_id);
-	printf("    Capabilities = %08x\n", synshm->synhw.capabilities);
-	printf("    Identity     = %08x\n", synshm->synhw.identity);
-    } else {
-	printf("    No touchpad found\n");
-	printf("    Do you use a newer kernel than 2.4?\n");
-	printf("    Then browse the messages or boot.msg for the hardware info\n");
-    }
-}
-
-/* ---------------------------------------------------------------------- */
-
 enum ParaType {
     PT_INT,
     PT_BOOL,
@@ -54,7 +38,7 @@ enum ParaType {
 };
 
 struct Parameter {
-    char* name;				    /* Name of parameter */
+    char *name;				    /* Name of parameter */
     int offset;				    /* Offset in shared memory area */
     enum ParaType type;			    /* Type of parameter */
     double min_val;			    /* Minimum allowed value */
@@ -108,7 +92,23 @@ static struct Parameter params[] = {
     { 0, 0, 0, 0, 0 }
 };
 
-static void show_settings(SynapticsSHM* synshm)
+static void
+show_hw_info(SynapticsSHM *synshm)
+{
+    printf("Hardware properties:\n");
+    if (synshm->synhw.model_id) {
+	printf("    Model Id     = %08x\n", synshm->synhw.model_id);
+	printf("    Capabilities = %08x\n", synshm->synhw.capabilities);
+	printf("    Identity     = %08x\n", synshm->synhw.identity);
+    } else {
+	printf("    No touchpad found\n");
+	printf("    Do you use a newer kernel than 2.4?\n");
+	printf("    Then browse the messages or boot.msg for the hardware info\n");
+    }
+}
+
+static void
+show_settings(SynapticsSHM *synshm)
 {
     int i;
 
@@ -129,12 +129,13 @@ static void show_settings(SynapticsSHM* synshm)
     }
 }
 
-static void set_variables(SynapticsSHM* synshm, int argc, char* argv[], int first_cmd)
+static void
+set_variables(SynapticsSHM *synshm, int argc, char *argv[], int first_cmd)
 {
     int i;
     for (i = first_cmd; i < argc; i++) {
-	char* cmd = argv[i];
-	char* eqp = index(cmd, '=');
+	char *cmd = argv[i];
+	char *eqp = index(cmd, '=');
 	if (eqp) {
 	    int j;
 	    int found = 0;
@@ -174,7 +175,8 @@ static void set_variables(SynapticsSHM* synshm, int argc, char* argv[], int firs
     }
 }
 
-static int is_equal(SynapticsSHM* s1, SynapticsSHM* s2)
+static int
+is_equal(SynapticsSHM *s1, SynapticsSHM *s2)
 {
     int i;
 
@@ -202,14 +204,16 @@ static int is_equal(SynapticsSHM* s1, SynapticsSHM* s2)
     return 1;
 }
 
-static double get_time()
+static double
+get_time()
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return tv.tv_sec + tv.tv_usec / 1000000.0;
 }
 
-static void monitor(SynapticsSHM* synshm, int delay)
+static void
+monitor(SynapticsSHM *synshm, int delay)
 {
     int header = 0;
     SynapticsSHM old;
@@ -245,7 +249,8 @@ static void monitor(SynapticsSHM* synshm, int delay)
     }
 }
 
-static void usage()
+static void
+usage()
 {
     fprintf(stderr, "Usage: synclient [-m interval] [-h] [-l] [-V] [-?] [var1=value1 [var2=value2] ...]\n");
     fprintf(stderr, "  -m monitor changes to the touchpad state.\n"
@@ -258,7 +263,8 @@ static void usage()
     exit(1);
 }
 
-int main(int argc, char* argv[])
+int
+main(int argc, char *argv[])
 {
     SynapticsSHM *synshm;
     int shmid;

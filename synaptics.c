@@ -209,7 +209,8 @@ SetDeviceAndProtocol(LocalDevicePtr local)
  * The function will allocate shared memory if priv->shm_config is TRUE.
  * The allocated data is initialized from priv->synpara_default.
  */
-static Bool alloc_param_data(LocalDevicePtr local)
+static Bool
+alloc_param_data(LocalDevicePtr local)
 {
     int shmid;
     SynapticsPrivate *priv = local->private;
@@ -242,7 +243,8 @@ static Bool alloc_param_data(LocalDevicePtr local)
 /*
  * Free SynapticsSHM data previously allocated by alloc_param_data().
  */
-static void free_param_data(SynapticsPrivate *priv)
+static void
+free_param_data(SynapticsPrivate *priv)
 {
     int shmid;
 
@@ -621,8 +623,9 @@ move_distance(int dx, int dy)
  * -1 corresponds to the left/upper edge and +1 corresponds to the
  * right/lower edge.
  */
-static void relative_coords(SynapticsPrivate *priv, int x, int y,
-			    double *relX, double *relY)
+static void
+relative_coords(SynapticsPrivate *priv, int x, int y,
+		double *relX, double *relY)
 {
     int minX = priv->synpara->left_edge;
     int maxX = priv->synpara->right_edge;
@@ -741,7 +744,8 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
     return 0;
 }
 
-static int clamp(int val, int min, int max)
+static int
+clamp(int val, int min, int max)
 {
     if (val < min)
 	return min;
@@ -1130,7 +1134,8 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
 #define HIST(a) (priv->move_hist[((priv->hist_index - (a) + SYNAPTICS_MOVE_HISTORY) % SYNAPTICS_MOVE_HISTORY)])
 
-static void store_history(SynapticsPrivate *priv, int x, int y, unsigned int millis)
+static void
+store_history(SynapticsPrivate *priv, int x, int y, unsigned int millis)
 {
     int idx = (priv->hist_index + 1) % SYNAPTICS_MOVE_HISTORY;
     priv->move_hist[idx].x = x;
@@ -1144,13 +1149,15 @@ static void store_history(SynapticsPrivate *priv, int x, int y, unsigned int mil
  * linear regression to fit a line to the data and use the slope of the
  * line.
  */
-static double estimate_delta(double x0, double x1, double x2, double x3)
+static double
+estimate_delta(double x0, double x1, double x2, double x3)
 {
     return x0 * 0.3 + x1 * 0.1 - x2 * 0.1 - x3 * 0.3;
 }
 
-static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
-			  edge_type edge, int *dxP, int *dyP)
+static long
+ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
+	      edge_type edge, int *dxP, int *dyP)
 {
     SynapticsSHM *para = priv->synpara;
     Bool moving_state;

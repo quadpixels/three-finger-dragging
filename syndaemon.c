@@ -36,7 +36,8 @@ static int disable_taps_only;
 static int background = 0;
 
 
-static void usage()
+static void
+usage()
 {
     fprintf(stderr, "Usage: syndaemon [-i idle-time] [-d]\n");
     fprintf(stderr, "  -i How many seconds to wait after the last key press before\n");
@@ -46,7 +47,8 @@ static void usage()
     exit(1);
 }
 
-static void signal_handler(int signum)
+static void
+signal_handler(int signum)
 {
     if (pad_disabled) {
 	synshm->touchpad_off = 0;
@@ -55,7 +57,8 @@ static void signal_handler(int signum)
     kill(getpid(), signum);
 }
 
-static void install_signal_handler()
+static void
+install_signal_handler()
 {
     static int signals[] = {
 	SIGHUP, SIGINT, SIGQUIT, SIGILL, SIGTRAP, SIGABRT,
@@ -82,7 +85,8 @@ static void install_signal_handler()
 /**
  * Return non-zero if the keyboard state has changed since the last call.
  */
-static int keyboard_activity(Display *display)
+static int
+keyboard_activity(Display *display)
 {
     #define KEYMAP_SIZE 32
     static char old_key_state[KEYMAP_SIZE];
@@ -104,7 +108,8 @@ static int keyboard_activity(Display *display)
 /**
  * Return non-zero if any physical touchpad button is currently pressed.
  */
-static int touchpad_buttons_active()
+static int
+touchpad_buttons_active()
 {
     int i;
 
@@ -118,14 +123,16 @@ static int touchpad_buttons_active()
     return 0;
 }
 
-static double get_time()
+static double
+get_time()
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return tv.tv_sec + tv.tv_usec / 1000000.0;
 }
 
-static void main_loop(Display *display, double idle_time)
+static void
+main_loop(Display *display, double idle_time)
 {
     const int poll_delay = 20000;	    /* 20 ms */
     double last_activity = 0.0;
@@ -164,7 +171,8 @@ static void main_loop(Display *display, double idle_time)
     }
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     double idle_time = 2.0;
     Display *display;
