@@ -53,11 +53,11 @@ install: $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/lib/modules/inpu
 
 install-man: $(MANDIR)/synclient.1 $(MANDIR)/syndaemon.1
 
-$(MANDIR)/synclient.1:
-	install -D manpages/synclient.1 $(DESTDIR)/$@
+$(MANDIR)/synclient.1: manpages/synclient.1
+	install -D $< $(DESTDIR)/$@
 
-$(MANDIR)/syndaemon.1:
-	install -D manpages/syndaemon.1 $(DESTDIR)/$@
+$(MANDIR)/syndaemon.1: manpages/syndaemon.1
+	install -D $< $(DESTDIR)/$@
 
 $(BINDIR)/synclient : synclient
 	cp $< $@
