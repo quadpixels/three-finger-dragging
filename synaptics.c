@@ -199,8 +199,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->repeat_timer = NULL;
 	priv->repeatButtons = 0;
 
-	priv->proto = SYN_PROTO_PSAUX;
-
 	/* install shared memory or normal memory for parameter */
 	priv->shm_config = FALSE;
 	if(xf86SetBoolOption(local->options, "SHMConfig", FALSE)) 
@@ -225,6 +223,11 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		if(!priv->synpara)
 			goto SetupProc_fail;
 	}
+
+	priv->proto = SYN_PROTO_PSAUX;
+	str_par = xf86FindOptionValue(local->options, "Protocol");
+	if (str_par && !strcmp(str_par, "event"))
+		priv->proto = SYN_PROTO_EVENT;
 
 	/* read the parameter */
 	priv->synpara->left_edge = xf86SetIntOption(local->options, "LeftEdge", 1900);

@@ -28,6 +28,7 @@ Section "InputDevice"
   Driver  	"synaptics"
   Identifier  	"Mouse[1]"
   Option 	"Device"  	"/dev/psaux"
+  Option	"Protocol"	"psaux"
   Option	"LeftEdge"      "1900"
   Option	"RightEdge"     "5400"
   Option	"TopEdge"       "3900"
@@ -61,8 +62,3 @@ step 8.
       Output
 If you can't get the driver working, mail the logfiles and the
 configuration file to me.
-
-
-
-
-

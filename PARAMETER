@@ -1,4 +1,6 @@
 Device			String	Synaptics device
+Protocol		String	"psaux" (raw, default) or "event" (linux 2.5
+				kernel events)
 SHMConfig		Bool	switch on/off shared-memory for configuration
 LeftEdge		Int	coordinates for left edge
 RightEdge		Int	coordinates for right edge
