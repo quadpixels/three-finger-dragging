@@ -872,6 +872,7 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
     DBG(7, ErrorF("SetTapState - %d -> %d (millis:%d)\n", priv->tap_state, tap_state, millis));
     switch (tap_state) {
     case TS_START:
+	priv->tap_button_state = TBS_BUTTON_UP;
 	priv->tap_max_fingers = 0;
 	break;
     default:
@@ -933,12 +934,10 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    SetTapState(priv, TS_START, hw->millis);
 	break;
     case TS_2:
-	if (touch) {
+	if (touch)
 	    SetTapState(priv, TS_3, hw->millis);
-	} else if (timeout) {
-	    priv->tap_button_state = TBS_BUTTON_UP;
+	else if (timeout)
 	    SetTapState(priv, TS_START, hw->millis);
-	}
 	break;
     case TS_3:
 	if (timeout || move) {
@@ -951,12 +950,10 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	break;
     case TS_DRAG:
 	if (release) {
-	    if (para->locked_drags) {
+	    if (para->locked_drags)
 		SetTapState(priv, TS_4, hw->millis);
-	    } else {
-		priv->tap_button_state = TBS_BUTTON_UP;
+	    else
 		SetTapState(priv, TS_START, hw->millis);
-	    }
 	}
 	break;
     case TS_4:
@@ -968,7 +965,6 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    SetTapState(priv, TS_DRAG, hw->millis);
 	    goto restart;
 	} else if (release) {
-	    priv->tap_button_state = TBS_BUTTON_UP;
 	    SetTapState(priv, TS_START, hw->millis);
 	}
 	break;
