@@ -113,6 +113,12 @@ The MinSpeed, MaxSpeed and AccelFactor parameters don't have any
 effect on scrolling speed. Scrolling speed is determined solely from
 the VertScrollDelta and HorizScrollDelta parameters.
 
+Since synaptics touchpads don't have a button that corresponds to the
+middle button on a mouse, the driver can emulate middle mouse button
+events. If you press both the left and right mouse buttons at almost
+the same time (no more than EmulateMidButtonTime milliseconds apart)
+the driver generates a middle mouse button event.
+
 
 FAQ
 ---
