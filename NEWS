@@ -1,3 +1,37 @@
+0.14.0 (2005-01-06)
+- Configurable palm detection heuristics.
+- Added FastTaps option to make the driver react faster to tapping.
+- Another Makefile fix for x86_64 systems, from the FC3 RPM.
+- Support up to 12 (virtual) mouse buttons.
+- Made the event device auto detection more robust. Check for required
+  features instead of relying on the IDs of the input device.
+  Suggested by Vojtech Pavlik.
+- Made it possible to disable tapping without disabling mouse
+  movements. Added -t switch to syndaemon to disable only tapping in
+  response to keyboard activity.
+- Remove the shared memory area when the X server terminates.
+- Improved edge motion behavior. The speed no longer depends on the
+  MinSpeed, MaxSpeed and AccelFactor parameters, and it doesn't depend
+  on the packet rate from the touchpad hardware. The
+  EdgeMotionMinSpeed and EdgeMotionMaxSpeed parameters may have to be
+  modified to get the same speed as before this change.
+- Better noise reduction in the x/y delta estimates used for pointer
+  motion. This will slow down the pointer movements, so to regain the
+  same speed as before, the MinSpeed, MaxSpeed and AccelFactor
+  parameters should be multiplied by 1.5.
+- Made it possible to use horizontal circular scrolling by smoothly
+  switching from "horizontal" to "horizontal circular" when the finger
+  enters the lower left or lower right corners during horizontal
+  scrolling.
+- Fixed a bug that made it possible to lock up the X server by setting
+  VertScrollDelta, HorizScrollDelta or CircScrollDelta to 0 while the
+  touchpad was scrolling.
+- Implemented coasting, ie the ability to automatically continue
+  scrolling with the same speed in the same direction when the finger
+  leaves the touchpad.
+- Some documentation updates.
+- Updated the compatibility list.
+
 0.13.6 (2004-10-23)
 - Updated the ALPS patch for kernel 2.6.9.
 - Fixed detection of ALPS touchpads with signature 63 03 c8.
