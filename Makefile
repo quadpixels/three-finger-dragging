@@ -81,10 +81,10 @@ install: $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/$(LIBDIR)/module
 install-man: $(MANDIR)/synclient.1 $(MANDIR)/syndaemon.1
 
 $(MANDIR)/synclient.1: manpages/synclient.1
-	install -D $< $@
+	install --mode=0644 -D $< $@
 
 $(MANDIR)/syndaemon.1: manpages/syndaemon.1
-	install -D $< $@
+	install --mode=0644 -D $< $@
 
 $(BINDIR)/synclient : synclient
 	install -D $< $@
@@ -93,7 +93,7 @@ $(BINDIR)/syndaemon : syndaemon
 	install -D $< $@
 
 $(INSTALLED_X)/$(LIBDIR)/modules/input/synaptics_drv.o : synaptics_drv.o
-	install -D $< $@
+	install --mode=0644 -D $< $@
 
 synaptics_drv.o: $(OBJS)
 	$(RM) $@
