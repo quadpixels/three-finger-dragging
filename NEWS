@@ -1,3 +1,17 @@
+0.13.3 (2004-06-13)
+- Added support for Synaptics cPad devices. (Also requires a 2.6
+  kernel patch.) From Jan Steinhoff.
+- Bug fix for touchpads with a middle mouse button.
+- Fixed handling of the repeater device.
+- Fixed compiler warnings when using the xorg sdk include files.
+- Added two parameters:
+  * MaxDoubleTapTime makes it easier to do fast double clicks.
+  * ClickTime adds a delay between the button down and button up
+    events generated in response to a tap event.
+- Updated the alps patch for kernel 2.6.7-rc3.
+- Added -V option to synclient to display the version number.
+- Updated the compatibility list.
+
 0.13.2 (2004-05-09)
 - Fixed middle mouse button emulation, which broke in the 0.13.0
   release.
