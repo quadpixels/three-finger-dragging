@@ -1,3 +1,10 @@
+0.11.7 (2003-09-28)
+- Added "Acer TravelMate 234LC" to the compatibility list.
+- Added "Gateway 600S" to the compatibility list.
+- When using the Linux 2.6 event device, try to get exclusive access
+  to the device, so that touchpad data doesn't leak to
+  /dev/input/mice. This should fix problems with recent 2.6 kernels.
+
 0.11.6 (2003-09-26)
 - Updated the config section in INSTALL.DE. Added warning explaining
   that the file is not up to date.
