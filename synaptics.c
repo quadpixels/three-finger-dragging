@@ -1160,6 +1160,10 @@ static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	!priv->vert_scroll_on && !priv->horiz_scroll_on && !priv->circ_scroll_on) {
 	delay = MIN(delay, 13);
 	if (priv->count_packet_finger > 3) { /* min. 3 packets */
+	    double tmpf;
+	    int x_edge_speed = 0;
+	    int y_edge_speed = 0;
+	    double dtime = (hw->millis - MOVE_HIST(1).millis) / 1000.0;
 	    dx = (hw->x - MOVE_HIST(2).x) / 2;
 	    dy = (hw->y - MOVE_HIST(2).y) / 2;
 
@@ -1169,8 +1173,6 @@ static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		int minSpd = para->edge_motion_min_speed;
 		int maxSpd = para->edge_motion_max_speed;
 		int edge_speed;
-		int x_edge_speed = 0;
-		int y_edge_speed = 0;
 
 		if (hw->z <= minZ) {
 		    edge_speed = minSpd;
@@ -1199,8 +1201,6 @@ static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		    x_edge_speed = (int)(edge_speed * relX);
 		    y_edge_speed = (int)(edge_speed * relY);
 		}
-		dx += x_edge_speed;
-		dy += y_edge_speed;
 	    }
 
 	    /* speed depending on distance/packet */
@@ -1212,10 +1212,12 @@ static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		speed = para->min_speed;
 	    }
 
-	    /* save the fraction for adding to the next priv->count_packet */
-	    priv->frac_x = xf86modf((dx * speed) + priv->frac_x, &integral);
+	    /* save the fraction, report the integer part */
+	    tmpf = dx * speed + x_edge_speed * dtime + priv->frac_x;
+	    priv->frac_x = xf86modf(tmpf, &integral);
 	    dx = integral;
-	    priv->frac_y = xf86modf((dy * speed) + priv->frac_y, &integral);
+	    tmpf = dy * speed + y_edge_speed * dtime + priv->frac_y;
+	    priv->frac_y = xf86modf(tmpf, &integral);
 	    dy = integral;
 	}
 
@@ -1236,6 +1238,7 @@ static long ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     /* generate a history of the absolute positions */
     MOVE_HIST(0).x = hw->x;
     MOVE_HIST(0).y = hw->y;
+    MOVE_HIST(0).millis = hw->millis;
 
     return delay;
 }

@@ -106,15 +106,10 @@ typedef struct _SynapticsSHM
  *****************************************************************************/
 #define SYNAPTICS_MOVE_HISTORY	5
 
-typedef struct _SynapticsTapRec
-{
-    int x, y;
-    unsigned int millis;
-} SynapticsTapRec;
-
 typedef struct _SynapticsMoveHist
 {
     int x, y;
+    unsigned int millis;
 } SynapticsMoveHistRec;
 
 enum MidButtonEmulation {
@@ -178,7 +173,7 @@ typedef struct _SynapticsPrivateRec
     int tap_max_fingers;		/* Max number of fingers seen since entering start state */
     int tap_button;			/* Which button started the tap processing */
     enum TapButtonState tap_button_state; /* Current tap action */
-    SynapticsTapRec touch_on;		/* data when the touchpad is touched/released */
+    SynapticsMoveHistRec touch_on;	/* data when the touchpad is touched/released */
 
     Bool vert_scroll_on;		/* scrolling flag */
     Bool horiz_scroll_on;		/* scrolling flag */
