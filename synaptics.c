@@ -593,6 +593,7 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
     sigstate = xf86BlockSIGIO();
 
     hw = priv->hwState;
+    hw.guest_dx = hw.guest_dy = 0;
     hw.millis = now;
     delay = HandleState(local, &hw);
 
