@@ -12,7 +12,7 @@
 
 static SynapticsSHM *synshm;
 static int pad_disabled;
-static int saved_tap_time;
+static Bool saved_touchpad_off;
 
 
 static void usage()
@@ -26,7 +26,7 @@ static void usage()
 static void signal_handler(int signum)
 {
     if (pad_disabled) {
-	synshm->tap_time = saved_tap_time;
+	synshm->touchpad_off = saved_touchpad_off;
 	pad_disabled = 0;
     }
     kill(getpid(), signum);
@@ -119,21 +119,15 @@ static void main_loop(Display *display, double idle_time)
 	if (current_time > last_activity + idle_time) {	/* Enable touchpad */
 	    if (pad_disabled) {
 		printf("Enable\n");
-		synshm->tap_time = saved_tap_time;
+		synshm->touchpad_off = saved_touchpad_off;
 		pad_disabled = 0;
 	    }
 	} else {			    /* Disable touchpad */
 	    if (!pad_disabled) {
 		printf("Disable\n");
-		saved_tap_time = synshm->tap_time;
-		synshm->tap_time = 0;
+		saved_touchpad_off = synshm->touchpad_off;
+		synshm->touchpad_off = 1;
 		pad_disabled = 1;
-	    } else {
-		/* Already disabled. Update saved_tap_time if needed */
-		if (synshm->tap_time) {
-		    printf("Updating tap_time\n");
-		    saved_tap_time = synshm->tap_time;
-		}
 	    }
 	}
 
@@ -143,7 +137,7 @@ static void main_loop(Display *display, double idle_time)
 
 int main(int argc, char *argv[])
 {
-    double idle_time = 3.0;
+    double idle_time = 2.0;
     Display *display;
     int c;
     int shmid;

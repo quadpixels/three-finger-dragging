@@ -779,10 +779,6 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     long timeleft;
     int i;
 
-    /* If touchpad is switched off, we skip the whole thing and return delay */
-    if (para->touchpad_off == TRUE)
-	return delay;
-
     edge = edge_detection(priv, hw->x, hw->y);
 
     dx = dy = 0;
@@ -806,6 +802,10 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     para->down = hw->down;
     for (i = 0; i < 8; i++)
 	para->multi[i] = hw->multi[i];
+
+    /* If touchpad is switched off, we skip the whole thing and return delay */
+    if (para->touchpad_off == TRUE)
+	return delay;
 
     /* Treat the first two multi buttons as up/down for now. */
     hw->up |= hw->multi[0];
