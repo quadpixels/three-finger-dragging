@@ -779,8 +779,6 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     long timeleft;
     int i;
 
-    edge = edge_detection(priv, hw->x, hw->y);
-
     dx = dy = 0;
 
     /* update finger position in shared memory */
@@ -830,6 +828,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	/* reset up/down button events */
 	hw->up = hw->down = FALSE;
     }
+
+    edge = edge_detection(priv, hw->x, hw->y);
 
     finger = SynapticsDetectFinger(priv, hw);
 
