@@ -69,7 +69,7 @@ read from /dev/psaux. This means that if you for example have GPM
 running, it will probably prevent the synaptics driver from working
 correctly. It also means that if you have a second InputDevice in your
 X configuration file, it must not read from /dev/psaux. You probably
-want it to read from /dev/input/mice instea, which will handle USB
+want it to read from /dev/input/mice instead, which will handle USB
 mice in both 2.4 and 2.6 linux kernels, and both USB and external PS/2
 mice if you use a 2.6 kernel.
 
