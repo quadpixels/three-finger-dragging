@@ -1288,6 +1288,7 @@ QueryHardware (LocalDevicePtr local)
 	}
 	para->isSynaptics = priv->isSynaptics;
 
+	priv->protoBufTail = 0;
 	if(!priv->isSynaptics) {
 		xf86Msg(X_PROBED, "%s no synaptics touchpad, data piped to repeater fifo\n", local->name);
 		synaptics_reset(local->fd);
@@ -1523,12 +1524,43 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
 	return Success;
 }
 
+/*
+ * Decide if the current packet stored in priv->protoBuf is valid.
+ */
+static Bool
+PacketOk(SynapticsPrivatePtr priv)
+{
+	unsigned char *buf = priv->protoBuf;
+	int newabs = SYN_MODEL_NEWABS(priv->model_id);
+
+	if (newabs ? ((buf[0] & 0xC8) != 0x80) : ((buf[0] & 0xC0) != 0xC0)) {
+		DBG(4, ErrorF("Synaptics driver lost sync at 1st byte\n"));
+		return FALSE;
+	}
+
+	if (!newabs && ((buf[1] & 0x60) != 0x00)) {
+		DBG(4, ErrorF("Synaptics driver lost sync at 2nd byte\n"));
+		return FALSE;
+	}
+
+	if ((newabs ? ((buf[3] & 0xc8) != 0xc0) : ((buf[3] & 0xc0) != 0x80))) {
+		DBG(4, ErrorF("Synaptics driver lost sync at 4th byte\n"));
+		return FALSE;
+	}
+
+	if (!newabs && ((buf[4] & 0x60) != 0x00)) {
+		DBG(4, ErrorF("Synaptics driver lost sync at 5th byte\n"));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 static Bool
 SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 {
 	int count = 0;
 	int c;
-	int newabs = SYN_MODEL_NEWABS(priv->model_id);
 	unsigned char u;
 
 	while((c = XisbRead(priv->buffer)) >= 0) {
@@ -1564,41 +1596,16 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 
 		priv->protoBuf[priv->protoBufTail++] = u;
 
-		/* check first byte */
-		if(priv->protoBufTail == 1)
-		{
-			if (newabs ? ((u & 0xC8) != 0x80) : ((u & 0xC0) != 0xC0))
-			{
+		/* Check that we have a valid packet. If not, we are out of sync,
+		   so we throw away the first byte in the packet.*/
+		if (priv->protoBufTail >= 6) {
+			if (!PacketOk(priv)) {
+				int i;
 				priv->inSync = FALSE;
-				priv->protoBufTail = 0;
-				DBG(4, ErrorF("Synaptics driver lost sync at 1st byte\n"));
-				continue;
+				for (i = 0; i < priv->protoBufTail - 1; i++)
+					priv->protoBuf[i] = priv->protoBuf[i + 1];
+				priv->protoBufTail--;
 			}
-		}
-		/* for old protocol check 2nd and 5th byte */
-		if (!newabs && ((priv->protoBufTail == 2) || (priv->protoBufTail == 5)) &&
-			((u & 0x60) != 0x00))
-		{
-			if (priv->protoBufTail == 2)
-			{
-				DBG(4, ErrorF("Synaptics driver lost sync at 2nd byte\n"));
-			}
-			else
-			{
-				DBG(4, ErrorF("Synaptics driver lost sync at 5th byte\n"));
-			}
-			priv->inSync = FALSE;
-			priv->protoBufTail = 0;
-			continue;
-		}
-		/* check 4th byte */
-		if((priv->protoBufTail == 4) &&
-		   (newabs ? ((u & 0xc8) != 0xc0) : ((u & 0xc0) != 0x80)))
-		{
-			priv->inSync = FALSE;
-			priv->protoBufTail = 0;
-			DBG(4, ErrorF("Synaptics driver lost sync at 4th byte\n"));
-			continue;
 		}
 
 		if(priv->protoBufTail >= 6)
