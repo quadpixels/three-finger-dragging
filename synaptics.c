@@ -890,7 +890,7 @@ PrintIdent(SynapticsPrivatePtr priv) {
 		xf86Msg(X_PROBED, " pen detection\n");
 
 	if(SYN_CAP_EXTENDED(priv->capabilities)) {
-		xf86Msg(X_PROBED, " Touchpad has extended capabiliety bits\n");
+		xf86Msg(X_PROBED, " Touchpad has extended capability bits\n");
 		if(SYN_CAP_FOUR_BUTTON(priv->capabilities))
 			xf86Msg(X_PROBED, " -> four buttons\n");
 		if(SYN_CAP_MULTIFINGER(priv->capabilities))
