@@ -1,7 +1,6 @@
 #ifndef	_SYNAPTICS_H_
 #define _SYNAPTICS_H_
 
-#include "linux_input.h"
 #include <X11/Xdefs.h>
 
 /******************************************************************************

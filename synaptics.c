@@ -76,6 +76,7 @@
 #define SYNAPTICS_PRIVATE
 #include "synaptics.h"
 #include "ps2comm.h"
+#include "linux_input.h"
 
 /*****************************************************************************
  *	Variables without includable headers
@@ -1447,4 +1448,3 @@ QueryHardware(LocalDevicePtr local)
 
     return TRUE;
 }
-
