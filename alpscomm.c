@@ -176,10 +176,8 @@ ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
 	    y = y - 512;
 	hw->guest_dx = x;
 	hw->guest_dy = -y;
-	hw->left   = packet[2] & 1;
-	hw->left  |= packet[3] & 1;
-	hw->right  = (packet[2] >> 1) & 1;
-	hw->right |= (packet[3] >> 1) & 1;
+	hw->left  = packet[3] & 1;
+	hw->right = (packet[3] >> 1) & 1;
 	return;
     }
 
