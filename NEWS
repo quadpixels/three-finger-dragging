@@ -1,3 +1,12 @@
+0.11.3p8: (2003-07-20)
+- From Hartwig Felger:
+  * Added "multi-buttons" to the FEATURES list.
+  * Updated NEWS file with data from the web page.
+  * More robust parsing of the Handlers= line when doing auto detection
+    for 2.6 kernels. ("Handlers=event2 js0" should work now.)
+  * Updated synclient program to explain that it can't query hardware
+    details when using a 2.6 kernel.
+
 0.11.3p7: (2003-07-17)
 - Added support for touchpads with "multi buttons". (Hartwig Felger)
 - Mention the synclient program in the INSTALL file.
