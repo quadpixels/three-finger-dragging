@@ -136,7 +136,9 @@ value.
 
 The MinSpeed, MaxSpeed and AccelFactor parameters don't have any
 effect on scrolling speed. Scrolling speed is determined solely from
-the VertScrollDelta and HorizScrollDelta parameters.
+the VertScrollDelta and HorizScrollDelta parameters. To disable
+vertical or horizontal scrolling, set VertScrollDelta or
+HorizScrollDelta to zero.
 
 When hitting an egde, movement can be automatically continued.
 If EdgeMotionUseAlways is false, edge motion is only used when

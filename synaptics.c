@@ -1064,12 +1064,12 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 		DBG(7, ErrorF("circular scroll detected on edge\n"));
 	    }
 	} else {
-	    if (edge & RIGHT_EDGE) {
+	    if ((para->scroll_dist_vert != 0) && (edge & RIGHT_EDGE)) {
 		priv->vert_scroll_on = TRUE;
 		priv->scroll_y = hw->y;
 		DBG(7, ErrorF("vert edge scroll detected on right edge\n"));
 	    }
-	    if (edge & BOTTOM_EDGE) {
+	    if ((para->scroll_dist_horiz != 0) && (edge & BOTTOM_EDGE)) {
 		priv->horiz_scroll_on = TRUE;
 		priv->scroll_x = hw->x;
 		DBG(7, ErrorF("horiz edge scroll detected on bottom edge\n"));
