@@ -1,6 +1,8 @@
 #ifndef	_SYNAPTICS_H_
 #define _SYNAPTICS_H_
 
+#include "linux_input.h"
+
 /******************************************************************************
  *		Public definitions.
  *						Used by driver and the shared memory configurator
@@ -59,18 +61,6 @@ struct SynapticsHwState {
 	Bool cbLeft;
 	Bool cbRight;
 };
-
-/*
- * Data format for the linux input event interface.
- */
-struct input_event {
-	unsigned long tv_sec;
-	unsigned long tv_usec;
-	unsigned short type;
-	unsigned short code;
-	unsigned int value;
-};
-
 
 typedef struct _SynapticsTapRec
 {

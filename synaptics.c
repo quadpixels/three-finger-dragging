@@ -1204,41 +1204,41 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
 
 	while (SynapticsReadEvent(priv, &ev) == Success) {
 		switch (ev.type) {
-		case 0x00:							/* SYN */
+		case EV_SYN:
 			switch (ev.code) {
-			case 0:							/* SYN_REPORT */
+			case SYN_REPORT:
 				*hw = priv->hwState;
 				return Success;
 			}
-		case 0x01:							/* KEY */
+		case EV_KEY:
 			switch (ev.code) {
-			case 0x110:						/* BTN_LEFT */
+			case BTN_LEFT:
 				priv->hwState.left = (ev.value ? TRUE : FALSE);
 				break;
-			case 0x111:						/* BTN_RIGHT */
+			case BTN_RIGHT:
 				priv->hwState.right = (ev.value ? TRUE : FALSE);
 				break;
-			case 0x115:						/* BTN_FORWARD */
+			case BTN_FORWARD:
 				priv->hwState.up = (ev.value ? TRUE : FALSE);
 				break;
-			case 0x116:						/* BTN_BACK */
+			case BTN_BACK:
 				priv->hwState.down = (ev.value ? TRUE : FALSE);
 				break;
-			case 0x100:						/* BTN_0 (multi-btn-0) */
+			case BTN_0:						/* multi-btn-0 */
 				priv->hwState.up = (ev.value ? TRUE : FALSE);
 				break;
-			case 0x101:						/* BTN_1 (multi-btn-1) */
+			case BTN_1:						/* multi-btn-1 */
 				priv->hwState.down = (ev.value ? TRUE : FALSE);
 				break;
-			case 0x102:						/* BTN_2 (multi-btn-2) */
+			case BTN_2:						/* multi-btn-2 */
 				priv->hwState.cbLeft = (ev.value ? TRUE : FALSE);
 				break;
-			case 0x103:						/* BTN_3 (multi-btn-3) */
+			case BTN_3:						/* multi-btn-3 */
 				priv->hwState.cbRight = (ev.value ? TRUE : FALSE);
 				break;
 			}
 			break;
-		case 0x03:							/* ABS */
+		case EV_ABS:
 			switch (ev.code) {
 			case 0x00:						/* ABS_X */
 				priv->hwState.x = ev.value;
@@ -1251,9 +1251,9 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
 				break;
 			}
 			break;
-		case 0x04:							/* MSC */
+		case EV_MSC:
 			switch (ev.code) {
-			case 0x02:						/* MSC_GESTURE */
+			case MSC_GESTURE:
 				priv->hwState.w = ev.value;
 				break;
 			}

@@ -68,7 +68,7 @@ synclient	: synclient.o
 testprotokoll: testprotokoll.c
 	$(CC) -o testprotokoll testprotokoll.c
 
-synaptics.o : synaptics.h ps2comm.h
+synaptics.o : synaptics.h ps2comm.h linux_input.h
 ps2comm.o   : ps2comm.h
 synclient.o : synaptics.h
 
@@ -78,7 +78,3 @@ clean::
 tags::
 	$(TAGS) -w *.[ch]
 	$(TAGS) -xw *.[ch] > TAGS
-
-
-
-
