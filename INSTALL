@@ -7,7 +7,8 @@ Requirements
 ------------
 
 1. You need X include files. On RPM based systems, they are usually
-   included in the XFree86-devel package.
+   included in the XFree86-devel package. On Debian systems, you need
+   to install the packages x-dev, libx11-dev and libxext-dev.
 
 2. For use with kernel 2.6.x you need to enable synaptics touchpad
    support when configuring the kernel (CONFIG_MOUSE_PS2). You also
