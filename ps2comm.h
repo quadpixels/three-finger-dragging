@@ -34,13 +34,13 @@
 #define SYN_CAP_MULTI_BUTTON_NO(synhw)	(((synhw).ext_cap & 0x00f000) >> 12)
 
 /* synaptics modes query bits */
-#define SYN_MODE_ABSOLUTE(synhw)	((synhw).model_id & (1 << 7))
-#define SYN_MODE_RATE(synhw)		((synhw).model_id & (1 << 6))
-#define SYN_MODE_BAUD_SLEEP(synhw)	((synhw).model_id & (1 << 3))
-#define SYN_MODE_DISABLE_GESTURE(synhw)	((synhw).model_id & (1 << 2))
-#define SYN_MODE_PACKSIZE(synhw)	((synhw).model_id & (1 << 1))
-#define SYN_MODE_WMODE(synhw)		((synhw).model_id & (1 << 0))
-#define SYN_MODE_VALID(synhw)		(((synhw).model_id & 0xffff00) == 0x3B47)
+#define SYN_MODE_ABSOLUTE(m)		((m) & (1 << 7))
+#define SYN_MODE_RATE(m)		((m) & (1 << 6))
+#define SYN_MODE_BAUD_SLEEP(m)		((m) & (1 << 3))
+#define SYN_MODE_DISABLE_GESTURE(m)	((m) & (1 << 2))
+#define SYN_MODE_PACKSIZE(m)		((m) & (1 << 1))
+#define SYN_MODE_WMODE(m)		((m) & (1 << 0))
+#define SYN_MODE_VALID(m)		(((m) & 0xffff00) == 0x3B47)
 
 /* synaptics identify query bits */
 #define SYN_ID_MODEL(synhw)		(((synhw).identity >> 4) & 0x0f)
