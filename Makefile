@@ -126,11 +126,12 @@ DST=synaptics-$(VERSION)
 synaptics-$(VERSION).tar.bz2 : $(ALLFILES)
 	rm -f $(DST).tar.bz2
 	rm -rf $(DST)
-	mkdir $(DST) $(DST)/manpages $(DST)/script $(DST)/test
+	mkdir $(DST) $(DST)/manpages $(DST)/script $(DST)/test $(DST)/docs
 	cp -a $(ALLFILES) $(DST)
 	cp -a manpages/{synclient.1,syndaemon.1} $(DST)/manpages/
 	cp -a script/usbmouse $(DST)/script/
 	cp -a test/test-pad.c $(DST)/test/
+	cp -a docs/tapndrag.dia $(DST)/docs/
 	chmod u+w $(DST)/*
 	tar cf $(DST).tar $(DST)
 	rm -rf $(DST)

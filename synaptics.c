@@ -294,8 +294,9 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->nextRepeat = 0;
     now = GetTimeInMillis();
     priv->count_packet_finger = 0;
-    priv->tapping_millis = now;
-    priv->button_delay_millis = now;
+    priv->tap_state = TS_START;
+    priv->tap_button = 0;
+    priv->tap_button_state = TBS_BUTTON_UP;
     priv->touch_on.millis = now;
     priv->hasGuest = FALSE;
 
@@ -817,24 +818,165 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
     }
     priv->prev_z = hw->z;
 
+    if (priv->palm)
+	finger = FALSE;
+
     return finger;
 }
 
 static void
-ReportTap(SynapticsPrivate *priv, TapEvent tap)
+SelectTapButton(SynapticsPrivate *priv, edge_type edge)
 {
-    int button = priv->synpara->tap_action[tap];
-    switch (button) {
+    TapEvent tap;
+
+    switch (priv->tap_max_fingers) {
     case 1:
-	priv->tap_left = TRUE;
+    default:
+	switch (edge) {
+	case RIGHT_TOP_EDGE:
+	    DBG(7, ErrorF("right top edge\n"));
+	    tap = RT_TAP;
+	    break;
+	case RIGHT_BOTTOM_EDGE:
+	    DBG(7, ErrorF("right bottom edge\n"));
+	    tap = RB_TAP;
+	    break;
+	case LEFT_TOP_EDGE:
+	    DBG(7, ErrorF("left top edge\n"));
+	    tap = LT_TAP;
+	    break;
+	case LEFT_BOTTOM_EDGE:
+	    DBG(7, ErrorF("left bottom edge\n"));
+	    tap = LB_TAP;
+	    break;
+	default:
+	    DBG(7, ErrorF("no edge\n"));
+	    tap = F1_TAP;
+	    break;
+	}
 	break;
     case 2:
-	priv->tap_mid = TRUE;
+	DBG(7, ErrorF("two finger tap\n"));
+	tap = F2_TAP;
 	break;
     case 3:
-	priv->tap_right = TRUE;
+	DBG(7, ErrorF("three finger tap\n"));
+	tap = F3_TAP;
 	break;
     }
+
+    priv->tap_button = priv->synpara->tap_action[tap];
+    priv->tap_button = clamp(priv->tap_button, 0, 7);
+}
+
+static void
+SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
+{
+    DBG(7, ErrorF("SetTapState - %d -> %d (millis:%d)\n", priv->tap_state, tap_state, millis));
+    switch (tap_state) {
+    case TS_START:
+	priv->tap_max_fingers = 0;
+	break;
+    default:
+	break;
+    }
+    priv->tap_state = tap_state;
+}
+
+static int
+HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
+		    edge_type edge, Bool finger)
+{
+    SynapticsSHM *para = priv->synpara;
+    Bool touch, release, timeout, move;
+    long timeleft;
+    long delay = 1000000000;
+
+    if (priv->palm)
+	return delay;
+
+    touch = finger && !priv->finger_flag;
+    release = !finger && priv->finger_flag;
+    move = FALSE;
+    if (touch) {
+	priv->touch_on.x = hw->x;
+	priv->touch_on.y = hw->y;
+	priv->touch_on.millis = hw->millis;
+    } else if (release) {
+	priv->touch_on.millis = hw->millis;
+	move = ((priv->tap_max_fingers <= 1) &&
+		((abs(hw->x - priv->touch_on.x) >= para->tap_move) ||
+		 (abs(hw->y - priv->touch_on.y) >= para->tap_move)));
+    }
+    if (priv->tap_max_fingers < hw->numFingers)
+	priv->tap_max_fingers = hw->numFingers;
+    timeleft = TIME_DIFF(priv->touch_on.millis + para->tap_time, hw->millis);
+    if (timeleft > 0)
+	delay = MIN(delay, timeleft);
+    timeout = timeleft <= 0;
+
+ restart:
+    switch (priv->tap_state) {
+    case TS_START:
+	if (touch)
+	    SetTapState(priv, TS_1, hw->millis);
+	break;
+    case TS_1:
+	if (timeout || move) {
+	    SetTapState(priv, TS_MOVE, hw->millis);
+	    goto restart;
+	} else if (release) {
+	    SelectTapButton(priv, edge);
+	    priv->tap_button_state = TBS_BUTTON_DOWN;
+	    SetTapState(priv, TS_2, hw->millis);
+	}
+	break;
+    case TS_MOVE:
+	if (release)
+	    SetTapState(priv, TS_START, hw->millis);
+	break;
+    case TS_2:
+	if (touch) {
+	    SetTapState(priv, TS_3, hw->millis);
+	} else if (timeout) {
+	    priv->tap_button_state = TBS_BUTTON_UP;
+	    SetTapState(priv, TS_START, hw->millis);
+	}
+	break;
+    case TS_3:
+	if (timeout || move) {
+	    SetTapState(priv, TS_DRAG, hw->millis);
+	    goto restart;
+	} else if (release) {
+	    priv->tap_button_state = TBS_BUTTON_UP_DOWN;
+	    SetTapState(priv, TS_2, hw->millis);
+	}
+	break;
+    case TS_DRAG:
+	if (release) {
+	    if (para->locked_drags) {
+		SetTapState(priv, TS_4, hw->millis);
+	    } else {
+		priv->tap_button_state = TBS_BUTTON_UP;
+		SetTapState(priv, TS_START, hw->millis);
+	    }
+	}
+	break;
+    case TS_4:
+	if (touch)
+	    SetTapState(priv, TS_5, hw->millis);
+	break;
+    case TS_5:
+	if (timeout || move) {
+	    SetTapState(priv, TS_DRAG, hw->millis);
+	    goto restart;
+	} else if (release) {
+	    priv->tap_button_state = TBS_BUTTON_UP;
+	    SetTapState(priv, TS_START, hw->millis);
+	}
+	break;
+    }
+    return delay;
 }
 
 /*
@@ -844,11 +986,11 @@ ReportTap(SynapticsPrivate *priv, TapEvent tap)
  * occurs.
  */
 static int
-HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
+HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
     SynapticsSHM *para = priv->synpara;
-    Bool finger;
+    Bool finger, moving_state;
     int dist, dx, dy, buttons, id;
     edge_type edge;
     Bool mid;
@@ -927,128 +1069,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
     finger = SynapticsDetectFinger(priv, hw);
 
     /* tap and drag detection */
-    if (priv->palm) {
-	/* Palm detected, skip tap/drag processing */
-    } else if (finger && !priv->finger_flag) { /* touched */
-	DBG(7, ErrorF("touched - x:%d, y:%d millis:%lu\n", hw->x, hw->y, hw->millis));
-	if (priv->tap) {
-	    DBG(7, ErrorF("drag detected - tap time:%lu\n", priv->tapping_millis));
-	    priv->drag = TRUE; /* drag gesture */
-	}
-	priv->touch_on.x = hw->x;
-	priv->touch_on.y = hw->y;
-	priv->touch_on.millis = hw->millis;
-    } else if (!finger && priv->finger_flag) { /* untouched */
-	DBG(7, ErrorF("untouched - x:%d, y:%d millis:%lu finger:%d\n",
-		      hw->x, hw->y, hw->millis, priv->finger_count));
-	/* check if
-	   1. the tap is in tap_time
-	   2. the max movement is in tap_move or more than one finger are tapped */
-	timeleft = TIME_DIFF(priv->touch_on.millis + para->tap_time, hw->millis);
-	if (timeleft > 0 &&
-	    (((abs(hw->x - priv->touch_on.x) < para->tap_move) &&
-	      (abs(hw->y - priv->touch_on.y) < para->tap_move)) ||
-	     priv->finger_count)) {
-	    if (priv->drag) {
-		DBG(7, ErrorF("double tapping detected\n"));
-		priv->doubletap = TRUE;
-		priv->tap = FALSE;
-	    } else {
-		DBG(7, ErrorF("tapping detected @ "));
-		priv->tapping_millis = hw->millis;
-		priv->tap = TRUE;
-		if (priv->finger_count == 0) {
-		    switch (edge) {
-		    case RIGHT_TOP_EDGE:
-			DBG(7, ErrorF("right top edge\n"));
-			ReportTap(priv, RT_TAP);
-			break;
-		    case RIGHT_BOTTOM_EDGE:
-			DBG(7, ErrorF("right bottom edge\n"));
-			ReportTap(priv, RB_TAP);
-			break;
-		    case LEFT_TOP_EDGE:
-			DBG(7, ErrorF("left top edge\n"));
-			ReportTap(priv, LT_TAP);
-			break;
-		    case LEFT_BOTTOM_EDGE:
-			DBG(7, ErrorF("left bottom edge\n"));
-			ReportTap(priv, LB_TAP);
-			break;
-		    default:
-			DBG(7, ErrorF("no edge\n"));
-			ReportTap(priv, F1_TAP);
-		    }
-		} else {
-		    switch (priv->finger_count) {
-		    case 2:
-			DBG(7, ErrorF("two finger tap\n"));
-			ReportTap(priv, F2_TAP);
-			break;
-		    case 3:
-			DBG(7, ErrorF("three finger tap\n"));
-			ReportTap(priv, F3_TAP);
-			break;
-		    default:
-			DBG(7, ErrorF("one finger\n"));
-			ReportTap(priv, F1_TAP);
-		    }
-		}
-	    }
-	} /* tap detection */
-	if ((timeleft <= 0) && priv->drag && para->locked_drags)
-	    priv->draglock = TRUE;
-	priv->drag = FALSE;
-    } /* finger lost */
-
-    /* detecting 2 and 3 fingers */
-    timeleft = TIME_DIFF(priv->touch_on.millis + para->tap_time, hw->millis);
+    timeleft = HandleTapProcessing(priv, hw, edge, finger);
     if (timeleft > 0)
 	delay = MIN(delay, timeleft);
-    if (finger &&			/* finger is on the surface */
-	(timeleft > 0)) {		/* tap time is not succeeded */
-	/* count fingers when reported */
-	if ((hw->numFingers == 2) && (priv->finger_count == 0))
-	    priv->finger_count = 2;
-	if (hw->numFingers == 3)
-	    priv->finger_count = 3;
-    } else { /* reset finger counts */
-	priv->finger_count = 0;
-    }
-
-    /* reset tapping button flags */
-    if (!priv->tap && !priv->drag && !priv->doubletap && !priv->draglock) {
-	priv->tap_left = priv->tap_mid = priv->tap_right = FALSE;
-    }
-
-    /* tap processing */
-    timeleft = TIME_DIFF(priv->tapping_millis + para->tap_time, hw->millis);
-    if (timeleft > 0)
-	delay = MIN(delay, timeleft);
-    if (priv->tap && (timeleft > 0)) {
-	hw->left  |= priv->tap_left;
-	mid       |= priv->tap_mid;
-	hw->right |= priv->tap_right;
-    } else {
-	if (priv->tap)
-	    priv->draglock = FALSE;
-	priv->tap = FALSE;
-    }
-
-    /* drag processing */
-    if (priv->drag || priv->draglock) {
-	hw->left  |= priv->tap_left;
-	mid       |= priv->tap_mid;
-	hw->right |= priv->tap_right;
-    }
-
-    /* double tap processing */
-    if (priv->doubletap && !priv->finger_flag) {
-	hw->left  |= priv->tap_left;
-	mid       |= priv->tap_mid;
-	hw->right |= priv->tap_right;
-	priv->doubletap = FALSE;
-    }
 
     /* scroll detection */
     if (finger && !priv->finger_flag) {
@@ -1080,21 +1103,19 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	    }
 	}
     }
-    if (priv->circ_scroll_on && (!finger || priv->palm)) {
+    if (priv->circ_scroll_on && !finger) {
 	/* circular scroll locks in until finger is raised */
 	DBG(7, ErrorF("cicular scroll off\n"));
 	priv->circ_scroll_on = FALSE;
     }
-    if (priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger || priv->palm)) {
+    if (priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger)) {
 	DBG(7, ErrorF("vert edge scroll off\n"));
 	priv->vert_scroll_on = FALSE;
     }
-    if (priv->horiz_scroll_on && (!(edge & BOTTOM_EDGE) || !finger || priv->palm)) {
+    if (priv->horiz_scroll_on && (!(edge & BOTTOM_EDGE) || !finger)) {
 	DBG(7, ErrorF("horiz edge scroll off\n"));
 	priv->horiz_scroll_on = FALSE;
     }
-
-    /* scroll processing */
 
     /* if hitting a corner (top right or bottom right) while vertical scrolling is active,
        switch over to circular scrolling smoothly */
@@ -1153,15 +1174,29 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	}
     }
 
-    /* movement */
-    if (finger && !priv->vert_scroll_on && !priv->horiz_scroll_on && !priv->circ_scroll_on &&
-	!priv->finger_count && !priv->palm) {
+    moving_state = FALSE;
+    switch (priv->tap_state) {
+    case TS_MOVE:
+    case TS_DRAG:
+	moving_state = TRUE;
+	break;
+    case TS_1:
+    case TS_3:
+    case TS_5:
+	if (hw->numFingers == 1)
+	    moving_state = TRUE;
+	break;
+    default:
+	break;
+    }
+    if (moving_state && !priv->palm &&
+	!priv->vert_scroll_on && !priv->horiz_scroll_on && !priv->circ_scroll_on) {
 	delay = MIN(delay, 13);
 	if (priv->count_packet_finger > 3) { /* min. 3 packets */
 	    dx = (hw->x - MOVE_HIST(2).x) / 2;
 	    dy = (hw->y - MOVE_HIST(2).y) / 2;
 
-	    if (priv->drag || priv->draglock || para->edge_motion_use_always) {
+	    if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always) {
 		int minZ = para->edge_motion_min_z;
 		int maxZ = para->edge_motion_max_z;
 		int minSpd = para->edge_motion_min_speed;
@@ -1188,7 +1223,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	    }
 
 	    /* speed depending on distance/packet */
-	    dist = move_distance( dx, dy );
+	    dist = move_distance(dx, dy);
 	    speed = dist * para->accl;
 	    if (speed > para->max_speed) {  /* set max speed factor */
 		speed = para->max_speed;
@@ -1208,7 +1243,6 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	priv->count_packet_finger = 0;
     }
 
-
     buttons = ((hw->left     ? 0x01 : 0) |
 	       (mid          ? 0x02 : 0) |
 	       (hw->right    ? 0x04 : 0) |
@@ -1220,8 +1254,19 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	       (hw->multi[2] ? 0x20 : 0) |
 	       (hw->multi[3] ? 0x40 : 0));
 
-    /* Flags */
-    priv->finger_flag = finger;
+    if (priv->tap_button > 0) {
+	int tap_mask = 1 << (priv->tap_button - 1);
+	if (priv->tap_button_state == TBS_BUTTON_UP_DOWN) {
+	    if ((buttons & tap_mask) != (priv->lastButtons & tap_mask)) {
+		xf86PostButtonEvent(local->dev, FALSE, priv->tap_button, buttons & tap_mask, 0, 0);
+		priv->lastButtons &= ~tap_mask;
+		priv->lastButtons |= buttons & tap_mask;
+	    }
+	    priv->tap_button_state = TBS_BUTTON_DOWN;
+	}
+	if (priv->tap_button_state == TBS_BUTTON_DOWN)
+	    buttons |= tap_mask;
+    }
 
     /* generate a history of the absolute positions */
     MOVE_HIST(0).x = hw->x;
@@ -1241,7 +1286,6 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	change &= ~(1 << (id - 1));
 	xf86PostButtonEvent(local->dev, FALSE, id, (buttons & (1 << (id - 1))), 0, 0);
     }
-    priv->lastButtons = buttons;
 
     while (scroll_up-- > 0) {
 	xf86PostButtonEvent(local->dev, FALSE, 4, !hw->up, 0, 0);
@@ -1267,10 +1311,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	}
     }
 
-
-    /*
-     * Handle auto repeat buttons
-     */
+    /* Handle auto repeat buttons */
     if ((hw->up || hw->down || hw->multi[2] || hw->multi[3]) &&
 	para->updown_button_scrolling) {
 	priv->repeatButtons = buttons & 0x78;
@@ -1300,6 +1341,10 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	    delay = MIN(delay, 100);
 	}
     }
+
+    /* Save old values of some state variables */
+    priv->finger_flag = finger;
+    priv->lastButtons = buttons;
 
     return delay;
 }

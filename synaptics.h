@@ -124,6 +124,24 @@ enum MidButtonEmulation {
     MBE_TIMEOUT			/* Waiting for both buttons to be released. */
 };
 
+/* See docs/tapndrag.dia for a state machine diagram */
+enum TapState {
+    TS_START,			/* No tap/drag in progress */
+    TS_1,			/* After first touch */
+    TS_MOVE,			/* Pointer movement enabled */
+    TS_2,			/* After first release */
+    TS_3,			/* After second touch */
+    TS_DRAG,			/* Pointer drag enabled */
+    TS_4,			/* After release when "locked drags" enabled */
+    TS_5			/* After touch when "locked drags" enabled */
+};
+
+enum TapButtonState {
+    TBS_BUTTON_UP,		/* "Virtual tap button" is up */
+    TBS_BUTTON_DOWN,		/* "Virtual tap button" is down */
+    TBS_BUTTON_UP_DOWN		/* Send button up event + set down state */
+};
+
 enum SynapticsProtocol {
     SYN_PROTO_PSAUX,		/* Raw psaux device */
     SYN_PROTO_EVENT		/* Linux kernel event interface */
@@ -154,7 +172,6 @@ typedef struct _SynapticsPrivateRec
 					   have received */
     int protoBufTail;
     int fifofd;		 		/* fd for fifo */
-    SynapticsTapRec touch_on;		/* data when the touchpad is touched */
     SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY]; /* movement history */
 
     int largest_valid_x;		/* Largest valid X coordinate seen so far */
@@ -162,13 +179,16 @@ typedef struct _SynapticsPrivateRec
     int scroll_x;			/* last x-scroll position */
     double scroll_a;			/* last angle-scroll position */
     unsigned long count_packet_finger;	/* packet counter with finger on the touchpad */
-    unsigned int tapping_millis;	/* packet counter for tapping */
     unsigned int button_delay_millis;	/* button delay for 3rd button emulation */
     unsigned int prev_up;		/* Previous up button value, for double click emulation */
     Bool finger_flag;			/* previous finger */
-    Bool tap, drag, doubletap;		/* feature flags */
-    Bool draglock;			/* Locked drag active */
-    Bool tap_left, tap_mid, tap_right;	/* tapping buttons */
+
+    enum TapState tap_state;		/* State of tap processing */
+    int tap_max_fingers;		/* Max number of fingers seen since entering start state */
+    int tap_button;			/* Which button started the tap processing */
+    enum TapButtonState tap_button_state; /* Current tap action */
+    SynapticsTapRec touch_on;		/* data when the touchpad is touched/released */
+
     Bool vert_scroll_on;		/* scrolling flag */
     Bool horiz_scroll_on;		/* scrolling flag */
     Bool circ_scroll_on;		/* scrolling flag */
@@ -177,7 +197,6 @@ typedef struct _SynapticsPrivateRec
     int repeatButtons;			/* buttons for repeat */
     unsigned long nextRepeat;		/* Time when to trigger next auto repeat event */
     int lastButtons;			/* last State of the buttons */
-    int finger_count;			/* tap counter for fingers */
     int palm;				/* Set to true when palm detected, reset to false when
 					   palm/finger contact disappears */
     int prev_z;				/* previous z value, for palm detection */
