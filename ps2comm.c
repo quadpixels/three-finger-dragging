@@ -438,7 +438,9 @@ PrintIdent(const synapticshw_t *synhw)
 	if (SYN_CAP_MULTI_BUTTON_NO(*synhw))
 	    xf86Msg(X_PROBED, " -> %d multi buttons, i.e. besides standard buttons\n",
 		    (int)(SYN_CAP_MULTI_BUTTON_NO(*synhw)));
-	else if (SYN_CAP_FOUR_BUTTON(*synhw))
+	if (SYN_CAP_MIDDLE_BUTTON(*synhw))
+	    xf86Msg(X_PROBED, " -> middle button\n");
+	if (SYN_CAP_FOUR_BUTTON(*synhw))
 	    xf86Msg(X_PROBED, " -> four buttons\n");
 	if (SYN_CAP_MULTIFINGER(*synhw))
 	    xf86Msg(X_PROBED, " -> multifinger detection\n");
@@ -662,6 +664,9 @@ PS2ReadHwState(LocalDevicePtr local, synapticshw_t *synhw,
 	hw->right = (buf[0] & 0x02) ? 1 : 0;
 
 	if (SYN_CAP_EXTENDED(*synhw)) {
+	    if (SYN_CAP_MIDDLE_BUTTON(*synhw)) {
+		hw->middle = ((buf[0] ^ buf[3]) & 0x01) ? 1 : 0;
+	    }
 	    if (SYN_CAP_FOUR_BUTTON(*synhw)) {
 		hw->up = ((buf[3] & 0x01)) ? 1 : 0;
 		if (hw->left)
