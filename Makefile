@@ -93,7 +93,7 @@ synclient.o : synaptics.h
 syndeamon.o : synaptics.h
 
 clean::
-	$(RM) *.CKP *.ln *.BAK *.bak *.o core errs ,* *~ *.a .emacs_* tags TAGS make.log MakeOut synclient syndaemon "#"*
+	$(RM) *.CKP *.ln *.BAK *.bak *.o core errs ,* *~ *.a .emacs_* tags TAGS make.log MakeOut synclient syndaemon "#"* manpages/*~
 
 tags::
 	etags -o TAGS *.c *.h
