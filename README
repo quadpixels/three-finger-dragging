@@ -230,6 +230,17 @@ FAQ
     you release the button. This will lead to problems if the tap time
     is longer than the delay before auto repeat starts.
 
+* Vertical and horizontal scrolling events are mixed up. How come?
+
+    Probably because some X startup/login script uses xmodmap to remap
+    the mouse buttons. Correct settings for the touchpad are:
+
+	xmodmap -e 'pointer = 1 2 3 4 5 6 7'
+
+    You can check the current settings by running:
+
+	xmodmap -pp
+
 * Can the driver be used together with gpm?
 
     No, not reliably, if you are using a 2.4.x kernel. The gpm driver
@@ -262,6 +273,19 @@ FAQ
     of XFree86 you are using. In the example above, set
 
       TOP = /usr/src/redhat/BUILD/XFree86-4.3.0/xc
+
+* Can I use this driver with an ALPS Glidepoint device?
+
+    Hopefully, if you use a 2.6.x linux kernel and apply the alps
+    patch. See the README.alps file for more information.
+
+* Does it work on a Dell Inspiron 8200?
+
+    No, the Dell Inspiron 8200 has an ALPS touchpad that seems to be
+    incompatible with other ALPS touchpads. Since no hardware
+    documentation is available, this model will not be supported until
+    someone who has access to the hardware manages to reverse engineer
+    it.
 
 
 Authors
