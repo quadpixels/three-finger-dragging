@@ -3,8 +3,24 @@ Installation of the Synaptics Touchpad Driver for XFree 4.x
 
 Author: Stefan Gmeiner <riddlebox@freesurf.ch>
 
-needs: - Using with Kernel 2.4.x for x < 10 needs a kernel patch (see
-         source code)
+Requirements
+------------
+
+- Using with kernel 2.4.x for x < 10 needs a kernel patch
+  (pc_keyb.c.diff.2.4.3).
+
+- For use with kernel 2.6.x you need to enable synaptics touchpad
+  support when configuring the kernel. (CONFIG_MOUSE_PS2 and
+  CONFIG_MOUSE_PS2_SYNAPTICS). You also need support for the evdev
+  interface (CONFIG_INPUT_EVDEV). If you compile evdev as a module,
+  make sure it is loaded before starting the X server, as it will not
+  be auto-loaded.
+
+- For use with an ALPS touchpad, you need to use a 2.6.x kernel and
+  apply the alps patch. See the README.alps file for more details.
+
+Installing
+----------
 
 1. If you are installing the driver by binary you can go to step 3.
 
@@ -51,17 +67,18 @@ Section "ServerLayout"
   InputDevice "Mouse[1]"  "CorePointer"
 ...
 
-7. Start/Restart the X Server. If the touchpad doesn't work go to
-step 8.
-
-8. a) Check the XFree Logfiles
+7. Start/Restart the X Server. If the touchpad doesn't work:
+   a) Check the XFree Logfiles
    b) Try to start the XServer with 'startx -- -logverbose 8' for more
       Output
 
-9. If you want to be able to change driver parameters without
+8. If you want to be able to change driver parameters without
    restarting the X server, enable the "SHMConfig" option in the XFree
    configuration file. You can then use the "synclient" program to
    query and modify driver parameters on the fly.
+   Note! This is not secure if you are in an untrusted multiuser
+   environment. All local users can change the parameters at any
+   time.
 
 If you can't get the driver working, mail the logfiles and the
 configuration file to petero2@telia.com. If you use a 2.6.x linux

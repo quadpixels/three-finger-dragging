@@ -1,5 +1,6 @@
 It is possible to use the driver with an ALPS Glidepoint device, if
-you are using a 2.6 linux kernel and the ALPS kernel patch.
+you are using a 2.6 linux kernel and the ALPS kernel patch. (The
+alps.patch file.)
 
 One user reported success with the following parameter settings:
 
