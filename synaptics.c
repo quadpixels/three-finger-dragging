@@ -195,6 +195,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->repeatButtons = 0;
 
 	/* install shared memory or normal memory for parameter */
+	priv->shm_config = FALSE;
 	if(xf86SetBoolOption(local->options, "SHMConfig", FALSE)) 
 	{
 		if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
@@ -209,6 +210,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 			xf86Msg(X_ERROR, "%s error shmat\n", local->name);
 			goto SetupProc_fail;
 		}
+		priv->shm_config = TRUE;
 	} 
 	else 
 	{
@@ -350,8 +352,18 @@ DeviceControl (DeviceIntPtr dev, int mode)
 		RetValue = DeviceOn( dev );
 		break;
 	case DEVICE_OFF:
-	case DEVICE_CLOSE:
 		RetValue = DeviceOff( dev );
+		break;
+	case DEVICE_CLOSE:
+		{
+			int shmid;
+			LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
+			SynapticsPrivatePtr priv = (SynapticsPrivatePtr) (local->private);
+			RetValue = DeviceOff( dev );
+			if (priv->shm_config)
+				if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
+					xf86shmctl(shmid, XF86IPC_RMID, NULL);
+		}
 		break;
 	default:
 		RetValue = BadValue;

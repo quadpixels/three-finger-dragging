@@ -26,10 +26,20 @@ int main()
 	int shmid;
 	SynapticsSHM old;
 
-	if((shmid = shmget(SHM_SYNAPTICS, 0, 0)) == -1) 
-		printf("shmget Fehler\n");
-	if((synshm = (SynapticsSHM*) shmat(shmid, NULL, 0)) == NULL)
-		printf("shmat Fehler\n");
+	if((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0)) == -1) {
+		if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) == -1) {
+			fprintf(stderr, "Can't access shared memory area. SHMConfig disabled?\n");
+			exit(1);
+		} else {
+			fprintf(stderr, "Incorrect size of shared memory area. "
+					"Incompatible driver version?\n");
+			exit(1);
+		}
+	}
+	if((synshm = (SynapticsSHM*) shmat(shmid, NULL, 0)) == NULL) {
+		perror("shmat");
+		exit(1);
+	}
 
 	while(1) {
 		SynapticsSHM cur = *synshm;

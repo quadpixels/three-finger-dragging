@@ -73,6 +73,8 @@ typedef struct _SynapticsPrivateRec
 	Bool isSynaptics;					/* Synaptics touchpad active */
 	Bool six_buttons;					/* Use six button protocol */
 
+	Bool shm_config;					/* True when shared memory area allocated */
+
 	/* Data for normal processing */
 	XISBuffer *buffer;
 	unsigned char protoBuf[6];			/* Buffer for Packet */
