@@ -1,10 +1,10 @@
-Synaptics TouchPad driver for XFree86
--------------------------------------
+Synaptics TouchPad driver for XOrg/XFree86
+------------------------------------------
 
 Introduction
 ------------
 
-This is a driver for the Synaptics TouchPad for XFree86 4.x. A
+This is a driver for the Synaptics TouchPad for XOrg/XFree86 4.x. A
 Synaptics touchpad by default operates in compatibility mode by
 emulating a standard mouse. However, by using a dedicated driver, more
 advance features of the touchpad becomes available, such as:
