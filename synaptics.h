@@ -1,25 +1,13 @@
-#ifndef	_SAMPLE_H_
-#define _SAMPLE_H_
+#ifndef	_SYNAPTICS_H_
+#define _SYNAPTICS_H_
 
 /******************************************************************************
- *		Definitions
- *									structs, typedefs, #defines, enums
+ *		Public definitions.
+ *						Used by driver and the shared memory configurator
  *****************************************************************************/
-#define SYNAPTICS_MOVE_HISTORY	5
 #define SHM_SYNAPTICS 23947
-
-typedef struct _SynapticsTapRec 
+typedef struct _SynapticsSHM
 {
-	int x, y;
-	unsigned int packet;
-} SynapticsTapRec;
-
-typedef struct _SynapticsMoveHist 
-{
-	int x, y;
-} SynapticsMoveHistRec;
-
-typedef struct _SynapticsSHM {
 	/* Current device state */
 	int x, y;							/* actual x, y Coordinates */
 	int z;								/* pressure value */
@@ -46,6 +34,24 @@ typedef struct _SynapticsSHM {
 	char* repeater;						/* Repeater on or off */
 	Bool updown_button_scrolling;		/* Up/Down-Button scrolling or middle/double-click */
 } SynapticsSHM, *SynapticsSHMPtr;
+
+#ifdef SYNAPTICS_PRIVATE
+/******************************************************************************
+ *		Definitions
+ *									structs, typedefs, #defines, enums
+ *****************************************************************************/
+#define SYNAPTICS_MOVE_HISTORY	5
+
+typedef struct _SynapticsTapRec 
+{
+	int x, y;
+	unsigned int packet;
+} SynapticsTapRec;
+
+typedef struct _SynapticsMoveHist 
+{
+	int x, y;
+} SynapticsMoveHistRec;
 
 typedef struct _SynapticsPrivateRec
 {
@@ -107,10 +113,14 @@ static Bool DeviceOff(DeviceIntPtr);
 static Bool DeviceInit(DeviceIntPtr);
 static Bool SynapticsGetPacket(LocalDevicePtr, SynapticsPrivatePtr);
 static void PrintIdent(SynapticsPrivatePtr);
+
+#endif
+
+
 /* 
  *    DO NOT PUT ANYTHING AFTER THIS ENDIF
  */
-#endif
+#endif /* _SYNAPTICS_H_ */
 
 /* Local Variables: */
 /* tab-width: 4 */

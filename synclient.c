@@ -5,13 +5,8 @@
 #include <sys/shm.h>
 #include <unistd.h>
 
-#define SHM_SYNAPTICS 23947
-typedef struct _SynapticsSHM {
-	int x, y;
-	int z;								/* pressure value */
-	int w;								/* finger width value */
-	int left, right, up, down;			/* left/right/up/down buttons */
-} SynapticsSHM;
+#include <X11/Xdefs.h>
+#include "synaptics.h"
 
 static int is_equal(SynapticsSHM* s1, SynapticsSHM* s2)
 {
@@ -25,7 +20,8 @@ static int is_equal(SynapticsSHM* s1, SynapticsSHM* s2)
 			(s1->down  == s2->down));
 }
 
-int main() {
+int main()
+{
 	SynapticsSHM *synshm;
 	int shmid;
 	SynapticsSHM old;
