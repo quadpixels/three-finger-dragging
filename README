@@ -306,14 +306,6 @@ FAQ
 
     Yes, see the README.alps file for more information.
 
-* Does it work on a Dell Inspiron 8200?
-
-    No, the Dell Inspiron 8200 has an ALPS touchpad that seems to be
-    incompatible with other ALPS touchpads. Since no hardware
-    documentation is available, this model will not be supported until
-    someone who has access to the hardware manages to reverse engineer
-    it.
-
 
 Authors
 -------
