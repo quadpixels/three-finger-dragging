@@ -48,9 +48,15 @@ EventDeviceOffHook(LocalDevicePtr local)
 {
 }
 
+static Bool
+EventQueryHardware(LocalDevicePtr local, struct synapticshw *synhw, Bool *hasGuest)
+{
+    return TRUE;
+}
 
 
 struct SynapticsProtocolOperations event_proto_operations = {
     EventDeviceOnHook,
-    EventDeviceOffHook
+    EventDeviceOffHook,
+    EventQueryHardware
 };

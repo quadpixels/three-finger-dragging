@@ -44,8 +44,6 @@ typedef struct _SynapticsSHM
     /* Probed hardware properties */
     synapticshw_t synhw;
 
-    Bool isSynaptics;			    /* Synaptics touchpad active */
-
     /* Parameter data */
     int	left_edge, right_edge, top_edge, bottom_edge; /* edge coordinates absolute */
     int	finger_low, finger_high;	    /* finger detection values in Z-values */
@@ -146,8 +144,8 @@ typedef struct _SynapticsPrivateRec
 					   have received */
     int protoBufTail;
     int fifofd;		 		/* fd for fifo */
-    SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY]; /* movement history */
 
+    SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY]; /* movement history */
     int largest_valid_x;		/* Largest valid X coordinate seen so far */
     int scroll_y;			/* last y-scroll position */
     int scroll_x;			/* last x-scroll position */
@@ -201,7 +199,6 @@ static Bool SynapticsReadEvent(SynapticsPrivate *, struct input_event *);
 static Bool SynapticsParseRawPacket(LocalDevicePtr, SynapticsPrivate *,
 				    struct SynapticsHwState *);
 static Bool SynapticsGetPacket(LocalDevicePtr, SynapticsPrivate *);
-static void PrintIdent(const synapticshw_t *);
 
 #endif /* SYNAPTICS_PRIVATE */
 

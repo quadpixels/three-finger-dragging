@@ -416,7 +416,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	}
     }
 
-    if (QueryHardware(local) != Success) {
+    if (!QueryHardware(local)) {
 	xf86Msg(X_ERROR, "%s Unable to query/initialize Synaptics hardware.\n", local->name);
 	goto SetupProc_fail;
     }
@@ -1423,68 +1423,27 @@ QueryHardware(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
     SynapticsSHM *para = priv->synpara;
-    int mode;
-
-    if (priv->proto == SYN_PROTO_EVENT)
-	return Success;
-
-    /* is the synaptics touchpad active? */
-    priv->isSynaptics = QueryIsSynaptics(local->fd);
-
-    if ((!priv->isSynaptics) && (!para->repeater || (priv->fifofd == -1))) {
-	xf86Msg(X_ERROR, "%s no synaptics touchpad detected and no repeater device\n",
-		local->name);
-	priv->isSynaptics = TRUE;
-	return !Success;
-    }
-    para->isSynaptics = priv->isSynaptics;
 
     priv->protoBufTail = 0;
+
+    priv->isSynaptics = priv->proto_ops->QueryHardware(local, &priv->synhw, &priv->hasGuest);
+
     if (!priv->isSynaptics) {
+	if (!para->repeater || (priv->fifofd == -1)) {
+	    xf86Msg(X_ERROR, "%s no synaptics touchpad detected and no repeater device\n",
+		    local->name);
+	    priv->isSynaptics = TRUE;
+	    return FALSE;
+	}
 	xf86Msg(X_PROBED, "%s no synaptics touchpad, data piped to repeater fifo\n", local->name);
 	synaptics_reset(local->fd);
 	SynapticsEnableDevice(local->fd);
-	return Success;
+	return TRUE;
     }
-
-    xf86Msg(X_PROBED, "%s synaptics touchpad found\n", local->name);
-
-    if (synaptics_reset(local->fd) != Success)
-	xf86Msg(X_ERROR, "%s reset failed\n", local->name);
-
-    if (synaptics_get_hwinfo(local->fd, &priv->synhw) != Success)
-	return !Success;
 
     para->synhw = priv->synhw;
 
-    mode = SYN_BIT_ABSOLUTE_MODE | SYN_BIT_HIGH_RATE;
-    if (SYN_ID_MAJOR(priv->synhw) >= 4)
-	mode |= SYN_BIT_DISABLE_GESTURE;
-    if (SYN_CAP_EXTENDED(priv->synhw))
-	mode |= SYN_BIT_W_MODE;
-    if (synaptics_set_mode(local->fd, mode) != Success)
-	return !Success;
-
-    /* Check to see if the host mouse supports a guest */
-    if (SYN_CAP_PASSTHROUGH(priv->synhw)) {
-        priv->hasGuest = TRUE;
-
-	/* Enable the guest mouse.  Set it to relative mode, three byte
-	 * packets */
-
-	/* Disable the host to talk to the guest */
-	SynapticsDisableDevice(local->fd);
-	/* Reset it, set defaults, streaming and enable it */
-	if ((SynapticsResetPassthrough(local->fd)) != Success) {
-	    priv->hasGuest = FALSE;
-	}
-    }
-
-    SynapticsEnableDevice(local->fd);
-
-    PrintIdent(&priv->synhw);
-
-    return Success;
+    return TRUE;
 }
 
 static Bool
@@ -1853,37 +1812,4 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivate *priv)
     }
 
     return !Success;
-}
-
-static void
-PrintIdent(const synapticshw_t *synhw)
-{
-    xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(*synhw));
-    xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(*synhw),
-	    SYN_ID_MINOR(*synhw));
-
-    if (SYN_MODEL_ROT180(*synhw))
-	xf86Msg(X_PROBED, " 180 degree mounted touchpad\n");
-    if (SYN_MODEL_PORTRAIT(*synhw))
-	xf86Msg(X_PROBED, " portrait touchpad\n");
-    xf86Msg(X_PROBED, " Sensor: %d\n", SYN_MODEL_SENSOR(*synhw));
-    if (SYN_MODEL_NEWABS(*synhw))
-	xf86Msg(X_PROBED, " new absolute packet format\n");
-    if (SYN_MODEL_PEN(*synhw))
-	xf86Msg(X_PROBED, " pen detection\n");
-
-    if (SYN_CAP_EXTENDED(*synhw)) {
-	xf86Msg(X_PROBED, " Touchpad has extended capability bits\n");
-	if (SYN_CAP_MULTI_BUTTON_NO(*synhw))
-	    xf86Msg(X_PROBED, " -> %d multi buttons, i.e. besides standard buttons\n",
-		    (int)(SYN_CAP_MULTI_BUTTON_NO(*synhw)));
-	else if (SYN_CAP_FOUR_BUTTON(*synhw))
-	    xf86Msg(X_PROBED, " -> four buttons\n");
-	if (SYN_CAP_MULTIFINGER(*synhw))
-	    xf86Msg(X_PROBED, " -> multifinger detection\n");
-	if (SYN_CAP_PALMDETECT(*synhw))
-	    xf86Msg(X_PROBED, " -> palm detection\n");
-	if (SYN_CAP_PASSTHROUGH(*synhw))
-	    xf86Msg(X_PROBED, " -> pass-through port\n");
-    }
 }

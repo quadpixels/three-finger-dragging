@@ -34,7 +34,7 @@
 static void show_hw_info(SynapticsSHM* synshm)
 {
     printf("Hardware properties:\n");
-    if (synshm->isSynaptics) {
+    if (synshm->synhw.model_id) {
 	printf("    Model Id     = %08lx\n", synshm->synhw.model_id);
 	printf("    Capabilities = %08lx\n", synshm->synhw.capabilities);
 	printf("    Identity     = %08lx\n", synshm->synhw.identity);

@@ -28,6 +28,7 @@
 #include "ps2comm.h"
 #include "synproto.h"
 #include "synaptics.h"
+#include <xf86.h>
 
 /* acknowledge for commands and parameter */
 #define PS2_ACK 			0xFA
@@ -450,19 +451,100 @@ QueryIsSynaptics(int fd)
     }
 }
 
+static void
+PrintIdent(const synapticshw_t *synhw)
+{
+    xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(*synhw));
+    xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(*synhw),
+	    SYN_ID_MINOR(*synhw));
+
+    if (SYN_MODEL_ROT180(*synhw))
+	xf86Msg(X_PROBED, " 180 degree mounted touchpad\n");
+    if (SYN_MODEL_PORTRAIT(*synhw))
+	xf86Msg(X_PROBED, " portrait touchpad\n");
+    xf86Msg(X_PROBED, " Sensor: %d\n", SYN_MODEL_SENSOR(*synhw));
+    if (SYN_MODEL_NEWABS(*synhw))
+	xf86Msg(X_PROBED, " new absolute packet format\n");
+    if (SYN_MODEL_PEN(*synhw))
+	xf86Msg(X_PROBED, " pen detection\n");
+
+    if (SYN_CAP_EXTENDED(*synhw)) {
+	xf86Msg(X_PROBED, " Touchpad has extended capability bits\n");
+	if (SYN_CAP_MULTI_BUTTON_NO(*synhw))
+	    xf86Msg(X_PROBED, " -> %d multi buttons, i.e. besides standard buttons\n",
+		    (int)(SYN_CAP_MULTI_BUTTON_NO(*synhw)));
+	else if (SYN_CAP_FOUR_BUTTON(*synhw))
+	    xf86Msg(X_PROBED, " -> four buttons\n");
+	if (SYN_CAP_MULTIFINGER(*synhw))
+	    xf86Msg(X_PROBED, " -> multifinger detection\n");
+	if (SYN_CAP_PALMDETECT(*synhw))
+	    xf86Msg(X_PROBED, " -> palm detection\n");
+	if (SYN_CAP_PASSTHROUGH(*synhw))
+	    xf86Msg(X_PROBED, " -> pass-through port\n");
+    }
+}
+
 
 static void
-DeviceOnHook(LocalDevicePtr local)
+PS2DeviceOnHook(LocalDevicePtr local)
 {
 }
 
 static void
-DeviceOffHook(LocalDevicePtr local)
+PS2DeviceOffHook(LocalDevicePtr local)
 {
     synaptics_set_mode(local->fd, 0);
 }
 
+static Bool
+PS2QueryHardware(LocalDevicePtr local, synapticshw_t *synhw, Bool *hasGuest)
+{
+    int mode;
+
+    /* is the synaptics touchpad active? */
+    if (!QueryIsSynaptics(local->fd))
+	return FALSE;
+
+    xf86Msg(X_PROBED, "%s synaptics touchpad found\n", local->name);
+
+    if (synaptics_reset(local->fd) != Success)
+	xf86Msg(X_ERROR, "%s reset failed\n", local->name);
+
+    if (synaptics_get_hwinfo(local->fd, synhw) != Success)
+	return FALSE;
+
+    mode = SYN_BIT_ABSOLUTE_MODE | SYN_BIT_HIGH_RATE;
+    if (SYN_ID_MAJOR(*synhw) >= 4)
+	mode |= SYN_BIT_DISABLE_GESTURE;
+    if (SYN_CAP_EXTENDED(*synhw))
+	mode |= SYN_BIT_W_MODE;
+    if (synaptics_set_mode(local->fd, mode) != Success)
+	return FALSE;
+
+    /* Check to see if the host mouse supports a guest */
+    if (SYN_CAP_PASSTHROUGH(*synhw)) {
+        *hasGuest = TRUE;
+
+	/* Enable the guest mouse.  Set it to relative mode, three byte
+	 * packets */
+
+	/* Disable the host to talk to the guest */
+	SynapticsDisableDevice(local->fd);
+	/* Reset it, set defaults, streaming and enable it */
+	if ((SynapticsResetPassthrough(local->fd)) != Success) {
+	    *hasGuest = FALSE;
+	}
+    }
+
+    SynapticsEnableDevice(local->fd);
+
+    PrintIdent(synhw);
+
+    return TRUE;
+}
+
 struct SynapticsProtocolOperations psaux_proto_operations = {
-    DeviceOnHook,
-    DeviceOffHook
+    PS2DeviceOnHook,
+    PS2DeviceOffHook,
+    PS2QueryHardware
 };
