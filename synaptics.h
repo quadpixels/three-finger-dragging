@@ -8,12 +8,14 @@
 #define SYNAPTICS_MOVE_HISTORY	5
 #define SHM_SYNAPTICS 23947
 
-typedef struct _SynapticsTapRec {
+typedef struct _SynapticsTapRec 
+{
 	int x, y;
 	unsigned int packet;
 } SynapticsTapRec;
 
-typedef struct _SynapticsMoveHist {
+typedef struct _SynapticsMoveHist 
+{
 	int x, y;
 } SynapticsMoveHistRec;
 
