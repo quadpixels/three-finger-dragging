@@ -51,3 +51,30 @@ Section "InputDevice"
   Option	"UpDownScrolling"	"1"
   Option	"TouchpadOff"		"0"
 EndSection
+
+On some (all?) ALPS hardware, it is not possible to disable tapping
+unless you apply the patch below. However, some users have reported
+that this patch breaks tap-and-drag operations, which is why the patch
+is not included in the main alps.patch file.
+
+--- linux/drivers/input/mouse/alps.c~alps-test3	2004-02-28 20:46:34.000000000 +0100
++++ linux-petero/drivers/input/mouse/alps.c	2004-02-28 20:49:12.000000000 +0100
+@@ -87,6 +87,10 @@ static void ALPS_process_packet(struct p
+ 	y = (packet[4] & 0x7f) | ((packet[3] & 0x70)<<(7-4));
+ 	z = packet[5];
+ 
++	if (packet[2] & 1) {
++		z = 35;
++	}
++
+ 	if (z > 0) {
+ 		input_report_abs(dev, ABS_X, x);
+ 		input_report_abs(dev, ABS_Y, y);
+@@ -97,7 +101,6 @@ static void ALPS_process_packet(struct p
+ 	if (z > 30) input_report_key(dev, BTN_TOUCH, 1);
+ 	if (z < 25) input_report_key(dev, BTN_TOUCH, 0);
+ 
+-	left  |= (packet[2]     ) & 1;
+ 	left  |= (packet[3]     ) & 1;
+ 	right |= (packet[3] >> 1) & 1;
+ 	if (packet[0] == 0xff) {

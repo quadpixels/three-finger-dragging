@@ -51,11 +51,11 @@ initial announcement have not been dealt with:
 
 
  linux-petero/drivers/input/mouse/Makefile       |    2 
- linux-petero/drivers/input/mouse/alps.c         |  147 ++++++++++++++++++++++++
+ linux-petero/drivers/input/mouse/alps.c         |  144 ++++++++++++++++++++++++
  linux-petero/drivers/input/mouse/alps.h         |   17 ++
  linux-petero/drivers/input/mouse/psmouse-base.c |    8 +
  linux-petero/drivers/input/mouse/psmouse.h      |    1 
- 5 files changed, 174 insertions(+), 1 deletion(-)
+ 5 files changed, 171 insertions(+), 1 deletion(-)
 
 diff -puN drivers/input/mouse/Makefile~alps drivers/input/mouse/Makefile
 --- linux/drivers/input/mouse/Makefile~alps	2004-02-22 08:29:18.000000000 +0100
@@ -68,8 +68,8 @@ diff -puN drivers/input/mouse/Makefile~alps drivers/input/mouse/Makefile
 +psmouse-objs  := psmouse-base.o logips2pp.o alps.o synaptics.o
 diff -puN drivers/input/mouse/alps.c~alps drivers/input/mouse/alps.c
 --- linux/drivers/input/mouse/alps.c~alps	2004-02-22 08:29:18.000000000 +0100
-+++ linux-petero/drivers/input/mouse/alps.c	2004-02-25 18:39:19.000000000 +0100
-@@ -0,0 +1,147 @@
++++ linux-petero/drivers/input/mouse/alps.c	2004-02-28 20:42:41.000000000 +0100
+@@ -0,0 +1,144 @@
 +/*
 + * ALPS touchpad PS/2 mouse driver
 + *
@@ -159,10 +159,6 @@ diff -puN drivers/input/mouse/alps.c~alps drivers/input/mouse/alps.c
 +	y = (packet[4] & 0x7f) | ((packet[3] & 0x70)<<(7-4));
 +	z = packet[5];
 +
-+	if (packet[2] & 1) {
-+		z = 35;
-+	}
-+
 +	if (z > 0) {
 +		input_report_abs(dev, ABS_X, x);
 +		input_report_abs(dev, ABS_Y, y);
@@ -173,6 +169,7 @@ diff -puN drivers/input/mouse/alps.c~alps drivers/input/mouse/alps.c
 +	if (z > 30) input_report_key(dev, BTN_TOUCH, 1);
 +	if (z < 25) input_report_key(dev, BTN_TOUCH, 0);
 +
++	left  |= (packet[2]     ) & 1;
 +	left  |= (packet[3]     ) & 1;
 +	right |= (packet[3] >> 1) & 1;
 +	if (packet[0] == 0xff) {
