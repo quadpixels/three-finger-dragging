@@ -17,15 +17,15 @@ features:
 ---
 
  linux-petero/drivers/input/mouse/Makefile       |    2 
- linux-petero/drivers/input/mouse/alps.c         |  417 ++++++++++++++++++++++++
+ linux-petero/drivers/input/mouse/alps.c         |  424 ++++++++++++++++++++++++
  linux-petero/drivers/input/mouse/alps.h         |   17 
  linux-petero/drivers/input/mouse/psmouse-base.c |   24 +
  linux-petero/drivers/input/mouse/psmouse.h      |    4 
- 5 files changed, 462 insertions(+), 2 deletions(-)
+ 5 files changed, 469 insertions(+), 2 deletions(-)
 
 diff -puN drivers/input/mouse/Makefile~alps drivers/input/mouse/Makefile
---- linux/drivers/input/mouse/Makefile~alps	2004-07-30 23:12:35.759062064 +0200
-+++ linux-petero/drivers/input/mouse/Makefile	2004-07-30 23:12:35.765061152 +0200
+--- linux/drivers/input/mouse/Makefile~alps	2004-07-30 23:12:35.000000000 +0200
++++ linux-petero/drivers/input/mouse/Makefile	2004-07-30 23:12:35.000000000 +0200
 @@ -14,4 +14,4 @@ obj-$(CONFIG_MOUSE_PS2)		+= psmouse.o
  obj-$(CONFIG_MOUSE_SERIAL)	+= sermouse.o
  obj-$(CONFIG_MOUSE_VSXXXAA)	+= vsxxxaa.o
@@ -34,8 +34,8 @@ diff -puN drivers/input/mouse/Makefile~alps drivers/input/mouse/Makefile
 +psmouse-objs  := psmouse-base.o alps.o logips2pp.o synaptics.o
 diff -puN /dev/null drivers/input/mouse/alps.c
 --- /dev/null	2004-02-23 22:02:56.000000000 +0100
-+++ linux-petero/drivers/input/mouse/alps.c	2004-07-30 23:12:48.765084848 +0200
-@@ -0,0 +1,417 @@
++++ linux-petero/drivers/input/mouse/alps.c	2004-07-31 10:52:56.515538984 +0200
+@@ -0,0 +1,424 @@
 +/*
 + * ALPS touchpad PS/2 mouse driver
 + *
@@ -148,8 +148,15 @@ diff -puN /dev/null drivers/input/mouse/alps.c
 +			x = x - 768;
 +		if (y > 255)
 +			y = y - 512;
++		left   = packet[2] & 1;
++		left  |= packet[3] & 1;
++		right  = (packet[2] >> 1) & 1;
++		right |= (packet[3] >> 1) & 1;
++
 +		input_report_rel(dev, REL_X, x);
 +		input_report_rel(dev, REL_Y, -y);
++		input_report_key(dev, BTN_LEFT, left);
++		input_report_key(dev, BTN_RIGHT, right);
 +		input_sync(dev);
 +		return;
 +	}
@@ -455,7 +462,7 @@ diff -puN /dev/null drivers/input/mouse/alps.c
 +
 diff -puN /dev/null drivers/input/mouse/alps.h
 --- /dev/null	2004-02-23 22:02:56.000000000 +0100
-+++ linux-petero/drivers/input/mouse/alps.h	2004-07-30 23:12:35.766061000 +0200
++++ linux-petero/drivers/input/mouse/alps.h	2004-07-30 23:12:35.000000000 +0200
 @@ -0,0 +1,17 @@
 +/*
 + * ALPS touchpad PS/2 mouse driver
@@ -475,8 +482,8 @@ diff -puN /dev/null drivers/input/mouse/alps.h
 +
 +#endif
 diff -puN drivers/input/mouse/psmouse-base.c~alps drivers/input/mouse/psmouse-base.c
---- linux/drivers/input/mouse/psmouse-base.c~alps	2004-07-30 23:12:35.761061760 +0200
-+++ linux-petero/drivers/input/mouse/psmouse-base.c	2004-07-30 23:12:35.766061000 +0200
+--- linux/drivers/input/mouse/psmouse-base.c~alps	2004-07-30 23:12:35.000000000 +0200
++++ linux-petero/drivers/input/mouse/psmouse-base.c	2004-07-30 23:12:35.000000000 +0200
 @@ -2,6 +2,7 @@
   * PS/2 mouse driver
   *
@@ -530,8 +537,8 @@ diff -puN drivers/input/mouse/psmouse-base.c~alps drivers/input/mouse/psmouse-ba
  
  		if (set_properties) {
 diff -puN drivers/input/mouse/psmouse.h~alps drivers/input/mouse/psmouse.h
---- linux/drivers/input/mouse/psmouse.h~alps	2004-07-30 23:12:35.762061608 +0200
-+++ linux-petero/drivers/input/mouse/psmouse.h	2004-07-30 23:12:35.767060848 +0200
+--- linux/drivers/input/mouse/psmouse.h~alps	2004-07-30 23:12:35.000000000 +0200
++++ linux-petero/drivers/input/mouse/psmouse.h	2004-07-30 23:12:35.000000000 +0200
 @@ -2,13 +2,16 @@
  #define _PSMOUSE_H
  
