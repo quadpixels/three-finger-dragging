@@ -307,20 +307,30 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	return (local);
 
   SetupProc_fail:
-	if ((local) && (local->fd))
+	if (local->fd >= 0) {
+		RemoveEnabledDevice (local->fd);
 		xf86CloseSerial (local->fd);
+		local->fd = -1;
+	}
 
 	/* If it fails, the name will be printed 
-	if ((local) && (local->name))
+	if (local->name)
 		xfree (local->name);
 	*/
 
-	if ((priv) && (priv->buffer))
+	if (priv->buffer)
 		XisbFree (priv->buffer);
-	if ((priv) && (priv->synpara))
-		xfree (priv->synpara);
-	if (priv)
-		xfree (priv);
+	if (priv->synpara) {
+		if (priv->shm_config) {
+			if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
+				xf86shmctl(shmid, XF86IPC_RMID, NULL);
+		} else {
+			xfree (priv->synpara);
+		}
+	}
+	/* Freeing priv makes the X server crash. Don't know why.
+	xfree (priv);
+	*/
 	return (local);
 }
 
