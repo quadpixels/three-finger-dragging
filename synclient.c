@@ -214,7 +214,7 @@ static void monitor(SynapticsSHM* synshm, int delay)
     memset(&old, 0, sizeof(SynapticsSHM));
     old.x = -1;				    /* Force first equality test to fail */
 
-    while(1) {
+    while (1) {
 	SynapticsSHM cur = *synshm;
 	if (!is_equal(&old, &cur)) {
 	    if (!header) {
@@ -292,7 +292,7 @@ int main(int argc, char* argv[])
 	usage();
 
     /* Connect to the shared memory area */
-    if((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0)) == -1) {
+    if ((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0)) == -1) {
 	if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) == -1) {
 	    fprintf(stderr, "Can't access shared memory area. SHMConfig disabled?\n");
 	    exit(1);
@@ -301,7 +301,7 @@ int main(int argc, char* argv[])
 	    exit(1);
 	}
     }
-    if((synshm = (SynapticsSHM*) shmat(shmid, NULL, 0)) == NULL) {
+    if ((synshm = (SynapticsSHM*) shmat(shmid, NULL, 0)) == NULL) {
 	perror("shmat");
 	exit(1);
     }

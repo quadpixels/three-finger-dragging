@@ -44,7 +44,7 @@ static Bool
 psm_synaptics_identify(int fd, synapticshw_t *ident)
 {
     int ret;
-    
+
     SYSCALL(ret = ioctl(fd, MOUSE_SYNGETHWINFO, ident));
     if (ret == 0)
 	return TRUE;

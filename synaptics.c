@@ -578,7 +578,7 @@ static void relative_coords(SynapticsPrivate *priv, int x, int y,
     if ((maxX - xCenter > 0) && (maxY - yCenter > 0)) {
 	*relX = (x - xCenter) / (maxX - xCenter);
 	*relY = (y - yCenter) / (maxY - yCenter);
-    } else {	
+    } else {
 	*relX = 0;
 	*relY = 0;
     }

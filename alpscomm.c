@@ -30,7 +30,7 @@ static void
 ALPS_sync(int fd)
 {
     byte buffer[4];
-    while(xf86WaitForInput(fd, 250000) > 0) {
+    while (xf86WaitForInput(fd, 250000) > 0) {
 	xf86ReadSerial(fd, &buffer, 1);
     }
 }
