@@ -125,9 +125,14 @@ Next, check that the log file also contains a line like this:
 If there is no such line, there is probably a binary compatibility
 problem between the synaptics driver and the X server.
 
+Possible fixes:
+
 1. Try upgrading to the latest synaptics driver.
 
 2. Try installing the X SDK package if it is available for your
    version of X. (In Fedora Core 2, that package is called
    xorg-x11-sdk-6.7.0-2.i386.rpm.) Then re-compile the synaptics
    driver and try again.
+
+3. Make sure the driver is compiled with the same compiler version as
+   the X server.
