@@ -10,6 +10,7 @@ TOP_X_INCLUDES = -I$(TOP)/exports/include
 TOP_INCLUDES = -I$(TOP) $(TOP_X_INCLUDES)
 
 INSTALLED_X = /usr/X11R6
+BINDIR = /usr/local/bin
 
 XF86SRC = $(SERVERSRC)/hw/xfree86
 XF86COMSRC = $(XF86SRC)/common
@@ -45,6 +46,14 @@ DRIVER = synaptics
 	$(CC) -c $(CFLAGS) $(_NOOP_) $*.c
 
 all:: $(DRIVER)_drv.o synclient
+
+install: $(BINDIR)/synclient $(INSTALLED_X)/lib/modules/input/$(DRIVER)_drv.o
+
+$(BINDIR)/synclient : synclient
+	cp $< $@
+
+$(INSTALLED_X)/lib/modules/input/$(DRIVER)_drv.o : $(DRIVER)_drv.o
+	cp $< $@
 
 $(DRIVER)_drv.o:  $(OBJS) $(EXTRALIBRARYDEPS)
 	$(RM) $@
