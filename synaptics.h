@@ -40,7 +40,7 @@ typedef struct _SynapticsSHM
     Bool updown_button_scrolling;	    /* Up/Down-Button scrolling or middle/double-click */
     Bool touchpad_off;			    /* Switches the Touchpad off*/
     Bool locked_drags;			    /* Enable locked drags */
-} SynapticsSHM, *SynapticsSHMPtr;
+} SynapticsSHM;
 
 #ifdef SYNAPTICS_PRIVATE
 /******************************************************************************
@@ -98,7 +98,7 @@ enum SynapticsProtocol {
 typedef struct _SynapticsPrivateRec
 {
     /* shared memory pointer */
-    SynapticsSHMPtr synpara;
+    SynapticsSHM *synpara;
 
     enum SynapticsProtocol proto;
 
@@ -150,8 +150,7 @@ typedef struct _SynapticsPrivateRec
 
     Bool swapY;				/* Swap Y coordinate direction. For compatibility
 					   with old 2.5/2.6 kernels. Will be removed. */
-}
-SynapticsPrivateRec, *SynapticsPrivatePtr;
+} SynapticsPrivate;
 
 
 static Bool DeviceControl(DeviceIntPtr, int);
@@ -166,14 +165,14 @@ static Bool DeviceInit(DeviceIntPtr);
 static Bool DeviceOn(DeviceIntPtr);
 static Bool DeviceOff(DeviceIntPtr);
 static Bool DeviceInit(DeviceIntPtr);
-static Bool SynapticsGetHwState(LocalDevicePtr, SynapticsPrivatePtr, struct SynapticsHwState*);
-static Bool SynapticsParseEventData(LocalDevicePtr, SynapticsPrivatePtr,
-				    struct SynapticsHwState*);
-static Bool SynapticsReadEvent(SynapticsPrivatePtr, struct input_event*);
-static Bool SynapticsParseRawPacket(LocalDevicePtr, SynapticsPrivatePtr,
-				    struct SynapticsHwState*);
-static Bool SynapticsGetPacket(LocalDevicePtr, SynapticsPrivatePtr);
-static void PrintIdent(SynapticsPrivatePtr);
+static Bool SynapticsGetHwState(LocalDevicePtr, SynapticsPrivate *, struct SynapticsHwState *);
+static Bool SynapticsParseEventData(LocalDevicePtr, SynapticsPrivate *,
+				    struct SynapticsHwState *);
+static Bool SynapticsReadEvent(SynapticsPrivate *, struct input_event *);
+static Bool SynapticsParseRawPacket(LocalDevicePtr, SynapticsPrivate *,
+				    struct SynapticsHwState *);
+static Bool SynapticsGetPacket(LocalDevicePtr, SynapticsPrivate *);
+static void PrintIdent(SynapticsPrivate *);
 
 #endif /* SYNAPTICS_PRIVATE */
 

@@ -163,7 +163,7 @@ static void
 SetDeviceAndProtocol(LocalDevicePtr local)
 {
     char *str_par;
-    SynapticsPrivatePtr priv = local->private;
+    SynapticsPrivate *priv = local->private;
 
     priv->proto = SYN_PROTO_PSAUX;
     str_par = xf86FindOptionValue(local->options, "Protocol");
@@ -215,7 +215,7 @@ static InputInfoPtr
 SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 {
     LocalDevicePtr local;
-    SynapticsPrivatePtr priv;
+    SynapticsPrivate *priv;
 #ifdef XFREE_4_0_3
     XF86OptionPtr optList;
 #else
@@ -226,7 +226,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     unsigned long now;
 
     /* allocate memory for SynaticsPrivateRec */
-    priv = xcalloc (1, sizeof (SynapticsPrivateRec));
+    priv = xcalloc (1, sizeof (SynapticsPrivate));
     if (!priv)
 	return NULL;
 
@@ -446,7 +446,7 @@ DeviceControl (DeviceIntPtr dev, int mode)
 	{
 	    int shmid;
 	    LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
-	    SynapticsPrivatePtr priv = (SynapticsPrivatePtr) (local->private);
+	    SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
 	    RetValue = DeviceOff( dev );
 	    if (priv->shm_config)
 		if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
@@ -464,7 +464,7 @@ static Bool
 DeviceOn (DeviceIntPtr dev)
 {
     LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
-    SynapticsPrivatePtr priv = (SynapticsPrivatePtr) (local->private);
+    SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
 
     DBG(3, ErrorF("Synaptics DeviceOn called\n"));
 
@@ -505,7 +505,7 @@ static Bool
 DeviceOff(DeviceIntPtr dev)
 {
     LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
-    SynapticsPrivatePtr priv = (SynapticsPrivatePtr) (local->private);
+    SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
 
     DBG(3, ErrorF("Synaptics DeviceOff called\n"));
 
@@ -557,7 +557,7 @@ move_distance(int dx, int dy)
 }
 
 static edge_type
-edge_detection(SynapticsPrivatePtr priv, int x, int y)
+edge_detection(SynapticsPrivate *priv, int x, int y)
 {
     edge_type edge = 0;
 
@@ -578,7 +578,7 @@ static CARD32
 timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 {
     LocalDevicePtr local = (LocalDevicePtr) (arg);
-    SynapticsPrivatePtr priv = (SynapticsPrivatePtr) (local->private);
+    SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
     struct SynapticsHwState hw;
     int delay;
     int sigstate;
@@ -626,7 +626,7 @@ static int clamp(int val, int min, int max)
 static void
 ReadInput(LocalDevicePtr local)
 {
-    SynapticsPrivatePtr priv = (SynapticsPrivatePtr) (local->private);
+    SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
     struct SynapticsHwState hw;
     int delay = 0;
     Bool newDelay = FALSE;
@@ -642,9 +642,9 @@ ReadInput(LocalDevicePtr local)
 }
 
 static int
-HandleMidButtonEmulation(SynapticsPrivatePtr priv, struct SynapticsHwState* hw, long* delay)
+HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, long *delay)
 {
-    SynapticsSHMPtr para = priv->synpara;
+    SynapticsSHM *para = priv->synpara;
     Bool done = FALSE;
     long timeleft;
     int mid = 0;
@@ -714,9 +714,9 @@ HandleMidButtonEmulation(SynapticsPrivatePtr priv, struct SynapticsHwState* hw, 
 }
 
 static int
-SynapticsDetectFinger(SynapticsPrivatePtr priv, struct SynapticsHwState* hw)
+SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 {
-    SynapticsSHMPtr para = priv->synpara;
+    SynapticsSHM *para = priv->synpara;
     int finger;
 
     /* finger detection thru pressure and threshold */
@@ -765,8 +765,8 @@ SynapticsDetectFinger(SynapticsPrivatePtr priv, struct SynapticsHwState* hw)
 static int
 HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 {
-    SynapticsPrivatePtr priv = (SynapticsPrivatePtr) (local->private);
-    SynapticsSHMPtr para = priv->synpara;
+    SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
+    SynapticsSHM *para = priv->synpara;
     Bool finger;
     int dist, dx, dy, buttons, id;
     edge_type edge;
@@ -1183,8 +1183,8 @@ ConvertProc (LocalDevicePtr local,
 static Bool
 QueryHardware (LocalDevicePtr local)
 {
-    SynapticsPrivatePtr priv = (SynapticsPrivatePtr) local->private;
-    SynapticsSHMPtr para = priv->synpara;
+    SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
+    SynapticsSHM *para = priv->synpara;
     int retries;
     int mode;
 
@@ -1245,7 +1245,7 @@ QueryHardware (LocalDevicePtr local)
 }
 
 static Bool
-SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivatePtr priv,
+SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivate *priv,
 		    struct SynapticsHwState *hw)
 {
     if (priv->proto == SYN_PROTO_PSAUX) {
@@ -1258,7 +1258,7 @@ SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivatePtr priv,
 }
 
 static Bool
-SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
+SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivate *priv,
 			struct SynapticsHwState *hw)
 {
     struct input_event ev;
@@ -1375,7 +1375,7 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
 }
 
 static Bool
-SynapticsReadEvent(SynapticsPrivatePtr priv, struct input_event *ev)
+SynapticsReadEvent(SynapticsPrivate *priv, struct input_event *ev)
 {
     int i, c;
     unsigned char *pBuf, u;
@@ -1391,7 +1391,7 @@ SynapticsReadEvent(SynapticsPrivatePtr priv, struct input_event *ev)
 }
 
 static Bool
-SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
+SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivate *priv,
 			struct SynapticsHwState *hw)
 {
     Bool ret = SynapticsGetPacket(local, priv);
@@ -1519,7 +1519,7 @@ SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
  * Decide if the current packet stored in priv->protoBuf is valid.
  */
 static Bool
-PacketOk(SynapticsPrivatePtr priv)
+PacketOk(SynapticsPrivate *priv)
 {
     unsigned char *buf = priv->protoBuf;
     int newabs = SYN_MODEL_NEWABS(priv->model_id);
@@ -1548,7 +1548,7 @@ PacketOk(SynapticsPrivatePtr priv)
 }
 
 static Bool
-SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
+SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivate *priv)
 {
     int count = 0;
     int c;
@@ -1615,7 +1615,7 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 }
 
 static void
-PrintIdent(SynapticsPrivatePtr priv)
+PrintIdent(SynapticsPrivate *priv)
 {
     xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(priv->identity));
     xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(priv->identity),
