@@ -1,2 +1,2 @@
-* Options to disable features (palm detection, edge scrolling, etc)
+* Option to disable palm detection.
 * Use ftok to get shared memory ID.
