@@ -26,6 +26,17 @@
 
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
+/* list of supported devices */
+static struct device_id_table {
+    unsigned short bustype;
+    unsigned short vendor;
+    unsigned short product;
+} device_id_table[] = {
+    { BUS_I8042, 0x0002, PSMOUSE_SYNAPTICS },
+    { BUS_USB, USB_VENDOR_ID_SYNAPTICS, USB_DEVICE_ID_CPAD },
+    { 0, 0, 0 }
+};
+
 
 /*****************************************************************************
  *	Function Definitions
@@ -52,14 +63,16 @@ static Bool
 event_query_is_synaptics(int fd)
 {
     struct input_id id;
-    int ret;
+    int ret, i;
 
     SYSCALL(ret = ioctl(fd, EVIOCGID, &id));
     if (ret >= 0) {
-	if ((id.bustype == BUS_I8042) &&
-	    (id.vendor == 0x0002) &&
-	    (id.product == PSMOUSE_SYNAPTICS)) {
-	    return TRUE;
+	for (i = 0; device_id_table[i].bustype; i++) {
+	    if ((id.bustype == device_id_table[i].bustype) &&
+		(id.vendor == device_id_table[i].vendor) &&
+		(id.product == device_id_table[i].product)) {
+		return TRUE;
+	    }
 	}
     }
     return FALSE;
