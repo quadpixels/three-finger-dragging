@@ -199,6 +199,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->repeat_timer = NULL;
 	priv->repeatButtons = 0;
 
+	priv->proto = SYN_PROTO_PSAUX;
+
 	/* install shared memory or normal memory for parameter */
 	priv->shm_config = FALSE;
 	if(xf86SetBoolOption(local->options, "SHMConfig", FALSE)) 
@@ -1050,6 +1052,9 @@ QueryHardware (LocalDevicePtr local)
 	
 	xf86Msg(X_INFO, "xfree driver for the synaptics touchpad %s\n", VERSION);
 
+	if (priv->proto == SYN_PROTO_EVENT)
+		return Success;
+
 	/* is the synaptics touchpad active? */
 	priv->isSynaptics = QueryIsSynaptics(local->fd);
 
@@ -1110,6 +1115,87 @@ QueryHardware (LocalDevicePtr local)
 static Bool
 SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivatePtr priv,
 					struct SynapticsHwState *hw)
+{
+	if (priv->proto == SYN_PROTO_PSAUX) {
+		return SynapticsParseRawPacket(local, priv, hw);
+	} else if (priv->proto == SYN_PROTO_EVENT) {
+		return SynapticsParseEventData(local, priv, hw);
+	} else {
+		return !Success;
+	}
+}
+
+static Bool
+SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
+						struct SynapticsHwState *hw)
+{
+	struct input_event ev;
+
+	while (SynapticsReadEvent(priv, &ev) == Success) {
+		switch (ev.type) {
+		case 0x00:							/* SYN */
+			*hw = priv->hwState;
+			return Success;
+		case 0x01:							/* KEY */
+			switch (ev.code) {
+			case 0x110:						/* BTN_LEFT */
+				priv->hwState.left = (ev.value ? TRUE : FALSE);
+				break;
+			case 0x111:						/* BTN_RIGHT */
+				priv->hwState.right = (ev.value ? TRUE : FALSE);
+				break;
+			case 0x115:						/* BTN_FORWARD */
+				priv->hwState.up = (ev.value ? TRUE : FALSE);
+				break;
+			case 0x116:						/* BTN_BACK */
+				priv->hwState.down = (ev.value ? TRUE : FALSE);
+				break;
+			}
+			break;
+		case 0x03:							/* ABS */
+			switch (ev.code) {
+			case 0x00:						/* ABS_X */
+				priv->hwState.x = ev.value;
+				break;
+			case 0x01:						/* ABS_Y */
+				priv->hwState.y = ev.value;
+				break;
+			case 0x18:						/* ABS_PRESSURE */
+				priv->hwState.z = ev.value;
+				break;
+			}
+			break;
+		case 0x04:							/* MSC */
+			switch (ev.code) {
+			case 0x02:						/* MSC_GESTURE */
+				priv->hwState.w = ev.value;
+				break;
+			}
+			break;
+		}
+	}
+	return !Success;
+}
+
+static Bool
+SynapticsReadEvent(SynapticsPrivatePtr priv, struct input_event *ev)
+{
+	int i, c;
+	unsigned char *pBuf, u;
+
+	for (i = 0; i < sizeof(struct input_event); i++) {
+		if ((c = XisbRead(priv->buffer)) < 0)
+			return !Success;
+		u = (unsigned char)c;
+		pBuf = (unsigned char *)ev;
+		pBuf[i] = u;
+	}
+	return Success;
+}
+
+static Bool
+SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
+						struct SynapticsHwState *hw)
 {
 	Bool ret = SynapticsGetPacket(local, priv);
 	unsigned char *buf;

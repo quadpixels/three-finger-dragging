@@ -58,6 +58,18 @@ struct SynapticsHwState {
 	Bool cbRight;
 };
 
+/*
+ * Data format for the linux input event interface.
+ */
+struct input_event {
+	unsigned long tv_sec;
+	unsigned long tv_usec;
+	unsigned short type;
+	unsigned short code;
+	unsigned int value;
+};
+
+
 typedef struct _SynapticsTapRec 
 {
 	int x, y;
@@ -77,10 +89,19 @@ enum MidButtonEmulation {
 										   to be released */
 };
 
+enum SynapticsProtocol {
+	SYN_PROTO_PSAUX,					/* Raw psaux device */
+	SYN_PROTO_EVENT						/* Linux kernel event interface */
+};
+
 typedef struct _SynapticsPrivateRec
 {
 	/* shared memory pointer */
 	SynapticsSHMPtr synpara;	
+
+	enum SynapticsProtocol proto;
+
+	struct SynapticsHwState hwState;
 
 	/* Data read from the touchpad */
 	unsigned long int model_id;			/* Model-ID */
@@ -140,6 +161,11 @@ static Bool DeviceOff(DeviceIntPtr);
 static Bool DeviceInit(DeviceIntPtr);
 static Bool SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivatePtr priv,
 								struct SynapticsHwState *hw);
+static Bool SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
+									struct SynapticsHwState *hw);
+static Bool SynapticsReadEvent(SynapticsPrivatePtr priv, struct input_event *ev);
+static Bool SynapticsParseRawPacket(LocalDevicePtr local, SynapticsPrivatePtr priv,
+									struct SynapticsHwState *hw);
 static Bool SynapticsGetPacket(LocalDevicePtr, SynapticsPrivatePtr);
 static void PrintIdent(SynapticsPrivatePtr);
 
