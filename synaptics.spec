@@ -20,7 +20,7 @@ advanced features of the touchpad becomes available.
 %setup
 
 %build
-make
+make ARCH=%{_arch}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
