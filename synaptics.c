@@ -304,8 +304,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     /* read the parameter */
     priv->synpara->left_edge = xf86SetIntOption(local->options, "LeftEdge", 1900);
     priv->synpara->right_edge = xf86SetIntOption(local->options, "RightEdge", 5400);
-    priv->synpara->top_edge = xf86SetIntOption(local->options, "TopEdge", 3900);
-    priv->synpara->bottom_edge = xf86SetIntOption(local->options, "BottomEdge", 1800);
+    priv->synpara->top_edge = xf86SetIntOption(local->options, "TopEdge", 1900);
+    priv->synpara->bottom_edge = xf86SetIntOption(local->options, "BottomEdge", 4000);
     priv->synpara->finger_low = xf86SetIntOption(local->options, "FingerLow", 25);
     priv->synpara->finger_high = xf86SetIntOption(local->options, "FingerHigh", 30);
     priv->synpara->tap_time = xf86SetIntOption(local->options, "MaxTapTime", 180);
