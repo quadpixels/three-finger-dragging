@@ -396,7 +396,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     local->flags |= XI86_CONFIGURED;
 
     if (local->fd != -1) {
-	xf86RemoveEnabledDevice(local);
 	if (priv->comm.buffer) {
 	    XisbFree(priv->comm.buffer);
 	    priv->comm.buffer = NULL;
@@ -408,7 +407,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
  SetupProc_fail:
     if (local->fd >= 0) {
-	RemoveEnabledDevice(local->fd);
 	xf86CloseSerial(local->fd);
 	local->fd = -1;
     }
