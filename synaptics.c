@@ -1342,45 +1342,54 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
     if (priv->vert_scroll_on) {
 	/* + = down, - = up */
-	while (hw->y - priv->scroll_y > para->scroll_dist_vert) {
-	    sd->down++;
-	    priv->scroll_y += para->scroll_dist_vert;
-	}
-	while (hw->y - priv->scroll_y < -para->scroll_dist_vert) {
-	    sd->up++;
-	    priv->scroll_y -= para->scroll_dist_vert;
+	int delta = para->scroll_dist_vert;
+	if (delta > 0) {
+	    while (hw->y - priv->scroll_y > delta) {
+		sd->down++;
+		priv->scroll_y += delta;
+	    }
+	    while (hw->y - priv->scroll_y < -delta) {
+		sd->up++;
+		priv->scroll_y -= delta;
+	    }
 	}
     }
     if (priv->horiz_scroll_on) {
 	/* + = right, - = left */
-	while (hw->x - priv->scroll_x > para->scroll_dist_horiz) {
-	    sd->right++;
-	    priv->scroll_x += para->scroll_dist_horiz;
-	}
-	while (hw->x - priv->scroll_x < -para->scroll_dist_horiz) {
-	    sd->left++;
-	    priv->scroll_x -= para->scroll_dist_horiz;
+	int delta = para->scroll_dist_horiz;
+	if (delta > 0) {
+	    while (hw->x - priv->scroll_x > delta) {
+		sd->right++;
+		priv->scroll_x += delta;
+	    }
+	    while (hw->x - priv->scroll_x < -delta) {
+		sd->left++;
+		priv->scroll_x -= delta;
+	    }
 	}
     }
     if (priv->circ_scroll_on) {
 	/* + = counter clockwise, - = clockwise */
-	while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) > para->scroll_dist_circ) {
-	    if (priv->circ_scroll_vert)
-		sd->up++;
-	    else
-		sd->right++;
-	    priv->scroll_a += para->scroll_dist_circ;
-	    if (priv->scroll_a > M_PI)
-		priv->scroll_a -= 2 * M_PI;
-	}
-	while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) < -para->scroll_dist_circ) {
-	    if (priv->circ_scroll_vert)
-		sd->down++;
-	    else
-		sd->left++;
-	    priv->scroll_a -= para->scroll_dist_circ;
-	    if (priv->scroll_a < -M_PI)
-		priv->scroll_a += 2 * M_PI;
+	double delta = para->scroll_dist_circ;
+	if (delta >= 0.005) {
+	    while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) > delta) {
+		if (priv->circ_scroll_vert)
+		    sd->up++;
+		else
+		    sd->right++;
+		priv->scroll_a += delta;
+		if (priv->scroll_a > M_PI)
+		    priv->scroll_a -= 2 * M_PI;
+	    }
+	    while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) < -delta) {
+		if (priv->circ_scroll_vert)
+		    sd->down++;
+		else
+		    sd->left++;
+		priv->scroll_a -= delta;
+		if (priv->scroll_a < -M_PI)
+		    priv->scroll_a += 2 * M_PI;
+	    }
 	}
     }
 }
