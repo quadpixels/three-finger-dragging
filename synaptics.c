@@ -239,6 +239,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     char *str_par;
     int shmid;
     unsigned long now;
+    SynapticsSHM *pars;
 
     /* allocate memory for SynaticsPrivateRec */
     priv = xcalloc(1, sizeof(SynapticsPrivate));
@@ -298,7 +299,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->touch_on.millis = now;
     priv->hasGuest = FALSE;
 
-    /* install shared memory or normal memory for parameter */
+    /* install shared memory or normal memory for parameters */
     priv->shm_config = FALSE;
     if (xf86SetBoolOption(local->options, "SHMConfig", FALSE)) {
 	if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
@@ -319,85 +320,86 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	    goto SetupProc_fail;
     }
 
-    /* read the parameter */
-    priv->synpara->left_edge = xf86SetIntOption(local->options, "LeftEdge", 1900);
-    priv->synpara->right_edge = xf86SetIntOption(local->options, "RightEdge", 5400);
-    priv->synpara->top_edge = xf86SetIntOption(local->options, "TopEdge", 1900);
-    priv->synpara->bottom_edge = xf86SetIntOption(local->options, "BottomEdge", 4000);
-    priv->synpara->finger_low = xf86SetIntOption(local->options, "FingerLow", 25);
-    priv->synpara->finger_high = xf86SetIntOption(local->options, "FingerHigh", 30);
-    priv->synpara->tap_time = xf86SetIntOption(local->options, "MaxTapTime", 180);
-    priv->synpara->tap_move = xf86SetIntOption(local->options, "MaxTapMove", 220);
-    priv->synpara->emulate_mid_button_time = xf86SetIntOption(local->options,
+    /* read the parameters */
+    pars = priv->synpara;
+    pars->left_edge = xf86SetIntOption(local->options, "LeftEdge", 1900);
+    pars->right_edge = xf86SetIntOption(local->options, "RightEdge", 5400);
+    pars->top_edge = xf86SetIntOption(local->options, "TopEdge", 1900);
+    pars->bottom_edge = xf86SetIntOption(local->options, "BottomEdge", 4000);
+    pars->finger_low = xf86SetIntOption(local->options, "FingerLow", 25);
+    pars->finger_high = xf86SetIntOption(local->options, "FingerHigh", 30);
+    pars->tap_time = xf86SetIntOption(local->options, "MaxTapTime", 180);
+    pars->tap_move = xf86SetIntOption(local->options, "MaxTapMove", 220);
+    pars->emulate_mid_button_time = xf86SetIntOption(local->options,
 							      "EmulateMidButtonTime", 75);
-    priv->synpara->scroll_dist_vert = xf86SetIntOption(local->options, "VertScrollDelta", 100);
-    priv->synpara->scroll_dist_horiz = xf86SetIntOption(local->options, "HorizScrollDelta", 100);
-    priv->synpara->edge_motion_min_z = xf86SetIntOption(local->options, "EdgeMotionMinZ", 30);
-    priv->synpara->edge_motion_max_z = xf86SetIntOption(local->options, "EdgeMotionMaxZ", 160);
-    priv->synpara->edge_motion_min_speed = xf86SetIntOption(local->options, "EdgeMotionMinSpeed", 1);
-    priv->synpara->edge_motion_max_speed = xf86SetIntOption(local->options, "EdgeMotionMaxSpeed", 200);
-    priv->synpara->edge_motion_use_always = xf86SetBoolOption(local->options, "EdgeMotionUseAlways", FALSE);
-    priv->synpara->repeater = xf86SetStrOption(local->options, "Repeater", NULL);
-    priv->synpara->updown_button_scrolling = xf86SetBoolOption(local->options, "UpDownScrolling", TRUE);
-    priv->synpara->touchpad_off = xf86SetBoolOption(local->options, "TouchpadOff", FALSE);
-    priv->synpara->locked_drags = xf86SetBoolOption(local->options, "LockedDrags", FALSE);
-    priv->synpara->tap_action[RT_TAP] = xf86SetIntOption(local->options, "RTCornerButton", 2);
-    priv->synpara->tap_action[RB_TAP] = xf86SetIntOption(local->options, "RBCornerButton", 3);
-    priv->synpara->tap_action[LT_TAP] = xf86SetIntOption(local->options, "LTCornerButton", 0);
-    priv->synpara->tap_action[LB_TAP] = xf86SetIntOption(local->options, "LBCornerButton", 0);
-    priv->synpara->tap_action[F1_TAP] = xf86SetIntOption(local->options, "TapButton1",     1);
-    priv->synpara->tap_action[F2_TAP] = xf86SetIntOption(local->options, "TapButton2",     2);
-    priv->synpara->tap_action[F3_TAP] = xf86SetIntOption(local->options, "TapButton3",     3);
-    priv->synpara->circular_scrolling = xf86SetBoolOption(local->options, "CircularScrolling", FALSE);
-    priv->synpara->circular_trigger   = xf86SetIntOption(local->options, "CircScrollTrigger", 0);
+    pars->scroll_dist_vert = xf86SetIntOption(local->options, "VertScrollDelta", 100);
+    pars->scroll_dist_horiz = xf86SetIntOption(local->options, "HorizScrollDelta", 100);
+    pars->edge_motion_min_z = xf86SetIntOption(local->options, "EdgeMotionMinZ", 30);
+    pars->edge_motion_max_z = xf86SetIntOption(local->options, "EdgeMotionMaxZ", 160);
+    pars->edge_motion_min_speed = xf86SetIntOption(local->options, "EdgeMotionMinSpeed", 1);
+    pars->edge_motion_max_speed = xf86SetIntOption(local->options, "EdgeMotionMaxSpeed", 200);
+    pars->edge_motion_use_always = xf86SetBoolOption(local->options, "EdgeMotionUseAlways", FALSE);
+    pars->repeater = xf86SetStrOption(local->options, "Repeater", NULL);
+    pars->updown_button_scrolling = xf86SetBoolOption(local->options, "UpDownScrolling", TRUE);
+    pars->touchpad_off = xf86SetBoolOption(local->options, "TouchpadOff", FALSE);
+    pars->locked_drags = xf86SetBoolOption(local->options, "LockedDrags", FALSE);
+    pars->tap_action[RT_TAP] = xf86SetIntOption(local->options, "RTCornerButton", 2);
+    pars->tap_action[RB_TAP] = xf86SetIntOption(local->options, "RBCornerButton", 3);
+    pars->tap_action[LT_TAP] = xf86SetIntOption(local->options, "LTCornerButton", 0);
+    pars->tap_action[LB_TAP] = xf86SetIntOption(local->options, "LBCornerButton", 0);
+    pars->tap_action[F1_TAP] = xf86SetIntOption(local->options, "TapButton1",     1);
+    pars->tap_action[F2_TAP] = xf86SetIntOption(local->options, "TapButton2",     2);
+    pars->tap_action[F3_TAP] = xf86SetIntOption(local->options, "TapButton3",     3);
+    pars->circular_scrolling = xf86SetBoolOption(local->options, "CircularScrolling", FALSE);
+    pars->circular_trigger   = xf86SetIntOption(local->options, "CircScrollTrigger", 0);
 
     str_par = xf86FindOptionValue(local->options, "MinSpeed");
-    if ((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->min_speed) != 1))
-	priv->synpara->min_speed=0.02;
+    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->min_speed) != 1))
+	pars->min_speed=0.02;
     str_par = xf86FindOptionValue(local->options, "MaxSpeed");
-    if ((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->max_speed) != 1))
-	priv->synpara->max_speed=0.18;
+    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->max_speed) != 1))
+	pars->max_speed=0.18;
     str_par = xf86FindOptionValue(local->options, "AccelFactor");
-    if ((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->accl) != 1))
-	priv->synpara->accl=0.0015;
+    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->accl) != 1))
+	pars->accl=0.0015;
     str_par = xf86FindOptionValue(local->options, "CircScrollDelta");
-    if ((!str_par) || (xf86sscanf(str_par, "%lf", &priv->synpara->scroll_dist_circ) != 1))
-	priv->synpara->scroll_dist_circ = 0.1;
+    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->scroll_dist_circ) != 1))
+	pars->scroll_dist_circ = 0.1;
 
-    if (priv->synpara->circular_trigger < 0 || priv->synpara->circular_trigger > 8) {
+    if (pars->circular_trigger < 0 || pars->circular_trigger > 8) {
 	xf86Msg(X_WARNING, "Unknown circular scrolling trigger, using 0 (edges)");
-	priv->synpara->circular_trigger = 0;
+	pars->circular_trigger = 0;
     }
 
     /* Warn about (and fix) incorrectly configured TopEdge/BottomEdge parameters */
-    if (priv->synpara->top_edge > priv->synpara->bottom_edge) {
-	int tmp = priv->synpara->top_edge;
-	priv->synpara->top_edge = priv->synpara->bottom_edge;
-	priv->synpara->bottom_edge = tmp;
+    if (pars->top_edge > pars->bottom_edge) {
+	int tmp = pars->top_edge;
+	pars->top_edge = pars->bottom_edge;
+	pars->bottom_edge = tmp;
 	xf86Msg(X_WARNING, "%s: TopEdge is bigger than BottomEdge. Fixing.\n",
 		local->name);
     }
 
-    priv->largest_valid_x = MIN(priv->synpara->right_edge, XMAX_NOMINAL);
+    priv->largest_valid_x = MIN(pars->right_edge, XMAX_NOMINAL);
 
     priv->buffer = XisbNew(local->fd, 200);
     DBG(9, XisbTrace(priv->buffer, 1));
 
-    if (priv->synpara->repeater) {
+    if (pars->repeater) {
 	/* create repeater fifo */
-	if ((xf86mknod(priv->synpara->repeater, 666, XF86_S_IFIFO) != 0) &&
+	if ((xf86mknod(pars->repeater, 666, XF86_S_IFIFO) != 0) &&
 	    (xf86errno != xf86_EEXIST)) {
 	    xf86Msg(X_ERROR, "%s can't create repeater fifo\n", local->name);
-	    xf86free(priv->synpara->repeater);
-	    priv->synpara->repeater = NULL;
+	    xf86free(pars->repeater);
+	    pars->repeater = NULL;
 	    priv->fifofd = -1;
 	} else {
 	    /* open the repeater fifo */
-	    optList = xf86NewOption("Device", priv->synpara->repeater);
+	    optList = xf86NewOption("Device", pars->repeater);
 	    if ((priv->fifofd = xf86OpenSerial(optList)) == -1) {
 		xf86Msg(X_ERROR, "%s repeater device open failed\n", local->name);
-		xf86free(priv->synpara->repeater);
-		priv->synpara->repeater = NULL;
+		xf86free(pars->repeater);
+		pars->repeater = NULL;
 		priv->fifofd = -1;
 	    }
 	}
