@@ -96,11 +96,11 @@ syndaemon.o	: syndaemon.c
 syndaemon	: syndaemon.o
 	$(CC) -o $@ $< -lm -L$(INSTALLED_X)/lib -lXext -lX11
 
-synaptics.o : synaptics.h ps2comm.h synproto.h Makefile
-ps2comm.o   : ps2comm.h synproto.h
-eventcomm.o : eventcomm.h synproto.h linux_input.h
+synaptics.o : synaptics.h synproto.h Makefile
+ps2comm.o   : ps2comm.h synproto.h synaptics.h
+eventcomm.o : eventcomm.h linux_input.h synproto.h synaptics.h
 synclient.o : synaptics.h
-syndeamon.o : synaptics.h
+syndaemon.o : synaptics.h
 
 clean::
 	$(RM) *.CKP *.ln *.BAK *.bak *.o core errs ,* *~ *.a .emacs_* tags TAGS make.log MakeOut synclient syndaemon "#"* manpages/*~ synaptics-$(VERSION).tar.bz2
