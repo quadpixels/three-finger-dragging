@@ -1,0 +1,33 @@
+It is possible to use the driver with an ALPS Glidepoint device, if
+you are using a 2.6 linux kernel and the ALPS kernel patch.
+
+One user reported success with the following parameter settings:
+
+    LeftEdge             = 60
+    RightEdge            = 830
+    TopEdge              = 70
+    BottomEdge           = 650
+    FingerLow            = 25
+    FingerHigh           = 30
+    MaxTapTime           = 180
+    MaxTapMove           = 110
+    EmulateMidButtonTime = 75
+    VertScrollDelta      = 50
+    HorizScrollDelta     = 50
+    MinSpeed             = 0.2
+    MaxSpeed             = 0.5
+    AccelFactor          = 0.01
+    EdgeMotionSpeed      = 40
+    UpDownScrolling      = 1
+    TouchpadOff          = 0
+
+Note though that the auto-dev protocol option doesn't work for ALPS
+devices, so you have to use the "event" protocol instead and set the
+device option to the correct event device, something like this:
+
+Section "InputDevice"
+  Driver  	"synaptics"
+  Identifier  	"Mouse[1]"
+  Option 	"Device"  	"/dev/input/event1"
+  Option	"Protocol"	"event"
+EndSection
