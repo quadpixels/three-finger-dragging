@@ -126,11 +126,10 @@ typedef struct _SynapticsPrivateRec
 	int fifofd;		 					/* fd for fifo */
 	SynapticsTapRec touch_on;			/* data when the touchpad is touched */
 	SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY]; /* movement history */
-	int move_hist_idx;					/* Most recent entry in move_hist[] */
 
 	int scroll_y;						/* last y-scroll position */
 	int scroll_x;						/* last x-scroll position */
-	unsigned long finger_millis;		/* Time when finger entered touchpad */
+	unsigned long count_packet_finger;	/* packet counter with finger on the touchpad */
 	unsigned int tapping_millis;		/* packet counter for tapping */
 	unsigned int button_delay_millis;	/* button delay for 3rd button emulation */
 	unsigned int prev_up;				/* Previous up button value, for double click emulation */

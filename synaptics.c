@@ -202,7 +202,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	priv->repeatButtons = 0;
 	priv->nextRepeat = 0;
 	now = GetTimeInMillis();
-	priv->finger_millis = now;
+	priv->count_packet_finger = 0;
 	priv->tapping_millis = now;
 	priv->button_delay_millis = now;
 	priv->touch_on.millis = now;
@@ -538,7 +538,7 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 }
 
 
-#define MOVE_HIST(a) (priv->move_hist[((priv->move_hist_idx-(a))%SYNAPTICS_MOVE_HISTORY)])
+#define MOVE_HIST(a) (priv->move_hist[((priv->count_packet_finger-(a))%SYNAPTICS_MOVE_HISTORY)])
 
 static int clamp(int val, int min, int max)
 {
@@ -927,11 +927,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	if(finger && !priv->vert_scroll_on && !priv->horiz_scroll_on &&
 	   !priv->finger_count && !priv->palm) 
 	{
-		timeleft = TIME_DIFF(priv->finger_millis + 50, hw->millis);
-		if (timeleft > 0)
-			delay = MIN(delay, timeleft);
-		if (timeleft <= 0)
-		{
+		delay = MIN(delay, 13);
+		if (priv->count_packet_finger > 3)
+		{ /* min. 3 packets */
 			delay = MIN(delay, 13);
 
 			dy = (1 * 
@@ -972,10 +970,12 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 			priv->frac_y = xf86modf((dy * speed) + priv->frac_y, &integral);
 			dy = integral;
 		}
+
+		priv->count_packet_finger++;
 	}
 	else 
-	{
-		priv->finger_millis = hw->millis;
+	{ /* reset packet counter */
+		priv->count_packet_finger = 0;
 	}
 
 
@@ -989,11 +989,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	priv->finger_flag = finger;
 
 	/* generate a history of the absolute positions */
-	if (1) {
-		priv->move_hist_idx++;
-		MOVE_HIST(0).y = hw->y;
-		MOVE_HIST(0).x = hw->x;
-	}
+	MOVE_HIST(0).y = hw->y;
+	MOVE_HIST(0).x = hw->x;
 
 	/* Post events */
 	if(dx || dy)
