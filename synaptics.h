@@ -112,7 +112,7 @@ typedef struct _SynapticsPrivateRec
 	unsigned long int identity;			/* Identification */
 	Bool isSynaptics;					/* Synaptics touchpad active */
 	Bool six_buttons;					/* Use six button protocol */
-
+										/*  only of interest if in raw mode */
 	Bool shm_config;					/* True when shared memory area allocated */
 
 	OsTimerPtr timer;				   /* for up/down-button repeat, tap processing, etc */

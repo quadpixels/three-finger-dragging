@@ -1,4 +1,7 @@
 /* 
+ *   2003 Hartwig Felger <hgfelger@hgfelger.de>
+ *     patch to make the horizontal-wheel-replacement-buttons work.
+ *
  *   2002 Peter Osterlund <petero2@telia.com>
  *     patches for fast scrolling, palm detection, edge motion, 
  *     horizontal scrolling
@@ -982,7 +985,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 			   (mid       ? 0x02 : 0) |
 			   (hw->right ? 0x04 : 0) |
 			   (hw->up    ? 0x08 : 0) |
-			   (hw->down  ? 0x10 : 0));		
+			   (hw->down  ? 0x10 : 0) |
+			   (hw->cbLeft  ? 0x20 : 0) |
+			   (hw->cbRight ? 0x40 : 0));
 
 	/* Flags */
 	priv->finger_flag = finger;
@@ -1032,8 +1037,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	/*
 	 * Handle auto repeat buttons
 	 */
-	if ((hw->up || hw->down) && para->updown_button_scrolling) {
-		priv->repeatButtons = buttons & 0x18;
+	if ((hw->up || hw->down || hw->cbLeft || hw->cbRight) &&
+		para->updown_button_scrolling) {
+		priv->repeatButtons = buttons & 0x78;
 		if (!priv->nextRepeat) {
 			priv->nextRepeat = hw->millis + 200;
 		}
@@ -1219,6 +1225,12 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivatePtr priv,
 				break;
 			case 0x116:						/* BTN_BACK */
 				priv->hwState.down = (ev.value ? TRUE : FALSE);
+				break;
+			case 0x113:						/* BTN_SIDE cb_l */
+				priv->hwState.cbLeft = (ev.value ? TRUE : FALSE);
+				break;
+			case 0x114:						/* BTN_EXTRA cb_r */
+				priv->hwState.cbRight = (ev.value ? TRUE : FALSE);
 				break;
 			}
 			break;
