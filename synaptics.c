@@ -1409,6 +1409,10 @@ QueryHardware(LocalDevicePtr local)
 
     if (priv->proto_ops->QueryHardware(local, &priv->synhw)) {
 	para->synhw = priv->synhw;
+	if (priv->fifofd != -1) {
+	    xf86CloseSerial(priv->fifofd);
+	    priv->fifofd = -1;
+	}
 	return TRUE;
     }
 
