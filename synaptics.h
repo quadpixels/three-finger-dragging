@@ -147,9 +147,6 @@ typedef struct _SynapticsPrivateRec
 					   palm/finger contact disappears */
     int prev_z;				/* previous z value, for palm detection */
     int avg_width;			/* weighted average of previous fingerWidth values */
-
-    Bool swapY;				/* Swap Y coordinate direction. For compatibility
-					   with old 2.5/2.6 kernels. Will be removed. */
 } SynapticsPrivate;
 
 

@@ -1328,44 +1328,13 @@ SynapticsParseEventData(LocalDevicePtr local, SynapticsPrivate *priv,
 		priv->hwState.x = ev.value;
 		break;
 	    case ABS_Y:
-		if (priv->swapY) {
-		    priv->hwState.y = YMAX_NOMINAL + YMIN_NOMINAL - ev.value;
-		} else {
-		    priv->hwState.y = ev.value;
-		}
+		priv->hwState.y = ev.value;
 		break;
 	    case ABS_PRESSURE:
 		priv->hwState.z = ev.value;
 		break;
 	    case ABS_TOOL_WIDTH:
 		priv->hwState.fingerWidth = ev.value;
-		break;
-	    }
-	    break;
-	case EV_MSC:
-	    switch (ev.code) {
-	    case MSC_GESTURE:
-		priv->swapY = TRUE;
-		switch (ev.value) {
-		case 0:
-		    priv->hwState.oneFinger = FALSE;
-		    priv->hwState.twoFingers = TRUE;
-		    priv->hwState.threeFingers = FALSE;
-		    priv->hwState.fingerWidth = 5;
-		    break;
-		case 1:
-		    priv->hwState.oneFinger = FALSE;
-		    priv->hwState.twoFingers = FALSE;
-		    priv->hwState.threeFingers = TRUE;
-		    priv->hwState.fingerWidth = 5;
-		    break;
-		default:
-		    priv->hwState.oneFinger = TRUE;
-		    priv->hwState.twoFingers = FALSE;
-		    priv->hwState.threeFingers = FALSE;
-		    priv->hwState.fingerWidth = ev.value;
-		    break;
-		}
 		break;
 	    }
 	    break;
