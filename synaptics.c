@@ -781,7 +781,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 
     dx = dy = 0;
 
-    /* update finger position in shared memory */
+    /* update hardware state in shared memory */
     para->x = hw->x;
     para->y = hw->y;
     para->z = hw->z;
