@@ -1573,8 +1573,6 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 		if (old_proto && ((priv->protoBufTail == 2) || (priv->protoBufTail == 5)) &&
 			((u & 0x60) != 0x00))
 		{
-			priv->inSync = FALSE;
-			priv->protoBufTail = 0;
 			if (priv->protoBufTail == 2)
 			{
 				DBG(4, ErrorF("Synaptics driver lost sync at 2nd byte\n"));
@@ -1583,6 +1581,8 @@ SynapticsGetPacket(LocalDevicePtr local, SynapticsPrivatePtr priv)
 			{
 				DBG(4, ErrorF("Synaptics driver lost sync at 5th byte\n"));
 			}
+			priv->inSync = FALSE;
+			priv->protoBufTail = 0;
 			continue;
 		}
 		/* check 4th byte */
