@@ -197,6 +197,7 @@ EventAutoDevProbe(LocalDevicePtr local)
     /* We are trying to find the right eventX device or fall back to
        the psaux protocol and the given device from XF86Config */
     int i;
+    Bool have_evdev = FALSE;
 
     for (i = 0; ; i++) {
 	char fname[64];
@@ -212,6 +213,7 @@ EventAutoDevProbe(LocalDevicePtr local)
 		continue;
 	    }
 	}
+	have_evdev = TRUE;
 	is_synaptics = event_query_is_synaptics(fd);
 	SYSCALL(close(fd));
 	if (is_synaptics) {
@@ -223,6 +225,8 @@ EventAutoDevProbe(LocalDevicePtr local)
     }
     ErrorF("%s no synaptics event device found (checked %d nodes)\n",
 	   local->name, i + 1);
+    if (!have_evdev)
+	ErrorF("%s The evdev kernel module seems to be missing\n", local->name);
     return FALSE;
 }
 
