@@ -24,6 +24,17 @@
 #include "synaptics.h"
 #include <xf86.h>
 
+
+/* Wait for the channel to go silent, which means we're in sync */
+static void
+ALPS_sync(int fd)
+{
+    byte buffer[4];
+    while(xf86WaitForInput(fd, 250000) > 0) {
+	xf86ReadSerial(fd, &buffer, 1);
+    }
+}
+
 /*
  * send the ALPSinit sequence, ie 4 consecutive "disable"s before the "enable"
  */
@@ -31,11 +42,30 @@ static void
 ALPS_initialize(int fd)
 {
     xf86FlushInput(fd);
+    ps2_putbyte(fd, PS2_CMD_SET_DEFAULT);
+    ps2_putbyte(fd, PS2_CMD_SET_SCALING_2_1);
+    ps2_putbyte(fd, PS2_CMD_SET_SCALING_2_1);
+    ps2_putbyte(fd, PS2_CMD_SET_SCALING_2_1);
+    ps2_putbyte(fd, PS2_CMD_DISABLE);
+
     ps2_putbyte(fd, PS2_CMD_DISABLE);
     ps2_putbyte(fd, PS2_CMD_DISABLE);
     ps2_putbyte(fd, PS2_CMD_DISABLE);
     ps2_putbyte(fd, PS2_CMD_DISABLE);
     ps2_putbyte(fd, PS2_CMD_ENABLE);
+
+    ps2_putbyte(fd, PS2_CMD_SET_SCALING_1_1);
+    ps2_putbyte(fd, PS2_CMD_SET_SCALING_1_1);
+    ps2_putbyte(fd, PS2_CMD_SET_SCALING_1_1);
+    ps2_putbyte(fd, PS2_CMD_DISABLE);
+
+    ps2_putbyte(fd, PS2_CMD_DISABLE);
+    ps2_putbyte(fd, PS2_CMD_DISABLE);
+    ps2_putbyte(fd, PS2_CMD_DISABLE);
+    ps2_putbyte(fd, PS2_CMD_DISABLE);
+    ps2_putbyte(fd, PS2_CMD_ENABLE);
+
+    ALPS_sync(fd);
 }
 
 static void
@@ -65,7 +95,7 @@ ALPS_packet_ok(struct CommData *comm)
 }
 
 static Bool
-ALPS_get_packet(struct CommData *comm)
+ALPS_get_packet(struct CommData *comm, LocalDevicePtr local)
 {
     int c;
 
@@ -74,20 +104,18 @@ ALPS_get_packet(struct CommData *comm)
 
 	comm->protoBuf[comm->protoBufTail++] = u;
 
-	/* Check that we have a valid packet. If not, we are out of sync,
-	   so we throw away the first byte in the packet.*/
-	if (comm->protoBufTail >= 6) {
-	    if (!ALPS_packet_ok(comm)) {
-		int i;
-		for (i = 0; i < comm->protoBufTail - 1; i++)
-		    comm->protoBuf[i] = comm->protoBuf[i + 1];
-		comm->protoBufTail--;
+	if (comm->protoBufTail == 3) { /* PS/2 packet received? */
+	    if ((comm->protoBuf[0] & 0xc8) == 0x08) {
+		comm->protoBufTail = 0;
+		return TRUE;
 	    }
 	}
 
 	if (comm->protoBufTail >= 6) { /* Full packet received */
 	    comm->protoBufTail = 0;
-	    return TRUE;
+	    if (ALPS_packet_ok(comm))
+		return TRUE;
+	    ALPS_sync(local->fd);  /* If packet is invalid, re-sync */
 	}
     }
 
@@ -114,12 +142,38 @@ ALPS_get_packet(struct CommData *comm)
 static void
 ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
 {
-    int x, y, z;
+    int x = 0, y = 0, z = 0;
     int left = 0, right = 0, middle = 0;
+
+    if ((packet[0] & 0xc8) == 0x08) {	    /* 3-byte PS/2 packet */
+	x = packet[1];
+	if (packet[0] & 0x10)
+	    x = x - 256;
+	y = packet[2];
+	if (packet[0] & 0x20)
+	    y = y - 256;
+	hw->guest_dx = x;
+	hw->guest_dy = -y;
+	if (packet[0] & 0x01)
+	    hw->left = 1;
+	if (packet[0] & 0x02)
+	    hw->right = 1;
+	return;
+    }
 
     x = (packet[1] & 0x7f) | ((packet[2] & 0x78) << (7-3));
     y = (packet[4] & 0x7f) | ((packet[3] & 0x70) << (7-4));
     z = packet[5];
+
+    if (z == 127) {	/* DualPoint stick is relative, not absolute */
+	if (x > 383)
+	    x = x - 768;
+	if (y > 255)
+	    y = y - 512;
+	hw->guest_dx = x;
+	hw->guest_dy = -y;
+	z = 0;
+    }
 
     if (z > 0) {
 	hw->x = x;
@@ -162,7 +216,7 @@ ALPSReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
     unsigned char *buf = comm->protoBuf;
     struct SynapticsHwState *hw = &(comm->hwState);
 
-    if (!ALPS_get_packet(comm))
+    if (!ALPS_get_packet(comm, local))
 	return FALSE;
 
     memset(hw, 0, sizeof(*hw));
