@@ -268,12 +268,14 @@ FAQ
 
 * How can I configure tap-to-click behavior?
 
-    If you set MaxTapTime=0 then the touchpad will not use tapping at
-    all, i.e. touching/tapping will not be taken as a mouse click.
+    If you set MaxTapTime=0 in the X config file then the touchpad
+    will not use tapping at all, i.e. touching/tapping will not be
+    taken as a mouse click.
 
-    If, instead, you set MaxTapMove=0, then the touchpad will not use
-    tapping for a single finger tap (left mouse button click) but will
-    for the two and three finger tap (middle and right button click).
+    If, instead, you set MaxTapMove=0 in the X config file, then the
+    touchpad will not use tapping for a single finger tap (left mouse
+    button click) but will for the two and three finger tap (middle
+    and right button click).
 
 * Why did tap-to-click stop working after I upgraded from an old version?
 
