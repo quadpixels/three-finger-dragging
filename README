@@ -83,6 +83,8 @@ EdgeMotionMinZ		Int	finger pressure at which minimum edge motion speed is set
 EdgeMotionMaxZ		Int	finger pressure at which maximum edge motion speed is set
 EdgeMotionMinSpeed	Int	slowest setting for edge motion speed
 EdgeMotionMaxSpeed	Int	fastest setting for edge motion speed
+EdgeMotionUseAlways	Bool	If on, edge motion is also used for normal movements,
+				if off, egde motion is used only when dragging
 Repeater		String	repeater device
 MinSpeed		Float	min. Speed factor
 MaxSpeed		Float	max. Speed factor
@@ -136,11 +138,17 @@ The MinSpeed, MaxSpeed and AccelFactor parameters don't have any
 effect on scrolling speed. Scrolling speed is determined solely from
 the VertScrollDelta and HorizScrollDelta parameters.
 
-Edge motion speed is calculated by taking into account the amount of pressure
-applied to the touchpad. The sensitivity can be adjusted using the EdgeMotion
-parameters. If the pressure is below EdgeMotionMinZ, EdgeMotionMinSpeed is used,
-and if the pressure is greater than EdgeMotionMaxZ, EdgeMotionMaxSpeed is used.
-For a pressure value between EdgeMotionMinZ and EdgeMotionMaxZ, the speed is
+When hitting an egde, movement can be automatically continued.
+If EdgeMotionUseAlways is false, edge motion is only used when
+dragging. With EdgeMotionUseAlways set to true, it is also used for
+normal cursor movements.
+
+Edge motion speed is calculated by taking into account the amount of
+pressure applied to the touchpad. The sensitivity can be adjusted
+using the EdgeMotion parameters. If the pressure is below
+EdgeMotionMinZ, EdgeMotionMinSpeed is used, and if the pressure is
+greater than EdgeMotionMaxZ, EdgeMotionMaxSpeed is used. For a
+pressure value between EdgeMotionMinZ and EdgeMotionMaxZ, the speed is
 increased linearly.
 
 Since synaptics touchpads don't have a button that corresponds to the
@@ -157,6 +165,7 @@ circles around the trackpad will generate scroll down events and
 counter clockwise scroll up events. Lifting your finger will disengage
 circular scrolling. Use tight circles near the center of the pad for
 fast scrolling and large circles for better control.
+
 
 FAQ
 ---

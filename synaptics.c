@@ -335,6 +335,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->synpara->edge_motion_max_z = xf86SetIntOption(local->options, "EdgeMotionMaxZ", 160);
     priv->synpara->edge_motion_min_speed = xf86SetIntOption(local->options, "EdgeMotionMinSpeed", 1);
     priv->synpara->edge_motion_max_speed = xf86SetIntOption(local->options, "EdgeMotionMaxSpeed", 200);
+    priv->synpara->edge_motion_use_always = xf86SetBoolOption(local->options, "EdgeMotionUseAlways", FALSE);
     priv->synpara->repeater = xf86SetStrOption(local->options, "Repeater", NULL);
     priv->synpara->updown_button_scrolling = xf86SetBoolOption(local->options, "UpDownScrolling", TRUE);
     priv->synpara->touchpad_off = xf86SetBoolOption(local->options, "TouchpadOff", FALSE);
@@ -1144,7 +1145,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	    dx = (hw->x - MOVE_HIST(2).x) / 2;
 	    dy = (hw->y - MOVE_HIST(2).y) / 2;
 
-	    if (priv->drag || priv->draglock) {
+	    if (priv->drag || priv->draglock || para->edge_motion_use_always) {
 		int minZ = para->edge_motion_min_z;
 		int maxZ = para->edge_motion_max_z;
 		int minSpd = para->edge_motion_min_speed;
@@ -1170,7 +1171,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 		}
 	    }
 
-	    /* speed in depence of distance/packet */
+	    /* speed depending on distance/packet */
 	    dist = move_distance( dx, dy );
 	    speed = dist * para->accl;
 	    if (speed > para->max_speed) {  /* set max speed factor */

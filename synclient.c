@@ -83,6 +83,7 @@ static struct Parameter params[] = {
     DEFINE_PAR("EdgeMotionMaxZ",       edge_motion_max_z,       PT_INT,    1, 255),
     DEFINE_PAR("EdgeMotionMinSpeed",   edge_motion_min_speed,   PT_INT,    0, 500),
     DEFINE_PAR("EdgeMotionMaxSpeed",   edge_motion_max_speed,   PT_INT,    0, 500),
+    DEFINE_PAR("EdgeMotionUseAlways",  edge_motion_use_always,  PT_BOOL,   0, 1),
     DEFINE_PAR("UpDownScrolling",      updown_button_scrolling, PT_BOOL,   0, 1),
     DEFINE_PAR("TouchpadOff",          touchpad_off,            PT_BOOL,   0, 1),
     DEFINE_PAR("LockedDrags",          locked_drags,            PT_BOOL,   0, 1),
