@@ -1369,14 +1369,18 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     timeleft = ComputeDeltas(priv, hw, edge, &dx, &dy);
     delay = MIN(delay, timeleft);
 
-
-    buttons = (((hw->left || hw->guest_left)   ? 0x01 : 0) |
-	       ((hw->middle || hw->guest_mid)  ? 0x02 : 0) |
-	       ((hw->right || hw->guest_right) ? 0x04 : 0) |
-	       (hw->up                         ? 0x08 : 0) |
-	       (hw->down                       ? 0x10 : 0) |
-	       (hw->multi[2]                   ? 0x20 : 0) |
-	       (hw->multi[3]                   ? 0x40 : 0));
+    if (!para->guestmouse_off) {
+	hw->left |= hw->guest_left;
+	hw->middle |= hw->guest_mid;
+	hw->right |= hw->guest_right;
+    }
+    buttons = ((hw->left     ? 0x01 : 0) |
+	       (hw->middle   ? 0x02 : 0) |
+	       (hw->right    ? 0x04 : 0) |
+	       (hw->up       ? 0x08 : 0) |
+	       (hw->down     ? 0x10 : 0) |
+	       (hw->multi[2] ? 0x20 : 0) |
+	       (hw->multi[3] ? 0x40 : 0));
 
     if (priv->tap_button > 0) {
 	int tap_mask = 1 << (priv->tap_button - 1);
