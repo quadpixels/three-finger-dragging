@@ -75,6 +75,8 @@ FingerLow		Int	When finger pressure drops below this value, the
 				driver counts it as a release.
 FingerHigh		Int	When finger pressure goes above this value, the
 				driver counts it as a touch.
+PalmDetection		Bool    Enable/disable palm detection heuristics.
+				Requires hardware support.
 MaxTapTime		Int	max. time (in milliseconds) for detecting a tap
 MaxTapMove		Int	max. movement of the finger for detecting a tap
 MaxDoubleTapTime	Int	max. time (in milliseconds) for detecting a double tap

@@ -308,6 +308,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->bottom_edge = xf86SetIntOption(local->options, "BottomEdge", 4000);
     pars->finger_low = xf86SetIntOption(local->options, "FingerLow", 25);
     pars->finger_high = xf86SetIntOption(local->options, "FingerHigh", 30);
+    pars->palm_detection = xf86SetBoolOption(local->options, "PalmDetection", TRUE);
     pars->tap_time = xf86SetIntOption(local->options, "MaxTapTime", 180);
     pars->tap_move = xf86SetIntOption(local->options, "MaxTapMove", 220);
     pars->tap_time_2 = xf86SetIntOption(local->options, "MaxDoubleTapTime", 180);
@@ -818,6 +819,9 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
     /* finger detection thru pressure and threshold */
     finger = (((hw->z > para->finger_high) && !priv->finger_flag) ||
 	      ((hw->z > para->finger_low)  &&  priv->finger_flag));
+
+    if (!para->palm_detection)
+	return finger;
 
     /* palm detection */
     if (finger) {

@@ -72,6 +72,7 @@ static struct Parameter params[] = {
     DEFINE_PAR("FingerLow",            finger_low,              PT_INT,    0, 255),
     DEFINE_PAR("FingerHigh",           finger_high,             PT_INT,    0, 255),
     DEFINE_PAR("MaxTapTime",           tap_time,                PT_INT,    0, 1000),
+    DEFINE_PAR("PalmDetection",        palm_detection,          PT_BOOL,   0, 1),
     DEFINE_PAR("MaxTapMove",           tap_move,                PT_INT,    0, 2000),
     DEFINE_PAR("MaxDoubleTapTime",     tap_time_2,              PT_INT,    0, 1000),
     DEFINE_PAR("ClickTime",            click_time,              PT_INT,    0, 1000),

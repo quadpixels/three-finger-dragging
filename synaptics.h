@@ -47,6 +47,7 @@ typedef struct _SynapticsSHM
     /* Parameter data */
     int	left_edge, right_edge, top_edge, bottom_edge; /* edge coordinates absolute */
     int	finger_low, finger_high;	    /* finger detection values in Z-values */
+    Bool palm_detection;		    /* Enable palm detection heuristics */
     unsigned long tap_time;
     int tap_move;			    /* max. tapping time and movement in packets and coord. */
     unsigned long tap_time_2;		    /* max. tapping time for double taps */
