@@ -4,19 +4,16 @@ Installation of the Synaptics-Touchpad-Driver for XFree 4.x
 Author: Stefan Gmeiner <riddlebox@freesurf.ch>
 Date: 20.04.02
 
-needs: - XFree 4.x
-       - Using with Kernel 2.4.x for x < 10 needs a kernel-patch (see
+needs: - Using with Kernel 2.4.x for x < 10 needs a kernel-patch (see
          source-code)
 
-1. If you installing the driver by binary (recommended) you can go to
-step 3.
+1. If you are installing the driver by binary you can go to step 3.
 
-2. Change in the "Makefile" the path to the xfree-sourcecode tree by
-changig the Variable TOP. Then type "make" to build the driver
-"synaptics_drv.o".
+2. Type "make" to build the driver "synaptics_drv.o".
 
 3. Copy the driver-module "synaptics_drv.o" into the XFree-module path
-"ex. /usr/X11R6/lib/modules/input/".
+"ex. /usr/X11R6/lib/modules/input/". Running "make install" as root
+will do this for you if you have X installed in /usr/X11R6/.
 
 4. Load the driver by changig the XFree configuration file through
 adding the line 'Load "synaptics"' in the module section.
@@ -41,8 +38,8 @@ Section "InputDevice"
   Option	"MinSpeed"	"0.02"
   Option	"MaxSpeed"	"0.18"
   Option	"AccelFactor" "0.0010"
+  Option	"SHMConfig"	"on"
 #  Option	"Repeater"	"/dev/ps2mouse"
-#  Option	"SHMConfig"	"on"
 EndSection
 
 Change the Identifier to the same name as in the ServerLayout-section.
@@ -68,4 +65,4 @@ step 8.
    query and modify driver parameters on the fly.
 
 If you can't get the driver working, mail the logfiles and the
-configuration file to me.
+configuration file to petero2@telia.com.

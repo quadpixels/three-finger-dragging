@@ -1,5 +1,4 @@
 * Resetsequenz für repeater treiber
 * feartures über optionen abschalten
 * ftok benutzen um Shared-Memory ID zu erzeugen
-* scrollen geschwindigkeitsabhängig machen
 * linke Ecken gleiche Funktion wie rechte Ecken bzw. Konfigurierbar
