@@ -6,8 +6,8 @@ Author: Stefan Gmeiner <riddlebox@freesurf.ch>
 Requirements
 ------------
 
-1. Using with kernel 2.4.x for x < 10 needs a kernel patch
-   (pc_keyb.c.diff.2.4.3).
+1. You need X include files. On RPM based systems, they are usually
+   included in the XFree86-devel package.
 
 2. For use with kernel 2.6.x you need to enable synaptics touchpad
    support when configuring the kernel (CONFIG_MOUSE_PS2). You also
@@ -18,12 +18,12 @@ Requirements
 3. For use with an ALPS touchpad, you need to use a 2.6.x kernel and
    apply the alps patch. See the README.alps file for more details.
 
-4. You need X include files. On RPM based systems, they are usually
-   included in the XFree86-devel package.
-
-5. If you use XFree86 version 4.0 or 4.1, you will need the XFree86
+4. If you use XFree86 version 4.0 or 4.1, you will need the XFree86
    source code to compile the driver. See the "How do I compile the
    driver?" section in the FAQ in the README file for details.
+
+5. Using with kernel 2.4.x for x < 10 needs a kernel patch
+   (pc_keyb.c.diff.2.4.3).
 
 Installing
 ----------
