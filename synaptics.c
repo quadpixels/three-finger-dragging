@@ -211,6 +211,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     int shmid;
     unsigned long now;
     SynapticsSHM *pars;
+    char *repeater;
 
     /* allocate memory for SynaticsPrivateRec */
     priv = xcalloc(1, sizeof(SynapticsPrivate));
@@ -310,7 +311,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->edge_motion_min_speed = xf86SetIntOption(local->options, "EdgeMotionMinSpeed", 1);
     pars->edge_motion_max_speed = xf86SetIntOption(local->options, "EdgeMotionMaxSpeed", 200);
     pars->edge_motion_use_always = xf86SetBoolOption(local->options, "EdgeMotionUseAlways", FALSE);
-    pars->repeater = xf86SetStrOption(local->options, "Repeater", NULL);
+    repeater = xf86SetStrOption(local->options, "Repeater", NULL);
     pars->updown_button_scrolling = xf86SetBoolOption(local->options, "UpDownScrolling", TRUE);
     pars->touchpad_off = xf86SetBoolOption(local->options, "TouchpadOff", FALSE);
     pars->locked_drags = xf86SetBoolOption(local->options, "LockedDrags", FALSE);
@@ -357,22 +358,19 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     DBG(9, XisbTrace(priv->comm.buffer, 1));
 
     priv->fifofd = -1;
-    if (pars->repeater) {
+    if (repeater) {
 	/* create repeater fifo */
-	if ((xf86mknod(pars->repeater, 666, XF86_S_IFIFO) != 0) &&
+	if ((xf86mknod(repeater, 666, XF86_S_IFIFO) != 0) &&
 	    (xf86errno != xf86_EEXIST)) {
 	    xf86Msg(X_ERROR, "%s can't create repeater fifo\n", local->name);
-	    xf86free(pars->repeater);
-	    pars->repeater = NULL;
 	} else {
 	    /* open the repeater fifo */
-	    optList = xf86NewOption("Device", pars->repeater);
+	    optList = xf86NewOption("Device", repeater);
 	    if ((priv->fifofd = xf86OpenSerial(optList)) == -1) {
 		xf86Msg(X_ERROR, "%s repeater device open failed\n", local->name);
-		xf86free(pars->repeater);
-		pars->repeater = NULL;
 	    }
 	}
+	xf86free(repeater);
     }
 
     if (!QueryHardware(local)) {

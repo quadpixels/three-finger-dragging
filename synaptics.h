@@ -60,7 +60,6 @@ typedef struct _SynapticsSHM
     int edge_motion_max_speed;		    /* fastest setting for edge motion speed */
     Bool edge_motion_use_always;	    /* If false, egde motion is used only when dragging */
 
-    char* repeater;			    /* Repeater on or off */
     Bool updown_button_scrolling;	    /* Up/Down-Button scrolling or middle/double-click */
     Bool touchpad_off;			    /* Switches the Touchpad off*/
     Bool locked_drags;			    /* Enable locked drags */
