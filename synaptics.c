@@ -672,13 +672,14 @@ static void
 ReadInput(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
-    struct SynapticsHwState *hw = &priv->hwState;
+    struct SynapticsHwState hw;
     int delay = 0;
     Bool newDelay = FALSE;
 
-    while (SynapticsGetHwState(local, priv, hw)) {
-	hw->millis = GetTimeInMillis();
-	delay = HandleState(local, hw);
+    while (SynapticsGetHwState(local, priv, &hw)) {
+	hw.millis = GetTimeInMillis();
+	priv->hwState = hw;
+	delay = HandleState(local, &hw);
 	newDelay = TRUE;
     }
 
