@@ -15,7 +15,7 @@ step 3.
 changig the Variable TOP. Then type "make" to build the driver
 "synaptics_drv.o".
 
-3. Copy the driver-modul "snyaptics_drv.o" into the XFree-module path
+3. Copy the driver-module "synaptics_drv.o" into the XFree-module path
 "ex. /usr/X11R6/lib/modules/input/".
 
 4. Load the driver by changig the XFree configuration file through
