@@ -1,4 +1,7 @@
 /*
+ *   Copyright 2004 Matthias Ihmig <m.ihmig@gmx.net>
+ *     patch for pressure dependent EdgeMotion speed
+ *
  *   Copyright 2004 Alexei Gilchrist <alexei@physics.uq.edu.au>
  *     patch for circular scrolling
  *
@@ -328,7 +331,10 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 							      "EmulateMidButtonTime", 75);
     priv->synpara->scroll_dist_vert = xf86SetIntOption(local->options, "VertScrollDelta", 100);
     priv->synpara->scroll_dist_horiz = xf86SetIntOption(local->options, "HorizScrollDelta", 100);
-    priv->synpara->edge_motion_speed = xf86SetIntOption(local->options, "EdgeMotionSpeed", 40);
+    priv->synpara->edge_motion_min_z = xf86SetIntOption(local->options, "EdgeMotionMinZ", 30);
+    priv->synpara->edge_motion_max_z = xf86SetIntOption(local->options, "EdgeMotionMaxZ", 160);
+    priv->synpara->edge_motion_min_speed = xf86SetIntOption(local->options, "EdgeMotionMinSpeed", 1);
+    priv->synpara->edge_motion_max_speed = xf86SetIntOption(local->options, "EdgeMotionMaxSpeed", 200);
     priv->synpara->repeater = xf86SetStrOption(local->options, "Repeater", NULL);
     priv->synpara->updown_button_scrolling = xf86SetBoolOption(local->options, "UpDownScrolling", TRUE);
     priv->synpara->touchpad_off = xf86SetBoolOption(local->options, "TouchpadOff", FALSE);
@@ -1139,7 +1145,19 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 	    dy = (hw->y - MOVE_HIST(2).y) / 2;
 
 	    if (priv->drag || priv->draglock) {
-		int edge_speed = para->edge_motion_speed;
+		int minZ = para->edge_motion_min_z;
+		int maxZ = para->edge_motion_max_z;
+		int minSpd = para->edge_motion_min_speed;
+		int maxSpd = para->edge_motion_max_speed;
+		int edge_speed;
+
+		if (hw->z <= minZ) {
+		    edge_speed = minSpd;
+		} else if (hw->z >= maxZ) {
+		    edge_speed = maxSpd;
+		} else {
+		    edge_speed = minSpd + (hw->z - minZ) * (maxSpd - minSpd) / (maxZ - minZ);
+		}
 		if (edge & RIGHT_EDGE) {
 		    dx += clamp(edge_speed - dx, 0, edge_speed);
 		} else if (edge & LEFT_EDGE) {

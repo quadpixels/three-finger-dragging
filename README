@@ -79,7 +79,10 @@ MaxTapTime		Int	max. time (in milliseconds) for detecting a tap
 MaxTapMove		Int	max. movement of the finger for detecting a tap
 VertScrollDelta		Int	move distance of the finger for a scroll event
 HorizScrollDelta	Int	move distance of the finger for a scroll event
-EdgeMotionSpeed		Int	edge motion speed when dragging
+EdgeMotionMinZ		Int	finger pressure at which minimum edge motion speed is set
+EdgeMotionMaxZ		Int	finger pressure at which maximum edge motion speed is set
+EdgeMotionMinSpeed	Int	slowest setting for edge motion speed
+EdgeMotionMaxSpeed	Int	fastest setting for edge motion speed
 Repeater		String	repeater device
 MinSpeed		Float	min. Speed factor
 MaxSpeed		Float	max. Speed factor
@@ -132,6 +135,13 @@ value.
 The MinSpeed, MaxSpeed and AccelFactor parameters don't have any
 effect on scrolling speed. Scrolling speed is determined solely from
 the VertScrollDelta and HorizScrollDelta parameters.
+
+Edge motion speed is calculated by taking into account the amount of pressure
+applied to the touchpad. The sensitivity can be adjusted using the EdgeMotion
+parameters. If the pressure is below EdgeMotionMinZ, EdgeMotionMinSpeed is used,
+and if the pressure is greater than EdgeMotionMaxZ, EdgeMotionMaxSpeed is used.
+For a pressure value between EdgeMotionMinZ and EdgeMotionMaxZ, the speed is
+increased linearly.
 
 Since synaptics touchpads don't have a button that corresponds to the
 middle button on a mouse, the driver can emulate middle mouse button

@@ -49,7 +49,11 @@ typedef struct _SynapticsSHM
     int	scroll_dist_vert;		    /* Scrolling distance in absolute coordinates */
     int	scroll_dist_horiz;		    /* Scrolling distance in absolute coordinates */
     double min_speed, max_speed, accl;	    /* movement parameters */
-    int edge_motion_speed;		    /* Edge motion speed when dragging */
+    int edge_motion_min_z;		    /* finger pressure at which minimum edge motion speed is set */
+    int edge_motion_max_z;		    /* finger pressure at which maximum edge motion speed is set */
+    int edge_motion_min_speed;		    /* slowest setting for edge motion speed */
+    int edge_motion_max_speed;		    /* fastest setting for edge motion speed */
+
     char* repeater;			    /* Repeater on or off */
     Bool updown_button_scrolling;	    /* Up/Down-Button scrolling or middle/double-click */
     Bool touchpad_off;			    /* Switches the Touchpad off*/
