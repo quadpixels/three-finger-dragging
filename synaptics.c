@@ -90,6 +90,8 @@
 #define YMIN_NOMINAL 1408
 #define YMAX_NOMINAL 4448
 
+#define XMAX_VALID 6143
+
 #define MAX_UNSYNC_PACKETS 10				/* i.e. 10 to 60 bytes */
 
 typedef enum {
@@ -353,6 +355,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	xf86Msg(X_WARNING, "%s: TopEdge is bigger than BottomEdge. Fixing.\n",
 		local->name);
     }
+
+    priv->largest_valid_x = MIN(priv->synpara->right_edge, XMAX_NOMINAL);
 
     priv->buffer = XisbNew(local->fd, 200);
     DBG(9, XisbTrace(priv->buffer, 1));
@@ -856,6 +860,18 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState* hw)
 
 	/* reset up/down button events */
 	hw->up = hw->down = FALSE;
+    }
+
+    /*
+     * Some touchpads have a scroll wheel region where a very large X
+     * coordinate is reported. For such touchpads, we adjust the X
+     * coordinate to eliminate the discontinuity.
+     */
+    if (hw->x <= XMAX_VALID) {
+	if (priv->largest_valid_x < hw->x)
+	    priv->largest_valid_x = hw->x;
+    } else {
+	hw->x = priv->largest_valid_x;
     }
 
     edge = edge_detection(priv, hw->x, hw->y);

@@ -144,6 +144,7 @@ typedef struct _SynapticsPrivateRec
     SynapticsTapRec touch_on;		/* data when the touchpad is touched */
     SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY]; /* movement history */
 
+    int largest_valid_x;		/* Largest valid X coordinate seen so far */
     int scroll_y;			/* last y-scroll position */
     int scroll_x;			/* last x-scroll position */
     unsigned long count_packet_finger;	/* packet counter with finger on the touchpad */
