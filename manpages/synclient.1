@@ -1,53 +1,53 @@
 .TH "synclient" "1" "0.12.3" "" ""
 .SH "NAME"
-.LP 
-synclient \- query and modify Synaptic TouchPad driver for XFree86 server parameters on the fly.
+.LP
+synclient \- query and modify Synaptics TouchPad driver for XFree86 server parameters on the fly.
 .SH "SYNTAX"
-.LP 
+.LP
 synclient [\fI\-m interval\fP]
-.br 
+.br
 synclient [\fI\-hl?\fP] [var1=value1 [var2=value2] ...]
 .SH "DESCRIPTION"
-.LP 
-This program let you change your Synaptic TouchPad driver for XFree86 server parameters while X is running if you enabled SHMConfig "on" in your XFree86 configuration.
-.TP 
+.LP
+This program lets you change your Synaptics TouchPad driver for XFree86 server parameters while X is running if you enabled SHMConfig "on" in your XFree86 configuration.
+.TP
 WARNING: This is not secure if you are in an untrusted multiuser environment. All local users can change the parameters at any time.
 .SH "OPTIONS"
-.LP 
-.TP 
+.LP
+.TP
 \fB\-m interval\fR
 monitor changes to the touchpad state. Interval specifies how often (in ms) to poll the touchpad state.
-.TP 
+.TP
 \fB\-h\fR
 Show detected hardware properties.
-.TP 
+.TP
 \fB\-l\fR
 List current user settings.
-.TP 
+.TP
 \fB\-?\fR
 Show the help message.
-.TP 
+.TP
 \fBvar=value\fR
 Set user parameter \fIvar\fR to \fIvalue\fR.
 
 
 .SH "FILES"
-.LP 
-\fI/etc/X11/XF86Config\-4\fP 
+.LP
+\fI/etc/X11/XF86Config\-4\fP
 .SH "EXAMPLES"
-.LP 
+.LP
 To disable EdgeMotionSpeed:
-.LP 
+.LP
 synclient EdgeMotionSpeed=0
-.LP 
+.LP
 To monitor touchpad events:
-.LP 
+.LP
 synclient \-m 100
 .SH "AUTHORS"
-.LP 
+.LP
 Peter Osterlund <petero2@telia.com> and many others.
-.TP 
+.TP
 This man page was written by Mattia Dongili <dongili@supereva.it>
 .SH "SEE ALSO"
-.LP 
+.LP
 syndaemon(1)
