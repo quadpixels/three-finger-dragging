@@ -1,32 +1,46 @@
-NOTE!!! I (Peter Österlund) don't know enough German to keep this file
-up to date. See the INSTALL file for the most up to date information.
+Installation des Synaptics Touchpad Treibers für XFree 4.x
+===========================================================
+
+Author: Stefan Gmeiner <riddlebox@freesurf.ch>
+Übersetzer Markus Bajones <bajo@gmx.at>
+
+Voraussetzung:
+--------------
+
+- Bei Verwendung eines Kernel 2.4.x wenn x < 10 brauchst du einen Kernel Patch
+  (pc_keyb.c.diff.2.4.3).
 
 
-Installation des Synaptics-Touchpad-Treibers für XFree 4.x
-==========================================================
+- Bei Verwendung eines 2.6.x Kernels musst du während der Konfiguration
+  das Synaptics Touchpad aktivieren (CONFIG_MOUSE_PS2 and
+  CONFIG_MOUSE_PS2_SYNAPTICS).
+  Weiters benötigst du das evdev Interface (CONFIG_INPUT_EVDEV).
+  Falls du evdev als ein Modul kompiliert hast musst du sicherstellen, dass
+  es vor dem start des X Server geladen wird, da es nicht automatisch
+  geladen wird.
 
-Autor: Stefan Gmeiner <riddlebox@freesurf.ch>
-Datum: 17.02.02
 
-Vorraussetzungen für die Installation:
-- XFree 4.x
-- Bei Kernel 2.4.x für x < 10 muss ein Kernel-Patch installiert
-  werden (siehe Source-Tree des Treibers)
+- Bei Verwendung mit einem ALPS Touchpads musst du einen 2.6.x Kernel verwenden
+  und den alps Patch installieren.
+  Lies auch die README.alps für mehr Details.
 
-1. Wenn du den Treiber als Binary installierst (empfohlen), kannst du direkt
-zum Schritt 2 übergehen.
 
-2. Nach dem im "Makefile" der Pfad zum XFree Sourcetree angepasst
-wurde (TOP=<Pfad zum XFree-Quellcode , kann der Treiber mit
-"make" übersetzt werden.
 
-3. Der Treiber "synaptics_drv.o" muss in das Modul-Verzeichnis
-der XFree Installation kopiert werden.
+Installation:
+-------------
 
-4. In der Konfigurationsdatei ist der Treiber über "Load
-"synaptics"" in der Modul-Section zu laden.
+1. Gib "make" ein um den Treiber (synaptics_drv.o) zu erstellen.
 
-5. In der InputDevice-Section für das Touchpad sind folgende
+2. Kopiere das Treiber Modul (synaptics_drv.o) in das XFree Modul Verzeichnis
+   (meist zu finden unter /usr/X11R6/lib/modules/input/).
+   Wenn du X in /usr/X11R6 installiert hast, kannst du auch als root
+   "make install" ausführen, dabei wird der Treiber in das obige Verzeichnis
+   kopiert.
+
+3. Um den Treiber zu laden muss in der Konfigurationsdatei Load "synaptics"
+   eingefügt werden.
+
+4. In der InputDevice-Section für das Touchpad sind folgende
 Optionen einzufügen/ersetzen:
 
 Section "InputDevice"
@@ -52,14 +66,38 @@ EndSection
 
 Als Identifier muss der gleiche Name wie in der
 ServerLayout-Section verwendet werden.
-Die Optionen "Repeater" und "SHMConfig" sind noch in der
-Testphase. Über die "Repeater"-Option kann eine ext. Maus auf ein
-Repeater-FiFo umgeleitet werden. Über die Option "SHMConfig" soll
-der Treiber später einaml online konfigurierbar werden.
+
+5. Füge die "CorePointer" Option in die InputDevice Zeile in der ServerLayout Sektion ein:
+
+Section "ServerLayout"
+...
+  InputDevice "Mouse[1]"  "CorePointer"
+...
+
+   Achtung: Du kannst nicht mehr als EINEN "core pointer" verwenden.
+   Wenn du also auch eine externe Maus verwenden willst, musst du
+   alle "mouse input devices" ausser einem von "CorePointer" auf "Always Core" umstellen.
+
 
 6. Der X-Server ist neu zu starten. Sollte das Touchpad nicht
-funktionieren, siehe Schritt 7.
+   funktionieren.
 
-7. a) Die Ausgaben des XFree-Logfiles anschauen.
+   a) Die Ausgaben des XFree-Logfiles anschauen.
    b) Den XServer mit "startx -- -logverbose 8" starten um mehr
       Ausgaben zu erzeugen.
+
+
+7. Wenn du die Einstellungen des Treibers ohne Neustart des X Server ändern willst,
+   aktiviere die Option "SHMConfig" in der XFree Konfigurationsdatei.
+   Danach kannst du das Programm "synclient" verwenden um die Treiberoptionen
+   direkt zu ändern.
+
+   Achtung! Wenn du in einer nicht vertraunswürdigen Mehrbenutzer Umgebung bist
+   ist dies nicht sicher.
+   Alle lokalen Benutzer können jederzeit die Parameter verändern.
+
+
+Falls du den Treiber nicht zum Funktionieren bringst, schicke die Log-Files und
+die Konfigurationsdatei an petero2@telia.com.
+Wenn du einen 2.6.x Linux Kernel verwendest schick auch die Ausgabe von dmesg und
+den Inhalt von /proc/bus/input/devices mit.
