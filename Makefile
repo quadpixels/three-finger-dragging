@@ -146,7 +146,7 @@ synaptics-$(VERSION).tar.bz2 : FORCE
 	mkdir $(DST) $(DST)/manpages $(DST)/script $(DST)/test $(DST)/docs
 	cp -a $(ALLFILES) $(DST)
 	cp -a manpages/{synclient.1,syndaemon.1} $(DST)/manpages/
-	cp -a script/usbmouse $(DST)/script/
+	cp -a script/{usbmouse,usbhid} $(DST)/script/
 	cp -a test/{test-pad.c,testprotocol.c} $(DST)/test/
 	cp -a docs/tapndrag.dia $(DST)/docs/
 	chmod u+w $(DST)/*
