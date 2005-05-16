@@ -1,3 +1,16 @@
+0.14.2 (2005-05-16)
+- Added a hotplug script that disables the touchpad when a USB mouse
+  is connected. (And reenables it again when the USB mouse is
+  disconnected.) From Joergen Scheibengruber.
+- Ignore the finger count from synaptics touchpads if the finger
+  pressure is below finger_high. Some touchpads (for example, the one
+  found on HP Pavilion 2028) report an unreliable finger count when
+  the finger pressure is very low.
+- Use better permission modes in "make install". Patch from Mattia
+  Dongili.
+- Some documentation updates.
+- Updated the compatibility list.
+
 0.14.1 (2005-03-15)
 - Fix for build problems on Gentoo amd64 systems.
 - Added -p switch to syndaemon to make it record its pid in a pid
