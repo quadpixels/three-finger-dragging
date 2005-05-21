@@ -36,16 +36,19 @@ static int disable_taps_only;
 static int background;
 static const char *pid_file;
 
+#define KEYMAP_SIZE 32
+static unsigned char keyboard_mask[KEYMAP_SIZE];
 
 static void
 usage()
 {
-    fprintf(stderr, "Usage: syndaemon [-i idle-time] [-d]\n");
+    fprintf(stderr, "Usage: syndaemon [-i idle-time] [-d] [-t] [-k]\n");
     fprintf(stderr, "  -i How many seconds to wait after the last key press before\n");
     fprintf(stderr, "     enabling the touchpad. (default is 2.0s)\n");
     fprintf(stderr, "  -d Start as a daemon, ie in the background.\n");
     fprintf(stderr, "  -p Create a pid file with the specified name.\n");
     fprintf(stderr, "  -t Only disable tapping, not mouse movements.\n");
+    fprintf(stderr, "  -k Ignore modifier keys when monitoring keyboard activity.\n");
     exit(1);
 }
 
@@ -92,12 +95,14 @@ install_signal_handler()
 static int
 keyboard_activity(Display *display)
 {
-    #define KEYMAP_SIZE 32
-    static char old_key_state[KEYMAP_SIZE];
-    char key_state[KEYMAP_SIZE];
+    static unsigned char old_key_state[KEYMAP_SIZE];
+    unsigned char key_state[KEYMAP_SIZE];
     int i;
 
-    XQueryKeymap(display, key_state);
+    XQueryKeymap(display, (char*)key_state);
+
+    for (i = 0; i < KEYMAP_SIZE; i++)
+	key_state[i] &= keyboard_mask[i];
 
     for (i = 0; i < KEYMAP_SIZE; i++) {
 	if (key_state[i] != old_key_state[i]) {
@@ -175,6 +180,34 @@ main_loop(Display *display, double idle_time)
     }
 }
 
+static void
+clear_bit(unsigned char *ptr, int bit)
+{
+    int byte_num = bit / 8;
+    int bit_num = bit % 8;
+    ptr[byte_num] &= ~(1 << bit_num);
+}
+
+static void
+setup_keyboard_mask(Display *display, int ignore_modifier_keys)
+{
+    XModifierKeymap *modifiers;
+    int i;
+
+    for (i = 0; i < KEYMAP_SIZE; i++)
+	keyboard_mask[i] = 0xff;
+
+    if (ignore_modifier_keys) {
+	modifiers = XGetModifierMapping(display);
+	for (i = 0; i < 8 * modifiers->max_keypermod; i++) {
+	    KeyCode kc = modifiers->modifiermap[i];
+	    if (kc != 0)
+		clear_bit(keyboard_mask, kc);
+	}
+	XFreeModifiermap(modifiers);
+    }
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -182,9 +215,10 @@ main(int argc, char *argv[])
     Display *display;
     int c;
     int shmid;
+    int ignore_modifier_keys = 0;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "i:dtp:?")) != EOF) {
+    while ((c = getopt(argc, argv, "i:dtp:k?")) != EOF) {
 	switch(c) {
 	case 'i':
 	    idle_time = atof(optarg);
@@ -197,6 +231,9 @@ main(int argc, char *argv[])
 	    break;
 	case 'p':
 	    pid_file = optarg;
+	    break;
+	case 'k':
+	    ignore_modifier_keys = 1;
 	    break;
 	default:
 	    usage();
@@ -253,6 +290,8 @@ main(int argc, char *argv[])
 	    fclose(fd);
 	}
     }
+
+    setup_keyboard_mask(display, ignore_modifier_keys);
 
     /* Run the main loop */
     main_loop(display, idle_time);
