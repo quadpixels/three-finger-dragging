@@ -16,14 +16,11 @@ Requirements
    compile evdev as a module, make sure it is loaded before starting
    the X server, as it will not be auto-loaded.
 
-3. For use with an ALPS touchpad, you need to use a 2.6.x kernel and
-   apply the alps patch. See the README.alps file for more details.
-
-4. If you use XFree86 version 4.0 or 4.1, you will need the XFree86
+3. If you use XFree86 version 4.0 or 4.1, you will need the XFree86
    source code to compile the driver. See the "How do I compile the
    driver?" section in the FAQ in the README file for details.
 
-5. Using with kernel 2.4.x for x < 10 needs a kernel patch
+4. Using with kernel 2.4.x for x < 10 needs a kernel patch
    (pc_keyb.c.diff.2.4.3).
 
 Installing
