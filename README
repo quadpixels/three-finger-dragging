@@ -243,6 +243,21 @@ FAQ
     Yes, the source code is released under the GNU General Public
     License.
 
+* When will the driver be included in the XOrg distribution?
+
+    This is unlikely to happen because of copyright issues. Although
+    the GPL license is compatible with the license used by the XOrg X
+    server, the XOrg project doesn't want to include GPL code in their
+    source code, because it would effectively make the whole XOrg
+    project GPL. The synaptics license can't be changed unless all
+    copyright holders agree to change the license, but previous
+    attempts to find all copyright holders for the synaptics source
+    code have failed.
+
+    So unfortunately, the best we can currently hope for is that the
+    synaptics driver is included as a separate package by the major
+    distributions.
+
 * How do I use this driver with Linux kernel 2.6.x?
 
     You need to have the "evdev" driver loaded or compiled into the
