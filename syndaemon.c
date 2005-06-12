@@ -33,6 +33,9 @@
 static SynapticsSHM *synshm;
 static int pad_disabled;
 static int disable_taps_only;
+static int disable_scroll;
+static int saved_scroll_dist_horiz;
+static int saved_scroll_dist_vert;
 static int background;
 static const char *pid_file;
 
@@ -48,17 +51,37 @@ usage()
     fprintf(stderr, "  -d Start as a daemon, ie in the background.\n");
     fprintf(stderr, "  -p Create a pid file with the specified name.\n");
     fprintf(stderr, "  -t Only disable tapping, not mouse movements.\n");
+    fprintf(stderr, "  -s Also disable scrolling (implies -t).\n");
     fprintf(stderr, "  -k Ignore modifier keys when monitoring keyboard activity.\n");
     exit(1);
+}
+
+static int
+enable_touchpad()
+{
+    int ret = 0;
+    if (pad_disabled) {
+	synshm->touchpad_off = 0;
+	pad_disabled = 0;
+	ret = 1;
+    }
+    if (saved_scroll_dist_horiz && (synshm->scroll_dist_horiz == 0)) {
+	synshm->scroll_dist_horiz = saved_scroll_dist_horiz;
+	saved_scroll_dist_horiz = 0;
+	ret = 1;
+    }
+    if (saved_scroll_dist_vert && (synshm->scroll_dist_vert == 0)) {
+	synshm->scroll_dist_vert = saved_scroll_dist_vert;
+	saved_scroll_dist_vert = 0;
+	ret = 1;
+    }
+    return ret;
 }
 
 static void
 signal_handler(int signum)
 {
-    if (pad_disabled) {
-	synshm->touchpad_off = 0;
-	pad_disabled = 0;
-    }
+    enable_touchpad();
     if (pid_file)
 	unlink(pid_file);
     kill(getpid(), signum);
@@ -158,20 +181,24 @@ main_loop(Display *display, double idle_time)
 	    last_activity = 0.0;
 
 	if (current_time > last_activity + idle_time) {	/* Enable touchpad */
-	    if (pad_disabled) {
+	    if (enable_touchpad()) {
 		if (!background)
 		    printf("Enable\n");
-		synshm->touchpad_off = 0;
-		pad_disabled = 0;
 	    }
 	} else {			    /* Disable touchpad */
 	    if (!pad_disabled && !synshm->touchpad_off) {
 		if (!background)
 		    printf("Disable\n");
 		pad_disabled = 1;
-		if (disable_taps_only)
+		if (disable_taps_only) {
 		    synshm->touchpad_off = 2;
-		else
+		    if (disable_scroll) {
+			saved_scroll_dist_vert = synshm->scroll_dist_vert;
+			saved_scroll_dist_horiz = synshm->scroll_dist_horiz;
+			synshm->scroll_dist_vert = 0;
+			synshm->scroll_dist_horiz = 0;
+		    }
+		} else
 		    synshm->touchpad_off = 1;
 	    }
 	}
@@ -218,7 +245,7 @@ main(int argc, char *argv[])
     int ignore_modifier_keys = 0;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "i:dtp:k?")) != EOF) {
+    while ((c = getopt(argc, argv, "i:dstp:k?")) != EOF) {
 	switch(c) {
 	case 'i':
 	    idle_time = atof(optarg);
@@ -228,6 +255,9 @@ main(int argc, char *argv[])
 	    break;
 	case 't':
 	    disable_taps_only = 1;
+	    break;
+        case 's':
+	    disable_scroll = disable_taps_only = 1;
 	    break;
 	case 'p':
 	    pid_file = optarg;

@@ -4,7 +4,8 @@
 syndaemon \- a program that monitors keyboard activity and disables the touchpad when the keyboard is being used.
 .SH "SYNTAX"
 .LP
-syndaemon [\fI\-i idle\-time\fP] [\fI\-d\fP] [\fI\-p pid\-file\fP] [\fI\-t\fP] [\fI\-k\fP]
+syndaemon [\fI\-i idle\-time\fP] [\fI\-d\fP] [\fI\-p pid\-file\fP]
+[\fI\-t\fP] [\fI\-k\fP] [\fI\-s\fP]
 .SH "DESCRIPTION"
 .LP
 Disabling the touchpad while typing avoids unwanted movements of the pointer that could lead to giving focus to the wrong window. This program needs SHMConfig "on" in your XFree86 Synaptics Touchpad configuration.
@@ -26,6 +27,10 @@ created if the program is started in daemon mode.
 .TP
 \fB\-t\fP
 Only disable tapping, not mouse movements, in response to keyboard activity.
+.LP
+.TP
+\fB\-s\fP
+Also disable scrolling (implies -t).
 .LP
 .TP
 \fB\-k\fP
