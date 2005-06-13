@@ -930,7 +930,7 @@ SelectTapButton(SynapticsPrivate *priv, edge_type edge)
     if (priv->synpara->touchpad_off == 2) {
 	priv->tap_button = 0;
 	return;
-    }    
+    }
 
     switch (priv->tap_max_fingers) {
     case 1:
@@ -988,7 +988,7 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
     case TS_2A:
 	if (para->fast_taps)
 	    priv->tap_button_state = TBS_BUTTON_DOWN;
-	else 
+	else
 	    priv->tap_button_state = TBS_BUTTON_UP;
 	break;
     case TS_2B:
@@ -1000,7 +1000,7 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
     case TS_SINGLETAP:
 	if (para->fast_taps)
 	    priv->tap_button_state = TBS_BUTTON_UP;
-	else 
+	else
 	    priv->tap_button_state = TBS_BUTTON_DOWN;
 	priv->touch_on.millis = millis;
 	break;
