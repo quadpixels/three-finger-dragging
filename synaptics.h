@@ -69,7 +69,7 @@ typedef struct _SynapticsSHM
     int touchpad_off;			    /* Switches the touchpad off
 					     * 0 : Not off
 					     * 1 : Off
-					     * 2 : Only tapping off
+					     * 2 : Only tapping and scrolling off
 					     */
     Bool guestmouse_off;		    /* Switches the guest mouse off */
     Bool locked_drags;			    /* Enable locked drags */

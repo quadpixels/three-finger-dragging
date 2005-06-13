@@ -1323,6 +1323,15 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
     sd->left = sd->right = sd->up = sd->down = 0;
 
+    if (priv->synpara->touchpad_off == 2) {
+	priv->autoscroll_xspd = 0;
+	priv->autoscroll_yspd = 0;
+	priv->circ_scroll_on = FALSE;
+	priv->vert_scroll_on = FALSE;
+	priv->horiz_scroll_on = FALSE;
+	return delay;
+    }
+
     /* scroll detection */
     if (finger && !priv->finger_flag) {
 	priv->autoscroll_xspd = 0;
