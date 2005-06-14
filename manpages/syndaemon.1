@@ -1,19 +1,27 @@
 .TH "syndaemon" "1" "0.14.2" "" ""
 .SH "NAME"
 .LP
-syndaemon \- a program that monitors keyboard activity and disables the touchpad when the keyboard is being used.
+syndaemon \- a program that monitors keyboard activity and disables
+the touchpad when the keyboard is being used.
 .SH "SYNTAX"
 .LP
 syndaemon [\fI\-i idle\-time\fP] [\fI\-d\fP] [\fI\-p pid\-file\fP]
 [\fI\-t\fP] [\fI\-k\fP]
 .SH "DESCRIPTION"
 .LP
-Disabling the touchpad while typing avoids unwanted movements of the pointer that could lead to giving focus to the wrong window. This program needs SHMConfig "on" in your XFree86 Synaptics Touchpad configuration.
+Disabling the touchpad while typing avoids unwanted movements of the
+pointer that could lead to giving focus to the wrong window.
+.
+This program needs SHMConfig "on" in your XFree86 Synaptics Touchpad
+configuration.
 .SH "OPTIONS"
 .LP
 .TP
 \fB\-i\fR <\fIidle\-time\fP>
-How many seconds to wait after the last key press before enabling the touchpad. (default is 2.0s).
+How many seconds to wait after the last key press before enabling the
+touchpad.
+.
+(default is 2.0s). 
 .LP
 .TP
 \fB\-d\fP
@@ -21,8 +29,10 @@ Start as a daemon, ie in the background.
 .LP
 .TP
 \fB\-p\fR <\fIpid\-file\fP>
-Create a pid file with the specified filename. A pid file will only be
-created if the program is started in daemon mode.
+Create a pid file with the specified filename.
+.
+A pid file will only be created if the program is started in daemon
+mode.
 .LP
 .TP
 \fB\-t\fP

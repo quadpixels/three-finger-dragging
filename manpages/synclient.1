@@ -1,7 +1,8 @@
 .TH "synclient" "1" "0.14.2" "" ""
 .SH "NAME"
 .LP
-synclient \- query and modify Synaptics TouchPad driver for XFree86 server parameters on the fly.
+synclient \- query and modify Synaptics TouchPad driver for XFree86
+server parameters on the fly.
 .SH "SYNTAX"
 .LP
 synclient [\fI\-m interval\fP]
@@ -9,14 +10,21 @@ synclient [\fI\-m interval\fP]
 synclient [\fI\-hlV?\fP] [var1=value1 [var2=value2] ...]
 .SH "DESCRIPTION"
 .LP
-This program lets you change your Synaptics TouchPad driver for XFree86 server parameters while X is running if you enabled SHMConfig "on" in your XFree86 configuration.
+This program lets you change your Synaptics TouchPad driver for
+XFree86 server parameters while X is running if you enabled SHMConfig
+"on" in your XFree86 configuration.
 .TP
-WARNING: This is not secure if you are in an untrusted multiuser environment. All local users can change the parameters at any time.
+WARNING: This is not secure if you are in an untrusted multiuser
+environment.
+.
+All local users can change the parameters at any time.
 .SH "OPTIONS"
 .LP
 .TP
 \fB\-m interval\fR
-monitor changes to the touchpad state. Interval specifies how often (in ms) to poll the touchpad state.
+monitor changes to the touchpad state.
+.
+Interval specifies how often (in ms) to poll the touchpad state.
 .TP
 \fB\-h\fR
 Show detected hardware properties.
