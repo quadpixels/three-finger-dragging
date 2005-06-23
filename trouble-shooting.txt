@@ -136,3 +136,16 @@ Possible fixes:
 
 3. Make sure the driver is compiled with the same compiler version as
    the X server.
+
+
+6. Check that the touchpad is enabled in the BIOS/hardware
+----------------------------------------------------------
+
+On some computers, it is possible to disable the touchpad either with
+a special key combination, from the BIOS, or with a special touch pad
+on/off button. On some machines, cycling the power doesn't
+automatically reenable the touchpad.
+
+If the touchpad appears to be dead, try to enable it from the BIOS or
+using a key combination. One user also reported that he had to remove
+the computer battery to make his touchpad operational again.
