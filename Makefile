@@ -6,7 +6,7 @@ VERSION=0.14.2
 INSTALLED_X = $(DESTDIR)/usr/X11R6
 LOCAL_X = Xincludes/usr/X11R6
 BINDIR = $(DESTDIR)/usr/local/bin
-MANDIR = $(DESTDIR)/usr/local/man/man1
+MANDIR = $(DESTDIR)/usr/local/man
 
 ifeq ($(ARCH),)
   ARCH = $(shell /bin/arch)
@@ -78,12 +78,15 @@ all:: synaptics_drv.o synclient syndaemon
 
 install: $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/$(LIBDIR)/modules/input/synaptics_drv.o install-man
 
-install-man: $(MANDIR)/synclient.1 $(MANDIR)/syndaemon.1
+install-man: $(MANDIR)/man1/synclient.1 $(MANDIR)/man1/syndaemon.1 $(MANDIR)/man5/synaptics.5
 
-$(MANDIR)/synclient.1: manpages/synclient.1
+$(MANDIR)/man1/synclient.1: manpages/synclient.1
 	install --mode=0644 -D $< $@
 
-$(MANDIR)/syndaemon.1: manpages/syndaemon.1
+$(MANDIR)/man1/syndaemon.1: manpages/syndaemon.1
+	install --mode=0644 -D $< $@
+
+$(MANDIR)/man5/synaptics.5: manpages/synaptics.5
 	install --mode=0644 -D $< $@
 
 $(BINDIR)/synclient : synclient
@@ -126,7 +129,7 @@ tags::
 	etags -o TAGS *.c *.h
 
 uninstall::
-	$(RM) $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/lib/modules/input/synaptics_drv.o $(MANDIR)/synclient.1 $(MANDIR)/syndaemon.1
+	$(RM) $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/lib/modules/input/synaptics_drv.o $(MANDIR)/man1/synclient.1 $(MANDIR)/man1/syndaemon.1 $(MANDIR)/man5/synaptics.5
 
 distribution : synaptics-$(VERSION).tar.bz2
 
@@ -145,7 +148,7 @@ synaptics-$(VERSION).tar.bz2 : FORCE
 	rm -rf $(DST)
 	mkdir $(DST) $(DST)/manpages $(DST)/script $(DST)/test $(DST)/docs
 	cp -a $(ALLFILES) $(DST)
-	cp -a manpages/{synclient.1,syndaemon.1} $(DST)/manpages/
+	cp -a manpages/{synclient.1,syndaemon.1,synaptics.5} $(DST)/manpages/
 	cp -a script/{usbmouse,usbhid} $(DST)/script/
 	cp -a test/{test-pad.c,testprotocol.c} $(DST)/test/
 	cp -a docs/tapndrag.dia $(DST)/docs/
