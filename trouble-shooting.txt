@@ -142,7 +142,7 @@ Possible fixes:
 ----------------------------------------------------------
 
 On some computers, it is possible to disable the touchpad either with
-a special key combination, from the BIOS, or with a special touch pad
+a special key combination, from the BIOS, or with a special touchpad
 on/off button. On some machines, cycling the power doesn't
 automatically reenable the touchpad.
 
