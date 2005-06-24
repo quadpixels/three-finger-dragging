@@ -7,7 +7,7 @@ Introduction
 This is a driver for the Synaptics TouchPad for XOrg/XFree86 4.x. A
 Synaptics touchpad by default operates in compatibility mode by
 emulating a standard mouse. However, by using a dedicated driver, more
-advance features of the touchpad becomes available, such as:
+advanced features of the touchpad becomes available, such as:
 
 - Movement with adjustable, non-linear acceleration and speed.
 - Button events through short touching of the touchpad.
