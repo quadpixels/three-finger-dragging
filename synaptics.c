@@ -524,6 +524,10 @@ DeviceOn(DeviceIntPtr dev)
 
     local->fd = xf86OpenSerial(local->options);
     if (local->fd == -1) {
+	SetDeviceAndProtocol(local);
+	local->fd = xf86OpenSerial(local->options);
+    }
+    if (local->fd == -1) {
 	xf86Msg(X_WARNING, "%s: cannot open input device\n", local->name);
 	return !Success;
     }
