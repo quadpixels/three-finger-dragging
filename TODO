@@ -1,5 +1,4 @@
 * Use ftok to get shared memory ID.
-* Convert the parameter section of the README file into a man page, synaptics(5).
 * Add an option to disable "double-tap-and-drag" to make it possible
   to get faster double clicks.
 * Better coasting speed estimation. The current algorithm uses a time
