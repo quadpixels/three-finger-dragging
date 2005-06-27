@@ -3,4 +3,4 @@
   to get faster double clicks.
 * Better coasting speed estimation. The current algorithm uses a time
   average but over a very short time period, so it's quite easy to
-  accidentally start costing.
+  accidentally start coasting.
