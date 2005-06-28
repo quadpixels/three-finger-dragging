@@ -66,6 +66,11 @@ typedef struct _SynapticsSHM
     Bool edge_motion_use_always;	    /* If false, egde motion is used only when dragging */
 
     Bool updown_button_scrolling;	    /* Up/Down-Button scrolling or middle/double-click */
+    Bool leftright_button_scrolling;	    /* Left/right-button scrolling, or two lots of middle button */
+    Bool updown_button_repeat;		    /* If up/down button being used to scroll, auto-repeat?*/
+    Bool leftright_button_repeat;	    /* If left/right button being used to scroll, auto-repeat? */
+    int scroll_button_repeat;		    /* time, in milliseconds, between scroll events being
+					     * sent when holding down scroll buttons */
     int touchpad_off;			    /* Switches the touchpad off
 					     * 0 : Not off
 					     * 1 : Off
@@ -83,6 +88,12 @@ typedef struct _SynapticsSHM
     int palm_min_z;			    /* Palm detection depth */
     double coasting_speed;		    /* Coasting threshold scrolling speed */
 } SynapticsSHM;
+
+/*
+ * Minimum and maximum values for scroll_button_repeat
+ */
+#define SBR_MIN 10
+#define SBR_MAX 1000
 
 /*
  * The x/y limits are taken from the Synaptics TouchPad interfacing Guide,

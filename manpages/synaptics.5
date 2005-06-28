@@ -158,6 +158,25 @@ If on, the up/down buttons generate button 4/5 events.
 If off, the up button generates a double click and the down button
 generates a button 2 event.
 .TP
+\fBLeftRightScrolling\fR (Bool)
+If on, the left/right buttons generate button 6/7 events.
+.
+If off, the left/right buttons both generate button 2 events.
+.TP
+\fBUpDownRepeat\fR (Bool)
+If on, and the up/down buttons are used for scrolling
+(\fBUpDownScrolling\fR), these buttons will send auto-repeating 4/5 events,
+with the delay between repeats determined by \fBScrollButtonRepeat\fR.
+.TP
+\fBLeftRightRepeat\fR (Bool)
+If on, and the left/right buttons are used for scrolling
+(\fBLeftRightScrolling\fR), these buttons will send auto-repeating 6/7 events,
+with the delay between repeats determined by \fBScrollButtonRepeat\fR.
+.TP
+\fBScrollButtonRepeat\fR (Integer)
+The number of milliseconds between repeats of button events 4-7 from the
+up/down/left/right scroll buttons.
+.TP
 \fBEmulateMidButtonTime\fR (Integer)
 Maximum time (in milliseconds) for middle button emulation.
 .TP

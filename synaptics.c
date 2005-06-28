@@ -365,6 +365,10 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->edge_motion_use_always = xf86SetBoolOption(local->options, "EdgeMotionUseAlways", FALSE);
     repeater = xf86SetStrOption(local->options, "Repeater", NULL);
     pars->updown_button_scrolling = xf86SetBoolOption(local->options, "UpDownScrolling", TRUE);
+    pars->leftright_button_scrolling = xf86SetBoolOption(local->options, "LeftRightScrolling", TRUE);
+    pars->updown_button_repeat = xf86SetBoolOption(local->options, "UpDownScrollRepeat", TRUE);
+    pars->leftright_button_repeat = xf86SetBoolOption(local->options, "LeftRightScrollRepeat", TRUE);
+    pars->scroll_button_repeat = xf86SetIntOption(local->options,"ScrollButtonRepeat", 100);
     pars->touchpad_off = xf86SetIntOption(local->options, "TouchpadOff", 0);
     pars->guestmouse_off = xf86SetBoolOption(local->options, "GuestMouseOff", FALSE);
     pars->locked_drags = xf86SetBoolOption(local->options, "LockedDrags", FALSE);
@@ -1510,11 +1514,11 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
     SynapticsSHM *para = priv->synpara;
     Bool finger;
-    int dx, dy, buttons, id;
+    int dx, dy, buttons, rep_buttons, id;
     edge_type edge;
     int change;
     struct ScrollData scroll;
-    int double_click;
+    int double_click, repeat_delay;
     long delay = 1000000000;
     long timeleft;
     int i;
@@ -1572,6 +1576,15 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 	hw->up = hw->down = FALSE;
     }
 
+    /* Left/right button scrolling, or middle clicks */
+    if (!para->leftright_button_scrolling) {
+	if (hw->multi[2] || hw->multi[3])
+	    hw->middle = TRUE;
+
+	/* reset left/right button events */
+	hw->multi[2] = hw->multi[3] = FALSE;
+    }
+
     /*
      * Some touchpads have a scroll wheel region where a very large X
      * coordinate is reported. For such touchpads, we adjust the X
@@ -1599,6 +1612,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 
     timeleft = ComputeDeltas(priv, hw, edge, &dx, &dy);
     delay = MIN(delay, timeleft);
+
+    rep_buttons = ((para->updown_button_repeat ? 0x18 : 0) |
+		   (para->leftright_button_repeat ? 0x60 : 0));
 
     buttons = ((hw->left     ? 0x01 : 0) |
 	       (hw->middle   ? 0x02 : 0) |
@@ -1657,11 +1673,14 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     }
 
     /* Handle auto repeat buttons */
-    if ((hw->up || hw->down || hw->multi[2] || hw->multi[3]) &&
-	para->updown_button_scrolling) {
-	priv->repeatButtons = buttons & 0x78;
+    repeat_delay = clamp(para->scroll_button_repeat, SBR_MIN, SBR_MAX);
+    if (((hw->up || hw->down) && para->updown_button_repeat &&
+	 para->updown_button_scrolling) ||
+	((hw->multi[2] || hw->multi[3]) && para->leftright_button_repeat &&
+	 para->leftright_button_scrolling) ){
+	priv->repeatButtons = buttons & rep_buttons;
 	if (!priv->nextRepeat) {
-	    priv->nextRepeat = hw->millis + 200;
+	    priv->nextRepeat = hw->millis + repeat_delay * 2;
 	}
     } else {
 	priv->repeatButtons = 0;
@@ -1682,8 +1701,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 		xf86PostButtonEvent(local->dev, FALSE, id, TRUE, 0, 0);
 	    }
 
-	    priv->nextRepeat = hw->millis + 100;
-	    delay = MIN(delay, 100);
+	    priv->nextRepeat = hw->millis + repeat_delay;
+	    delay = MIN(delay, repeat_delay);
 	}
     }
 
