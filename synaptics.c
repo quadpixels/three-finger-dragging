@@ -528,6 +528,7 @@ DeviceOn(DeviceIntPtr dev)
 
     local->fd = xf86OpenSerial(local->options);
     if (local->fd == -1) {
+	xf86ReplaceStrOption(local->options, "Device", "");
 	SetDeviceAndProtocol(local);
 	local->fd = xf86OpenSerial(local->options);
     }
