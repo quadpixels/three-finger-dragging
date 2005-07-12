@@ -236,6 +236,7 @@ EventAutoDevProbe(LocalDevicePtr local)
     int i;
     Bool have_evdev = FALSE;
     int noent_cnt = 0;
+    const int max_skip = 10;
 
     for (i = 0; ; i++) {
 	char fname[64];
@@ -246,7 +247,7 @@ EventAutoDevProbe(LocalDevicePtr local)
 	SYSCALL(fd = open(fname, O_RDONLY));
 	if (fd < 0) {
 	    if (errno == ENOENT) {
-		if (++noent_cnt >= 10)
+		if (++noent_cnt >= max_skip)
 		    break;
 		else
 		    continue;
@@ -267,7 +268,7 @@ EventAutoDevProbe(LocalDevicePtr local)
     }
     ErrorF("%s no synaptics event device found (checked %d nodes)\n",
 	   local->name, i + 1);
-    if (i > 0 && !have_evdev)
+    if (i > max_skip && !have_evdev)
 	ErrorF("%s The evdev kernel module seems to be missing\n", local->name);
     return FALSE;
 }
