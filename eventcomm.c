@@ -268,6 +268,9 @@ EventAutoDevProbe(LocalDevicePtr local)
     }
     ErrorF("%s no synaptics event device found (checked %d nodes)\n",
 	   local->name, i + 1);
+    if (i <= max_skip)
+	ErrorF("%s The /dev/input/event* device nodes seem to be missing\n",
+	       local->name);
     if (i > max_skip && !have_evdev)
 	ErrorF("%s The evdev kernel module seems to be missing\n", local->name);
     return FALSE;
