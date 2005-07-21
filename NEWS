@@ -1,3 +1,24 @@
+0.14.3 (2005-07-22)
+- Added -k switch to syndaemon to make it ignore modifier keys when
+  monitoring keyboard activity. Suggested by Harold Aling.
+- Also disable scrolling when the TouchpadOff parameter is set to 2.
+  It doesn't make any sense to disable tapping but not scrolling as a
+  response to keyboard activity.
+- In the DeviceOn() function, if opening the device node fails, try to
+  auto-detect the correct event device again. This fixes some problems
+  which occur after a suspend/resume cycle or after rmmod/insmod-ing
+  the psmouse kernel driver.
+- Implemented new driver options LeftRightScrolling,
+  UpDownScrollRepeat, LeftRightScrollRepeat and ScrollButtonRepeat to
+  control the auto-repeat behavior of the scroll buttons. Contributed
+  by Sam Barnett-Cormack with some small changes by me.
+- The evdev auto-dev code could incorrectly blame problems on a
+  missing evdev driver.
+- If no /dev/input/event* device nodes are found, say so in the log
+  file.
+- Documentation updates.
+- Updated the compatibility list.
+
 0.14.2 (2005-05-16)
 - Added a hotplug script that disables the touchpad when a USB mouse
   is connected. (And reenables it again when the USB mouse is

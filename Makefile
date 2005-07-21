@@ -1,4 +1,4 @@
-VERSION=0.14.2
+VERSION=0.14.3
 
 # Define the TOP variable to build using include files from a local source tree.
 #TOP = /usr/src/redhat/BUILD/XFree86-4.3.0/xc

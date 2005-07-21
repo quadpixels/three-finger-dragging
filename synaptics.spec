@@ -1,6 +1,6 @@
 Summary: The Synaptics touchpad X driver
 Name: synaptics
-Version: 0.14.2
+Version: 0.14.3
 Release: 1
 License: GPL
 Group: User Interface/X
