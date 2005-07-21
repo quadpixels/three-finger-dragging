@@ -201,7 +201,7 @@
 - Made syndaemon recognize the '?' option, causing the help message to
   be printed.
 - In the syndaemon help message, print the default disable time.
-  Suggestion from Frédéric Bothamy.
+  Suggestion from FrÃ©dÃ©ric Bothamy.
 - Only use the -fno-merge-constants compiler flag if the compiler
   understands it.
 - Updated INSTALL.DE. Translation contributed by Markus B.
@@ -284,7 +284,7 @@
 - Fixed spelling errors.
 - synaptics: Added "Acer 661 LCi" to the compatibility list.
 - Made it possible to disable the touchpad at runtime. (Patch from
-  Jörg Bösner.)
+  JÃ¶rg BÃ¶sner.)
 - Clarified description of FingerLow/FingerHigh parameters.
 - Added "DELL Latitude CPi" to the compatibility list.
 - Changed the identifier for the synaptics protocol to match kernel
