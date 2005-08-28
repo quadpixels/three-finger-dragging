@@ -69,4 +69,12 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #endif /* _XFUNCPROTOBEGIN */
 
+#if defined(__GNUC__) && (__GNUC__ >= 4)
+# define _X_SENTINEL(x) __attribute__ ((__sentinel__(x)))
+# define _X_ATTRIBUTE_PRINTF(x,y) __attribute__((__format__(__printf__,x,y)))
+#else
+# define _X_SENTINEL(x)
+# define _X_ATTRIBUTE_PRINTF(x,y)
+#endif /* GNUC >= 4 */
+
 #endif /* _XFUNCPROTO_H_ */
