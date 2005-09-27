@@ -9,6 +9,7 @@ Contents
 3. Check if some other program is using the /dev/psaux device
 4. Check that the evdev kernel driver is available
 5. Check that the synaptics driver is properly loaded by the X server
+6. Check that the touchpad is enabled in the BIOS/hardware
 
 
 1. Check that the touchpad is correctly detected by the kernel
