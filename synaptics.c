@@ -96,7 +96,7 @@ typedef enum {
 
 #define MAX(a, b) (((a)>(b))?(a):(b))
 #define MIN(a, b) (((a)<(b))?(a):(b))
-#define TIME_DIFF(a, b) ((long)((a)-(b)))
+#define TIME_DIFF(a, b) ((int)((a)-(b)))
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
 #ifndef M_PI
@@ -276,7 +276,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pointer optList;
 #endif
     char *str_par;
-    unsigned long now;
     SynapticsSHM *pars;
     char *repeater;
 
@@ -331,12 +330,11 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->timer = NULL;
     priv->repeatButtons = 0;
     priv->nextRepeat = 0;
-    now = GetTimeInMillis();
     priv->count_packet_finger = 0;
     priv->tap_state = TS_START;
     priv->tap_button = 0;
     priv->tap_button_state = TBS_BUTTON_UP;
-    priv->touch_on.millis = now;
+    priv->touch_on.millis = 0;
 
     /* install shared memory or normal memory for parameters */
     priv->shm_config = xf86SetBoolOption(local->options, "SHMConfig", FALSE);
@@ -811,11 +809,11 @@ ReadInput(LocalDevicePtr local)
 }
 
 static int
-HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, long *delay)
+HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, int *delay)
 {
     SynapticsSHM *para = priv->synpara;
     Bool done = FALSE;
-    long timeleft;
+    int timeleft;
     int mid = 0;
 
     while (!done) {
@@ -1045,8 +1043,8 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 {
     SynapticsSHM *para = priv->synpara;
     Bool touch, release, is_timeout, move;
-    long timeleft, timeout;
-    long delay = 1000000000;
+    int timeleft, timeout;
+    int delay = 1000000000;
 
     if (priv->palm)
 	return delay;
@@ -1169,7 +1167,7 @@ estimate_delta(double x0, double x1, double x2, double x3)
     return x0 * 0.3 + x1 * 0.1 - x2 * 0.1 - x3 * 0.3;
 }
 
-static long
+static int
 ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	      edge_type edge, int *dxP, int *dyP)
 {
@@ -1178,7 +1176,7 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     int dist;
     double dx, dy;
     double speed, integral;
-    long delay = 1000000000;
+    int delay = 1000000000;
 
     dx = dy = 0;
 
@@ -1520,8 +1518,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     int change;
     struct ScrollData scroll;
     int double_click, repeat_delay;
-    long delay = 1000000000;
-    long timeleft;
+    int delay = 1000000000;
+    int timeleft;
     int i;
 
     /* update hardware state in shared memory */

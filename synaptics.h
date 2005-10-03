@@ -49,10 +49,10 @@ typedef struct _SynapticsSHM
     /* Parameter data */
     int	left_edge, right_edge, top_edge, bottom_edge; /* edge coordinates absolute */
     int	finger_low, finger_high;	    /* finger detection values in Z-values */
-    unsigned long tap_time;
+    int tap_time;
     int tap_move;			    /* max. tapping time and movement in packets and coord. */
-    unsigned long tap_time_2;		    /* max. tapping time for double taps */
-    unsigned long click_time;		    /* The duration of a single click */
+    int tap_time_2;			    /* max. tapping time for double taps */
+    int click_time;			    /* The duration of a single click */
     Bool fast_taps;			    /* Faster reaction to single taps */
     int emulate_mid_button_time;	    /* Max time between left and right button presses to
 					       emulate a middle button press. */
@@ -121,7 +121,7 @@ typedef struct _SynapticsSHM
 typedef struct _SynapticsMoveHist
 {
     int x, y;
-    unsigned int millis;
+    int millis;
 } SynapticsMoveHistRec;
 
 enum MidButtonEmulation {
@@ -177,9 +177,9 @@ typedef struct _SynapticsPrivateRec
     int scroll_y;			/* last y-scroll position */
     int scroll_x;			/* last x-scroll position */
     double scroll_a;			/* last angle-scroll position */
-    unsigned long count_packet_finger;	/* packet counter with finger on the touchpad */
-    unsigned int button_delay_millis;	/* button delay for 3rd button emulation */
-    unsigned int prev_up;		/* Previous up button value, for double click emulation */
+    int count_packet_finger;		/* packet counter with finger on the touchpad */
+    int button_delay_millis;		/* button delay for 3rd button emulation */
+    Bool prev_up;			/* Previous up button value, for double click emulation */
     Bool finger_flag;			/* previous finger */
 
     enum TapState tap_state;		/* State of tap processing */
@@ -201,7 +201,7 @@ typedef struct _SynapticsPrivateRec
     double frac_x, frac_y;		/* absolute -> relative fraction */
     enum MidButtonEmulation mid_emu_state;	/* emulated 3rd button */
     int repeatButtons;			/* buttons for repeat */
-    unsigned long nextRepeat;		/* Time when to trigger next auto repeat event */
+    int nextRepeat;			/* Time when to trigger next auto repeat event */
     int lastButtons;			/* last state of the buttons */
     int palm;				/* Set to true when palm detected, reset to false when
 					   palm/finger contact disappears */
