@@ -310,7 +310,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     local->history_size            = 0;
     local->always_core_feedback    = 0;
 
-    xf86Msg(X_INFO, "Synaptics touchpad driver version %s\n", VERSION);
+    xf86Msg(X_INFO, "Synaptics touchpad driver version %s (%d)\n", VERSION, VERSION_ID);
 
     xf86CollectInputOptions(local, NULL, NULL);
 
@@ -341,6 +341,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     /* read the parameters */
     pars = &priv->synpara_default;
+    pars->version = VERSION_ID;
     pars->left_edge = xf86SetIntOption(local->options, "LeftEdge", 1900);
     pars->right_edge = xf86SetIntOption(local->options, "RightEdge", 5400);
     pars->top_edge = xf86SetIntOption(local->options, "TopEdge", 1900);

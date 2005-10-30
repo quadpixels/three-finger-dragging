@@ -110,6 +110,7 @@ show_hw_info(SynapticsSHM *synshm)
 	printf("    This is normal if you are running linux kernel 2.6.\n");
 	printf("    Check the kernel log for touchpad hardware information.\n");
     }
+    printf("Driver version: %d\n", VERSION_ID);
 }
 
 static void
@@ -262,7 +263,7 @@ usage()
 	    "     interval specifies how often (in ms) to poll the touchpad state\n");
     fprintf(stderr, "  -h Show detected hardware properties\n");
     fprintf(stderr, "  -l List current user settings\n");
-    fprintf(stderr, "  -V Print version number and exit\n");
+    fprintf(stderr, "  -V Print synclient version string and exit\n");
     fprintf(stderr, "  -? Show this help message\n");
     fprintf(stderr, "  var=value  Set user parameter 'var' to 'value'.\n");
     exit(1);

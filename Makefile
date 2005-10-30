@@ -1,4 +1,8 @@
-VERSION=0.14.3
+VER_LEVEL_1=0
+VER_LEVEL_2=14
+VER_LEVEL_3=3
+VERSION=$(VER_LEVEL_1).$(VER_LEVEL_2).$(VER_LEVEL_3)
+VERSION_ID=($(VER_LEVEL_1)*10000+$(VER_LEVEL_2)*100+$(VER_LEVEL_3))
 
 # Define the TOP variable to build using include files from a local source tree.
 #TOP = /usr/src/redhat/BUILD/XFree86-4.3.0/xc
@@ -60,8 +64,8 @@ CCOPTIONS := -pedantic -Wall -Wpointer-arith
 CCOPTIONS += $(call check_gcc,-fno-merge-constants,)
 CCOPTIONS += $(call check_gcc,-fno-pic,)
 CDEBUGFLAGS = -O2
-CFLAGS = $(CDEBUGFLAGS) $(CCOPTIONS) $(ALLDEFINES) -DVERSION="\"$(VERSION)\""
-CFLAGSCLIENT = $(CDEBUGFLAGS) $(CCOPTIONS) -DVERSION="\"$(VERSION)\"" -I$(X_INCLUDES_ROOT)/include
+CFLAGS = $(CDEBUGFLAGS) $(CCOPTIONS) $(ALLDEFINES) -DVERSION="\"$(VERSION)\"" -DVERSION_ID="$(VERSION_ID)"
+CFLAGSCLIENT = $(CDEBUGFLAGS) $(CCOPTIONS) -DVERSION="\"$(VERSION)\""  -DVERSION_ID="$(VERSION_ID)" -I$(X_INCLUDES_ROOT)/include
 
 CC = gcc
 

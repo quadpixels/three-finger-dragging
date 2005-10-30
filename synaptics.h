@@ -32,6 +32,8 @@ struct SynapticsHwInfo {
 #define SHM_SYNAPTICS 23947
 typedef struct _SynapticsSHM
 {
+    int version;			    /* Driver version */
+
     /* Current device state */
     int x, y;				    /* actual x, y coordinates */
     int z;				    /* pressure value */
