@@ -33,6 +33,7 @@
 static SynapticsSHM *synshm;
 static int pad_disabled;
 static int disable_taps_only;
+static int ignore_modifier_combos;
 static int background;
 static const char *pid_file;
 
@@ -49,6 +50,7 @@ usage()
     fprintf(stderr, "  -p Create a pid file with the specified name.\n");
     fprintf(stderr, "  -t Only disable tapping and scrolling, not mouse movements.\n");
     fprintf(stderr, "  -k Ignore modifier keys when monitoring keyboard activity.\n");
+    fprintf(stderr, "  -K Like -k but also ignore Modifier+Key combos.\n");
     exit(1);
 }
 
@@ -107,20 +109,27 @@ keyboard_activity(Display *display)
     static unsigned char old_key_state[KEYMAP_SIZE];
     unsigned char key_state[KEYMAP_SIZE];
     int i;
+    int ret = 0;
 
     XQueryKeymap(display, (char*)key_state);
 
-    for (i = 0; i < KEYMAP_SIZE; i++)
-	key_state[i] &= keyboard_mask[i];
-
     for (i = 0; i < KEYMAP_SIZE; i++) {
-	if (key_state[i] != old_key_state[i]) {
-	    for (i = 0; i < KEYMAP_SIZE; i++)
-		old_key_state[i] = key_state[i];
-	    return 1;
+	if ((key_state[i] & ~old_key_state[i]) & keyboard_mask[i]) {
+	    ret = 1;
+	    break;
 	}
     }
-    return 0;
+    if (ignore_modifier_combos) {
+	for (i = 0; i < KEYMAP_SIZE; i++) {
+	    if (key_state[i] & ~keyboard_mask[i]) {
+		ret = 0;
+		break;
+	    }
+	}
+    }
+    for (i = 0; i < KEYMAP_SIZE; i++)
+	old_key_state[i] = key_state[i];
+    return ret;
 }
 
 /**
@@ -225,7 +234,7 @@ main(int argc, char *argv[])
     int ignore_modifier_keys = 0;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "i:dtp:k?")) != EOF) {
+    while ((c = getopt(argc, argv, "i:dtp:kK?")) != EOF) {
 	switch(c) {
 	case 'i':
 	    idle_time = atof(optarg);
@@ -240,6 +249,10 @@ main(int argc, char *argv[])
 	    pid_file = optarg;
 	    break;
 	case 'k':
+	    ignore_modifier_keys = 1;
+	    break;
+	case 'K':
+	    ignore_modifier_combos = 1;
 	    ignore_modifier_keys = 1;
 	    break;
 	default:

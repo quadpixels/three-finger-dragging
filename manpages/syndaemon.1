@@ -6,7 +6,7 @@ the touchpad when the keyboard is being used.
 .SH "SYNTAX"
 .LP
 syndaemon [\fI\-i idle\-time\fP] [\fI\-d\fP] [\fI\-p pid\-file\fP]
-[\fI\-t\fP] [\fI\-k\fP]
+[\fI\-t\fP] [\fI\-k\fP] [\fI\-K\fP]
 .SH "DESCRIPTION"
 .LP
 Disabling the touchpad while typing avoids unwanted movements of the
@@ -42,6 +42,10 @@ to keyboard activity.
 .TP
 \fB\-k\fP
 Ignore modifier keys when monitoring keyboard activity.
+.LP
+.TP
+\fB\-K\fP
+Like \-k but also ignore Modifier+Key combos.
 .SH "ENVIRONMENT VARIABLES"
 .LP
 .TP
