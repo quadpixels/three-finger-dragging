@@ -1282,7 +1282,8 @@ struct ScrollData {
 };
 
 static void
-start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw, edge_type edge)
+start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw, edge_type edge,
+	       Bool vertical)
 {
     SynapticsSHM *para = priv->synpara;
 
@@ -1291,8 +1292,7 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw, edge_type ed
 
     if ((priv->scroll_packet_count > 3) && (para->coasting_speed > 0.0)) {
 	double pkt_time = (HIST(0).millis - HIST(3).millis) / 1000.0;
-	if (priv->vert_scroll_on ||
-	    (priv->circ_scroll_on && priv->circ_scroll_vert)) {
+	if (vertical) {
 	    double dy = estimate_delta(HIST(0).y, HIST(1).y, HIST(2).y, HIST(3).y);
 	    int sdelta = para->scroll_dist_vert;
 	    if ((edge & RIGHT_EDGE) && pkt_time > 0 && sdelta > 0) {
@@ -1322,7 +1322,6 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		edge_type edge, Bool finger, struct ScrollData *sd)
 {
     SynapticsSHM *para = priv->synpara;
-    Bool scroll_stop = FALSE;
     int delay = 1000000000;
 
     sd->left = sd->right = sd->up = sd->down = 0;
@@ -1370,24 +1369,26 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    }
 	}
     }
-    if (priv->circ_scroll_on && !finger) {
-	/* circular scroll locks in until finger is raised */
-	DBG(7, ErrorF("cicular scroll off\n"));
-	scroll_stop = TRUE;
-    }
-    if (priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger)) {
-	DBG(7, ErrorF("vert edge scroll off\n"));
-	scroll_stop = TRUE;
-    }
-    if (priv->horiz_scroll_on && (!(edge & BOTTOM_EDGE) || !finger)) {
-	DBG(7, ErrorF("horiz edge scroll off\n"));
-	scroll_stop = TRUE;
-    }
-    if (scroll_stop) {
-	start_coasting(priv, hw, edge);
-	priv->circ_scroll_on = FALSE;
-	priv->vert_scroll_on = FALSE;
-	priv->horiz_scroll_on = FALSE;
+    {
+	Bool oldv = priv->vert_scroll_on || (priv->circ_scroll_on && priv->circ_scroll_vert);
+	Bool oldh = priv->horiz_scroll_on || (priv->circ_scroll_on && !priv->circ_scroll_vert);
+	if (priv->circ_scroll_on && !finger) {
+	    /* circular scroll locks in until finger is raised */
+	    DBG(7, ErrorF("cicular scroll off\n"));
+	    priv->circ_scroll_on = FALSE;
+	}
+	if (priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger)) {
+	    DBG(7, ErrorF("vert edge scroll off\n"));
+	    priv->vert_scroll_on = FALSE;
+	}
+	if (priv->horiz_scroll_on && (!(edge & BOTTOM_EDGE) || !finger)) {
+	    DBG(7, ErrorF("horiz edge scroll off\n"));
+	    priv->horiz_scroll_on = FALSE;
+	}
+	if ((oldv || oldh) && !(priv->circ_scroll_on || priv->vert_scroll_on ||
+			  priv->horiz_scroll_on)) {
+	    start_coasting(priv, hw, edge, oldv);
+	}
     }
 
     /* if hitting a corner (top right or bottom right) while vertical scrolling
