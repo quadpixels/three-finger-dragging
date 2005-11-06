@@ -1,3 +1,19 @@
+0.14.4 (2005-11-06)
+- X header file fix for xorg 6.8.99.15. Patch from Christoph Brill.
+- Fixed some long vs int inconsistencies to make the driver work
+  correctly on 64 bit machines.
+- Made the device name change code handle more cases. Patch from Karl
+  Tomlinson.
+- Included driver version number in the shared memory segment.
+  Suggested by Stefan Kombrink for use in ksynaptics.
+- Vertical/horizontal scrolling was incorrectly stopped then the
+  finger left the lower right corner if the scrolling was started from
+  within that corner. Reported by Arie Huijzer.
+- Added option to syndaemon to ignore "modifier+another key" combos.
+  Patch from Mattia Dongili.
+- Documentation updates.
+- Updated the compatibility list.
+
 0.14.3 (2005-07-22)
 - Added -k switch to syndaemon to make it ignore modifier keys when
   monitoring keyboard activity. Suggested by Harold Aling.
