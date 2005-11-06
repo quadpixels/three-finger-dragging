@@ -25,6 +25,75 @@ All local users can change the parameters at any time.
 monitor changes to the touchpad state.
 .
 Interval specifies how often (in ms) to poll the touchpad state.
+.
+Whenever a change in the touchpad state is detected, one line of
+output is generated that describes the current state of the touchpad.
+.
+The following data is included in the output.
+.RS
+.TP
+\fBtime\fR
+Time in seconds since the logging was started.
+.TP
+\fBx,y\fR
+The x/y coordinates of the finger on the touchpad.
+.
+The origin is in the upper left corner.
+.TP
+\fBz\fR
+The "pressure" value.
+.
+Pressing the finger harder on the touchpad typically produces a larger
+value.
+.
+Note that most touchpads don't measure the real pressure though.
+.
+Instead, capacitance is usually measured, which is correlated to the
+contact area between the finger and the touchpad.
+.
+Since more pressure usually means a larger contact area, the reported
+pressure value is at least indirectly related to the real pressure.
+.TP
+\fBf\fR
+The number of fingers currently touching the touchpad.
+.
+Note that only some touchpads can report more than one finger.
+.
+Generally, synaptics touchpads can, but ALPS touchpads can't.
+.TP
+\fBw\fR
+The w value is a measurement of the finger width.
+.
+This is only supported by some synaptics touchpads.
+.
+Touchpads that can't measure the finger width typically report a faked
+constant value when a finger is touching the touchpad.
+.TP
+\fBl,r,u,d,m,multi\fR
+The state of the left, right, up, down, middle and multi buttons.
+.
+Zero means not pressed, one means pressed.
+.
+Not all touchpads have all these buttons.
+.
+If a button doesn't exist, the value is always reported as 0.
+.TP
+\fBgl,gm,gr\fR
+Some touchpads have a "guest device".
+.
+This is typically a pointing stick located in the middle of the
+keyboard.
+.
+Some guest devices have physical buttons, or can detect button presses
+when tapping on the pointing stick.
+.
+Such button events are reported as "guest left", "guest middle" or
+"guest right".
+.TP
+\fBgdx,gdy\fR
+Pointer movements from the guest device are reported as relative x/y
+positions, called gdx and gdy.
+.RE
 .TP
 \fB\-h\fR
 Show detected hardware properties.
