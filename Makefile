@@ -7,10 +7,11 @@ VERSION_ID=($(VER_LEVEL_1)*10000+$(VER_LEVEL_2)*100+$(VER_LEVEL_3))
 # Define the TOP variable to build using include files from a local source tree.
 #TOP = /usr/src/redhat/BUILD/XFree86-4.3.0/xc
 
+PREFIX = /usr/local
 INSTALLED_X = $(DESTDIR)/usr/X11R6
 LOCAL_X = Xincludes/usr/X11R6
-BINDIR = $(DESTDIR)/usr/local/bin
-MANDIR = $(DESTDIR)/usr/local/man
+BINDIR = $(DESTDIR)$(PREFIX)/bin
+MANDIR = $(DESTDIR)$(PREFIX)/man
 
 ifeq ($(ARCH),)
   ARCH = $(shell /bin/arch)
