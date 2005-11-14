@@ -27,6 +27,7 @@ advanced features of the touchpad becomes available, such as:
 - Multifinger taps: two finger for middle button and three finger
   for right button events. (Needs hardware support. Not all models
   implement this feature.)
+- Pressure dependent motion speed.
 - Run-time configuration using shared memory. This means you can
   change parameter settings without restarting the X server.
 

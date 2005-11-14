@@ -384,6 +384,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->palm_detect        = xf86SetBoolOption(local->options, "PalmDetect", TRUE);
     pars->palm_min_width     = xf86SetIntOption(local->options, "PalmMinWidth", 10);
     pars->palm_min_z         = xf86SetIntOption(local->options, "PalmMinZ", 200);
+    pars->press_motion_min_z = xf86SetIntOption(local->options, "PressureMotionMinZ", pars->edge_motion_min_z);
+    pars->press_motion_max_z = xf86SetIntOption(local->options, "PressureMotionMaxZ", pars->edge_motion_max_z);
 
     str_par = xf86FindOptionValue(local->options, "MinSpeed");
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->min_speed) != 1))
@@ -401,6 +403,14 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->coasting_speed) != 1))
 	pars->coasting_speed = 0.0;
 
+    str_par = xf86FindOptionValue(local->options, "PressureMotionMinFactor");
+    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->press_motion_min_factor) != 1))
+	pars->press_motion_min_factor = 1;
+    str_par = xf86FindOptionValue(local->options, "PressureMotionMaxFactor");
+    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->press_motion_max_factor) != 1))
+	pars->press_motion_max_factor = 1;
+
+    /* Warn about (and fix) incorrectly configured CircScrollTrigger parameters */
     if (pars->circular_trigger < 0 || pars->circular_trigger > 8) {
 	xf86Msg(X_WARNING, "Unknown circular scrolling trigger, using 0 (edges)");
 	pars->circular_trigger = 0;
@@ -1246,6 +1256,22 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		speed = para->max_speed;
 	    } else if (speed < para->min_speed) { /* set min speed factor */
 		speed = para->min_speed;
+	    }
+
+	    /* modify speed according to pressure */
+	    {
+		int minZ = para->press_motion_min_z;
+		int maxZ = para->press_motion_max_z;
+		double minFctr = para->press_motion_min_factor;
+		double maxFctr = para->press_motion_max_factor;
+
+		if (hw->z <= minZ) {
+		    speed *= minFctr;
+		} else if (hw->z >= maxZ) {
+		    speed *= maxFctr;
+		} else {
+		    speed *= minFctr + (hw->z - minZ) * (maxFctr - minFctr) / (maxZ - minZ);
+		}
 	    }
 
 	    /* save the fraction, report the integer part */
