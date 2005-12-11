@@ -63,7 +63,6 @@ check_gcc = $(shell if $(CC) $(1) -S -o /dev/null -xc /dev/null > /dev/null 2>&1
 
 CCOPTIONS := -pedantic -Wall -Wpointer-arith
 CCOPTIONS += $(call check_gcc,-fno-merge-constants,)
-CCOPTIONS += $(call check_gcc,-fno-pic,)
 CDEBUGFLAGS = -O2
 CFLAGS = $(CDEBUGFLAGS) $(CCOPTIONS) $(ALLDEFINES) -DVERSION="\"$(VERSION)\"" -DVERSION_ID="$(VERSION_ID)"
 CFLAGSCLIENT = $(CDEBUGFLAGS) $(CCOPTIONS) -DVERSION="\"$(VERSION)\""  -DVERSION_ID="$(VERSION_ID)" -I$(X_INCLUDES_ROOT)/include
