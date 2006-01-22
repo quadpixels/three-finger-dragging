@@ -49,8 +49,8 @@ typedef struct _SynapticsSHM
     struct SynapticsHwInfo synhw;
 
     /* Parameter data */
-    int	left_edge, right_edge, top_edge, bottom_edge; /* edge coordinates absolute */
-    int	finger_low, finger_high;	    /* finger detection values in Z-values */
+    int left_edge, right_edge, top_edge, bottom_edge; /* edge coordinates absolute */
+    int finger_low, finger_high;	    /* finger detection values in Z-values */
     int tap_time;
     int tap_move;			    /* max. tapping time and movement in packets and coord. */
     int tap_time_2;			    /* max. tapping time for double taps */
@@ -58,8 +58,8 @@ typedef struct _SynapticsSHM
     Bool fast_taps;			    /* Faster reaction to single taps */
     int emulate_mid_button_time;	    /* Max time between left and right button presses to
 					       emulate a middle button press. */
-    int	scroll_dist_vert;		    /* Scrolling distance in absolute coordinates */
-    int	scroll_dist_horiz;		    /* Scrolling distance in absolute coordinates */
+    int scroll_dist_vert;		    /* Scrolling distance in absolute coordinates */
+    int scroll_dist_horiz;		    /* Scrolling distance in absolute coordinates */
     double min_speed, max_speed, accl;	    /* movement parameters */
     int edge_motion_min_z;		    /* finger pressure at which minimum edge motion speed is set */
     int edge_motion_max_z;		    /* finger pressure at which maximum edge motion speed is set */
