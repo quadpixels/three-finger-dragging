@@ -155,6 +155,10 @@ FAQ
     You can use the "xev" program to check if the synaptics driver
     generates the horizontal scroll events.
 
+    If you are having problems with Mozilla, try this link:
+
+	http://lists.debian.org/debian-laptop/2004/08/msg00167.html
+
 * Can the driver be used together with gpm?
 
     No, not reliably, if you are using a 2.4.x kernel. The gpm driver
