@@ -898,7 +898,7 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 	      ((hw->z > para->finger_low)  &&  priv->finger_flag));
 
     if (!para->palm_detect)
-        return finger;
+	return finger;
 
     /* palm detection */
     if (finger) {
