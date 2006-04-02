@@ -1,4 +1,7 @@
 /*
+ *   Copyright 2006 Stefan Bethge <stefan.bethge@web.de>
+ *     patch for two-fingered scrolling
+ *
  *   Copyright 2004 Matthias Ihmig <m.ihmig@gmx.net>
  *     patch for pressure dependent EdgeMotion speed
  *
@@ -357,6 +360,10 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 							      "EmulateMidButtonTime", 75);
     pars->scroll_dist_vert = xf86SetIntOption(local->options, "VertScrollDelta", 100);
     pars->scroll_dist_horiz = xf86SetIntOption(local->options, "HorizScrollDelta", 100);
+    pars->scroll_edge_vert = xf86SetBoolOption(local->options, "VertEdgeScroll", TRUE);
+    pars->scroll_edge_horiz = xf86SetBoolOption(local->options, "HorizEdgeScroll", TRUE);
+    pars->scroll_twofinger_vert = xf86SetBoolOption(local->options, "VertTwoFingerScroll", FALSE);
+    pars->scroll_twofinger_horiz = xf86SetBoolOption(local->options, "HorizTwoFingerScroll", FALSE);
     pars->edge_motion_min_z = xf86SetIntOption(local->options, "EdgeMotionMinZ", 30);
     pars->edge_motion_max_z = xf86SetIntOption(local->options, "EdgeMotionMaxZ", 160);
     pars->edge_motion_min_speed = xf86SetIntOption(local->options, "EdgeMotionMinSpeed", 1);
@@ -1203,7 +1210,9 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	break;
     }
     if (moving_state && !priv->palm &&
-	!priv->vert_scroll_on && !priv->horiz_scroll_on && !priv->circ_scroll_on) {
+	!priv->vert_scroll_edge_on && !priv->horiz_scroll_edge_on &&
+	!priv->vert_scroll_twofinger_on && !priv->horiz_scroll_twofinger_on &&
+	!priv->circ_scroll_on) {
 	delay = MIN(delay, 13);
 	if (priv->count_packet_finger > 3) { /* min. 3 packets */
 	    double tmpf;
@@ -1356,8 +1365,10 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	priv->autoscroll_xspd = 0;
 	priv->autoscroll_yspd = 0;
 	priv->circ_scroll_on = FALSE;
-	priv->vert_scroll_on = FALSE;
-	priv->horiz_scroll_on = FALSE;
+	priv->vert_scroll_edge_on = FALSE;
+	priv->horiz_scroll_edge_on = FALSE;
+	priv->vert_scroll_twofinger_on = FALSE;
+	priv->horiz_scroll_twofinger_on = FALSE;
 	return delay;
     }
 
@@ -1383,45 +1394,75 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    }
 	}
 	if (!priv->circ_scroll_on) {
-	    if ((para->scroll_dist_vert != 0) && (edge & RIGHT_EDGE)) {
-		priv->vert_scroll_on = TRUE;
-		priv->scroll_y = hw->y;
-		DBG(7, ErrorF("vert edge scroll detected on right edge\n"));
+	    if (hw->numFingers == 2) {
+		if ((para->scroll_twofinger_vert) && (para->scroll_dist_vert != 0)) {
+		    priv->vert_scroll_twofinger_on = TRUE;
+		    priv->scroll_y = hw->y;
+		    DBG(7, ErrorF("vert two-finger scroll detected\n"));
+		}
+		if ((para->scroll_twofinger_horiz) && (para->scroll_dist_horiz != 0)) {
+		    priv->horiz_scroll_twofinger_on = TRUE;
+		    priv->scroll_x = hw->x;
+		    DBG(7, ErrorF("horiz two-finger scroll detected\n"));
+		}
 	    }
-	    if ((para->scroll_dist_horiz != 0) && (edge & BOTTOM_EDGE)) {
-		priv->horiz_scroll_on = TRUE;
-		priv->scroll_x = hw->x;
-		DBG(7, ErrorF("horiz edge scroll detected on bottom edge\n"));
+	    if (!priv->vert_scroll_twofinger_on && !priv->horiz_scroll_twofinger_on) {
+		if ((para->scroll_edge_vert) && (para->scroll_dist_vert != 0) &&
+		    (edge & RIGHT_EDGE)) {
+		    priv->vert_scroll_edge_on = TRUE;
+		    priv->scroll_y = hw->y;
+		    DBG(7, ErrorF("vert edge scroll detected on right edge\n"));
+		}
+		if ((para->scroll_edge_horiz) && (para->scroll_dist_horiz != 0) &&
+		    (edge & BOTTOM_EDGE)) {
+		    priv->horiz_scroll_edge_on = TRUE;
+		    priv->scroll_x = hw->x;
+		    DBG(7, ErrorF("horiz edge scroll detected on bottom edge\n"));
+		}
 	    }
 	}
     }
     {
-	Bool oldv = priv->vert_scroll_on || (priv->circ_scroll_on && priv->circ_scroll_vert);
-	Bool oldh = priv->horiz_scroll_on || (priv->circ_scroll_on && !priv->circ_scroll_vert);
+	Bool oldv = priv->vert_scroll_edge_on || (priv->circ_scroll_on && priv->circ_scroll_vert);
+	Bool oldh = priv->horiz_scroll_edge_on || (priv->circ_scroll_on && !priv->circ_scroll_vert);
 	if (priv->circ_scroll_on && !finger) {
 	    /* circular scroll locks in until finger is raised */
 	    DBG(7, ErrorF("cicular scroll off\n"));
 	    priv->circ_scroll_on = FALSE;
 	}
-	if (priv->vert_scroll_on && (!(edge & RIGHT_EDGE) || !finger)) {
+
+	if (hw->numFingers < 2) {
+	    if (priv->vert_scroll_twofinger_on) {
+		DBG(7, ErrorF("vert two-finger scroll off\n"));
+		priv->vert_scroll_twofinger_on = FALSE;
+	    }
+	    if (priv->horiz_scroll_twofinger_on) {
+		DBG(7, ErrorF("horiz two-finger scroll off\n"));
+		priv->horiz_scroll_twofinger_on = FALSE;
+	    }
+	}
+
+	if (priv->vert_scroll_edge_on && (!(edge & RIGHT_EDGE) || !finger)) {
 	    DBG(7, ErrorF("vert edge scroll off\n"));
-	    priv->vert_scroll_on = FALSE;
+	    priv->vert_scroll_edge_on = FALSE;
 	}
-	if (priv->horiz_scroll_on && (!(edge & BOTTOM_EDGE) || !finger)) {
+	if (priv->horiz_scroll_edge_on && (!(edge & BOTTOM_EDGE) || !finger)) {
 	    DBG(7, ErrorF("horiz edge scroll off\n"));
-	    priv->horiz_scroll_on = FALSE;
+	    priv->horiz_scroll_edge_on = FALSE;
 	}
-	if ((oldv || oldh) && !(priv->circ_scroll_on || priv->vert_scroll_on ||
-			  priv->horiz_scroll_on)) {
+	if ((oldv || oldh) &&
+	    !(priv->circ_scroll_on || priv->vert_scroll_edge_on ||
+	      priv->horiz_scroll_edge_on)) {
 	    start_coasting(priv, hw, edge, oldv);
 	}
     }
 
     /* if hitting a corner (top right or bottom right) while vertical scrolling
        is active, switch over to circular scrolling smoothly */
-    if (priv->vert_scroll_on && !priv->horiz_scroll_on && para->circular_scrolling) {
+    if (priv->vert_scroll_edge_on && !priv->horiz_scroll_edge_on &&
+	para->circular_scrolling) {
 	if ((edge & RIGHT_EDGE) && (edge & (TOP_EDGE | BOTTOM_EDGE))) {
-	    priv->vert_scroll_on = FALSE;
+	    priv->vert_scroll_edge_on = FALSE;
 	    priv->circ_scroll_on = TRUE;
 	    priv->circ_scroll_vert = TRUE;
 	    priv->scroll_a = angle(priv, hw->x, hw->y);
@@ -1429,9 +1470,10 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	}
     }
     /* Same treatment for horizontal scrolling */
-    if (priv->horiz_scroll_on && !priv->vert_scroll_on && para->circular_scrolling) {
+    if (priv->horiz_scroll_edge_on && !priv->vert_scroll_edge_on &&
+	para->circular_scrolling) {
 	if ((edge & BOTTOM_EDGE) && (edge & (LEFT_EDGE | RIGHT_EDGE))) {
-	    priv->horiz_scroll_on = FALSE;
+	    priv->horiz_scroll_edge_on = FALSE;
 	    priv->circ_scroll_on = TRUE;
 	    priv->circ_scroll_vert = FALSE;
 	    priv->scroll_a = angle(priv, hw->x, hw->y);
@@ -1439,10 +1481,13 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	}
     }
 
-    if (priv->vert_scroll_on || priv->horiz_scroll_on || priv->circ_scroll_on)
+    if (priv->vert_scroll_edge_on || priv->horiz_scroll_edge_on ||
+	priv->vert_scroll_twofinger_on || priv->horiz_scroll_twofinger_on ||
+	priv->circ_scroll_on) {
 	priv->scroll_packet_count++;
+    }
 
-    if (priv->vert_scroll_on) {
+    if (priv->vert_scroll_edge_on || priv->vert_scroll_twofinger_on) {
 	/* + = down, - = up */
 	int delta = para->scroll_dist_vert;
 	if (delta > 0) {
@@ -1456,7 +1501,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    }
 	}
     }
-    if (priv->horiz_scroll_on) {
+    if (priv->horiz_scroll_edge_on || priv->horiz_scroll_twofinger_on) {
 	/* + = right, - = left */
 	int delta = para->scroll_dist_horiz;
 	if (delta > 0) {

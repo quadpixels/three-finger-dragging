@@ -60,6 +60,10 @@ typedef struct _SynapticsSHM
 					       emulate a middle button press. */
     int scroll_dist_vert;		    /* Scrolling distance in absolute coordinates */
     int scroll_dist_horiz;		    /* Scrolling distance in absolute coordinates */
+    Bool scroll_edge_vert;		    /* Enable/disable vertical scrolling on right edge */
+    Bool scroll_edge_horiz;		    /* Enable/disable horizontal scrolling on left edge */
+    Bool scroll_twofinger_vert;		    /* Enable/disable vertical two-finger scrolling */
+    Bool scroll_twofinger_horiz;	    /* Enable/disable horizontal two-finger scrolling */
     double min_speed, max_speed, accl;	    /* movement parameters */
     int edge_motion_min_z;		    /* finger pressure at which minimum edge motion speed is set */
     int edge_motion_max_z;		    /* finger pressure at which maximum edge motion speed is set */
@@ -194,9 +198,11 @@ typedef struct _SynapticsPrivateRec
     enum TapButtonState tap_button_state; /* Current tap action */
     SynapticsMoveHistRec touch_on;	/* data when the touchpad is touched/released */
 
-    Bool vert_scroll_on;		/* scrolling flag */
-    Bool horiz_scroll_on;		/* scrolling flag */
-    Bool circ_scroll_on;		/* scrolling flag */
+    Bool vert_scroll_edge_on;		/* Keeps track of currently active scroll modes */
+    Bool horiz_scroll_edge_on;		/* Keeps track of currently active scroll modes */
+    Bool vert_scroll_twofinger_on;	/* Keeps track of currently active scroll modes */
+    Bool horiz_scroll_twofinger_on;	/* Keeps track of currently active scroll modes */
+    Bool circ_scroll_on;		/* Keeps track of currently active scroll modes */
     Bool circ_scroll_vert;		/* True: Generate vertical scroll events
 					   False: Generate horizontal events */
     double autoscroll_xspd;		/* Horizontal coasting speed */
