@@ -265,6 +265,17 @@ free_param_data(SynapticsPrivate *priv)
     priv->synpara = NULL;
 }
 
+static double
+synSetFloatOption(pointer options, const char *optname, double default_value)
+{
+    char *str_par;
+    double value;
+    str_par = xf86FindOptionValue(options, optname);
+    if ((!str_par) || (xf86sscanf(str_par, "%lf", &value) != 1))
+	return default_value;
+    return value;
+}
+
 /*
  *  called by the module loader for initialization
  */
@@ -278,7 +289,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 #else
     pointer optList;
 #endif
-    char *str_par;
     SynapticsSHM *pars;
     char *repeater;
     pointer opts;
@@ -397,28 +407,13 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->press_motion_min_z = xf86SetIntOption(opts, "PressureMotionMinZ", pars->edge_motion_min_z);
     pars->press_motion_max_z = xf86SetIntOption(opts, "PressureMotionMaxZ", pars->edge_motion_max_z);
 
-    str_par = xf86FindOptionValue(opts, "MinSpeed");
-    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->min_speed) != 1))
-	pars->min_speed=0.09;
-    str_par = xf86FindOptionValue(opts, "MaxSpeed");
-    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->max_speed) != 1))
-	pars->max_speed=0.18;
-    str_par = xf86FindOptionValue(opts, "AccelFactor");
-    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->accl) != 1))
-	pars->accl=0.0015;
-    str_par = xf86FindOptionValue(opts, "CircScrollDelta");
-    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->scroll_dist_circ) != 1))
-	pars->scroll_dist_circ = 0.1;
-    str_par = xf86FindOptionValue(opts, "CoastingSpeed");
-    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->coasting_speed) != 1))
-	pars->coasting_speed = 0.0;
-
-    str_par = xf86FindOptionValue(opts, "PressureMotionMinFactor");
-    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->press_motion_min_factor) != 1))
-	pars->press_motion_min_factor = 1;
-    str_par = xf86FindOptionValue(opts, "PressureMotionMaxFactor");
-    if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->press_motion_max_factor) != 1))
-	pars->press_motion_max_factor = 1;
+    pars->min_speed = synSetFloatOption(opts, "MinSpeed", 0.09);
+    pars->max_speed = synSetFloatOption(opts, "MaxSpeed", 0.18);
+    pars->accl = synSetFloatOption(opts, "AccelFactor", 0.0015);
+    pars->scroll_dist_circ = synSetFloatOption(opts, "CircScrollDelta", 0.1);
+    pars->coasting_speed = synSetFloatOption(opts, "CoastingSpeed", 0.0);
+    pars->press_motion_min_factor = synSetFloatOption(opts, "PressureMotionMinFactor", 1.0);
+    pars->press_motion_max_factor = synSetFloatOption(opts, "PressureMotionMaxFactor", 1.0);
 
     /* Warn about (and fix) incorrectly configured TopEdge/BottomEdge parameters */
     if (pars->top_edge > pars->bottom_edge) {
