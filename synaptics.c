@@ -420,12 +420,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     if ((!str_par) || (xf86sscanf(str_par, "%lf", &pars->press_motion_max_factor) != 1))
 	pars->press_motion_max_factor = 1;
 
-    /* Warn about (and fix) incorrectly configured CircScrollTrigger parameters */
-    if (pars->circular_trigger < 0 || pars->circular_trigger > 8) {
-	xf86Msg(X_WARNING, "Unknown circular scrolling trigger, using 0 (edges)");
-	pars->circular_trigger = 0;
-    }
-
     /* Warn about (and fix) incorrectly configured TopEdge/BottomEdge parameters */
     if (pars->top_edge > pars->bottom_edge) {
 	int tmp = pars->top_edge;
