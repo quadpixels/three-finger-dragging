@@ -4,6 +4,10 @@ VER_LEVEL_3=4
 VERSION=$(VER_LEVEL_1).$(VER_LEVEL_2).$(VER_LEVEL_3)
 VERSION_ID=($(VER_LEVEL_1)*10000+$(VER_LEVEL_2)*100+$(VER_LEVEL_3))
 
+# Define BUILD_MODULAR to any value to build an .so object
+# for use with modular Xorg.
+BUILD_MODULAR ?=
+
 # Define the TOP variable to build using include files from a local source tree.
 #TOP = /usr/src/redhat/BUILD/XFree86-4.3.0/xc
 
@@ -69,7 +73,16 @@ CFLAGSCLIENT = $(CDEBUGFLAGS) $(CCOPTIONS) -DVERSION="\"$(VERSION)\""  -DVERSION
 
 CC = gcc
 
-LDCOMBINEFLAGS = -r
+ifneq ($(BUILD_MODULAR),)
+  # Xorg 7.0 uses /usr/lib/xorg/modules and builds stripped shared objects
+  INPUT_MODULE_DIR = $(DESTDIR)/usr/$(LIBDIR)/xorg/modules/input
+  SYNAPTICS_DRV = synaptics_drv.so
+  LDCOMBINEFLAGS = -shared
+else
+  INPUT_MODULE_DIR = $(INSTALLED_X)/$(LIBDIR)/modules/input
+  SYNAPTICS_DRV = synaptics_drv.o
+  LDCOMBINEFLAGS = -r
+endif
 
 SRCS = synaptics.c ps2comm.c eventcomm.c psmcomm.c alpscomm.c
 OBJS = synaptics.o ps2comm.o eventcomm.o psmcomm.o alpscomm.o
@@ -78,9 +91,9 @@ OBJS = synaptics.o ps2comm.o eventcomm.o psmcomm.o alpscomm.o
 	$(RM) $@
 	$(CC) -c $(CFLAGS) $(_NOOP_) $*.c
 
-all:: synaptics_drv.o synclient syndaemon
+all:: $(SYNAPTICS_DRV) synclient syndaemon
 
-install: $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/$(LIBDIR)/modules/input/synaptics_drv.o install-man
+install: $(BINDIR)/synclient $(BINDIR)/syndaemon $(INPUT_MODULE_DIR)/$(SYNAPTICS_DRV) install-man
 
 install-man: $(MANDIR)/man1/synclient.1 $(MANDIR)/man1/syndaemon.1 $(MANDIR)/man5/synaptics.5
 
@@ -99,10 +112,10 @@ $(BINDIR)/synclient : synclient
 $(BINDIR)/syndaemon : syndaemon
 	install -D $< $@
 
-$(INSTALLED_X)/$(LIBDIR)/modules/input/synaptics_drv.o : synaptics_drv.o
+$(INPUT_MODULE_DIR)/$(SYNAPTICS_DRV) : $(SYNAPTICS_DRV)
 	install --mode=0644 -D $< $@
 
-synaptics_drv.o: $(OBJS)
+$(SYNAPTICS_DRV): $(OBJS)
 	$(RM) $@
 	$(LD) $(LDCOMBINEFLAGS)  $(OBJS) -o $@
 
@@ -127,7 +140,7 @@ synclient.o : synaptics.h Makefile
 syndaemon.o : synaptics.h
 
 clean::
-	$(RM) *.CKP *.ln *.BAK *.bak *.o core errs ,* *~ *.a .emacs_* tags TAGS make.log MakeOut synclient syndaemon "#"* manpages/*~ synaptics-$(VERSION).tar.bz2
+	$(RM) *.CKP *.ln *.BAK *.bak *.o *.so core errs ,* *~ *.a .emacs_* tags TAGS make.log MakeOut synclient syndaemon "#"* manpages/*~ synaptics-$(VERSION).tar.bz2
 
 tags::
 	etags -o TAGS *.c *.h
