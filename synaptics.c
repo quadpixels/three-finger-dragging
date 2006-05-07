@@ -404,6 +404,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->palm_detect        = xf86SetBoolOption(opts, "PalmDetect", TRUE);
     pars->palm_min_width     = xf86SetIntOption(opts, "PalmMinWidth", 10);
     pars->palm_min_z         = xf86SetIntOption(opts, "PalmMinZ", 200);
+    pars->single_tap_timeout = xf86SetIntOption(opts, "SingleTapTimeout", 180);
     pars->press_motion_min_z = xf86SetIntOption(opts, "PressureMotionMinZ", pars->edge_motion_min_z);
     pars->press_motion_max_z = xf86SetIntOption(opts, "PressureMotionMaxZ", pars->edge_motion_max_z);
 
@@ -1030,12 +1031,13 @@ GetTimeOut(SynapticsPrivate *priv)
 
     switch (priv->tap_state) {
     case TS_1:
-    case TS_2A:
     case TS_3:
     case TS_5:
 	return para->tap_time;
     case TS_SINGLETAP:
 	return para->click_time;
+    case TS_2A:
+	return para->single_tap_timeout;
     case TS_2B:
 	return para->tap_time_2;
     default:

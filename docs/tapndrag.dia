@@ -590,6 +590,7 @@ R  : Release
 TO : Tap Timeout
 TO2: Mouse click timeout
 TO3: Double tap timeout
+TO4: Single tap timeout
 M  : Finger movement
 [U]: Generate button up event
 [D]: Generate button down event
@@ -1349,7 +1350,7 @@ Tap#</dia:string>
       <dia:attribute name="text">
         <dia:composite type="text">
           <dia:attribute name="string">
-            <dia:string>#TO
+            <dia:string>#TO4
 [U] if F
 [D] if !F#</dia:string>
           </dia:attribute>

@@ -53,6 +53,7 @@ typedef struct _SynapticsSHM
     int finger_low, finger_high;	    /* finger detection values in Z-values */
     int tap_time;
     int tap_move;			    /* max. tapping time and movement in packets and coord. */
+    int single_tap_timeout;		    /* timeout to recognize a single tap */
     int tap_time_2;			    /* max. tapping time for double taps */
     int click_time;			    /* The duration of a single click */
     Bool fast_taps;			    /* Faster reaction to single taps */
