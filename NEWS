@@ -1,3 +1,14 @@
+0.14.5 (2006-06-04)
+- Added PREFIX support to the Makefile. From Ricardo Garcia.
+- Implemented pressure dependent motion speed. From Stephane Rosi.
+- Minor documentation updates.
+- Implemented two-finger vertical and horizontal scrolling. From
+  Stefan Bethge.
+- Some code cleanup.
+- Makefile support for Xorg 7.0. From Mattia Dongili.
+- Added new parameter "SingleTapTimeout" to give greater control over
+  tap behavior. From Vaclav Kadlcik.
+
 0.14.4 (2005-11-06)
 - X header file fix for xorg 6.8.99.15. Patch from Christoph Brill.
 - Fixed some long vs int inconsistencies to make the driver work
