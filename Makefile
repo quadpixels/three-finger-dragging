@@ -4,16 +4,10 @@ VER_LEVEL_3=4
 VERSION=$(VER_LEVEL_1).$(VER_LEVEL_2).$(VER_LEVEL_3)
 VERSION_ID=($(VER_LEVEL_1)*10000+$(VER_LEVEL_2)*100+$(VER_LEVEL_3))
 
-# Define BUILD_MODULAR to any value to build an .so object
-# for use with modular Xorg.
-BUILD_MODULAR ?=
-
 # Define the TOP variable to build using include files from a local source tree.
 #TOP = /usr/src/redhat/BUILD/XFree86-4.3.0/xc
 
 PREFIX ?= /usr/local
-INSTALLED_X = $(DESTDIR)/usr/X11R6
-LOCAL_X = Xincludes/usr/X11R6
 BINDIR = $(DESTDIR)$(PREFIX)/bin
 MANDIR = $(DESTDIR)$(PREFIX)/man
 
@@ -31,30 +25,49 @@ else
   LIBDIR = lib
 endif
 
-ifeq ($(TOP),)
-  # This hack attempts to check if the needed XFree86 header files are installed.
-  # It checks for a needed XFree86 4.3.00 SDK header file that is not installed by
-  # default. If it is present, then it assumes that all header files are present.
-  # If it is not present, then it assumes that all header files are not present
-  # and uses the local copy of the XFree86 4.2.0 header files.
-  X_INCLUDES_ROOT = $(shell \
-    if [ -f $(INSTALLED_X)/$(LIBDIR)/Server/include/xisb.h ] ; then \
-      echo -n $(INSTALLED_X) ; \
-    else \
-      echo -n $(LOCAL_X) ; \
-    fi )
-  ALLINCLUDES = -I. -I$(X_INCLUDES_ROOT)/include/X11 \
-		-I$(X_INCLUDES_ROOT)/include/X11/extensions \
-		-I$(X_INCLUDES_ROOT)/$(LIBDIR)/Server/include
+BUILD_MODULAR ?= $(shell pkg-config xorg-server --exists && echo y)
+ifeq ($(BUILD_MODULAR),y)
+  # Xorg 7.0 uses /usr/lib/xorg/modules and builds stripped shared objects
+  INSTALLED_X = $(DESTDIR)$(shell pkg-config xorg-server --variable=prefix)
+  INPUT_MODULE_DIR = $(DESTDIR)$(shell pkg-config xorg-server --variable=moduledir)/input
+  SYNAPTICS_DRV = synaptics_drv.so
+  LDCOMBINEFLAGS = -shared
+  X_INCLUDES_ROOT = $(INSTALLED_X)
+  SDKDIR = $(shell pkg-config xorg-server --variable=sdkdir)
+  ALLINCLUDES = -I. -I$(INSTALLED_X)/include/X11 \
+		-I$(INSTALLED_X)/include/X11/extensions \
+		-I$(SDKDIR)
 else
-  SERVERSRC = $(TOP)/programs/Xserver
-  ALLINCLUDES = -I. \
+  INSTALLED_X = $(DESTDIR)/usr/X11R6
+  INPUT_MODULE_DIR = $(INSTALLED_X)/$(LIBDIR)/modules/input
+  SYNAPTICS_DRV = synaptics_drv.o
+  LDCOMBINEFLAGS = -r
+
+  ifeq ($(TOP),)
+    # This hack attempts to check if the needed XFree86 header files are installed.
+    # It checks for a needed XFree86 4.3.00 SDK header file that is not installed by
+    # default. If it is present, then it assumes that all header files are present.
+    # If it is not present, then it assumes that all header files are not present
+    # and uses the local copy of the XFree86 4.2.0 header files.
+    X_INCLUDES_ROOT = $(shell \
+      if [ -f $(INSTALLED_X)/$(LIBDIR)/Server/include/xisb.h ] ; then \
+        echo -n $(INSTALLED_X) ; \
+      else \
+        echo -n Xincludes/usr/X11R6 ; \
+      fi )
+    ALLINCLUDES = -I. -I$(X_INCLUDES_ROOT)/include/X11 \
+		  -I$(X_INCLUDES_ROOT)/include/X11/extensions \
+		  -I$(X_INCLUDES_ROOT)/$(LIBDIR)/Server/include
+  else
+    SERVERSRC = $(TOP)/programs/Xserver
+    ALLINCLUDES = -I. \
 	-I$(SERVERSRC)/hw/xfree86/common \
 	-I$(SERVERSRC)/hw/xfree86/os-support \
 	-I$(SERVERSRC)/mi \
 	-I$(SERVERSRC)/include \
 	-I$(TOP)/include
-  X_INCLUDES_ROOT = $(TOP)
+    X_INCLUDES_ROOT = $(TOP)
+  endif
 endif
 
 MODULE_DEFINES = -DIN_MODULE -DXFree86Module
@@ -72,17 +85,6 @@ CFLAGS = $(CDEBUGFLAGS) $(CCOPTIONS) $(ALLDEFINES) -DVERSION="\"$(VERSION)\"" -D
 CFLAGSCLIENT = $(CDEBUGFLAGS) $(CCOPTIONS) -DVERSION="\"$(VERSION)\""  -DVERSION_ID="$(VERSION_ID)" -I$(X_INCLUDES_ROOT)/include
 
 CC = gcc
-
-ifneq ($(BUILD_MODULAR),)
-  # Xorg 7.0 uses /usr/lib/xorg/modules and builds stripped shared objects
-  INPUT_MODULE_DIR = $(DESTDIR)/usr/$(LIBDIR)/xorg/modules/input
-  SYNAPTICS_DRV = synaptics_drv.so
-  LDCOMBINEFLAGS = -shared
-else
-  INPUT_MODULE_DIR = $(INSTALLED_X)/$(LIBDIR)/modules/input
-  SYNAPTICS_DRV = synaptics_drv.o
-  LDCOMBINEFLAGS = -r
-endif
 
 SRCS = synaptics.c ps2comm.c eventcomm.c psmcomm.c alpscomm.c
 OBJS = synaptics.o ps2comm.o eventcomm.o psmcomm.o alpscomm.o
