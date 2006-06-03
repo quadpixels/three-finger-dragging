@@ -1,3 +1,5 @@
+%define moduledir %(pkg-config xorg-server --variable=moduledir || echo /usr/X11R6)
+
 Summary: The Synaptics touchpad X driver
 Name: synaptics
 Version: 0.14.4
@@ -6,7 +8,6 @@ License: GPL
 Group: User Interface/X
 Source: %{name}-%{version}.tar.bz2
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
-BuildPreReq: XFree86-devel
 
 %description
 This is a driver for the Synaptics TouchPad for XOrg/XFree86 4.x. A Synaptics
@@ -48,7 +49,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 %files
 %defattr(-,root,root)
 /usr/local
-/usr/X11R6
+%{moduledir}
 %doc COMPATIBILITY FILES INSTALL INSTALL.DE INSTALL.FR LICENSE README README.alps TODO
 %doc trouble-shooting.txt
 
