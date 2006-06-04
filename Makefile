@@ -31,7 +31,7 @@ ifeq ($(BUILD_MODULAR),y)
   INSTALLED_X = $(shell pkg-config xorg-server --variable=prefix)
   INPUT_MODULE_DIR = $(DESTDIR)$(shell pkg-config xorg-server --variable=moduledir)/input
   SYNAPTICS_DRV = synaptics_drv.so
-  LDCOMBINEFLAGS = -shared
+  LDCOMBINEFLAGS = -shared -lc
   PICFLAG = $(call check_gcc,-fPIC,)
   X_INCLUDES_ROOT = $(INSTALLED_X)
   SDKDIR = $(shell pkg-config xorg-server --variable=sdkdir)
