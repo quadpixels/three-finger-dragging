@@ -32,6 +32,7 @@ ifeq ($(BUILD_MODULAR),y)
   INPUT_MODULE_DIR = $(DESTDIR)$(shell pkg-config xorg-server --variable=moduledir)/input
   SYNAPTICS_DRV = synaptics_drv.so
   LDCOMBINEFLAGS = -shared
+  PICFLAG = $(call check_gcc,-fPIC,)
   X_INCLUDES_ROOT = $(INSTALLED_X)
   SDKDIR = $(shell pkg-config xorg-server --variable=sdkdir)
   ALLINCLUDES = -I. -I$(INSTALLED_X)/include/X11 \
@@ -81,7 +82,7 @@ check_gcc = $(shell if $(CC) $(1) -S -o /dev/null -xc /dev/null > /dev/null 2>&1
 CCOPTIONS := -pedantic -Wall -Wpointer-arith
 CCOPTIONS += $(call check_gcc,-fno-merge-constants,)
 CDEBUGFLAGS = -O2
-CFLAGS = $(CDEBUGFLAGS) $(CCOPTIONS) $(ALLDEFINES) -DVERSION="\"$(VERSION)\"" -DVERSION_ID="$(VERSION_ID)"
+CFLAGS = $(CDEBUGFLAGS) $(CCOPTIONS) $(PICFLAG) $(ALLDEFINES) -DVERSION="\"$(VERSION)\"" -DVERSION_ID="$(VERSION_ID)"
 CFLAGSCLIENT = $(CDEBUGFLAGS) $(CCOPTIONS) -DVERSION="\"$(VERSION)\""  -DVERSION_ID="$(VERSION_ID)" -I$(X_INCLUDES_ROOT)/include
 
 CC = gcc
