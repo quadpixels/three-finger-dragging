@@ -28,7 +28,7 @@ endif
 BUILD_MODULAR ?= $(shell pkg-config xorg-server --exists && echo y)
 ifeq ($(BUILD_MODULAR),y)
   # Xorg 7.0 uses /usr/lib/xorg/modules and builds stripped shared objects
-  INSTALLED_X = $(DESTDIR)$(shell pkg-config xorg-server --variable=prefix)
+  INSTALLED_X = $(shell pkg-config xorg-server --variable=prefix)
   INPUT_MODULE_DIR = $(DESTDIR)$(shell pkg-config xorg-server --variable=moduledir)/input
   SYNAPTICS_DRV = synaptics_drv.so
   LDCOMBINEFLAGS = -shared
@@ -38,8 +38,8 @@ ifeq ($(BUILD_MODULAR),y)
 		-I$(INSTALLED_X)/include/X11/extensions \
 		-I$(SDKDIR)
 else
-  INSTALLED_X = $(DESTDIR)/usr/X11R6
-  INPUT_MODULE_DIR = $(INSTALLED_X)/$(LIBDIR)/modules/input
+  INSTALLED_X = /usr/X11R6
+  INPUT_MODULE_DIR = $(DESTDIR)/$(INSTALLED_X)/$(LIBDIR)/modules/input
   SYNAPTICS_DRV = synaptics_drv.o
   LDCOMBINEFLAGS = -r
 
