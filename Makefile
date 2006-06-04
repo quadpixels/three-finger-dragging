@@ -148,7 +148,7 @@ tags::
 	etags -o TAGS *.c *.h
 
 uninstall::
-	$(RM) $(BINDIR)/synclient $(BINDIR)/syndaemon $(INSTALLED_X)/lib/modules/input/synaptics_drv.o $(MANDIR)/man1/synclient.1 $(MANDIR)/man1/syndaemon.1 $(MANDIR)/man5/synaptics.5
+	$(RM) $(BINDIR)/synclient $(BINDIR)/syndaemon $(INPUT_MODULE_DIR)/$(SYNAPTICS_DRV) $(MANDIR)/man1/synclient.1 $(MANDIR)/man1/syndaemon.1 $(MANDIR)/man5/synaptics.5
 
 distribution : synaptics-$(VERSION).tar.bz2
 
