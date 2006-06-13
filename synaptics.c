@@ -59,6 +59,7 @@
  *	Standard Headers
  ****************************************************************************/
 
+#include <unistd.h>
 #include <sys/ioctl.h>
 #include <misc.h>
 #include <xf86.h>

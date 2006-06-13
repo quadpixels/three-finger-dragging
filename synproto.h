@@ -19,6 +19,7 @@
 #ifndef _SYNPROTO_H_
 #define _SYNPROTO_H_
 
+#include <unistd.h>
 #include <sys/ioctl.h>
 #include <xf86Xinput.h>
 #include <xisb.h>

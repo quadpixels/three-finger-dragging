@@ -29,6 +29,8 @@
  */
 
 #include "psmcomm.h"
+#include <errno.h>
+#include <string.h>
 #include "synproto.h"
 #include "synaptics.h"
 #include "ps2comm.h"			    /* ps2_print_ident() */
