@@ -341,7 +341,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	ErrorF("Synaptics driver unable to open device\n");
 	goto SetupProc_fail;
     }
-    xf86ErrorFVerb( 6, "port opened successfully\n" );
+    xf86ErrorFVerb(6, "port opened successfully\n");
 
     /* initialize variables */
     priv->timer = NULL;
@@ -1740,7 +1740,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     if (((hw->up || hw->down) && para->updown_button_repeat &&
 	 para->updown_button_scrolling) ||
 	((hw->multi[2] || hw->multi[3]) && para->leftright_button_repeat &&
-	 para->leftright_button_scrolling) ){
+	 para->leftright_button_scrolling)) {
 	priv->repeatButtons = buttons & rep_buttons;
 	if (!priv->nextRepeat) {
 	    priv->nextRepeat = hw->millis + repeat_delay * 2;
