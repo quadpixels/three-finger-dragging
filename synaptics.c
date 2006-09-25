@@ -103,6 +103,8 @@ typedef enum {
 #define TIME_DIFF(a, b) ((int)((a)-(b)))
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
+#define SQR(x) ((x) * (x))
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -634,7 +636,7 @@ DeviceInit(DeviceIntPtr dev)
 static int
 move_distance(int dx, int dy)
 {
-    return xf86sqrt((dx * dx) + (dy * dy));
+    return xf86sqrt(SQR(dx) + SQR(dy));
 }
 
 /*
@@ -691,7 +693,7 @@ circular_edge_detection(SynapticsPrivate *priv, int x, int y)
     double relX, relY, relR;
 
     relative_coords(priv, x, y, &relX, &relY);
-    relR = relX * relX + relY * relY;
+    relR = SQR(relX) + SQR(relY);
 
     if (relR > 1) {
 	/* we are outside the ellipse enclosed by the edge parameters */
