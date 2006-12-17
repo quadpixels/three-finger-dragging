@@ -60,6 +60,10 @@
 #define PS2DBG(x)
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 1
+#define DBG(a,b)
+#endif
+
 /*****************************************************************************
  *	PS/2 Utility functions.
  *     Many parts adapted from tpconfig.c by C. Scott Ananian

@@ -113,6 +113,10 @@ typedef enum {
 #define M_SQRT1_2  0.70710678118654752440  /* 1/sqrt(2) */
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 1
+#define DBG(a,b)
+#endif
+
 /*****************************************************************************
  * Forward declaration
  ****************************************************************************/
@@ -323,8 +327,10 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     local->private_flags           = 0;
     local->flags                   = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
     local->conf_idev               = dev;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
     local->motion_history_proc     = xf86GetMotionEvents;
     local->history_size            = 0;
+#endif
     local->always_core_feedback    = 0;
 
     xf86Msg(X_INFO, "Synaptics touchpad driver version %s (%d)\n", VERSION, VERSION_ID);
@@ -457,8 +463,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	xf86Msg(X_ERROR, "%s Unable to query/initialize Synaptics hardware.\n", local->name);
 	goto SetupProc_fail;
     }
-
-    local->history_size = xf86SetIntOption(opts, "HistorySize", 0);
 
     xf86ProcessCommonOptions(local, opts);
     local->flags |= XI86_CONFIGURED;
@@ -616,17 +620,25 @@ DeviceInit(DeviceIntPtr dev)
 
     InitPointerDeviceStruct((DevicePtr)dev, map,
 			    SYN_MAX_BUTTONS,
-			    miPointerGetMotionEvents, SynapticsCtrl,
-			    miPointerGetMotionBufferSize());
-
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
+			    miPointerGetMotionEvents,
+			    SynapticsCtrl,
+			    miPointerGetMotionBufferSize()
+#else
+			    GetMotionHistory,
+			    SynapticsCtrl,
+			    GetMotionHistorySize(), 2
+#endif
+			    );
     /* X valuator */
     xf86InitValuatorAxisStruct(dev, 0, 0, -1, 1, 0, 1);
     xf86InitValuatorDefaults(dev, 0);
     /* Y valuator */
     xf86InitValuatorAxisStruct(dev, 1, 0, -1, 1, 0, 1);
     xf86InitValuatorDefaults(dev, 1);
-
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
     xf86MotionHistoryAllocate(local);
+#endif
 
     if (!alloc_param_data(local))
 	return !Success;
