@@ -374,6 +374,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->fast_taps = xf86SetIntOption(opts, "FastTaps", FALSE);
     pars->emulate_mid_button_time = xf86SetIntOption(opts,
 							      "EmulateMidButtonTime", 75);
+    pars->emulate_twofinger_z = xf86SetIntOption(opts, "EmulateTwoFingerMinZ", 257);
     pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", 100);
     pars->scroll_dist_horiz = xf86SetIntOption(opts, "HorizScrollDelta", 100);
     pars->scroll_edge_vert = xf86SetBoolOption(opts, "VertEdgeScroll", TRUE);
@@ -1623,6 +1624,11 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 
     /* 3rd button emulation */
     hw->middle |= HandleMidButtonEmulation(priv, hw, &delay);
+
+    /* Two finger emulation */
+    if (hw->z >= para->emulate_twofinger_z && hw->numFingers == 1) {
+	hw->numFingers = 2;
+    }
 
     /* Up/Down button scrolling or middle/double click */
     double_click = FALSE;
