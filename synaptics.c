@@ -426,7 +426,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->max_speed = synSetFloatOption(opts, "MaxSpeed", 0.18);
     pars->accl = synSetFloatOption(opts, "AccelFactor", 0.0015);
     pars->trackstick_accl = synSetFloatOption(opts, "TrackstickAccelFactor", 0.5);
-    pars->trackstick_exp_accl = synSetFloatOption(opts, "TrackstickAccelExp", 1.1);
     pars->scroll_dist_circ = synSetFloatOption(opts, "CircScrollDelta", 0.1);
     pars->coasting_speed = synSetFloatOption(opts, "CoastingSpeed", 0.0);
     pars->press_motion_min_factor = synSetFloatOption(opts, "PressureMotionMinFactor", 1.0);
@@ -1314,8 +1313,8 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
                 dx = (hw->x - priv->trackstick_neutral_x);
                 dy = (hw->y - priv->trackstick_neutral_y);
                 
-                dx = xf86pow(xf86fabs(dx), para->trackstick_exp_accl) * (dx < 0 ? -1.0 : 1.0) * para->trackstick_accl;
-                dy = xf86pow(xf86fabs(dy), para->trackstick_exp_accl) * (dy < 0 ? -1.0 : 1.0) * para->trackstick_accl;
+                dx = dx * para->trackstick_accl;
+                dy = dy * para->trackstick_accl;
             }                
 
 	    /* speed depending on distance/packet */
