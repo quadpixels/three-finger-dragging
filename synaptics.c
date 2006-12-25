@@ -1,4 +1,7 @@
 /*
+ *   Copyright 2006 Christian Thaeter <chth@gmx.net>
+ *     patch for Trackstick mode
+ *
  *   Copyright 2006 Stefan Bethge <stefan.bethge@web.de>
  *     patch for two-fingered scrolling
  *
@@ -373,6 +376,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->bottom_edge = xf86SetIntOption(opts, "BottomEdge", 4000);
     pars->finger_low = xf86SetIntOption(opts, "FingerLow", 25);
     pars->finger_high = xf86SetIntOption(opts, "FingerHigh", 30);
+    pars->finger_press = xf86SetIntOption(opts, "FingerPress", 256);
     pars->tap_time = xf86SetIntOption(opts, "MaxTapTime", 180);
     pars->tap_move = xf86SetIntOption(opts, "MaxTapMove", 220);
     pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 180);
@@ -421,6 +425,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->min_speed = synSetFloatOption(opts, "MinSpeed", 0.09);
     pars->max_speed = synSetFloatOption(opts, "MaxSpeed", 0.18);
     pars->accl = synSetFloatOption(opts, "AccelFactor", 0.0015);
+    pars->trackstick_accl = synSetFloatOption(opts, "TrackstickAccelFactor", 0.5);
+    pars->trackstick_exp_accl = synSetFloatOption(opts, "TrackstickAccelExp", 1.1);
     pars->scroll_dist_circ = synSetFloatOption(opts, "CircScrollDelta", 0.1);
     pars->coasting_speed = synSetFloatOption(opts, "CoastingSpeed", 0.0);
     pars->press_motion_min_factor = synSetFloatOption(opts, "PressureMotionMinFactor", 1.0);
@@ -910,8 +916,10 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
     int finger;
 
     /* finger detection thru pressure and threshold */
-    finger = (((hw->z > para->finger_high) && !priv->finger_flag) ||
-	      ((hw->z > para->finger_low)  &&  priv->finger_flag));
+    finger = ((hw->z > para->finger_press) && priv->finger_state < FS_PRESSED) ? FS_PRESSED
+        : ((hw->z > para->finger_high) && priv->finger_state < FS_TOUCHED) ? FS_TOUCHED
+        : ((hw->z < para->finger_low)  &&  priv->finger_state > FS_UNTOUCHED) ? FS_UNTOUCHED
+        : priv->finger_state;
 
     if (!para->palm_detect)
 	return finger;
@@ -927,7 +935,7 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 	priv->avg_width = 0;
     else
 	priv->avg_width += (hw->fingerWidth - priv->avg_width + 1) / 2;
-    if (finger && !priv->finger_flag) {
+    if (finger && !priv->finger_state) {
 	int safe_width = MAX(hw->fingerWidth, priv->avg_width);
 	if (hw->numFingers > 1)
 	    finger = TRUE;			/* more than one finger -> not a palm */
@@ -1040,6 +1048,20 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
     priv->tap_state = tap_state;
 }
 
+static void
+SetMovingState(SynapticsPrivate *priv, enum MovingState moving_state, int millis)
+{
+    /* SynapticsSHM *para = priv->synpara; */
+    DBG(7, ErrorF("SetMovingState - %d -> %d center at %d/%d (millis:%d)\n", priv->moving_state,
+    	moving_state,priv->hwState.x, priv->hwState.y, millis));
+
+    if (moving_state == MS_TRACKSTICK) {
+        priv->trackstick_neutral_x = priv->hwState.x;
+        priv->trackstick_neutral_y = priv->hwState.y;
+    }
+    priv->moving_state = moving_state;
+}
+
 static int
 GetTimeOut(SynapticsPrivate *priv)
 {
@@ -1063,7 +1085,7 @@ GetTimeOut(SynapticsPrivate *priv)
 
 static int
 HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
-		    edge_type edge, Bool finger)
+		    edge_type edge, enum FingerState finger)
 {
     SynapticsSHM *para = priv->synpara;
     Bool touch, release, is_timeout, move;
@@ -1073,9 +1095,12 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     if (priv->palm)
 	return delay;
 
-    touch = finger && !priv->finger_flag;
-    release = !finger && priv->finger_flag;
-    move = FALSE;
+    touch = finger && !priv->finger_state;
+    release = !finger && priv->finger_state;
+    move = ((priv->tap_max_fingers <= 1) &&
+            ((abs(hw->x - priv->touch_on.x) >= para->tap_move) ||
+            (abs(hw->y - priv->touch_on.y) >= para->tap_move)));
+
     if (touch) {
 	priv->touch_on.x = hw->x;
 	priv->touch_on.y = hw->y;
@@ -1100,17 +1125,31 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    SetTapState(priv, TS_1, hw->millis);
 	break;
     case TS_1:
-	if (is_timeout || move) {
-	    SetTapState(priv, TS_MOVE, hw->millis);
-	    goto restart;
-	} else if (release) {
-	    SelectTapButton(priv, edge);
-	    SetTapState(priv, TS_2A, hw->millis);
-	}
-	break;
+        if (move) {
+            SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
+            SetTapState(priv, TS_MOVE, hw->millis);
+            goto restart;
+        } else if (is_timeout) {
+            if (finger == FS_TOUCHED) {
+                SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
+            } else if (finger == FS_PRESSED) {
+                SetMovingState(priv, MS_TRACKSTICK, hw->millis);
+            }
+            SetTapState(priv, TS_MOVE, hw->millis);
+            goto restart;
+        } else if (release) {
+            SelectTapButton(priv, edge);
+            SetTapState(priv, TS_2A, hw->millis);
+        }
+        break;                                           
     case TS_MOVE:
-	if (release)
+        if (move && priv->moving_state == MS_TRACKSTICK) {
+            SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
+        }
+	if (release) {
+	    SetMovingState(priv, MS_FALSE, hw->millis);
 	    SetTapState(priv, TS_START, hw->millis);
+        }
 	break;
     case TS_2A:
 	if (touch)
@@ -1133,18 +1172,32 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    SetTapState(priv, TS_START, hw->millis);
 	break;
     case TS_3:
-	if (is_timeout || move) {
-	    SetTapState(priv, TS_DRAG, hw->millis);
-	    goto restart;
-	} else if (release)
+        if (move) {
+            SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
+            SetTapState(priv, TS_DRAG, hw->millis);
+            goto restart;
+        } else if (is_timeout) {
+            if (finger == FS_TOUCHED) {
+                SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
+            } else if (finger == FS_PRESSED) {
+                SetMovingState(priv, MS_TRACKSTICK, hw->millis);
+            }
+            SetTapState(priv, TS_DRAG, hw->millis);
+            goto restart;
+        } else if (release) {
 	    SetTapState(priv, TS_2B, hw->millis);
+        }
 	break;
     case TS_DRAG:
+        if (move)
+            SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
 	if (release) {
-	    if (para->locked_drags)
+	    SetMovingState(priv, MS_FALSE, hw->millis);
+	    if (para->locked_drags) {
 		SetTapState(priv, TS_4, hw->millis);
-	    else
+	    } else {
 		SetTapState(priv, TS_START, hw->millis);
+            }
 	}
 	break;
     case TS_4:
@@ -1155,8 +1208,10 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	if (is_timeout || move) {
 	    SetTapState(priv, TS_DRAG, hw->millis);
 	    goto restart;
-	} else if (release)
+	} else if (release) {
+            SetMovingState(priv, MS_FALSE, hw->millis);
 	    SetTapState(priv, TS_START, hw->millis);
+        }
 	break;
     }
 
@@ -1196,7 +1251,7 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	      edge_type edge, int *dxP, int *dyP)
 {
     SynapticsSHM *para = priv->synpara;
-    Bool moving_state;
+    enum MovingState moving_state;
     int dist;
     double dx, dy;
     double speed, integral;
@@ -1204,21 +1259,8 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
     dx = dy = 0;
 
-    moving_state = FALSE;
-    switch (priv->tap_state) {
-    case TS_MOVE:
-    case TS_DRAG:
-	moving_state = TRUE;
-	break;
-    case TS_1:
-    case TS_3:
-    case TS_5:
-	if (hw->numFingers == 1)
-	    moving_state = TRUE;
-	break;
-    default:
-	break;
-    }
+    moving_state = priv->moving_state;
+
     if (moving_state && !priv->palm &&
 	!priv->vert_scroll_edge_on && !priv->horiz_scroll_edge_on &&
 	!priv->vert_scroll_twofinger_on && !priv->horiz_scroll_twofinger_on &&
@@ -1229,44 +1271,52 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    int x_edge_speed = 0;
 	    int y_edge_speed = 0;
 	    double dtime = (hw->millis - HIST(0).millis) / 1000.0;
-	    dx = estimate_delta(hw->x, HIST(0).x, HIST(1).x, HIST(2).x);
-	    dy = estimate_delta(hw->y, HIST(0).y, HIST(1).y, HIST(2).y);
+            
+            if (priv->moving_state == MS_TOUCHPAD_RELATIVE) {
+	        dx = estimate_delta(hw->x, HIST(0).x, HIST(1).x, HIST(2).x);
+	        dy = estimate_delta(hw->y, HIST(0).y, HIST(1).y, HIST(2).y);
+		if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always) {
+		    int minZ = para->edge_motion_min_z;
+		    int maxZ = para->edge_motion_max_z;
+		    int minSpd = para->edge_motion_min_speed;
+		    int maxSpd = para->edge_motion_max_speed;
+		    int edge_speed;
 
-	    if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always) {
-		int minZ = para->edge_motion_min_z;
-		int maxZ = para->edge_motion_max_z;
-		int minSpd = para->edge_motion_min_speed;
-		int maxSpd = para->edge_motion_max_speed;
-		int edge_speed;
-
-		if (hw->z <= minZ) {
-		    edge_speed = minSpd;
-		} else if (hw->z >= maxZ) {
+		    if (hw->z <= minZ) {
+			edge_speed = minSpd;
+		    } else if (hw->z >= maxZ) {
 		    edge_speed = maxSpd;
-		} else {
+		    } else {
 		    edge_speed = minSpd + (hw->z - minZ) * (maxSpd - minSpd) / (maxZ - minZ);
-		}
-		if (!priv->synpara->circular_pad) {
-		    /* on rectangular pad */
-		    if (edge & RIGHT_EDGE) {
-			x_edge_speed = edge_speed;
-		    } else if (edge & LEFT_EDGE) {
-			x_edge_speed = -edge_speed;
 		    }
-		    if (edge & TOP_EDGE) {
-			y_edge_speed = -edge_speed;
-		    } else if (edge & BOTTOM_EDGE) {
-			y_edge_speed = edge_speed;
-		    }
-		} else if (edge) {
-		    /* at edge of circular pad */
-		    double relX, relY;
+		    if (!priv->synpara->circular_pad) {
+		        /* on rectangular pad */
+		        if (edge & RIGHT_EDGE) {
+			    x_edge_speed = edge_speed;
+		        } else if (edge & LEFT_EDGE) {
+			    x_edge_speed = -edge_speed;
+		        }
+		        if (edge & TOP_EDGE) {
+			    y_edge_speed = -edge_speed;
+		        } else if (edge & BOTTOM_EDGE) {
+			    y_edge_speed = edge_speed;
+		        }
+		    } else if (edge) {
+		        /* at edge of circular pad */
+		        double relX, relY;
 
-		    relative_coords(priv, hw->x, hw->y, &relX, &relY);
-		    x_edge_speed = (int)(edge_speed * relX);
-		    y_edge_speed = (int)(edge_speed * relY);
-		}
-	    }
+		        relative_coords(priv, hw->x, hw->y, &relX, &relY);
+		        x_edge_speed = (int)(edge_speed * relX);
+		        y_edge_speed = (int)(edge_speed * relY);
+		    }
+	        }
+            } else if (priv->moving_state == MS_TRACKSTICK) {
+                dx = (hw->x - priv->trackstick_neutral_x);
+                dy = (hw->y - priv->trackstick_neutral_y);
+                
+                dx = xf86pow(xf86fabs(dx), para->trackstick_exp_accl) * (dx < 0 ? -1.0 : 1.0) * para->trackstick_accl;
+                dy = xf86pow(xf86fabs(dy), para->trackstick_exp_accl) * (dy < 0 ? -1.0 : 1.0) * para->trackstick_accl;
+            }                
 
 	    /* speed depending on distance/packet */
 	    dist = move_distance(dx, dy);
@@ -1278,7 +1328,7 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    }
 
 	    /* modify speed according to pressure */
-	    {
+            if (priv->moving_state == MS_TOUCHPAD_RELATIVE) {
 		int minZ = para->press_motion_min_z;
 		int maxZ = para->press_motion_max_z;
 		double minFctr = para->press_motion_min_factor;
@@ -1383,7 +1433,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     }
 
     /* scroll detection */
-    if (finger && !priv->finger_flag) {
+    if (finger && !priv->finger_state) {
 	priv->autoscroll_xspd = 0;
 	priv->autoscroll_yspd = 0;
 	priv->scroll_packet_count = 0;
@@ -1790,7 +1840,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     }
 
     /* Save old values of some state variables */
-    priv->finger_flag = finger;
+    priv->finger_state = finger;
     priv->lastButtons = buttons;
 
     return delay;

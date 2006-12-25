@@ -50,7 +50,7 @@ typedef struct _SynapticsSHM
 
     /* Parameter data */
     int left_edge, right_edge, top_edge, bottom_edge; /* edge coordinates absolute */
-    int finger_low, finger_high;	    /* finger detection values in Z-values */
+    int finger_low, finger_high, finger_press;        /* finger detection values in Z-values */
     int tap_time;
     int tap_move;			    /* max. tapping time and movement in packets and coord. */
     int single_tap_timeout;		    /* timeout to recognize a single tap */
@@ -67,6 +67,7 @@ typedef struct _SynapticsSHM
     Bool scroll_twofinger_vert;		    /* Enable/disable vertical two-finger scrolling */
     Bool scroll_twofinger_horiz;	    /* Enable/disable horizontal two-finger scrolling */
     double min_speed, max_speed, accl;	    /* movement parameters */
+    double trackstick_accl, trackstick_exp_accl; /* trackstick mode acceleration parameters */
     int edge_motion_min_z;		    /* finger pressure at which minimum edge motion speed is set */
     int edge_motion_max_z;		    /* finger pressure at which maximum edge motion speed is set */
     int edge_motion_min_speed;		    /* slowest setting for edge motion speed */
@@ -136,6 +137,19 @@ typedef struct _SynapticsMoveHist
     int millis;
 } SynapticsMoveHistRec;
 
+enum FingerState {
+  FS_UNTOUCHED,
+  FS_TOUCHED,
+  FS_PRESSED
+};
+
+enum MovingState {
+  MS_FALSE,
+  MS_TOUCHPAD_RELATIVE,
+  MS_TOUCHPAD_ABSOLUTE, /* lets reserve this for future extension, in no way supported for now */
+  MS_TRACKSTICK         /* trackstick is always relative */
+};
+
 enum MidButtonEmulation {
     MBE_OFF,			/* No button pressed */
     MBE_LEFT,			/* Left button pressed, waiting for right button or timeout */
@@ -192,14 +206,14 @@ typedef struct _SynapticsPrivateRec
     int count_packet_finger;		/* packet counter with finger on the touchpad */
     int button_delay_millis;		/* button delay for 3rd button emulation */
     Bool prev_up;			/* Previous up button value, for double click emulation */
-    Bool finger_flag;			/* previous finger */
+    enum FingerState finger_state;	/* previous finger state */
 
     enum TapState tap_state;		/* State of tap processing */
     int tap_max_fingers;		/* Max number of fingers seen since entering start state */
     int tap_button;			/* Which button started the tap processing */
     enum TapButtonState tap_button_state; /* Current tap action */
     SynapticsMoveHistRec touch_on;	/* data when the touchpad is touched/released */
-
+    enum MovingState moving_state;	/* previous moving state */
     Bool vert_scroll_edge_on;		/* Keeps track of currently active scroll modes */
     Bool horiz_scroll_edge_on;		/* Keeps track of currently active scroll modes */
     Bool vert_scroll_twofinger_on;	/* Keeps track of currently active scroll modes */
@@ -207,6 +221,8 @@ typedef struct _SynapticsPrivateRec
     Bool circ_scroll_on;		/* Keeps track of currently active scroll modes */
     Bool circ_scroll_vert;		/* True: Generate vertical scroll events
 					   False: Generate horizontal events */
+    int trackstick_neutral_x;          /* neutral x position for trackstick mode */
+    int trackstick_neutral_y;          /* neutral y position for trackstick mode */
     double autoscroll_xspd;		/* Horizontal coasting speed */
     double autoscroll_yspd;		/* Vertical coasting speed */
     double autoscroll_x;		/* Accumulated horizontal coasting scroll */

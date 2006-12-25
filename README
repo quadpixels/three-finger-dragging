@@ -28,6 +28,7 @@ advanced features of the touchpad becomes available, such as:
   for right button events. (Needs hardware support. Not all models
   implement this feature.)
 - Pressure dependent motion speed.
+- Trackstick emulation.
 - Run-time configuration using shared memory. This means you can
   change parameter settings without restarting the X server.
 
