@@ -1259,6 +1259,21 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     dx = dy = 0;
 
     moving_state = priv->moving_state;
+    if (moving_state == MS_FALSE)
+      switch (priv->tap_state) {
+      case TS_MOVE:
+      case TS_DRAG:
+        moving_state = MS_TOUCHPAD_RELATIVE;
+        break;
+      case TS_1:
+      case TS_3:
+      case TS_5:
+        if (hw->numFingers == 1)
+          moving_state = MS_TOUCHPAD_RELATIVE;
+        break;
+      default:
+        break;
+      }
 
     if (moving_state && !priv->palm &&
 	!priv->vert_scroll_edge_on && !priv->horiz_scroll_edge_on &&
@@ -1270,8 +1285,14 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    int x_edge_speed = 0;
 	    int y_edge_speed = 0;
 	    double dtime = (hw->millis - HIST(0).millis) / 1000.0;
-            
-            if (priv->moving_state == MS_TOUCHPAD_RELATIVE) {
+
+            if (priv->moving_state == MS_TRACKSTICK) {
+                dx = (hw->x - priv->trackstick_neutral_x);
+                dy = (hw->y - priv->trackstick_neutral_y);
+
+	        dx = dx * para->trackstick_accl;
+                dy = dy * para->trackstick_accl;
+            } else if (moving_state == MS_TOUCHPAD_RELATIVE) {
 	        dx = estimate_delta(hw->x, HIST(0).x, HIST(1).x, HIST(2).x);
 	        dy = estimate_delta(hw->y, HIST(0).y, HIST(1).y, HIST(2).y);
 		if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always) {
@@ -1309,13 +1330,7 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		        y_edge_speed = (int)(edge_speed * relY);
 		    }
 	        }
-            } else if (priv->moving_state == MS_TRACKSTICK) {
-                dx = (hw->x - priv->trackstick_neutral_x);
-                dy = (hw->y - priv->trackstick_neutral_y);
-                
-                dx = dx * para->trackstick_accl;
-                dy = dy * para->trackstick_accl;
-            }                
+            }
 
 	    /* speed depending on distance/packet */
 	    dist = move_distance(dx, dy);
