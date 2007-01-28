@@ -1050,7 +1050,6 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
 static void
 SetMovingState(SynapticsPrivate *priv, enum MovingState moving_state, int millis)
 {
-    /* SynapticsSHM *para = priv->synpara; */
     DBG(7, ErrorF("SetMovingState - %d -> %d center at %d/%d (millis:%d)\n", priv->moving_state,
 		  moving_state,priv->hwState.x, priv->hwState.y, millis));
 
@@ -1106,9 +1105,6 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	priv->touch_on.millis = hw->millis;
     } else if (release) {
 	priv->touch_on.millis = hw->millis;
-	move = ((priv->tap_max_fingers <= 1) &&
-		((abs(hw->x - priv->touch_on.x) >= para->tap_move) ||
-		 (abs(hw->y - priv->touch_on.y) >= para->tap_move)));
     }
     if (hw->z > para->finger_high)
 	if (priv->tap_max_fingers < hw->numFingers)
@@ -1656,7 +1652,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
     SynapticsSHM *para = priv->synpara;
-    Bool finger;
+    int finger;
     int dx, dy, buttons, rep_buttons, id;
     edge_type edge;
     int change;

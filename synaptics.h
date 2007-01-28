@@ -137,7 +137,7 @@ typedef struct _SynapticsMoveHist
     int millis;
 } SynapticsMoveHistRec;
 
-enum FingerState {
+enum FingerState {		/* Note! The order matters. Compared with < operator. */
     FS_UNTOUCHED,
     FS_TOUCHED,
     FS_PRESSED
@@ -146,7 +146,6 @@ enum FingerState {
 enum MovingState {
     MS_FALSE,
     MS_TOUCHPAD_RELATIVE,
-    MS_TOUCHPAD_ABSOLUTE,	/* lets reserve this for future extension, in no way supported for now */
     MS_TRACKSTICK		/* trackstick is always relative */
 };
 
