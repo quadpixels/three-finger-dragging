@@ -67,7 +67,7 @@ typedef struct _SynapticsSHM
     Bool scroll_twofinger_vert;		    /* Enable/disable vertical two-finger scrolling */
     Bool scroll_twofinger_horiz;	    /* Enable/disable horizontal two-finger scrolling */
     double min_speed, max_speed, accl;	    /* movement parameters */
-    double trackstick_accl;		    /* trackstick mode acceleration parameters */
+    double trackstick_speed;		    /* trackstick mode speed */
     int edge_motion_min_z;		    /* finger pressure at which minimum edge motion speed is set */
     int edge_motion_max_z;		    /* finger pressure at which maximum edge motion speed is set */
     int edge_motion_min_speed;		    /* slowest setting for edge motion speed */

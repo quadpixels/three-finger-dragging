@@ -73,7 +73,7 @@ static struct Parameter params[] = {
     DEFINE_PAR("MinSpeed",             min_speed,               PT_DOUBLE, 0, 1.0),
     DEFINE_PAR("MaxSpeed",             max_speed,               PT_DOUBLE, 0, 1.0),
     DEFINE_PAR("AccelFactor",          accl,                    PT_DOUBLE, 0, 0.2),
-    DEFINE_PAR("TrackstickAccelFactor", trackstick_accl,        PT_DOUBLE, 0, 2.0),
+    DEFINE_PAR("TrackstickSpeed",      trackstick_speed,        PT_DOUBLE, 0, 2.0),
     DEFINE_PAR("EdgeMotionMinZ",       edge_motion_min_z,       PT_INT,    1, 255),
     DEFINE_PAR("EdgeMotionMaxZ",       edge_motion_max_z,       PT_INT,    1, 255),
     DEFINE_PAR("EdgeMotionMinSpeed",   edge_motion_min_speed,   PT_INT,    0, 1000),
