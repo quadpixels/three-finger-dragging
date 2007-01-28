@@ -425,7 +425,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->min_speed = synSetFloatOption(opts, "MinSpeed", 0.09);
     pars->max_speed = synSetFloatOption(opts, "MaxSpeed", 0.18);
     pars->accl = synSetFloatOption(opts, "AccelFactor", 0.0015);
-    pars->trackstick_speed = synSetFloatOption(opts, "TrackstickSpeed", 0.5);
+    pars->trackstick_speed = synSetFloatOption(opts, "TrackstickSpeed", 40);
     pars->scroll_dist_circ = synSetFloatOption(opts, "CircScrollDelta", 0.1);
     pars->coasting_speed = synSetFloatOption(opts, "CoastingSpeed", 0.0);
     pars->press_motion_min_factor = synSetFloatOption(opts, "PressureMotionMinFactor", 1.0);
@@ -1286,8 +1286,8 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		dx = (hw->x - priv->trackstick_neutral_x);
 		dy = (hw->y - priv->trackstick_neutral_y);
 
-		dx = dx * para->trackstick_speed;
-		dy = dy * para->trackstick_speed;
+		dx = dx * dtime * para->trackstick_speed;
+		dy = dy * dtime * para->trackstick_speed;
 	    } else if (moving_state == MS_TOUCHPAD_RELATIVE) {
 		dx = estimate_delta(hw->x, HIST(0).x, HIST(1).x, HIST(2).x);
 		dy = estimate_delta(hw->y, HIST(0).y, HIST(1).y, HIST(2).y);
