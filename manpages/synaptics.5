@@ -103,6 +103,13 @@ release.
 When finger pressure goes above this value, the driver counts it as a
 touch.
 .TP
+\fBFingerPress\fR (Integer)
+When finger pressure goes above this value, the driver counts it as a
+press.
+.
+Currently a press is equivalent to putting the touchpad in trackstick
+emulation mode.
+.TP
 \fBMaxTapTime\fR (Integer)
 Maximum time (in milliseconds) for detecting a tap.
 .TP
@@ -166,7 +173,10 @@ Minimum speed factor.
 Maximum speed factor.
 .TP
 \fBAccelFactor\fR (Float)
-Acceleration factor.
+Acceleration factor for normal pointer movements.
+.TP
+\fBTrackstickSpeed\fR (Float)
+Speed scale when in trackstick emulation mode.
 .TP
 \fBPressureMotionMinZ\fR (Integer)
 Finger pressure at which minimum pressure motion factor is applied.
@@ -497,6 +507,26 @@ If this scrolling speed is larger than the CoastingSpeed parameter
 (measured in scroll events per second), the scrolling will continue
 with the same speed in the same direction until the finger touches the
 touchpad again.
+.
+.LP
+Trackstick emulation mode is entered when pressing the finger hard on
+the touchpad.
+.
+The FingerPress parameter controls the minimum required finger
+pressure.
+.
+If the finger hasn't moved more than MaxTapMove after MaxTapTime has
+elapsed, trackstick mode is entered.
+.
+In this mode, moving the finger slightly in any direction gives a
+speed vector that moves the pointer.
+.
+The TrackstickSpeed parameter controls the ratio between pointer speed
+and finger movement distance.
+.
+Trackstick mode is exited when the finger pressure drops below
+FingerLow or when the finger is moved further than MaxTapMove away
+from the initial position.
 .SH "AUTHORS"
 .LP
 Peter Osterlund <petero2@telia.com> and many others.
