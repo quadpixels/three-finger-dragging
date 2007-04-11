@@ -89,7 +89,7 @@ PSMQueryIsSynaptics(LocalDevicePtr local)
 }
 
 static void
-PSMDeviceOnHook(LocalDevicePtr local)
+PSMDeviceOnHook(LocalDevicePtr local, SynapticsSHM *para)
 {
 }
 

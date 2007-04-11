@@ -430,6 +430,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->coasting_speed = synSetFloatOption(opts, "CoastingSpeed", 0.0);
     pars->press_motion_min_factor = synSetFloatOption(opts, "PressureMotionMinFactor", 1.0);
     pars->press_motion_max_factor = synSetFloatOption(opts, "PressureMotionMaxFactor", 1.0);
+    pars->grab_event_device = xf86SetBoolOption(opts, "GrabEventDevice", TRUE);
 
     /* Warn about (and fix) incorrectly configured TopEdge/BottomEdge parameters */
     if (pars->top_edge > pars->bottom_edge) {
@@ -555,7 +556,7 @@ DeviceOn(DeviceIntPtr dev)
 	return !Success;
     }
 
-    priv->proto_ops->DeviceOnHook(local);
+    priv->proto_ops->DeviceOnHook(local, priv->synpara);
 
     priv->comm.buffer = XisbNew(local->fd, 64);
     if (!priv->comm.buffer) {

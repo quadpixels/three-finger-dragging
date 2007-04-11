@@ -72,7 +72,7 @@ ALPS_initialize(int fd)
 }
 
 static void
-ALPSDeviceOnHook(LocalDevicePtr local)
+ALPSDeviceOnHook(LocalDevicePtr local, SynapticsSHM *para)
 {
 }
 

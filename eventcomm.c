@@ -41,14 +41,16 @@
  ****************************************************************************/
 
 static void
-EventDeviceOnHook(LocalDevicePtr local)
+EventDeviceOnHook(LocalDevicePtr local, SynapticsSHM *para)
 {
-    /* Try to grab the event device so that data don't leak to /dev/input/mice */
-    int ret;
-    SYSCALL(ret = ioctl(local->fd, EVIOCGRAB, (pointer)1));
-    if (ret < 0) {
-	xf86Msg(X_WARNING, "%s can't grab event device, errno=%d\n",
-		local->name, errno);
+    if (para->grab_event_device) {
+	/* Try to grab the event device so that data don't leak to /dev/input/mice */
+	int ret;
+	SYSCALL(ret = ioctl(local->fd, EVIOCGRAB, (pointer)1));
+	if (ret < 0) {
+	    xf86Msg(X_WARNING, "%s can't grab event device, errno=%d\n",
+		    local->name, errno);
+	}
     }
 }
 

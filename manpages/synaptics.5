@@ -324,6 +324,26 @@ Coasting threshold scrolling speed.
 .TP
 \fBSingleTapTimeout\fR (Integer)
 Timeout after a tap to recognize it as a single tap.
+.TP
+\fBGrabEventDevice\fR (Bool)
+If GrabEventDevice is true, the driver will grab the event device for
+exclusive use when using the linux 2.6 event protocol.
+.
+When using other protocols, this option has no effect.
+.
+Grabbing the event device means that no other user space or kernel
+space program sees the touchpad events. 
+.
+This is desirable if the X config file includes /dev/input/mice as an
+input device, but is undesirable if you want to monitor the device
+from user space.
+.
+When changing this parameter with the synclient program, the change
+will not take effect until the synaptics driver is disabled and
+reenabled. 
+.
+This can be achieved by switching to a text console and then switching
+back to X.
 .
 .
 .LP

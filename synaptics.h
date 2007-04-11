@@ -100,6 +100,7 @@ typedef struct _SynapticsSHM
     int press_motion_max_z;		    /* finger pressure at which maximum pressure motion factor is applied */
     double press_motion_min_factor;	    /* factor applied on speed when finger pressure is at minimum */
     double press_motion_max_factor; 	    /* factor applied on speed when finger pressure is at minimum */
+    Bool grab_event_device;		    /* grab event device for exclusive use? */
 } SynapticsSHM;
 
 /*

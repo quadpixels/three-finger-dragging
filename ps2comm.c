@@ -433,7 +433,7 @@ ps2_print_ident(const struct SynapticsHwInfo *synhw)
 
 
 static void
-PS2DeviceOnHook(LocalDevicePtr local)
+PS2DeviceOnHook(LocalDevicePtr local, SynapticsSHM* para)
 {
 }
 
