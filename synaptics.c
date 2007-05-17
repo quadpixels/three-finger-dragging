@@ -1499,19 +1499,27 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		DBG(7, ErrorF("circular scroll detected on edge\n"));
 	    }
 	}
-	if (!priv->circ_scroll_on) {
+    }
+    if (!priv->circ_scroll_on) {
+	if (finger) {
 	    if (hw->numFingers == 2) {
-		if ((para->scroll_twofinger_vert) && (para->scroll_dist_vert != 0)) {
+		if (!priv->vert_scroll_twofinger_on &&
+		    (para->scroll_twofinger_vert) && (para->scroll_dist_vert != 0)) {
 		    priv->vert_scroll_twofinger_on = TRUE;
+		    priv->vert_scroll_edge_on = FALSE;
 		    priv->scroll_y = hw->y;
 		    DBG(7, ErrorF("vert two-finger scroll detected\n"));
 		}
-		if ((para->scroll_twofinger_horiz) && (para->scroll_dist_horiz != 0)) {
+		if (!priv->horiz_scroll_twofinger_on &&
+		    (para->scroll_twofinger_horiz) && (para->scroll_dist_horiz != 0)) {
 		    priv->horiz_scroll_twofinger_on = TRUE;
+		    priv->horiz_scroll_edge_on = FALSE;
 		    priv->scroll_x = hw->x;
 		    DBG(7, ErrorF("horiz two-finger scroll detected\n"));
 		}
 	    }
+	}
+	if (finger && !priv->finger_state) {
 	    if (!priv->vert_scroll_twofinger_on && !priv->horiz_scroll_twofinger_on) {
 		if ((para->scroll_edge_vert) && (para->scroll_dist_vert != 0) &&
 		    (edge & RIGHT_EDGE)) {
