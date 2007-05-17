@@ -110,6 +110,8 @@ event_query_is_touchpad(int fd)
 	return FALSE;
     if (!TEST_BIT(BTN_TOOL_FINGER, evbits))
 	return FALSE;
+    if (TEST_BIT(BTN_TOOL_PEN, evbits))
+	return FALSE;			    /* Don't match wacom tablets */
 
     return TRUE;
 }

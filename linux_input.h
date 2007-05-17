@@ -61,6 +61,7 @@ struct input_absinfo {
 #define BTN_7			0x107
 #define BTN_A			0x130
 #define BTN_B			0x131
+#define BTN_TOOL_PEN		0x140
 #define BTN_TOOL_FINGER		0x145
 #define BTN_TOOL_DOUBLETAP	0x14d
 #define BTN_TOOL_TRIPLETAP	0x14e
