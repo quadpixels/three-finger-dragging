@@ -370,10 +370,51 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     /* read the parameters */
     pars = &priv->synpara_default;
     pars->version = VERSION_ID;
-    pars->left_edge = xf86SetIntOption(opts, "LeftEdge", 1900);
-    pars->right_edge = xf86SetIntOption(opts, "RightEdge", 5400);
-    pars->top_edge = xf86SetIntOption(opts, "TopEdge", 1900);
-    pars->bottom_edge = xf86SetIntOption(opts, "BottomEdge", 4000);
+
+    if (priv->maxx && priv->maxy) {
+	    int xsize = priv->maxx - priv->minx;
+	    int ysize = priv->maxy - priv->miny;
+	    int xedgesize = xsize * 0.1;
+	    int yedgesize = ysize * 0.1;
+
+	    pars->left_edge = xf86SetIntOption(opts, "LeftEdge", priv->minx +
+					       xedgesize);
+	    pars->right_edge = xf86SetIntOption(opts, "RightEdge", priv->maxx -
+						xedgesize);
+	    pars->top_edge = xf86SetIntOption(opts, "TopEdge", priv->miny +
+					      yedgesize);
+	    pars->bottom_edge = xf86SetIntOption(opts, "BottomEdge",
+						 priv->maxy - yedgesize);
+	    pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta",
+						      0.02*ysize);
+	    pars->scroll_dist_horiz = xf86SetIntOption(opts,
+						       "HorizScrollDelta",
+						       0.02*xsize);
+	    pars->edge_motion_min_speed = xf86SetIntOption(opts,
+							   "EdgeMotionMinSpeed", 1);
+	    pars->edge_motion_max_speed = xf86SetIntOption(opts,
+							   "EdgeMotionMaxSpeed", ysize * 0.1);
+	    pars->min_speed = synSetFloatOption(opts, "MinSpeed", 250.0 / ysize);
+	    pars->max_speed = synSetFloatOption(opts, "MaxSpeed", 600.0 / ysize);
+	    pars->accl = synSetFloatOption(opts, "AccelFactor", 5.0 / ysize);
+    } else {
+	    pars->left_edge = xf86SetIntOption(opts, "LeftEdge", 1900);
+	    pars->right_edge = xf86SetIntOption(opts, "RightEdge", 5400);
+	    pars->top_edge = xf86SetIntOption(opts, "TopEdge", 1900);
+	    pars->bottom_edge = xf86SetIntOption(opts, "BottomEdge", 4000);
+	    pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta",
+						      100);
+	    pars->scroll_dist_horiz = xf86SetIntOption(opts,
+						       "HorizScrollDelta",
+						       100);
+	    pars->edge_motion_min_speed = xf86SetIntOption(opts,
+							   "EdgeMotionMinSpeed", 1);
+	    pars->edge_motion_max_speed = xf86SetIntOption(opts,
+							   "EdgeMotionMaxSpeed", 400);
+	    pars->min_speed = synSetFloatOption(opts, "MinSpeed", 0.09);
+	    pars->max_speed = synSetFloatOption(opts, "MaxSpeed", 0.18);
+	    pars->accl = synSetFloatOption(opts, "AccelFactor", 0.0015);
+    }
     pars->finger_low = xf86SetIntOption(opts, "FingerLow", 25);
     pars->finger_high = xf86SetIntOption(opts, "FingerHigh", 30);
     pars->finger_press = xf86SetIntOption(opts, "FingerPress", 256);
@@ -385,16 +426,12 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->emulate_mid_button_time = xf86SetIntOption(opts,
 							      "EmulateMidButtonTime", 75);
     pars->emulate_twofinger_z = xf86SetIntOption(opts, "EmulateTwoFingerMinZ", 257);
-    pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", 100);
-    pars->scroll_dist_horiz = xf86SetIntOption(opts, "HorizScrollDelta", 100);
     pars->scroll_edge_vert = xf86SetBoolOption(opts, "VertEdgeScroll", TRUE);
     pars->scroll_edge_horiz = xf86SetBoolOption(opts, "HorizEdgeScroll", TRUE);
     pars->scroll_twofinger_vert = xf86SetBoolOption(opts, "VertTwoFingerScroll", FALSE);
     pars->scroll_twofinger_horiz = xf86SetBoolOption(opts, "HorizTwoFingerScroll", FALSE);
     pars->edge_motion_min_z = xf86SetIntOption(opts, "EdgeMotionMinZ", 30);
     pars->edge_motion_max_z = xf86SetIntOption(opts, "EdgeMotionMaxZ", 160);
-    pars->edge_motion_min_speed = xf86SetIntOption(opts, "EdgeMotionMinSpeed", 1);
-    pars->edge_motion_max_speed = xf86SetIntOption(opts, "EdgeMotionMaxSpeed", 400);
     pars->edge_motion_use_always = xf86SetBoolOption(opts, "EdgeMotionUseAlways", FALSE);
     repeater = xf86SetStrOption(opts, "Repeater", NULL);
     pars->updown_button_scrolling = xf86SetBoolOption(opts, "UpDownScrolling", TRUE);
@@ -422,9 +459,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->press_motion_min_z = xf86SetIntOption(opts, "PressureMotionMinZ", pars->edge_motion_min_z);
     pars->press_motion_max_z = xf86SetIntOption(opts, "PressureMotionMaxZ", pars->edge_motion_max_z);
 
-    pars->min_speed = synSetFloatOption(opts, "MinSpeed", 0.09);
-    pars->max_speed = synSetFloatOption(opts, "MaxSpeed", 0.18);
-    pars->accl = synSetFloatOption(opts, "AccelFactor", 0.0015);
     pars->trackstick_speed = synSetFloatOption(opts, "TrackstickSpeed", 40);
     pars->scroll_dist_circ = synSetFloatOption(opts, "CircScrollDelta", 0.1);
     pars->coasting_speed = synSetFloatOption(opts, "CoastingSpeed", 0.0);

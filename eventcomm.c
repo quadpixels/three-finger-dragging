@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include "synproto.h"
+#define SYNAPTICS_PRIVATE
 #include "synaptics.h"
 #include <xf86.h>
 
@@ -57,6 +58,27 @@ EventDeviceOnHook(LocalDevicePtr local, SynapticsSHM *para)
 static void
 EventDeviceOffHook(LocalDevicePtr local)
 {
+}
+
+static void
+event_query_abs_params(LocalDevicePtr local, int fd)
+{
+        int ret;
+        SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
+        struct input_absinfo absinfo;
+        SYSCALL(ret = ioctl(fd, EVIOCGABS(ABS_X), &absinfo));
+        if (ret < 0)
+                return;
+
+        priv->minx = absinfo.minimum;
+        priv->maxx = absinfo.maximum;
+
+        SYSCALL(ret = ioctl(fd, EVIOCGABS(ABS_Y), &absinfo));
+        if (ret < 0)
+                return;
+
+        priv->miny = absinfo.minimum;
+        priv->maxy = absinfo.maximum;
 }
 
 static Bool
@@ -265,13 +287,15 @@ EventAutoDevProbe(LocalDevicePtr local)
 	noent_cnt = 0;
 	have_evdev = TRUE;
 	is_touchpad = event_query_is_touchpad(fd);
-	SYSCALL(close(fd));
 	if (is_touchpad) {
 	    xf86Msg(X_PROBED, "%s auto-dev sets device to %s\n",
 		    local->name, fname);
 	    xf86ReplaceStrOption(local->options, "Device", fname);
+	    event_query_abs_params(local, fd);
+	    SYSCALL(close(fd));
 	    return TRUE;
 	}
+	SYSCALL(close(fd));
     }
     ErrorF("%s no synaptics event device found (checked %d nodes)\n",
 	   local->name, i + 1);

@@ -24,10 +24,18 @@ struct input_id {
 	unsigned short version;
 };
 
+struct input_absinfo {
+        int value;
+        int minimum;
+        int maximum;
+        int fuzz;
+        int flat;
+};
+
 #define EVIOCGID		_IOR('E', 0x02, struct input_id)	/* get device ID */
 #define EVIOCGRAB		_IOW('E', 0x90, int)			/* Grab/Release device */
 #define EVIOCGBIT(ev,len)	_IOC(_IOC_READ, 'E', 0x20 + ev, len)	/* get event bits */
-
+#define EVIOCGABS(abs)          _IOR('E', 0x40 + abs, struct input_absinfo) /* get abs value/limits */
 
 #define EV_SYN			0x00
 #define EV_KEY			0x01
