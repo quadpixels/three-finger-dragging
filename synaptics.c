@@ -442,6 +442,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->touchpad_off = xf86SetIntOption(opts, "TouchpadOff", 0);
     pars->guestmouse_off = xf86SetBoolOption(opts, "GuestMouseOff", FALSE);
     pars->locked_drags = xf86SetBoolOption(opts, "LockedDrags", FALSE);
+    pars->locked_drag_time = xf86SetIntOption(opts, "LockedDragTimeout", 5000);
     pars->tap_action[RT_TAP] = xf86SetIntOption(opts, "RTCornerButton", 2);
     pars->tap_action[RB_TAP] = xf86SetIntOption(opts, "RBCornerButton", 3);
     pars->tap_action[LT_TAP] = xf86SetIntOption(opts, "LTCornerButton", 0);
@@ -1111,6 +1112,8 @@ GetTimeOut(SynapticsPrivate *priv)
 	return para->single_tap_timeout;
     case TS_2B:
 	return para->tap_time_2;
+    case TS_4:
+	return para->locked_drag_time;
     default:
 	return -1;			    /* No timeout */
     }
@@ -1231,6 +1234,10 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	}
 	break;
     case TS_4:
+	if (is_timeout) {
+	    SetTapState(priv, TS_START, hw->millis);
+	    goto restart;
+	}
 	if (touch)
 	    SetTapState(priv, TS_5, hw->millis);
 	break;

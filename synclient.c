@@ -87,6 +87,7 @@ static struct Parameter params[] = {
     DEFINE_PAR("TouchpadOff",          touchpad_off,            PT_INT,    0, 2),
     DEFINE_PAR("GuestMouseOff",        guestmouse_off,          PT_BOOL,   0, 1),
     DEFINE_PAR("LockedDrags",          locked_drags,            PT_BOOL,   0, 1),
+    DEFINE_PAR("LockedDragTimeout",    locked_drag_time,        PT_INT,    0, 30000),
     DEFINE_PAR("RTCornerButton",       tap_action[RT_TAP],      PT_INT,    0, SYN_MAX_BUTTONS),
     DEFINE_PAR("RBCornerButton",       tap_action[RB_TAP],      PT_INT,    0, SYN_MAX_BUTTONS),
     DEFINE_PAR("LTCornerButton",       tap_action[LT_TAP],      PT_INT,    0, SYN_MAX_BUTTONS),
