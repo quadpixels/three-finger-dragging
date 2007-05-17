@@ -239,7 +239,13 @@ Switch on/off guest mouse (often a stick).
 \fBLockedDrags\fR (Bool)
 If off, a tap and drag gesture ends when you release the finger.
 .
-If on, the gesture is active until you tap a second time.
+If on, the gesture is active until you tap a second time, or until
+LockedDragTimeout expires.
+.TP
+\fBLockedDragTimeout\fR (Integer)
+This parameter specifies how long it takes (in milliseconds) for the
+LockedDrags mode to be automatically turned off after the finger is
+released from the touchpad.
 .TP
 \fBRTCornerButton\fR (Integer)
 .
