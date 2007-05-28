@@ -1,7 +1,8 @@
 It is possible to use this driver with an ALPS Glidepoint device. If
-you use a 2.6 linux kernel, you need to apply the ALPS kernel patch 
-in the alps.patch file. See http://www.kernelnewbies.org/faq/ for
-information about how to apply kernel patches and compile kernels.
+you use an older 2.6 linux kernel which has no ALPS input driver, you
+need to apply the ALPS kernel patch in the alps.patch file. See
+http://www.kernelnewbies.org/faq/ for information about how to apply
+kernel patches and compile kernels.
 
 Note! If you use kernel 2.6.11 or later, the alps patch is already
 included, so you don't have to patch your kernel.

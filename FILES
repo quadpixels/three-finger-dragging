@@ -9,5 +9,5 @@ script/usbmouse		script for shutting the touchpad down if
 			an external USB-mouse is attached
 syndaemon.c		A user space program that disables the touchpad
 			when the keyboard is used.
-alps.patch		Patch for 2.6 kernels that makes it possible to
+alps.patch		Patch for older 2.6 kernels that makes it possible to
 			use the driver with an ALPS GlidePoint device.
