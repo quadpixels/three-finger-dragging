@@ -16,6 +16,7 @@ Section "InputDevice"
   Identifier  	"Mouse[1]"
   Option	"Device"  		"/dev/psaux"
   Option	"Protocol"		"auto-dev"
+  Option	"SHMConfig"		"on"
   Option	"LeftEdge"		"120"
   Option	"RightEdge"		"830"
   Option	"TopEdge"		"120"
@@ -39,7 +40,7 @@ Section "InputDevice"
 EndSection
 
 If you use a 2.4 linux kernel, you don't need to patch the kernel, but
-you should instead set "Device" and "Protocol" like this:
+you should instead set "Protocol" like this:
 
   Option	"Protocol"		"alps"
 
