@@ -61,7 +61,9 @@ The driver behavior can be configured with parameters.
 These parameters are options in the InputDevice section in the
 XOrg/XFree86 config file.
 .
-See the INSTALL file for a working example.
+See the INSTALL file for a working example for a synaptics touchpad.
+.
+See the README.alps file for a working example for an ALPS touchpad.
 .
 If you have the SHMConfig parameter enabled, these parameters can also
 be changed at runtime with the synclient(1) program.
@@ -506,8 +508,8 @@ region, which can be all edges, a particular side, or a particular
 corner.
 .
 Once scrolling is engaged, moving your finger in clockwise circles
-around the touchpad will generate scroll down events and counter
-clockwise scroll up events.
+around the center of the touchpad will generate scroll down events and
+counter clockwise motion will generate scroll up events.
 .
 Lifting your finger will disengage circular scrolling.
 .
