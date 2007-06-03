@@ -137,13 +137,13 @@ show_settings(SynapticsSHM *synshm)
 	struct Parameter* par = &params[i];
 	switch (par->type) {
 	case PT_INT:
-	    printf("    %-20s = %d\n", par->name, *(int*)((char*)synshm + par->offset));
+	    printf("    %-23s = %d\n", par->name, *(int*)((char*)synshm + par->offset));
 	    break;
 	case PT_BOOL:
-	    printf("    %-20s = %d\n", par->name, *(Bool*)((char*)synshm + par->offset));
+	    printf("    %-23s = %d\n", par->name, *(Bool*)((char*)synshm + par->offset));
 	    break;
 	case PT_DOUBLE:
-	    printf("    %-20s = %g\n", par->name, *(double*)((char*)synshm + par->offset));
+	    printf("    %-23s = %g\n", par->name, *(double*)((char*)synshm + par->offset));
 	    break;
 	}
     }
