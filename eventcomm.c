@@ -1,5 +1,5 @@
 /*
- *   Copyright 2004 Peter Osterlund <petero2@telia.com>
+ *   Copyright 2004-2007 Peter Osterlund <petero2@telia.com>
  *
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU General Public License

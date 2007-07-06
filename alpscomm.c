@@ -1,7 +1,7 @@
 /* Copyright (C) 2001 Stefan Gmeiner <riddlebox@freesurf.ch>
  *
  * Copyright (c) 2003 Neil Brown <neilb@cse.unsw.edu.au>
- * Copyright (c) 2003-2004 Peter Osterlund <petero2@telia.com>
+ * Copyright (c) 2003-2005,2007 Peter Osterlund <petero2@telia.com>
  *
  *   This program is free software; you can redistribute it and/or
  *   modify it under the terms of the GNU General Public License
