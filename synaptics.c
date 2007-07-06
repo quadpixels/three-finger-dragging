@@ -1,4 +1,7 @@
 /*
+ *   Copyright 2007 Joseph P. Skudlarek <Jskud@Jskud.com>
+ *     patch for corner coasting (originally called corner edge scrolling)
+ *
  *   Copyright 2006 Christian Thaeter <chth@gmx.net>
  *     patch for Trackstick mode
  *
@@ -428,6 +431,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->emulate_twofinger_z = xf86SetIntOption(opts, "EmulateTwoFingerMinZ", 257);
     pars->scroll_edge_vert = xf86SetBoolOption(opts, "VertEdgeScroll", TRUE);
     pars->scroll_edge_horiz = xf86SetBoolOption(opts, "HorizEdgeScroll", TRUE);
+    pars->scroll_edge_corner = xf86SetBoolOption(opts, "CornerCoasting", FALSE);
     pars->scroll_twofinger_vert = xf86SetBoolOption(opts, "VertTwoFingerScroll", FALSE);
     pars->scroll_twofinger_horiz = xf86SetBoolOption(opts, "HorizTwoFingerScroll", FALSE);
     pars->edge_motion_min_z = xf86SetIntOption(opts, "EdgeMotionMinZ", 30);
@@ -1465,6 +1469,14 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw, edge_type ed
     priv->scroll_packet_count = 0;
 }
 
+static void
+stop_coasting(SynapticsPrivate *priv)
+{
+    priv->autoscroll_xspd = 0;
+    priv->autoscroll_yspd = 0;
+    priv->scroll_packet_count = 0;
+}
+
 static int
 HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		edge_type edge, Bool finger, struct ScrollData *sd)
@@ -1475,8 +1487,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     sd->left = sd->right = sd->up = sd->down = 0;
 
     if (priv->synpara->touchpad_off == 2) {
-	priv->autoscroll_xspd = 0;
-	priv->autoscroll_yspd = 0;
+	stop_coasting(priv);
 	priv->circ_scroll_on = FALSE;
 	priv->vert_scroll_edge_on = FALSE;
 	priv->horiz_scroll_edge_on = FALSE;
@@ -1487,9 +1498,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
     /* scroll detection */
     if (finger && !priv->finger_state) {
-	priv->autoscroll_xspd = 0;
-	priv->autoscroll_yspd = 0;
-	priv->scroll_packet_count = 0;
+	stop_coasting(priv);
 	if (para->circular_scrolling) {
 	    if ((para->circular_trigger == 0 && edge) ||
 		(para->circular_trigger == 1 && edge & TOP_EDGE) ||
@@ -1571,18 +1580,40 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    DBG(7, ErrorF("horiz edge scroll off\n"));
 	    priv->horiz_scroll_edge_on = FALSE;
 	}
-	if ((oldv || oldh) &&
+	/* If we were corner edge scrolling (coasting),
+	 * but no longer in corner or raised a finger, then stop coasting. */
+	if (para->scroll_edge_corner && (priv->autoscroll_xspd || priv->autoscroll_yspd)) {
+	    Bool is_in_corner =
+		((edge & RIGHT_EDGE)  && (edge & (TOP_EDGE | BOTTOM_EDGE))) ||
+		((edge & BOTTOM_EDGE) && (edge & (LEFT_EDGE | RIGHT_EDGE))) ;
+	    if (!is_in_corner || !finger) {
+		DBG(7, ErrorF("corner edge scroll off\n"));
+		stop_coasting(priv);
+	    }
+	}
+	/* if we were scrolling, but couldn't corner edge scroll,
+	 * and are no longer scrolling, then start coasting */
+	if ((oldv || oldh) && !para->scroll_edge_corner &&
 	    !(priv->circ_scroll_on || priv->vert_scroll_edge_on ||
 	      priv->horiz_scroll_edge_on)) {
 	    start_coasting(priv, hw, edge, oldv);
 	}
     }
 
-    /* if hitting a corner (top right or bottom right) while vertical scrolling
-       is active, switch over to circular scrolling smoothly */
+    /* if hitting a corner (top right or bottom right) while vertical
+     * scrolling is active, consider starting corner edge scrolling or
+     * switching over to circular scrolling smoothly */
     if (priv->vert_scroll_edge_on && !priv->horiz_scroll_edge_on &&
-	para->circular_scrolling) {
-	if ((edge & RIGHT_EDGE) && (edge & (TOP_EDGE | BOTTOM_EDGE))) {
+	(edge & RIGHT_EDGE) && (edge & (TOP_EDGE | BOTTOM_EDGE))) {
+	if (para->scroll_edge_corner) {
+	    if (priv->autoscroll_yspd == 0) {
+		/* FYI: We can generate multiple start_coasting requests if
+		 * we're in the corner, but we were moving so slowly when we
+		 * got here that we didn't actually start coasting. */
+		DBG(7, ErrorF("corner edge scroll on\n"));
+		start_coasting(priv, hw, edge, TRUE);
+	    }
+	} else if (para->circular_scrolling) {
 	    priv->vert_scroll_edge_on = FALSE;
 	    priv->circ_scroll_on = TRUE;
 	    priv->circ_scroll_vert = TRUE;
@@ -1592,8 +1623,16 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     }
     /* Same treatment for horizontal scrolling */
     if (priv->horiz_scroll_edge_on && !priv->vert_scroll_edge_on &&
-	para->circular_scrolling) {
-	if ((edge & BOTTOM_EDGE) && (edge & (LEFT_EDGE | RIGHT_EDGE))) {
+	(edge & BOTTOM_EDGE) && (edge & (LEFT_EDGE | RIGHT_EDGE))) {
+	if (para->scroll_edge_corner) {
+	    if (priv->autoscroll_xspd == 0) {
+		/* FYI: We can generate multiple start_coasting requests if
+		 * we're in the corner, but we were moving so slowly when we
+		 * got here that we didn't actually start coasting. */
+		DBG(7, ErrorF("corner edge scroll on\n"));
+		start_coasting(priv, hw, edge, FALSE);
+	    }
+	} else if (para->circular_scrolling) {
 	    priv->horiz_scroll_edge_on = FALSE;
 	    priv->circ_scroll_on = TRUE;
 	    priv->circ_scroll_vert = FALSE;

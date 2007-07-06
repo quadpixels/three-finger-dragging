@@ -64,6 +64,7 @@ typedef struct _SynapticsSHM
     int scroll_dist_horiz;		    /* Scrolling distance in absolute coordinates */
     Bool scroll_edge_vert;		    /* Enable/disable vertical scrolling on right edge */
     Bool scroll_edge_horiz;		    /* Enable/disable horizontal scrolling on left edge */
+    Bool scroll_edge_corner;		    /* Enable/disable continuous edge scrolling when in the corner */
     Bool scroll_twofinger_vert;		    /* Enable/disable vertical two-finger scrolling */
     Bool scroll_twofinger_horiz;	    /* Enable/disable horizontal two-finger scrolling */
     double min_speed, max_speed, accl;	    /* movement parameters */

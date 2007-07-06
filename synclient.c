@@ -68,6 +68,7 @@ static struct Parameter params[] = {
     DEFINE_PAR("HorizScrollDelta",     scroll_dist_horiz,       PT_INT,    0, 1000),
     DEFINE_PAR("VertEdgeScroll",       scroll_edge_vert,        PT_BOOL,   0, 1),
     DEFINE_PAR("HorizEdgeScroll",      scroll_edge_horiz,       PT_BOOL,   0, 1),
+    DEFINE_PAR("CornerCoasting",       scroll_edge_corner,      PT_BOOL,   0, 1),
     DEFINE_PAR("VertTwoFingerScroll",  scroll_twofinger_vert,   PT_BOOL,   0, 1),
     DEFINE_PAR("HorizTwoFingerScroll", scroll_twofinger_horiz,  PT_BOOL,   0, 1),
     DEFINE_PAR("MinSpeed",             min_speed,               PT_DOUBLE, 0, 1.0),

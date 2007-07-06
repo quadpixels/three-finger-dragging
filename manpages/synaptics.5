@@ -134,6 +134,9 @@ Enable vertical scrolling when dragging along the right edge.
 \fBHorizEdgeScroll\fR (Bool)
 Enable horizontal scrolling when dragging along the bottom edge.
 .TP
+\fBCornerCoasting\fR (Bool)
+Enable edge scrolling to continue while the finger stays in an edge corner.
+.TP
 \fBVertTwoFingerScroll\fR (Bool)
 Enable vertical scrolling when dragging with two fingers anywhere on
 the touchpad.
@@ -524,9 +527,15 @@ scrolling.
 Coasting is enabled by setting the CoastingSpeed parameter to a
 non-zero value.
 .
-When coasting is enabled, horizontal/vertical scrolling can continue
-after the finger is released from the lower/right edge of the
-touchpad.
+Coasting comes in two flavors: conventional (finger off) coasting, and
+corner (finger on) coasting.
+.LP
+Conventional coasting is enabled when coasting is enabled,
+and CornerCoasting is set to false.
+.
+When conventional coasting is enabled, horizontal/vertical scrolling
+can continue after the finger is released from the lower/right edge of
+the touchpad.
 .
 The driver computes the scrolling speed corresponding to the finger
 speed immediately before the finger leaves the touchpad.
@@ -535,6 +544,21 @@ If this scrolling speed is larger than the CoastingSpeed parameter
 (measured in scroll events per second), the scrolling will continue
 with the same speed in the same direction until the finger touches the
 touchpad again.
+.
+.LP
+Corner coasting is enabled when coasting is enabled, and
+CornerCoasting is set to true.
+.
+When corner coasting is enabled, edge scrolling can continue as long
+as the finger stays in a corner.
+.
+Coasting begins when the finger enters the corner, and continues until
+the finger leaves the corner.
+.
+CornerCoasting takes precedence over the seamless switch from edge
+scrolling to circular scrolling.  That is, if CornerCoasting is
+active, scrolling will stop, and circular scrolling will not start,
+when the finger leaves the corner.
 .
 .LP
 Trackstick emulation mode is entered when pressing the finger hard on
