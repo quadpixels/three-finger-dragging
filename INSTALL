@@ -53,7 +53,7 @@ Section "InputDevice"
   Driver	"synaptics"
   Option	"Device"		"/dev/psaux"
   Option	"Protocol"		"auto-dev"
-# enable SHMCOnfig if you want to enable synclient
+# enable SHMConfig if you want to enable synclient
 # NB: enabling SHMConfig is insecure, since any user can invoke it
 #  Option	 "SHMConfig"		 "on"
   Option	"LeftEdge"		"1700"
