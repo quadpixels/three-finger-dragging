@@ -240,10 +240,7 @@ typedef struct _SynapticsPrivateRec
 					   palm/finger contact disappears */
     int prev_z;				/* previous z value, for palm detection */
     int avg_width;			/* weighted average of previous fingerWidth values */
-    int minx;
-    int maxx;
-    int miny;
-    int maxy;
+
 } SynapticsPrivate;
 
 
