@@ -19,10 +19,14 @@
 #ifndef _EVENTCOMM_H_
 #define _EVENTCOMM_H_
 
-#include "linux_input.h"
+#ifdef __LINUX
+
+#include <linux/input.h>
 
 /* for auto-dev: */
 #define DEV_INPUT_EVENT "/dev/input"
 #define EVENT_DEV_NAME "event"
+
+#endif
 
 #endif /* _EVENTCOMM_H_ */

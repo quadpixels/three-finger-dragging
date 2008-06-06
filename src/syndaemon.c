@@ -17,6 +17,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <X11/Xlib.h>
 #include <stdio.h>
 #include <stdlib.h>

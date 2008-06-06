@@ -17,6 +17,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -125,7 +129,7 @@ show_hw_info(SynapticsSHM *synshm)
 	printf("    This is normal if you are running linux kernel 2.6.\n");
 	printf("    Check the kernel log for touchpad hardware information.\n");
     }
-    printf("Driver version: %d\n", VERSION_ID);
+    printf("Driver version: %d\n", (PACKAGE_VERSION_MAJOR*10000+PACKAGE_VERSION_MINOR*100+PACKAGE_VERSION_PATCHLEVEL));
 }
 
 static void

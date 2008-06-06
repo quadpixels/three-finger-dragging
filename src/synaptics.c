@@ -65,19 +65,24 @@
  *	Standard Headers
  ****************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <misc.h>
 #include <xf86.h>
-#define NEED_XF86_TYPES
-#include <xf86_ansic.h>
+#include <sys/shm.h>
+#include <sys/ipc.h>
+#include <sys/stat.h>
+#include <errno.h>
 #include <xf86_OSproc.h>
 #include <xf86Xinput.h>
 #include "mipointer.h"
 #ifdef XFREE_4_0_3
 #include <xf86Optrec.h>  		/* needed for Options */
 #endif
-
 
 /*****************************************************************************
  *	Local Headers
@@ -236,14 +241,14 @@ alloc_param_data(LocalDevicePtr local)
 	return TRUE;			    /* Already allocated */
 
     if (priv->shm_config) {
-	if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
-	    xf86shmctl(shmid, XF86IPC_RMID, NULL);
-	if ((shmid = xf86shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM),
-				0777 | XF86IPC_CREAT)) == -1) {
+	if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) != -1)
+	    shmctl(shmid, IPC_RMID, NULL);
+	if ((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM),
+				0777 | IPC_CREAT)) == -1) {
 	    xf86Msg(X_ERROR, "%s error shmget\n", local->name);
 	    return FALSE;
 	}
-	if ((priv->synpara = (SynapticsSHM*)xf86shmat(shmid, NULL, 0)) == NULL) {
+	if ((priv->synpara = (SynapticsSHM*)shmat(shmid, NULL, 0)) == NULL) {
 	    xf86Msg(X_ERROR, "%s error shmat\n", local->name);
 	    return FALSE;
 	}
@@ -270,7 +275,7 @@ free_param_data(SynapticsPrivate *priv)
 
     if (priv->shm_config) {
 	if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
-	    xf86shmctl(shmid, XF86IPC_RMID, NULL);
+	    shmctl(shmid, IPC_RMID, NULL);
     } else {
 	xfree(priv->synpara);
     }
@@ -305,6 +310,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     SynapticsSHM *pars;
     char *repeater;
     pointer opts;
+    int status;
 
     /* allocate memory for SynapticsPrivateRec */
     priv = xcalloc(1, sizeof(SynapticsPrivate));
@@ -339,7 +345,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 #endif
     local->always_core_feedback    = 0;
 
-    xf86Msg(X_INFO, "Synaptics touchpad driver version %s (%d)\n", VERSION, VERSION_ID);
+    xf86Msg(X_INFO, "Synaptics touchpad driver version %s\n", PACKAGE_VERSION);
 
     xf86CollectInputOptions(local, NULL, NULL);
 
@@ -372,7 +378,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     /* read the parameters */
     pars = &priv->synpara_default;
-    pars->version = VERSION_ID;
+    pars->version = (PACKAGE_VERSION_MAJOR*10000+PACKAGE_VERSION_MINOR*100+PACKAGE_VERSION_PATCHLEVEL);
 
     if (priv->maxx && priv->maxy) {
 	    int xsize = priv->maxx - priv->minx;
@@ -491,8 +497,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->fifofd = -1;
     if (repeater) {
 	/* create repeater fifo */
-	if ((xf86mknod(repeater, 666, XF86_S_IFIFO) != 0) &&
-	    (xf86errno != xf86_EEXIST)) {
+	status = mknod(repeater, 666, S_IFIFO);
+	if ((status != 0) && (status != EEXIST)) {
 	    xf86Msg(X_ERROR, "%s can't create repeater fifo\n", local->name);
 	} else {
 	    /* open the repeater fifo */
@@ -501,7 +507,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 		xf86Msg(X_ERROR, "%s repeater device open failed\n", local->name);
 	    }
 	}
-	xf86free(repeater);
+	free(repeater);
     }
 
     if (!QueryHardware(local)) {
@@ -667,11 +673,13 @@ DeviceInit(DeviceIntPtr dev)
 			    SYN_MAX_BUTTONS,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 			    miPointerGetMotionEvents,
+#elif GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
+			    GetMotionHistory,
+#endif
 			    SynapticsCtrl,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 			    miPointerGetMotionBufferSize()
 #else
-			    GetMotionHistory,
-			    SynapticsCtrl,
 			    GetMotionHistorySize(), 2
 #endif
 			    );

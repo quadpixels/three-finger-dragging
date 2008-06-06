@@ -28,4 +28,19 @@
 @DRIVER_NAME@_drv_la_LDFLAGS = -module -avoid-version
 @DRIVER_NAME@_drv_ladir = @inputdir@
 
-@DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c
+@DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c @DRIVER_NAME@.h \
+	alpscomm.c alpscomm.h \
+	eventcomm.c eventcomm.h \
+	ps2comm.c ps2comm.h \
+	psmcomm.c psmcomm.h \
+	synproto.h
+
+bin_PROGRAMS = \
+	synclient \
+	syndaemon
+
+synclient_SOURCES = synclient.c
+synclient_LDFLAGS = -lm
+
+syndaemon_SOURCES = syndaemon.c
+syndaemon_LDFLAGS = -lXi

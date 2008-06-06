@@ -25,6 +25,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "ps2comm.h"
 #include "synproto.h"
 #include "synaptics.h"

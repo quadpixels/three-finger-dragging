@@ -17,6 +17,12 @@
  *
  */
 
+#ifdef __LINUX
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "eventcomm.h"
 #include <errno.h>
 #include <sys/types.h>
@@ -316,3 +322,5 @@ struct SynapticsProtocolOperations event_proto_operations = {
     EventReadHwState,
     EventAutoDevProbe
 };
+
+#endif

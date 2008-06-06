@@ -28,6 +28,12 @@
  *
  */
 
+#if defined(__FreeBSD) || defined(__NetBSD__) || defined(__OpenBSD)
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "psmcomm.h"
 #include <errno.h>
 #include <string.h>
@@ -169,3 +175,5 @@ struct SynapticsProtocolOperations psm_proto_operations = {
     PSMReadHwState,
     PSMAutoDevProbe
 };
+
+#endif
