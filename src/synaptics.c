@@ -71,6 +71,9 @@
 #include <sys/ipc.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <math.h>
+#include <unistd.h>
+#include <stdio.h>
 #include <xf86_OSproc.h>
 #include <xf86Xinput.h>
 #include "mipointer.h"
@@ -273,7 +276,7 @@ synSetFloatOption(pointer options, const char *optname, double default_value)
     char *str_par;
     double value;
     str_par = xf86FindOptionValue(options, optname);
-    if ((!str_par) || (xf86sscanf(str_par, "%lf", &value) != 1))
+    if ((!str_par) || (sscanf(str_par, "%lf", &value) != 1))
 	return default_value;
     return value;
 }
@@ -652,7 +655,7 @@ DeviceInit(DeviceIntPtr dev)
 static int
 move_distance(int dx, int dy)
 {
-    return xf86sqrt(SQR(dx) + SQR(dy));
+    return sqrt(SQR(dx) + SQR(dy));
 }
 
 /*
@@ -687,14 +690,14 @@ angle(SynapticsPrivate *priv, int x, int y)
     double xCenter = (priv->synpara->left_edge + priv->synpara->right_edge) / 2.0;
     double yCenter = (priv->synpara->top_edge + priv->synpara->bottom_edge) / 2.0;
 
-    return xf86atan2(-(y - yCenter), x - xCenter);
+    return atan2(-(y - yCenter), x - xCenter);
 }
 
 /* return angle difference */
 static double
 diffa(double a1, double a2)
 {
-    double da = xf86fmod(a2 - a1, 2 * M_PI);
+    double da = fmod(a2 - a1, 2 * M_PI);
     if (da < 0)
 	da += 2 * M_PI;
     if (da > M_PI)
@@ -802,7 +805,7 @@ SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivate *priv,
 	int c;
 	while ((c = XisbRead(priv->comm.buffer)) >= 0) {
 	    unsigned char u = (unsigned char)c;
-	    xf86write(priv->fifofd, &u, 1);
+	    write(priv->fifofd, &u, 1);
 	    if (++count >= 3)
 		break;
 	}
@@ -1360,10 +1363,10 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
 	    /* save the fraction, report the integer part */
 	    tmpf = dx * speed + x_edge_speed * dtime + priv->frac_x;
-	    priv->frac_x = xf86modf(tmpf, &integral);
+	    priv->frac_x = modf(tmpf, &integral);
 	    dx = integral;
 	    tmpf = dy * speed + y_edge_speed * dtime + priv->frac_y;
-	    priv->frac_y = xf86modf(tmpf, &integral);
+	    priv->frac_y = modf(tmpf, &integral);
 	    dy = integral;
 	}
 
