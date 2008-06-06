@@ -1,0 +1,3 @@
+2008-06-06  Christoph Brill <egore911@egore911.de>
+
+	* src/*.c, src/*.h: move files to a directory
