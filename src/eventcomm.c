@@ -23,6 +23,7 @@
 #include "config.h"
 #endif
 
+#define SYNAPTICS_PRIVATE
 #include "eventcomm.h"
 #include <errno.h>
 #include <sys/types.h>
@@ -125,12 +126,30 @@ event_query_is_touchpad(int fd)
 static Bool
 EventQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 {
-    if (event_query_is_touchpad(local->fd)) {
-	xf86Msg(X_PROBED, "%s touchpad found\n", local->name);
-	return TRUE;
+    if (!event_query_is_touchpad(local->fd))
+	return FALSE;
+
+    xf86Msg(X_PROBED, "%s touchpad found\n", local->name);
+
+    /* awful */
+    if (strstr(local->name, "ALPS")) {
+	SynapticsSHM *pars = ((SynapticsPrivate *)local->private)->synpara;
+	void *opts = local->options;
+
+	pars->left_edge = xf86SetIntOption(opts, "LeftEdge", 120);
+	pars->right_edge = xf86SetIntOption(opts, "RightEdge", 830);
+	pars->top_edge = xf86SetIntOption(opts, "TopEdge", 120);
+	pars->bottom_edge = xf86SetIntOption(opts, "BottomEdge", 650);
+	pars->finger_low = xf86SetIntOption(opts, "FingerLow", 14);
+	pars->finger_high = xf86SetIntOption(opts, "FingerHigh", 15);
+	pars->tap_move = xf86SetIntOption(opts, "MaxTapMove", 110);
+	pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", 20);
+	pars->scroll_dist_horiz = xf86SetIntOption(opts, "HorizScrollDelta", 20);
+	pars->min_speed = xf86SetRealOption(opts, "MinSpeed", 0.3);
+	pars->max_speed = xf86SetRealOption(opts, "MaxSpeed", 0.75);
     }
 
-    return FALSE;
+    return TRUE;
 }
 
 static Bool
