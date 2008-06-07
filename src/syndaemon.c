@@ -47,9 +47,11 @@ static unsigned char keyboard_mask[KEYMAP_SIZE];
 static void
 usage()
 {
-    fprintf(stderr, "Usage: syndaemon [-i idle-time] [-d] [-t] [-k]\n");
+    fprintf(stderr, "Usage: syndaemon [-i idle-time] [-m poll-delay] [-d] [-t] [-k]\n");
     fprintf(stderr, "  -i How many seconds to wait after the last key press before\n");
     fprintf(stderr, "     enabling the touchpad. (default is 2.0s)\n");
+    fprintf(stderr, "  -m How many milli-seconds to wait until next poll.\n");
+    fprintf(stderr, "     (default is 20ms)\n");
     fprintf(stderr, "  -d Start as a daemon, ie in the background.\n");
     fprintf(stderr, "  -p Create a pid file with the specified name.\n");
     fprintf(stderr, "  -t Only disable tapping and scrolling, not mouse movements.\n");
@@ -163,9 +165,8 @@ get_time()
 }
 
 static void
-main_loop(Display *display, double idle_time)
+main_loop(Display *display, double idle_time, int poll_delay)
 {
-    const int poll_delay = 20000;	    /* 20 ms */
     double last_activity = 0.0;
     double current_time;
 
@@ -232,16 +233,20 @@ int
 main(int argc, char *argv[])
 {
     double idle_time = 2.0;
+	int poll_delay = 20000;	    /* 20 ms */
     Display *display;
     int c;
     int shmid;
     int ignore_modifier_keys = 0;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "i:dtp:kK?")) != EOF) {
+    while ((c = getopt(argc, argv, "i:m:dtp:kK?")) != EOF) {
 	switch(c) {
 	case 'i':
 	    idle_time = atof(optarg);
+	    break;
+	case 'm':
+	    poll_delay = atoi(optarg) * 1000;
 	    break;
 	case 'd':
 	    background = 1;
@@ -318,7 +323,7 @@ main(int argc, char *argv[])
     setup_keyboard_mask(display, ignore_modifier_keys);
 
     /* Run the main loop */
-    main_loop(display, idle_time);
+    main_loop(display, idle_time, poll_delay);
 
     return 0;
 }
