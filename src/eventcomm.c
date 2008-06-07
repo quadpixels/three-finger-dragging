@@ -33,6 +33,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <dirent.h>
+#include <string.h>
 #include <stdio.h>
 #include "synproto.h"
 #include "synaptics.h"
@@ -298,55 +300,60 @@ EventReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
     return FALSE;
 }
 
+/* filter for the AutoDevProbe scandir on /dev/input */
+static int EventDevOnly(const struct dirent *dir) {
+	return strncmp(EVENT_DEV_NAME, dir->d_name, 5) == 0;
+}
+
 static Bool
 EventAutoDevProbe(LocalDevicePtr local)
 {
     /* We are trying to find the right eventX device or fall back to
        the psaux protocol and the given device from XF86Config */
     int i;
-    Bool have_evdev = FALSE;
-    int noent_cnt = 0;
-    const int max_skip = 10;
+    Bool touchpad_found = FALSE;
+    struct dirent **namelist;
 
-    for (i = 0; ; i++) {
-	char fname[64];
-	int fd = -1;
-	Bool is_touchpad;
-
-	sprintf(fname, "%s/%s%d", DEV_INPUT_EVENT, EVENT_DEV_NAME, i);
-	SYSCALL(fd = open(fname, O_RDONLY));
-	if (fd < 0) {
-	    if (errno == ENOENT) {
-		if (++noent_cnt >= max_skip)
-		    break;
-		else
-		    continue;
-	    } else {
-		continue;
-	    }
-	}
-	noent_cnt = 0;
-	have_evdev = TRUE;
-	is_touchpad = event_query_is_touchpad(fd);
-	if (is_touchpad) {
-	    xf86Msg(X_PROBED, "%s auto-dev sets device to %s\n",
-		    local->name, fname);
-	    xf86ReplaceStrOption(local->options, "Device", fname);
-
-	    event_query_axis_ranges(fd, local);
-	    SYSCALL(close(fd));
-	    return TRUE;
-	}
-	SYSCALL(close(fd));
+    i = scandir(DEV_INPUT_EVENT, &namelist, EventDevOnly, alphasort);
+    if (i < 0) {
+		ErrorF("Couldn't open %s\n", DEV_INPUT_EVENT);
+		return FALSE;
     }
-    ErrorF("%s no synaptics event device found (checked %d nodes)\n",
-	   local->name, i + 1);
-    if (i <= max_skip)
-	ErrorF("%s The /dev/input/event* device nodes seem to be missing\n",
-	       local->name);
-    if (i > max_skip && !have_evdev)
-	ErrorF("%s The evdev kernel module seems to be missing\n", local->name);
-    return FALSE;
+    else if (i == 0) {
+		ErrorF("%s The /dev/input/event* device nodes seem to be missing\n",
+				local->name);
+		free(namelist);
+		return FALSE;
+    }
+
+    while (i--) {
+		char fname[64];
+		int fd = -1;
+
+		if (!touchpad_found) {
+			sprintf(fname, "%s/%s", DEV_INPUT_EVENT, namelist[i]->d_name);
+			SYSCALL(fd = open(fname, O_RDONLY));
+			if (fd < 0)
+				continue;
+
+			if (event_query_is_touchpad(fd)) {
+				touchpad_found = TRUE;
+			    xf86Msg(X_PROBED, "%s auto-dev sets device to %s\n",
+				    local->name, fname);
+			    xf86ReplaceStrOption(local->options, "Device", fname);
+			    event_query_axis_ranges(fd, local);
+			}
+			SYSCALL(close(fd));
+		}
+		free(namelist[i]);
+    }
+	free(namelist);
+
+	if (!touchpad_found) {
+		ErrorF("%s no synaptics event device found\n", local->name);
+		return FALSE;
+	}
+    return TRUE;
 }
 
 struct SynapticsProtocolOperations event_proto_operations = {
