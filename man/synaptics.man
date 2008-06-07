@@ -405,7 +405,7 @@ Coordinates to the left of LeftEdge are part of the left edge (areas
 (area 1) are part of the upper left corner, etc.
 .
 A good way to find appropriate edge parameters is to enable the
-SHMConfig option and run "synclient -m 1" to see the x/y coordinates
+SHMConfig option and run "synclient \-m 1" to see the x/y coordinates
 corresponding to different positions on the touchpad.
 .
 .LP
