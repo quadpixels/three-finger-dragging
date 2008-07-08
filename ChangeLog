@@ -1,3 +1,7 @@
+2008-07-08  Christoph Brill <egore911@egore911.de>
+
+	* ChangeLog: testing the official hosting at freedesktop.org
+
 2008-06-06  Christoph Brill <egore911@egore911.de>
 
 	* src/freebsd_mouse.h, src/linux_input.h: drop and use installed
