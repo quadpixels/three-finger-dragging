@@ -1,3 +1,4 @@
+* autoload evdev kernel module if necessary?
 * Use ftok to get shared memory ID.
 * Add an option to disable "double-tap-and-drag" to make it possible
   to get faster double clicks.

@@ -1,3 +1,12 @@
+0.15.0 (2008-07-15)
+- 2-finger emulation for ALPS touchpads
+- updates to X.Org changes
+- trackstick emulation
+- instant movement detection
+- config option to prevent the driver from grabbing the event
+- corner coasting
+- autotools based build system
+
 0.14.6 (2006-07-15)
 - Some small fixes for xorg 7.0 builds.
 - Made the driver work with xorg 7.1.
