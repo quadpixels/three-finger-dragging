@@ -55,15 +55,9 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *
  * Trademarks are the property of their respective owners.
- *
  */
 
-
-/*****************************************************************************
- *	Standard Headers
- ****************************************************************************/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -80,23 +74,9 @@
 #include <xf86_OSproc.h>
 #include <xf86Xinput.h>
 #include "mipointer.h"
-#ifdef XFREE_4_0_3
-#include <xf86Optrec.h>  		/* needed for Options */
-#endif
 
-/*****************************************************************************
- *	Local Headers
- ****************************************************************************/
 #define SYNAPTICS_PRIVATE
 #include "synaptics.h"
-
-/*****************************************************************************
- *	Variables without includable headers
- ****************************************************************************/
-
-/*****************************************************************************
- *	Local Variables and Types
- ****************************************************************************/
 
 typedef enum {
     BOTTOM_EDGE = 1,
@@ -302,11 +282,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 {
     LocalDevicePtr local;
     SynapticsPrivate *priv;
-#ifdef XFREE_4_0_3
-    XF86OptionPtr optList;
-#else
     pointer optList;
-#endif
     SynapticsSHM *pars;
     char *repeater;
     pointer opts;
