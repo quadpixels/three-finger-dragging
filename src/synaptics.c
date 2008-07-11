@@ -166,22 +166,32 @@ XF86ModuleData synapticsModuleData = {&VersionRec, &SetupProc, NULL };
 static void
 SetDeviceAndProtocol(LocalDevicePtr local)
 {
-    char *str_par;
+    char *str_par, *device;
     SynapticsPrivate *priv = local->private;
     enum SynapticsProtocol proto = SYN_PROTO_PSAUX;
 
-    str_par = xf86FindOptionValue(local->options, "Protocol");
-    if (str_par && !strcmp(str_par, "psaux")) {
-	/* Already set up */
-    } else if (str_par && !strcmp(str_par, "event")) {
+    device = xf86FindOptionValue(local->options, "Device");
+    if (!device) {
+	device = xf86FindOptionValue(local->options, "Path");
+	xf86SetStrOption(local->options, "Device", device);
+    }
+    if (device && strstr(device, "/dev/input/event")) {
+	/* trust the device name if we've been given one */
 	proto = SYN_PROTO_EVENT;
-    } else if (str_par && !strcmp(str_par, "psm")) {
-	proto = SYN_PROTO_PSM;
-    } else if (str_par && !strcmp(str_par, "alps")) {
-	proto = SYN_PROTO_ALPS;
-    } else { /* default to auto-dev */
-	if (event_proto_operations.AutoDevProbe(local))
+    } else {
+	str_par = xf86FindOptionValue(local->options, "Protocol");
+	if (str_par && !strcmp(str_par, "psaux")) {
+	    /* Already set up */
+	} else if (str_par && !strcmp(str_par, "event")) {
 	    proto = SYN_PROTO_EVENT;
+	} else if (str_par && !strcmp(str_par, "psm")) {
+	    proto = SYN_PROTO_PSM;
+	} else if (str_par && !strcmp(str_par, "alps")) {
+	    proto = SYN_PROTO_ALPS;
+	} else { /* default to auto-dev */
+	    if (event_proto_operations.AutoDevProbe(local))
+		proto = SYN_PROTO_EVENT;
+	}
     }
     switch (proto) {
     case SYN_PROTO_PSAUX:

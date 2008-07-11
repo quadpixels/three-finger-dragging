@@ -9,7 +9,7 @@ synaptics \- Synaptics touchpad input driver
 .BI "  Identifier \*q" devname \*q
 .B  "  Driver \*qsynaptics\*q"
 .BI "  Option \*qDevice\*q   \*q" devpath \*q
-.BI "  Option \*qProtocol\*q \*q" auto-dev \*q
+.BI "  Option \*qPath\*q     \*q" path \*q
 \ \ ...
 .B EndSection
 .fi
