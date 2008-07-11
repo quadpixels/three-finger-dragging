@@ -461,6 +461,10 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	goto SetupProc_fail;
     }
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
+    local->history_size = xf86SetIntOption(opts, "HistorySize", 0);
+#endif
+
     xf86ProcessCommonOptions(local, opts);
     local->flags |= XI86_CONFIGURED;
 
