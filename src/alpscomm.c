@@ -1,22 +1,31 @@
-/* Copyright (C) 2001 Stefan Gmeiner <riddlebox@freesurf.ch>
+/*
+ * Copyright © 2001 Stefan Gmeiner
+ * Copyright © 2003 Neil Brown
+ * Copyright © 2003-2005,2007 Peter Osterlund
  *
- * Copyright (c) 2003 Neil Brown <neilb@cse.unsw.edu.au>
- * Copyright (c) 2003-2005,2007 Peter Osterlund <petero2@telia.com>
+ * Permission to use, copy, modify, distribute, and sell this software
+ * and its documentation for any purpose is hereby granted without
+ * fee, provided that the above copyright notice appear in all copies
+ * and that both that copyright notice and this permission notice
+ * appear in supporting documentation, and that the name of Red Hat
+ * not be used in advertising or publicity pertaining to distribution
+ * of the software without specific, written prior permission.  Red
+ * Hat makes no representations about the suitability of this software
+ * for any purpose.  It is provided "as is" without express or implied
+ * warranty.
  *
- *   This program is free software; you can redistribute it and/or
- *   modify it under the terms of the GNU General Public License
- *   as published by the Free Software Foundation; either version 2
- *   of the License, or (at your option) any later version.
+ * THE AUTHORS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
+ * NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+ * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+ * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
+ * Authors:
+ *      Stefan Gmeiner (riddlebox@freesurf.ch)
+ *      Neil Brown (neilb@cse.unsw.edu.au)
+ *      Peter Osterlund (petero2@telia.com)
  */
 
 #ifdef HAVE_CONFIG_H

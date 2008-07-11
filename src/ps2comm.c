@@ -1,28 +1,35 @@
-/* Copyright (C) 2001 Stefan Gmeiner <riddlebox@freesurf.ch>
+/*
+ * Copyright © 1997 C. Scott Ananian
+ * Copyright © 1998-2000 Bruce Kalk
+ * Copyright © 2001 Stefan Gmeiner
+ * Copyright © 2002 Linuxcare Inc. David Kennedy
+ * Copyright © 2003 Fred Hucht <fred@thp.Uni-Duisburg.de>
  *
- *   Copyright (c) 1997 C. Scott Ananian <cananian@alumni.priceton.edu>
- *   Copyright (c) 1998-2000 Bruce Kalk <kall@compass.com>
- *     code für the special synaptics commands (from the tpconfig-source)
+ * Permission to use, copy, modify, distribute, and sell this software
+ * and its documentation for any purpose is hereby granted without
+ * fee, provided that the above copyright notice appear in all copies
+ * and that both that copyright notice and this permission notice
+ * appear in supporting documentation, and that the name of Red Hat
+ * not be used in advertising or publicity pertaining to distribution
+ * of the software without specific, written prior permission.  Red
+ * Hat makes no representations about the suitability of this software
+ * for any purpose.  It is provided "as is" without express or implied
+ * warranty.
  *
- *   Synaptics Passthrough Support
- *   Copyright (c) 2002 Linuxcare Inc. David Kennedy <dkennedy@linuxcare.com>
- *   adapted to version 0.12.1
- *   Copyright (c) 2003 Fred Hucht <fred@thp.Uni-Duisburg.de>
+ * THE AUTHORS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
+ * NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+ * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+ * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- *   This program is free software; you can redistribute it and/or
- *   modify it under the terms of the GNU General Public License
- *   as published by the Free Software Foundation; either version 2
- *   of the License, or (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
+ * Authors:
+ *      Stefan Gmeiner (riddlebox@freesurf.ch)
+ *      C. Scott Ananian (cananian@alumni.priceton.edu)
+ *      Bruce Kalk (kall@compass.com)
+ *      Linuxcare Inc. David Kennedy (dkennedy@linuxcare.com)
+ *      Fred Hucht (fred@thp.Uni-Duisburg.de)
  */
 
 #ifdef HAVE_CONFIG_H

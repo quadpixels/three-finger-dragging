@@ -1,59 +1,51 @@
 /*
- *   Copyright 2007 Joseph P. Skudlarek <Jskud@Jskud.com>
- *     patch for corner coasting (originally called corner edge scrolling)
+ * Copyright © 1999 Henry Davies
+ * Copyright © 2001 Stefan Gmeiner
+ * Copyright © 2002 S. Lehner
+ * Copyright © 2002 Peter Osterlund
+ * Copyright © 2002 Linuxcare Inc. David Kennedy
+ * Copyright © 2003 Hartwig Felger
+ * Copyright © 2003 Jörg Bösner
+ * Copyright © 2003 Fred Hucht
+ * Copyright © 2004 Alexei Gilchrist
+ * Copyright © 2004 Matthias Ihmig
+ * Copyright © 2006 Stefan Bethge
+ * Copyright © 2006 Christian Thaeter
+ * Copyright © 2007 Joseph P. Skudlarek
  *
- *   Copyright 2006 Christian Thaeter <chth@gmx.net>
- *     patch for Trackstick mode
+ * Permission to use, copy, modify, distribute, and sell this software
+ * and its documentation for any purpose is hereby granted without
+ * fee, provided that the above copyright notice appear in all copies
+ * and that both that copyright notice and this permission notice
+ * appear in supporting documentation, and that the name of Red Hat
+ * not be used in advertising or publicity pertaining to distribution
+ * of the software without specific, written prior permission.  Red
+ * Hat makes no representations about the suitability of this software
+ * for any purpose.  It is provided "as is" without express or implied
+ * warranty.
  *
- *   Copyright 2006 Stefan Bethge <stefan.bethge@web.de>
- *     patch for two-fingered scrolling
+ * THE AUTHORS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+ * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
+ * NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+ * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+ * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+ * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- *   Copyright 2004 Matthias Ihmig <m.ihmig@gmx.net>
- *     patch for pressure dependent EdgeMotion speed
- *
- *   Copyright 2004 Alexei Gilchrist <alexei@physics.uq.edu.au>
- *     patch for circular scrolling
- *
- *   Copyright 2003 Jörg Bösner <ich@joerg-boesner.de>
- *     patch for switching the touchpad off (for example, when a
- *     USB mouse is connected)
- *
- *   Copyright 2003 Hartwig Felger <hgfelger@hgfelger.de>
- *     patch to make the horizontal wheel replacement buttons work.
- *
- *   Copyright 2002 Peter Osterlund <petero2@telia.com>
- *     patches for fast scrolling, palm detection, edge motion,
- *     horizontal scrolling
- *
- *   Copyright 2002 S. Lehner <sam_x@bluemail.ch>
- *     for newer Firmware (5.8) protocol changes for 3rd to 6th button
- *
- *   Copyright (C) 2001 Stefan Gmeiner <riddlebox@freesurf.ch>
- *     start merging tpconfig and gpm code to an xfree input module
- *     adding some changes and extensions (ex. 3rd and 4th button)
- *
- *   Copyright (c) 1999 Henry Davies <hdavies@ameritech.net> for the
- *     absolute to relative translation code (from the gpm source)
- *     and some other ideas
- *
- *   Synaptics Passthrough Support
- *   Copyright (c) 2002 Linuxcare Inc. David Kennedy <dkennedy@linuxcare.com>
- *   adapted to version 0.12.1
- *   Copyright (c) 2003 Fred Hucht <fred@thp.Uni-Duisburg.de>
- *
- *   This program is free software; you can redistribute it and/or
- *   modify it under the terms of the GNU General Public License
- *   as published by the Free Software Foundation; either version 2
- *   of the License, or (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * Authors:
+ *      Joseph P. Skudlarek <Jskud@Jskud.com>
+ *      Christian Thaeter <chth@gmx.net>
+ *      Stefan Bethge <stefan.bethge@web.de>
+ *      Matthias Ihmig <m.ihmig@gmx.net>
+ *      Alexei Gilchrist <alexei@physics.uq.edu.au>
+ *      Jörg Bösner <ich@joerg-boesner.de>
+ *      Hartwig Felger <hgfelger@hgfelger.de>
+ *      Peter Osterlund <petero2@telia.com>
+ *      S. Lehner <sam_x@bluemail.ch>
+ *      Stefan Gmeiner <riddlebox@freesurf.ch>
+ *      Henry Davies <hdavies@ameritech.net> for the
+ *      Linuxcare Inc. David Kennedy <dkennedy@linuxcare.com>
+ *      Fred Hucht <fred@thp.Uni-Duisburg.de>
  *
  * Trademarks are the property of their respective owners.
  */
