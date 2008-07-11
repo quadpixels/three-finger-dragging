@@ -131,12 +131,10 @@ InputDriverRec SYNAPTICS = {
     "synaptics",
     NULL,
     SynapticsPreInit,
-    /*SynapticsUnInit*/ NULL,
+    NULL,
     NULL,
     0
 };
-
-#ifdef XFree86LOADER
 
 static XF86ModuleVersionInfo VersionRec = {
     "synaptics",
@@ -148,10 +146,8 @@ static XF86ModuleVersionInfo VersionRec = {
     ABI_CLASS_XINPUT,
     ABI_XINPUT_VERSION,
     MOD_CLASS_XINPUT,
-    {0, 0, 0, 0}				/* signature, to be patched into the file by
-						 * a tool */
+    {0, 0, 0, 0}
 };
-
 
 static pointer
 SetupProc(pointer module, pointer options, int *errmaj, int *errmin)
@@ -161,8 +157,6 @@ SetupProc(pointer module, pointer options, int *errmaj, int *errmin)
 }
 
 XF86ModuleData synapticsModuleData = {&VersionRec, &SetupProc, NULL };
-
-#endif /* XFree86LOADER */
 
 
 /*****************************************************************************
