@@ -1,8 +1,10 @@
-.TH "synclient" "1" "0.14.6" "" ""
-.SH "NAME"
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH synclient __appmansuffix__ __vendorversion__
+.SH NAME
 .LP
-synclient \- query and modify Synaptics TouchPad driver for
-XOrg/XFree86 server parameters on the fly.
+synclient \- commandline utitlity to query and modify Synaptics driver
+options.
 .SH "SYNTAX"
 .LP
 synclient [\fI\-m interval\fP]
@@ -132,4 +134,4 @@ Peter Osterlund <petero2@telia.com> and many others.
 This man page was written by Mattia Dongili <malattia@debian.org>
 .SH "SEE ALSO"
 .LP
-syndaemon(1), synaptics(5)
+__xservername__(__appmansuffix__), syndaemon(__appmansuffix__), synaptics(__drivermansuffix__)

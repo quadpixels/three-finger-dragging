@@ -596,4 +596,4 @@ from the initial position.
 Peter Osterlund <petero2@telia.com> and many others.
 .SH "SEE ALSO"
 .LP
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), synclient(1), syndaemon(1)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), synclient(__appmansuffix__), syndaemon(__appmansuffix__)

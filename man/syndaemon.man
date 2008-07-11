@@ -1,5 +1,7 @@
-.TH "syndaemon" "1" "0.14.6" "" ""
-.SH "NAME"
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH syndaemon __appmansuffix__ __vendorversion__
+.SH NAME
 .LP
 syndaemon \- a program that monitors keyboard activity and disables
 the touchpad when the keyboard is being used.
@@ -63,4 +65,4 @@ Peter Osterlund <petero2@telia.com>.
 This man page was written by Mattia Dongili <malattia@debian.org>
 .SH "SEE ALSO"
 .LP
-synclient(1), synaptics(5)
+__xservername__(__appmansuffix__), synclient(__appmansuffix__), synaptics(__drivermansuffix__)

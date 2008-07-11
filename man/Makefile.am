@@ -25,15 +25,21 @@
 # from the copyright holders.
 # 
 
+synclientmandir = $(APP_MAN_DIR)
+synclientman_PRE = synclient.man
+synclientman_DATA = $(synclientman_PRE:man=@APP_MAN_SUFFIX@)
+
+syndaemonmandir = $(APP_MAN_DIR)
+syndaemonman_PRE = syndaemon.man
+syndaemonman_DATA =$(syndaemonman_PRE:man=@APP_MAN_SUFFIX@)
+
 drivermandir = $(DRIVER_MAN_DIR)
-
 driverman_PRE = @DRIVER_NAME@.man
-
 driverman_DATA = $(driverman_PRE:man=@DRIVER_MAN_SUFFIX@)
 
-EXTRA_DIST = @DRIVER_NAME@.man
+EXTRA_DIST = @DRIVER_NAME@.man synclient.man syndaemon.man
 
-CLEANFILES = $(driverman_DATA)
+CLEANFILES = $(driverman_DATA) $(synclientman_DATA) $(syndaemonman_DATA)
 
 SED = sed
 
@@ -57,3 +63,6 @@ SUFFIXES = .$(DRIVER_MAN_SUFFIX) .man
 
 .man.$(DRIVER_MAN_SUFFIX):
 	sed $(MAN_SUBSTS) < $< > $@
+.man.$(APP_MAN_SUFFIX):
+	sed $(MAN_SUBSTS) < $< > $@
+
