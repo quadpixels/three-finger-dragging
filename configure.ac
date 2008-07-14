@@ -51,7 +51,7 @@ case "${host}" in
 	BUILD_EVENTCOMM="yes"
 	BUILD_PSMCOMM="no"
 	;;
-*freebsd*)
+*freebsd* | *openbsd* | *netbsd* | *dragonfly*)
 	AC_MSG_RESULT([psmcomm])
 	BUILD_EVENTCOMM="no"
 	BUILD_PSMCOMM="yes"
