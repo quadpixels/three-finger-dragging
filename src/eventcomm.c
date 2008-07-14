@@ -24,8 +24,6 @@
  *      Peter Osterlund (petero2@telia.com)
  */
 
-#ifdef __LINUX
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -324,5 +322,3 @@ struct SynapticsProtocolOperations event_proto_operations = {
     EventReadHwState,
     EventAutoDevProbe
 };
-
-#endif

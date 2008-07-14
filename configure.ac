@@ -44,6 +44,20 @@ AC_PROG_CC
 
 AH_TOP([#include "xorg-server.h"])
 
+AC_MSG_CHECKING([if eventcomm will be built])
+case "${host}" in
+*linux*)
+	AC_MSG_RESULT([yes])
+	BUILD_EVENTCOMM="yes"
+	;;
+*)
+	AC_MSG_RESULT([no])
+	BUILD_EVENTCOMM="no"
+	;;
+esac
+AM_CONDITIONAL([BUILD_EVENTCOMM], [test "x${BUILD_EVENTCOMM}" = "xyes"])
+
+
 #AC_DEFINE(XFree86LOADER,1,[Stub define for loadable drivers])
 #
 #AC_ARG_ENABLE(XINPUT, AS_HELP_STRING([--enable-xinput],
