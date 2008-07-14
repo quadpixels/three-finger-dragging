@@ -177,10 +177,14 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 	str_par = xf86FindOptionValue(local->options, "Protocol");
 	if (str_par && !strcmp(str_par, "psaux")) {
 	    /* Already set up */
+#ifdef BUILD_EVENTCOMM
 	} else if (str_par && !strcmp(str_par, "event")) {
 	    proto = SYN_PROTO_EVENT;
+#endif /* BUILD_EVENTCOMM */
+#ifdef BUILD_PSMCOMM
 	} else if (str_par && !strcmp(str_par, "psm")) {
 	    proto = SYN_PROTO_PSM;
+#endif /* BUILD_PSMCOMM */
 	} else if (str_par && !strcmp(str_par, "alps")) {
 	    proto = SYN_PROTO_ALPS;
 	} else { /* default to auto-dev */
@@ -192,12 +196,16 @@ SetDeviceAndProtocol(LocalDevicePtr local)
     case SYN_PROTO_PSAUX:
 	priv->proto_ops = &psaux_proto_operations;
 	break;
+#ifdef BUILD_EVENTCOMM
     case SYN_PROTO_EVENT:
 	priv->proto_ops = &event_proto_operations;
 	break;
+#endif /* BUILD_EVENTCOMM */
+#ifdef BUILD_PSMCOMM
     case SYN_PROTO_PSM:
 	priv->proto_ops = &psm_proto_operations;
 	break;
+#endif /* BUILD_PSMCOMM */
     case SYN_PROTO_ALPS:
 	priv->proto_ops = &alps_proto_operations;
 	break;

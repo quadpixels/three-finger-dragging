@@ -34,8 +34,6 @@
  *      Arne Schwabe <schwabe@uni-paderborn.de>
  */
 
-#if defined(__FreeBSD) || defined(__NetBSD__) || defined(__OpenBSD)
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -181,5 +179,3 @@ struct SynapticsProtocolOperations psm_proto_operations = {
     PSMReadHwState,
     PSMAutoDevProbe
 };
-
-#endif

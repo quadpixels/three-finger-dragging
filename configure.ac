@@ -44,19 +44,32 @@ AC_PROG_CC
 
 AH_TOP([#include "xorg-server.h"])
 
-AC_MSG_CHECKING([if eventcomm will be built])
+AC_MSG_CHECKING([which optional backends will be build])
 case "${host}" in
 *linux*)
-	AC_MSG_RESULT([yes])
+	AC_MSG_RESULT([eventcomm])
 	BUILD_EVENTCOMM="yes"
+	BUILD_PSMCOMM="no"
+	;;
+*freebsd*)
+	AC_MSG_RESULT([psmcomm])
+	BUILD_EVENTCOMM="no"
+	BUILD_PSMCOMM="yes"
 	;;
 *)
-	AC_MSG_RESULT([no])
+	AC_MSG_RESULT([none])
 	BUILD_EVENTCOMM="no"
+	BUILD_PSMCOMM="no"
 	;;
 esac
 AM_CONDITIONAL([BUILD_EVENTCOMM], [test "x${BUILD_EVENTCOMM}" = "xyes"])
-
+if test "x${BUILD_EVENTCOMM}" = "xyes" ; then
+	AC_DEFINE(BUILD_EVENTCOMM, 1, [Optional backend eventcomm enabled])
+fi
+AM_CONDITIONAL([BUILD_PSMCOMM], [test "x$BUILD_PSMCOMM}" = "xyes"])
+if test "x${BUILD_PSMCOMM}" = "xyes" ; then
+	AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])
+fi
 
 #AC_DEFINE(XFree86LOADER,1,[Stub define for loadable drivers])
 #
