@@ -261,7 +261,7 @@ free_param_data(SynapticsPrivate *priv)
 	return;
 
     if (priv->shm_config) {
-	if ((shmid = xf86shmget(SHM_SYNAPTICS, 0, 0)) != -1)
+	if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) != -1)
 	    shmctl(shmid, IPC_RMID, NULL);
     } else {
 	xfree(priv->synpara);
