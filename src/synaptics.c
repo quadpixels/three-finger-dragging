@@ -374,8 +374,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 180);
     pars->click_time = xf86SetIntOption(opts, "ClickTime", 100);
     pars->fast_taps = xf86SetIntOption(opts, "FastTaps", FALSE);
-    pars->emulate_mid_button_time = xf86SetIntOption(opts,
-							      "EmulateMidButtonTime", 75);
+    pars->emulate_mid_button_time = xf86SetIntOption(opts, "EmulateMidButtonTime", 75);
     pars->emulate_twofinger_z = xf86SetIntOption(opts, "EmulateTwoFingerMinZ", 257);
     pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", 100);
     pars->scroll_dist_horiz = xf86SetIntOption(opts, "HorizScrollDelta", 100);
@@ -490,9 +489,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     if (priv->comm.buffer)
 	XisbFree(priv->comm.buffer);
     free_param_data(priv);
-    /* Freeing priv makes the X server crash. Don't know why.
-       xfree(priv);
-    */
+    xfree(priv);
+    local->private = NULL;
     return local;
 }
 
