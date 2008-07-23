@@ -109,6 +109,7 @@ CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
 AC_SUBST([CFLAGS])
 
 # Checks for libraries.
+PKG_CHECK_MODULES(XLIB, x11) # needed for syndaemon
 
 # Checks for header files.
 AC_HEADER_STDC
