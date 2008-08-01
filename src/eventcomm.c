@@ -79,7 +79,7 @@ event_query_is_touchpad(int fd)
 
     /* Check for ABS_X, ABS_Y, ABS_PRESSURE and BTN_TOOL_FINGER */
 
-    SYSCALL(ret = ioctl(fd, EVIOCGBIT(0, EV_MAX), evbits));
+    SYSCALL(ret = ioctl(fd, EVIOCGBIT(0, sizeof(evbits)), evbits));
     if (ret < 0)
 	return FALSE;
     if (!TEST_BIT(EV_SYN, evbits) ||
@@ -87,7 +87,7 @@ event_query_is_touchpad(int fd)
 	!TEST_BIT(EV_KEY, evbits))
 	return FALSE;
 
-    SYSCALL(ret = ioctl(fd, EVIOCGBIT(EV_ABS, KEY_MAX), evbits));
+    SYSCALL(ret = ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(evbits)), evbits));
     if (ret < 0)
 	return FALSE;
     if (!TEST_BIT(ABS_X, evbits) ||
@@ -95,7 +95,7 @@ event_query_is_touchpad(int fd)
 	!TEST_BIT(ABS_PRESSURE, evbits))
 	return FALSE;
 
-    SYSCALL(ret = ioctl(fd, EVIOCGBIT(EV_KEY, KEY_MAX), evbits));
+    SYSCALL(ret = ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(evbits)), evbits));
     if (ret < 0)
 	return FALSE;
     if (!TEST_BIT(BTN_TOOL_FINGER, evbits))
