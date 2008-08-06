@@ -336,6 +336,14 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     xf86OptionListReport(opts);
 
+    /* set hard-coded axis ranges before querying the device.
+     * These defaults are overwritten with the ones provided by the device
+     * during SetDeviceAndProtocol (if applicable). */
+    priv->synpara_default.left_edge   = 1900;
+    priv->synpara_default.right_edge  = 5400;
+    priv->synpara_default.top_edge    = 1900;
+    priv->synpara_default.bottom_edge = 4000;
+
     SetDeviceAndProtocol(local);
 
     /* open the touchpad device */
@@ -362,10 +370,12 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     /* read the parameters */
     pars = &priv->synpara_default;
     pars->version = (PACKAGE_VERSION_MAJOR*10000+PACKAGE_VERSION_MINOR*100+PACKAGE_VERSION_PATCHLEVEL);
-    pars->left_edge = xf86SetIntOption(opts, "LeftEdge", 1900);
-    pars->right_edge = xf86SetIntOption(opts, "RightEdge", 5400);
-    pars->top_edge = xf86SetIntOption(opts, "TopEdge", 1900);
-    pars->bottom_edge = xf86SetIntOption(opts, "BottomEdge", 4000);
+    /* pars->xyz_edge contains defaults or values reported by hardware*/
+    pars->left_edge = xf86SetIntOption(opts, "LeftEdge", pars->left_edge);
+    pars->right_edge = xf86SetIntOption(opts, "RightEdge", pars->right_edge);
+    pars->top_edge = xf86SetIntOption(opts, "TopEdge", pars->top_edge);
+    pars->bottom_edge = xf86SetIntOption(opts, "BottomEdge", pars->bottom_edge);
+
     pars->finger_low = xf86SetIntOption(opts, "FingerLow", 25);
     pars->finger_high = xf86SetIntOption(opts, "FingerHigh", 30);
     pars->finger_press = xf86SetIntOption(opts, "FingerPress", 256);

@@ -106,6 +106,37 @@ event_query_is_touchpad(int fd)
     return TRUE;
 }
 
+/* Query device for axis ranges and store outcome in the default parameter. */
+static void
+event_query_axis_ranges(int fd, LocalDevicePtr local)
+{
+    SynapticsSHM *pars = &((SynapticsPrivate *)local->private)->synpara_default;
+    struct input_absinfo abs;
+    int rc;
+
+    SYSCALL(rc = ioctl(fd, EVIOCGABS(ABS_X), &abs));
+    if (rc == 0)
+    {
+	xf86Msg(X_INFO, "%s: x-axis range %d - %d\n", local->name,
+		abs.minimum, abs.maximum);
+	pars->left_edge  = abs.minimum;
+	pars->right_edge = abs.maximum;
+    } else
+	xf86Msg(X_ERROR, "%s: failed to query axis range (%s)\n", local->name,
+		strerror(errno));
+
+    SYSCALL(rc = ioctl(fd, EVIOCGABS(ABS_Y), &abs));
+    if (rc == 0)
+    {
+	xf86Msg(X_INFO, "%s: y-axis range %d - %d\n", local->name,
+		abs.minimum, abs.maximum);
+	pars->top_edge    = abs.minimum;
+	pars->bottom_edge = abs.maximum;
+    } else
+	xf86Msg(X_ERROR, "%s: failed to query axis range (%s)\n", local->name,
+		strerror(errno));
+}
+
 static Bool
 EventQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 {
@@ -297,13 +328,16 @@ EventAutoDevProbe(LocalDevicePtr local)
 	noent_cnt = 0;
 	have_evdev = TRUE;
 	is_touchpad = event_query_is_touchpad(fd);
-	SYSCALL(close(fd));
 	if (is_touchpad) {
 	    xf86Msg(X_PROBED, "%s auto-dev sets device to %s\n",
 		    local->name, fname);
 	    xf86ReplaceStrOption(local->options, "Device", fname);
+
+	    event_query_axis_ranges(fd, local);
+	    SYSCALL(close(fd));
 	    return TRUE;
 	}
+	SYSCALL(close(fd));
     }
     ErrorF("%s no synaptics event device found (checked %d nodes)\n",
 	   local->name, i + 1);
