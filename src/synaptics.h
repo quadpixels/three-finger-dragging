@@ -39,6 +39,13 @@ typedef enum {
     MAX_TAP
 } TapEvent;
 
+typedef enum {
+    F1_CLICK1 = 0,			    /* Click left, one finger */
+    F2_CLICK1,				    /* Click left, two fingers */
+    F3_CLICK1,				    /* Click left, three fingers */
+    MAX_CLICK
+} ClickFingerEvent;
+
 #define SYN_MAX_BUTTONS 12		    /* Max number of mouse buttons */
 
 struct SynapticsHwInfo {
@@ -111,6 +118,7 @@ typedef struct _SynapticsSHM
     Bool locked_drags;			    /* Enable locked drags */
     int locked_drag_time;		    /* timeout for locked drags */
     int tap_action[MAX_TAP];		    /* Button to report on tap events */
+    int click_action[MAX_CLICK];	    /* Button to report on click with fingers */
     Bool circular_scrolling;		    /* Enable circular scrolling */
     double scroll_dist_circ;		    /* Scrolling angle radians */
     int circular_trigger;		    /* Trigger area for circular scrolling */

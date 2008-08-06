@@ -300,6 +300,21 @@ Which mouse button is reported on a non-corner three-finger tap.
 .
 Set to 0 to disable.
 .TP
+.BI "Option \*qClickFinger1\*q \*q" integer \*q
+Which mouse button is reported when left-clicking with one finger.
+.
+Set to 0 to disable.
+.TP
+.BI "Option \*qClickFinger2\*q \*q" integer \*q
+Which mouse button is reported when left-clicking with two fingers.
+.
+Set to 0 to disable.
+.TP
+.BI "Option \*qClickFinger3\*q \*q" integer \*q
+Which mouse button is reported when left-clicking with three fingers.
+.
+Set to 0 to disable.
+.TP
 .BI "Option \*qCircularScrolling\*q \*q" boolean \*q
 If on, circular scrolling is used.
 .TP

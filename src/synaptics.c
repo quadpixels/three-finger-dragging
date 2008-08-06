@@ -415,6 +415,9 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->tap_action[F1_TAP] = xf86SetIntOption(opts, "TapButton1",     0);
     pars->tap_action[F2_TAP] = xf86SetIntOption(opts, "TapButton2",     0);
     pars->tap_action[F3_TAP] = xf86SetIntOption(opts, "TapButton3",     0);
+    pars->click_action[F1_CLICK1] = xf86SetIntOption(opts, "ClickFinger1",     1);
+    pars->click_action[F2_CLICK1] = xf86SetIntOption(opts, "ClickFinger2",     1);
+    pars->click_action[F3_CLICK1] = xf86SetIntOption(opts, "ClickFinger3",     1);
     pars->circular_scrolling = xf86SetBoolOption(opts, "CircularScrolling", FALSE);
     pars->circular_trigger   = xf86SetIntOption(opts, "CircScrollTrigger", 0);
     pars->circular_pad       = xf86SetBoolOption(opts, "CircularPad", FALSE);
@@ -1699,6 +1702,37 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     return delay;
 }
 
+static int
+HandleClickWithFingers(SynapticsSHM *para, struct SynapticsHwState *hw)
+{
+    int action = 0;
+    switch(hw->numFingers){
+        case 1:
+            action = para->click_action[F1_CLICK1];
+            break;
+        case 2:
+            action = para->click_action[F2_CLICK1];
+            break;
+        case 3:
+            action = para->click_action[F3_CLICK1];
+            break;
+    }
+    switch(action){
+        case 1:
+            hw->left = 1;
+            break;
+        case 2:
+            hw->left = 0;
+            hw->middle = 1;
+            break;
+        case 3:
+            hw->left = 0;
+            hw->right = 1;
+            break;
+    }
+}
+
+
 /*
  * React on changes in the hardware state. This function is called every time
  * the hardware state changes. The return value is used to specify how many
@@ -1755,6 +1789,11 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 
     /* 3rd button emulation */
     hw->middle |= HandleMidButtonEmulation(priv, hw, &delay);
+
+    /* Fingers emulate other buttons */
+    if(hw->left && hw->numFingers >= 1){
+        HandleClickWithFingers(para, hw);
+    }
 
     /* Two finger emulation */
     if (hw->z >= para->emulate_twofinger_z && hw->numFingers == 1) {
