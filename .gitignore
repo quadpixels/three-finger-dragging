@@ -17,8 +17,8 @@ libtool
 ltmain.sh
 missing
 stamp-h1
-src/.libs
-src/.deps
+.libs
+.deps
 *.o
 synclient
 syndaemon
