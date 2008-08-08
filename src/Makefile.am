@@ -33,7 +33,8 @@ INCLUDES=-I$(top_srcdir)/include/
 @DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c synapticsstr.h \
 	alpscomm.c alpscomm.h \
 	ps2comm.c ps2comm.h \
-	synproto.h
+	synproto.h \
+	properties.c
 
 if BUILD_EVENTCOMM
 @DRIVER_NAME@_drv_la_SOURCES += \
