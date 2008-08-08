@@ -28,7 +28,6 @@
 #include "config.h"
 #endif
 
-#define SYNAPTICS_PRIVATE
 #include "eventcomm.h"
 #include <errno.h>
 #include <sys/types.h>
@@ -37,6 +36,7 @@
 #include <stdio.h>
 #include "synproto.h"
 #include "synaptics.h"
+#include "synapticsstr.h"
 #include <xf86.h>
 
 

@@ -70,8 +70,8 @@
 #include <xf86Xinput.h>
 #include "mipointer.h"
 
-#define SYNAPTICS_PRIVATE
 #include "synaptics.h"
+#include "synapticsstr.h"
 
 typedef enum {
     BOTTOM_EDGE = 1,

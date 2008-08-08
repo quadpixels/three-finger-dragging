@@ -22,8 +22,7 @@ bin_PROGRAMS = \
 	synclient \
 	syndaemon
 
-synclient_INCLUDES = $(top_srcdir)/src/
-syndaemon_INCLUDES = $(top_srcdir)/src/
+INCLUDES=-I$(top_srcdir)/include/
 
 synclient_SOURCES = synclient.c
 synclient_LDFLAGS = -lm
