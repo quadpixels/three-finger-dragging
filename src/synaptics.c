@@ -1702,7 +1702,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     return delay;
 }
 
-static int
+static void
 HandleClickWithFingers(SynapticsSHM *para, struct SynapticsHwState *hw)
 {
     int action = 0;
