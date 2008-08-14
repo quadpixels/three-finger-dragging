@@ -121,4 +121,5 @@ AC_OUTPUT([Makefile
            src/Makefile
            man/Makefile
            tools/Makefile
-           fdi/Makefile])
+           fdi/Makefile
+           include/Makefile])
