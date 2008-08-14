@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<deviceinfo version="0.2">
+  <device>
+    <match key="info.capabilities" contains="input.touchpad">
+      <match key="info.product" contains="Synaptics TouchPad">
+        <merge key="input.x11_driver" type="string">synaptics</merge>
+      </match>
+      <match key="info.product" contains="AlpsPS/2 ALPS">
+        <merge key="input.x11_driver" type="string">synaptics</merge>
+      </match>
+    </match>
+  </device>
+</deviceinfo>
