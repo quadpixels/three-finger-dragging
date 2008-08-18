@@ -23,6 +23,9 @@
  * Authors: Peter Hutterer
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "xf86Module.h"
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
