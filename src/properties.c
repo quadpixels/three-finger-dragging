@@ -194,7 +194,7 @@ InitDeviceProperties(LocalDevicePtr local)
 
     prop_circscroll = InitAtom(local->dev, SYNAPTICS_PROP_CIRCULAR_SCROLLING, 8, 1, &para->circular_scrolling);
     /* FIXME: missing: scroll_dist_circ is a float */
-    prop_circscroll_trigger = InitAtom(local->dev, SYNAPTICS_PROP_CIRCULAR_TRIGGER, 8, 1, &para->circular_trigger);
+    prop_circscroll_trigger = InitAtom(local->dev, SYNAPTICS_PROP_CIRCULAR_SCROLLING_TRIGGER, 8, 1, &para->circular_trigger);
     prop_circpad = InitAtom(local->dev, SYNAPTICS_PROP_CIRCULAR_PAD, 8, 1, &para->circular_pad);
     prop_palm = InitAtom(local->dev, SYNAPTICS_PROP_PALM_DETECT, 8, 1, &para->palm_detect);
 

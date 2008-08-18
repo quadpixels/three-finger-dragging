@@ -69,6 +69,7 @@
 #include <xf86_OSproc.h>
 #include <xf86Xinput.h>
 #include "mipointer.h"
+#include <exevents.h>
 
 #include "synaptics.h"
 #include "synapticsstr.h"
