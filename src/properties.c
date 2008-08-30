@@ -456,7 +456,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
         int i;
         CARD8 *action;
 
-        if (prop->size >= MAX_TAP || prop->format != 8 || prop->type != XA_INTEGER)
+        if (prop->size > MAX_TAP || prop->format != 8 || prop->type != XA_INTEGER)
             return FALSE;
 
         action = (CARD8*)prop->data;
@@ -468,7 +468,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
         int i;
         CARD8 *action;
 
-        if (prop->size >= MAX_CLICK || prop->format != 8 || prop->type != XA_INTEGER)
+        if (prop->size > MAX_CLICK || prop->format != 8 || prop->type != XA_INTEGER)
             return FALSE;
 
         action = (CARD8*)prop->data;
