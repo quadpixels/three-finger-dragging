@@ -392,7 +392,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->finger_high = xf86SetIntOption(opts, "FingerHigh", 30);
     pars->finger_press = xf86SetIntOption(opts, "FingerPress", 256);
     pars->tap_time = xf86SetIntOption(opts, "MaxTapTime", 180);
-    pars->tap_move = xf86SetIntOption(opts, "MaxTapMove", 220);
+    pars->tap_move = xf86SetIntOption(opts, "MaxTapMove", 25);
     pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 180);
     pars->click_time = xf86SetIntOption(opts, "ClickTime", 100);
     pars->fast_taps = xf86SetIntOption(opts, "FastTaps", FALSE);
