@@ -95,6 +95,7 @@ typedef struct _SynapticsSHM
     Bool scroll_edge_corner;		    /* Enable/disable continuous edge scrolling when in the corner */
     Bool scroll_twofinger_vert;		    /* Enable/disable vertical two-finger scrolling */
     Bool scroll_twofinger_horiz;	    /* Enable/disable horizontal two-finger scrolling */
+    Bool special_scroll_area_right;         /* Enable/disable autodetection right special scroll area */
     double min_speed, max_speed, accl;	    /* movement parameters */
     double trackstick_speed;		    /* trackstick mode speed */
     int edge_motion_min_z;		    /* finger pressure at which minimum edge motion speed is set */

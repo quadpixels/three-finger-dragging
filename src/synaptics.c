@@ -12,6 +12,7 @@
  * Copyright © 2006 Stefan Bethge
  * Copyright © 2006 Christian Thaeter
  * Copyright © 2007 Joseph P. Skudlarek
+ * Copyright © 2008 Fedor P. Goncharov
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -46,6 +47,7 @@
  *      Henry Davies <hdavies@ameritech.net> for the
  *      Linuxcare Inc. David Kennedy <dkennedy@linuxcare.com>
  *      Fred Hucht <fred@thp.Uni-Duisburg.de>
+ *      Fedor P. Goncharov <fedgo@gorodok.net>
  *
  * Trademarks are the property of their respective owners.
  */
@@ -393,6 +395,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", 100);
     pars->scroll_dist_horiz = xf86SetIntOption(opts, "HorizScrollDelta", 100);
     pars->scroll_edge_vert = xf86SetBoolOption(opts, "VertEdgeScroll", TRUE);
+    pars->special_scroll_area_right  = xf86SetBoolOption(opts, "SpecialScrollAreaRight", TRUE);
     pars->scroll_edge_horiz = xf86SetBoolOption(opts, "HorizEdgeScroll", TRUE);
     pars->scroll_edge_corner = xf86SetBoolOption(opts, "CornerCoasting", FALSE);
     pars->scroll_twofinger_vert = xf86SetBoolOption(opts, "VertTwoFingerScroll", FALSE);
@@ -759,7 +762,7 @@ edge_detection(SynapticsPrivate *priv, int x, int y)
     if (priv->synpara->circular_pad)
 	return circular_edge_detection(priv, x, y);
 
-    if (x > priv->synpara->right_edge)
+    if (x >= priv->synpara->right_edge)
 	edge |= RIGHT_EDGE;
     else if (x < priv->synpara->left_edge)
 	edge |= LEFT_EDGE;
@@ -1838,14 +1841,32 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 
     /*
      * Some touchpads have a scroll wheel region where a very large X
-     * coordinate is reported. For such touchpads, we adjust the X
-     * coordinate to eliminate the discontinuity.
+     * coordinate is reported. 
+     *
+     *    We suggest two  solution this problem:
      */
     if (hw->x <= XMAX_VALID) {
 	if (priv->largest_valid_x < hw->x)
 	    priv->largest_valid_x = hw->x;
     } else {
-	hw->x = priv->largest_valid_x;
+      if (!(para->special_scroll_area_right))
+      /*               First:
+      * Adjust the X coordinate to eliminate the discontinuity 
+      * and use it region as 1 coordinate size line.
+      */
+	hw->x = priv->largest_valid_x + 1;
+      else {
+      /*               Second (default):
+       * Adjust the X coordinate to eliminate the discontinuity
+       * and use it region as scroll area automaticly.
+       */	
+	
+	if (priv->synpara->right_edge > priv->largest_valid_x + 1)
+	  priv->synpara->right_edge=priv->largest_valid_x + 1;
+	para->special_scroll_area_right = FALSE;
+       
+	hw->x = priv->largest_valid_x + 1;
+      }
     }
 
     edge = edge_detection(priv, hw->x, hw->y);
