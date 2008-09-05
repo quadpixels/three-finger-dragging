@@ -878,6 +878,8 @@ HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, in
 
     while (!done) {
 	switch (priv->mid_emu_state) {
+	case MBE_LEFT_CLICK:
+	case MBE_RIGHT_CLICK:
 	case MBE_OFF:
 	    priv->button_delay_millis = hw->millis;
 	    if (hw->left) {
@@ -893,7 +895,12 @@ HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, in
 				 hw->millis);
 	    if (timeleft > 0)
 		*delay = MIN(*delay, timeleft);
-	    if (!hw->left || (timeleft <= 0)) {
+
+            /* timeout, but within the same ReadInput cycle! */
+            if ((timeleft <= 0) && !hw->left) {
+		priv->mid_emu_state = MBE_LEFT_CLICK;
+		done = TRUE;
+            } else if ((!hw->left) || (timeleft <= 0)) {
 		hw->left = TRUE;
 		priv->mid_emu_state = MBE_TIMEOUT;
 		done = TRUE;
@@ -909,7 +916,12 @@ HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, in
 				 hw->millis);
 	    if (timeleft > 0)
 		*delay = MIN(*delay, timeleft);
-	    if (!hw->right || (timeleft <= 0)) {
+
+	     /* timeout, but within the same ReadInput cycle! */
+            if ((timeleft <= 0) && !hw->right) {
+		priv->mid_emu_state = MBE_RIGHT_CLICK;
+		done = TRUE;
+            } else if (!hw->right || (timeleft <= 0)) {
 		hw->right = TRUE;
 		priv->mid_emu_state = MBE_TIMEOUT;
 		done = TRUE;
@@ -1918,6 +1930,18 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     /* Post events */
     if (dx || dy)
 	xf86PostMotionEvent(local->dev, 0, 0, 2, dx, dy);
+
+    if (priv->mid_emu_state == MBE_LEFT_CLICK)
+    {
+	xf86PostButtonEvent(local->dev, FALSE, 1, 1, 0, 0);
+	xf86PostButtonEvent(local->dev, FALSE, 1, 0, 0, 0);
+	priv->mid_emu_state = MBE_OFF;
+    } else if (priv->mid_emu_state == MBE_RIGHT_CLICK)
+    {
+	xf86PostButtonEvent(local->dev, FALSE, 3, 1, 0, 0);
+	xf86PostButtonEvent(local->dev, FALSE, 3, 0, 0, 0);
+	priv->mid_emu_state = MBE_OFF;
+    }
 
     change = buttons ^ priv->lastButtons;
     while (change) {
