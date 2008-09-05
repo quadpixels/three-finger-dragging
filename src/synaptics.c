@@ -179,8 +179,10 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 	xf86SetStrOption(local->options, "Device", device);
     }
     if (device && strstr(device, "/dev/input/event")) {
+#ifdef BUILD_EVENTCOMM
 	/* trust the device name if we've been given one */
 	proto = SYN_PROTO_EVENT;
+#endif
     } else {
 	str_par = xf86FindOptionValue(local->options, "Protocol");
 	if (str_par && !strcmp(str_par, "psaux")) {
@@ -196,8 +198,10 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 	} else if (str_par && !strcmp(str_par, "alps")) {
 	    proto = SYN_PROTO_ALPS;
 	} else { /* default to auto-dev */
+#ifdef BUILD_EVENTCOMM
 	    if (event_proto_operations.AutoDevProbe(local))
 		proto = SYN_PROTO_EVENT;
+#endif
 	}
     }
     switch (proto) {
