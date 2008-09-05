@@ -94,7 +94,10 @@ install_signal_handler()
     static int signals[] = {
 	SIGHUP, SIGINT, SIGQUIT, SIGILL, SIGTRAP, SIGABRT,
 	SIGBUS, SIGFPE, SIGUSR1, SIGSEGV, SIGUSR2, SIGPIPE,
-	SIGALRM, SIGTERM, SIGPWR
+	SIGALRM, SIGTERM,
+#ifdef SIGPWR
+	SIGPWR
+#endif
     };
     int i;
     struct sigaction act;
@@ -103,7 +106,11 @@ install_signal_handler()
     sigemptyset(&set);
     act.sa_handler = signal_handler;
     act.sa_mask = set;
+#ifdef SA_ONESHOT
     act.sa_flags = SA_ONESHOT;
+#else
+    act.sa_flags = 0;
+#endif
 
     for (i = 0; i < sizeof(signals) / sizeof(int); i++) {
 	if (sigaction(signals[i], &act, 0) == -1) {
