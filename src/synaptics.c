@@ -124,8 +124,10 @@ static Bool DeviceOff(DeviceIntPtr);
 static Bool DeviceClose(DeviceIntPtr);
 static Bool QueryHardware(LocalDevicePtr);
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
 void InitDeviceProperties(LocalDevicePtr local);
 Bool SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop);
+#endif
 
 InputDriverRec SYNAPTICS = {
     1,
