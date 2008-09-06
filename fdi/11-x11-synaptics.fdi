@@ -16,6 +16,9 @@
       <match key="info.product" contains="appletouch">
         <merge key="input.x11_driver" type="string">synaptics</merge>
       </match>
+      <match key="info.product" contains="bcm5974">
+        <merge key="input.x11_driver" type="string">synaptics</merge>
+      </match>
     </match>
   </device>
 </deviceinfo>
