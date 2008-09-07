@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-synaptics],
-        0.15.0,
+        0.15.1,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-synaptics)
 
