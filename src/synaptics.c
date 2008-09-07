@@ -467,8 +467,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->guestmouse_off = xf86SetBoolOption(opts, "GuestMouseOff", FALSE);
     pars->locked_drags = xf86SetBoolOption(opts, "LockedDrags", FALSE);
     pars->locked_drag_time = xf86SetIntOption(opts, "LockedDragTimeout", 5000);
-    pars->tap_action[RT_TAP] = xf86SetIntOption(opts, "RTCornerButton", 2);
-    pars->tap_action[RB_TAP] = xf86SetIntOption(opts, "RBCornerButton", 3);
+    pars->tap_action[RT_TAP] = xf86SetIntOption(opts, "RTCornerButton", 0);
+    pars->tap_action[RB_TAP] = xf86SetIntOption(opts, "RBCornerButton", 0);
     pars->tap_action[LT_TAP] = xf86SetIntOption(opts, "LTCornerButton", 0);
     pars->tap_action[LB_TAP] = xf86SetIntOption(opts, "LBCornerButton", 0);
     pars->tap_action[F1_TAP] = xf86SetIntOption(opts, "TapButton1",     1);
