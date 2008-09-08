@@ -758,5 +758,6 @@ struct SynapticsProtocolOperations psaux_proto_operations = {
     PS2DeviceOffHook,
     PS2QueryHardware,
     PS2ReadHwState,
-    PS2AutoDevProbe
+    PS2AutoDevProbe,
+    NULL /* ProbeDevice */
 };

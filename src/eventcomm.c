@@ -305,6 +305,31 @@ static int EventDevOnly(const struct dirent *dir) {
 	return strncmp(EVENT_DEV_NAME, dir->d_name, 5) == 0;
 }
 
+/**
+ * Probe the given device name for axis ranges, if appropriate.
+ */
+static Bool
+EventProbeDevice(LocalDevicePtr local, char* device)
+{
+    int fd;
+
+    SYSCALL(fd = open(device, O_RDONLY));
+    if (fd < 0)
+        goto out;
+
+    if (!event_query_is_touchpad(fd))
+        goto out;
+
+    event_query_axis_ranges(fd, local);
+
+out:
+    if (fd >= 0)
+        SYSCALL(close(fd));
+
+    /* Always return TRUE, PreInit will complain for us if necessary */
+    return TRUE;
+}
+
 static Bool
 EventAutoDevProbe(LocalDevicePtr local)
 {
@@ -361,5 +386,6 @@ struct SynapticsProtocolOperations event_proto_operations = {
     EventDeviceOffHook,
     EventQueryHardware,
     EventReadHwState,
-    EventAutoDevProbe
+    EventAutoDevProbe,
+    EventProbeDevice
 };

@@ -177,5 +177,6 @@ struct SynapticsProtocolOperations psm_proto_operations = {
     PSMDeviceOffHook,
     PSMQueryHardware,
     PSMReadHwState,
-    PSMAutoDevProbe
+    PSMAutoDevProbe,
+    NULL /* ProbeDevice */
 };

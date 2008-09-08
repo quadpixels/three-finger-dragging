@@ -181,8 +181,9 @@ SetDeviceAndProtocol(LocalDevicePtr local)
     }
     if (device && strstr(device, "/dev/input/event")) {
 #ifdef BUILD_EVENTCOMM
-	/* trust the device name if we've been given one */
-	proto = SYN_PROTO_EVENT;
+        if (event_proto_operations.ProbeDevice &&
+            event_proto_operations.ProbeDevice(local, device))
+            proto = SYN_PROTO_EVENT;
 #endif
     } else {
 	str_par = xf86FindOptionValue(local->options, "Protocol");

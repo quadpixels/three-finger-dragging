@@ -262,5 +262,6 @@ struct SynapticsProtocolOperations alps_proto_operations = {
     ALPSDeviceOffHook,
     ALPSQueryHardware,
     ALPSReadHwState,
-    ALPSAutoDevProbe
+    ALPSAutoDevProbe,
+    NULL /* ProbeDevice */
 };

@@ -96,6 +96,7 @@ struct SynapticsProtocolOperations {
 			struct SynapticsProtocolOperations *proto_ops,
 			struct CommData *comm, struct SynapticsHwState *hwRet);
     Bool (*AutoDevProbe)(LocalDevicePtr local);
+    Bool (*ProbeDevice)(LocalDevicePtr local, char* name);
 };
 
 extern struct SynapticsProtocolOperations psaux_proto_operations;
