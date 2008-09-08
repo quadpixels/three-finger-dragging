@@ -108,11 +108,11 @@ event_query_is_touchpad(int fd)
     return TRUE;
 }
 
-/* Query device for axis ranges and store outcome in the default parameter. */
+/* Query device for axis ranges */
 static void
 event_query_axis_ranges(int fd, LocalDevicePtr local)
 {
-    SynapticsSHM *pars = &((SynapticsPrivate *)local->private)->synpara_default;
+    SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
     struct input_absinfo abs;
     int rc;
 
@@ -121,8 +121,8 @@ event_query_axis_ranges(int fd, LocalDevicePtr local)
     {
 	xf86Msg(X_INFO, "%s: x-axis range %d - %d\n", local->name,
 		abs.minimum, abs.maximum);
-	pars->left_edge  = abs.minimum;
-	pars->right_edge = abs.maximum;
+	priv->minx = abs.minimum;
+	priv->maxx = abs.maximum;
     } else
 	xf86Msg(X_ERROR, "%s: failed to query axis range (%s)\n", local->name,
 		strerror(errno));
@@ -132,8 +132,8 @@ event_query_axis_ranges(int fd, LocalDevicePtr local)
     {
 	xf86Msg(X_INFO, "%s: y-axis range %d - %d\n", local->name,
 		abs.minimum, abs.maximum);
-	pars->top_edge    = abs.minimum;
-	pars->bottom_edge = abs.maximum;
+	priv->miny = abs.minimum;
+	priv->maxy = abs.maximum;
     } else
 	xf86Msg(X_ERROR, "%s: failed to query axis range (%s)\n", local->name,
 		strerror(errno));

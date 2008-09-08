@@ -139,6 +139,7 @@ typedef struct _SynapticsPrivateRec
     int prev_z;				/* previous z value, for palm detection */
     int avg_width;			/* weighted average of previous fingerWidth values */
 
+    int minx, maxx, miny, maxy;         /* min/max dimensions as detected */
 } SynapticsPrivate;
 
 #endif /* _SYNAPTICSSTR_H_ */
