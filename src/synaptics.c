@@ -176,7 +176,8 @@ SetDeviceAndProtocol(LocalDevicePtr local)
     device = xf86FindOptionValue(local->options, "Device");
     if (!device) {
 	device = xf86FindOptionValue(local->options, "Path");
-	xf86ReplaceStrOption(local->options, "Device", device);
+	if (device)
+	    xf86ReplaceStrOption(local->options, "Device", device);
     }
     if (device && strstr(device, "/dev/input/event")) {
 #ifdef BUILD_EVENTCOMM
