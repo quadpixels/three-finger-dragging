@@ -112,6 +112,7 @@ typedef enum {
  * Forward declaration
  ****************************************************************************/
 static InputInfoPtr SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags);
+static void SynapticsUnInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags);
 static Bool DeviceControl(DeviceIntPtr, int);
 static void ReadInput(LocalDevicePtr);
 static int HandleState(LocalDevicePtr, struct SynapticsHwState*);
@@ -135,7 +136,7 @@ InputDriverRec SYNAPTICS = {
     "synaptics",
     NULL,
     SynapticsPreInit,
-    NULL,
+    SynapticsUnInit,
     NULL,
     0
 };
@@ -569,6 +570,20 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     local->private = NULL;
     return local;
 }
+
+
+/*
+ *  Uninitialize the device.
+ */
+static void SynapticsUnInit(InputDriverPtr drv,
+                            InputInfoPtr   local,
+                            int            flags)
+{
+    xfree(local->private);
+    local->private = NULL;
+    xf86DeleteInput(local, 0);
+}
+
 
 /*
  *  Alter the control parameters for the mouse. Note that all special
