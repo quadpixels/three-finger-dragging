@@ -177,8 +177,10 @@ SetDeviceAndProtocol(LocalDevicePtr local)
     device = xf86FindOptionValue(local->options, "Device");
     if (!device) {
 	device = xf86FindOptionValue(local->options, "Path");
-	if (device)
-	    xf86ReplaceStrOption(local->options, "Device", device);
+	if (device) {
+	    local->options =
+	    	xf86ReplaceStrOption(local->options, "Device", device);
+	}
     }
     if (device && strstr(device, "/dev/input/event")) {
 #ifdef BUILD_EVENTCOMM
@@ -351,11 +353,12 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     xf86CollectInputOptions(local, NULL, NULL);
 
-    opts = local->options;
+    xf86OptionListReport(local->options);
 
-    xf86OptionListReport(opts);
-
+    /* may change local->options */
     SetDeviceAndProtocol(local);
+
+    opts = local->options;
 
     /* open the touchpad device */
     local->fd = xf86OpenSerial(opts);

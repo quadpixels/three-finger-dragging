@@ -365,7 +365,8 @@ EventAutoDevProbe(LocalDevicePtr local)
 				touchpad_found = TRUE;
 			    xf86Msg(X_PROBED, "%s auto-dev sets device to %s\n",
 				    local->name, fname);
-			    xf86ReplaceStrOption(local->options, "Device", fname);
+			    local->options =
+			    	xf86ReplaceStrOption(local->options, "Device", fname);
 			    event_query_axis_ranges(fd, local);
 			}
 			SYSCALL(close(fd));
