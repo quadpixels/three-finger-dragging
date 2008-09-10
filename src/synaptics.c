@@ -328,7 +328,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     /* initialize the InputInfoRec */
     local->name                    = dev->identifier;
-    local->type_name               = XI_MOUSE; /* XI_TOUCHPAD and KDE killed the X Server at startup ? */
+    local->type_name               = XI_TOUCHPAD;
     local->device_control          = DeviceControl;
     local->read_input              = ReadInput;
     local->control_proc            = ControlProc;
