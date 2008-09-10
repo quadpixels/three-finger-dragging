@@ -299,91 +299,18 @@ synSetFloatOption(pointer options, const char *optname, double default_value)
     return value;
 }
 
-/*
- *  called by the module loader for initialization
- */
-static InputInfoPtr
-SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
+static void set_default_parameters(LocalDevicePtr local)
 {
-    LocalDevicePtr local;
-    SynapticsPrivate *priv;
-    pointer optList;
-    SynapticsSHM *pars;
-    char *repeater;
-    pointer opts;
-    int status;
+    SynapticsPrivate *priv = local->private; /* read-only */
+    pointer opts = local->options; /* read-only */
+    SynapticsSHM *pars = &priv->synpara_default; /* modified */
+
     float minSpeed, maxSpeed;
     int horizScrollDelta, vertScrollDelta,
         edgeMotionMinSpeed, edgeMotionMaxSpeed;
     int l, r, t, b; /* left, right, top, bottom */
 
-    /* allocate memory for SynapticsPrivateRec */
-    priv = xcalloc(1, sizeof(SynapticsPrivate));
-    if (!priv)
-	return NULL;
-
-    /* Allocate a new InputInfoRec and add it to the head xf86InputDevs. */
-    local = xf86AllocateInput(drv, 0);
-    if (!local) {
-	xfree(priv);
-	return NULL;
-    }
-
-    /* initialize the InputInfoRec */
-    local->name                    = dev->identifier;
-    local->type_name               = XI_TOUCHPAD;
-    local->device_control          = DeviceControl;
-    local->read_input              = ReadInput;
-    local->control_proc            = ControlProc;
-    local->close_proc              = CloseProc;
-    local->switch_mode             = SwitchMode;
-    local->conversion_proc         = ConvertProc;
-    local->reverse_conversion_proc = NULL;
-    local->dev                     = NULL;
-    local->private                 = priv;
-    local->private_flags           = 0;
-    local->flags                   = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
-    local->conf_idev               = dev;
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-    local->motion_history_proc     = xf86GetMotionEvents;
-    local->history_size            = 0;
-#endif
-    local->always_core_feedback    = 0;
-
-    xf86Msg(X_INFO, "Synaptics touchpad driver version %s\n", PACKAGE_VERSION);
-
-    xf86CollectInputOptions(local, NULL, NULL);
-
-    xf86OptionListReport(local->options);
-
-    /* may change local->options */
-    SetDeviceAndProtocol(local);
-
-    opts = local->options;
-
-    /* open the touchpad device */
-    local->fd = xf86OpenSerial(opts);
-    if (local->fd == -1) {
-	ErrorF("Synaptics driver unable to open device\n");
-	goto SetupProc_fail;
-    }
-    xf86ErrorFVerb(6, "port opened successfully\n");
-
-    /* initialize variables */
-    priv->timer = NULL;
-    priv->repeatButtons = 0;
-    priv->nextRepeat = 0;
-    priv->count_packet_finger = 0;
-    priv->tap_state = TS_START;
-    priv->tap_button = 0;
-    priv->tap_button_state = TBS_BUTTON_UP;
-    priv->touch_on.millis = 0;
-
-    /* install shared memory or normal memory for parameters */
-    priv->shm_config = xf86SetBoolOption(opts, "SHMConfig", FALSE);
-
     /* read the parameters */
-    pars = &priv->synpara_default;
     pars->version = (PACKAGE_VERSION_MAJOR*10000+PACKAGE_VERSION_MINOR*100+PACKAGE_VERSION_PATCHLEVEL);
 
     /* The synaptics specs specify typical edge widths of 4% on x, and 5.4% on
@@ -461,7 +388,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pars->edge_motion_min_speed = xf86SetIntOption(opts, "EdgeMotionMinSpeed", edgeMotionMinSpeed);
     pars->edge_motion_max_speed = xf86SetIntOption(opts, "EdgeMotionMaxSpeed", edgeMotionMaxSpeed);
     pars->edge_motion_use_always = xf86SetBoolOption(opts, "EdgeMotionUseAlways", FALSE);
-    repeater = xf86SetStrOption(opts, "Repeater", NULL);
     pars->updown_button_scrolling = xf86SetBoolOption(opts, "UpDownScrolling", TRUE);
     pars->leftright_button_scrolling = xf86SetBoolOption(opts, "LeftRightScrolling", TRUE);
     pars->updown_button_repeat = xf86SetBoolOption(opts, "UpDownScrollRepeat", TRUE);
@@ -509,16 +435,16 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	xf86Msg(X_WARNING, "%s: TopEdge is bigger than BottomEdge. Fixing.\n",
 		local->name);
     }
+}
 
-    priv->largest_valid_x = MIN(pars->right_edge, XMAX_NOMINAL);
+static void set_repeater_fifo(LocalDevicePtr local)
+{
+    SynapticsPrivate *priv = local->private;
+    pointer optList;
+    char *repeater;
+    int status;
 
-    if (!alloc_param_data(local))
-	goto SetupProc_fail;
-
-    priv->comm.buffer = XisbNew(local->fd, 200);
-    DBG(9, XisbTrace(priv->comm.buffer, 1));
-
-    priv->fifofd = -1;
+    repeater = xf86SetStrOption(local->options, "Repeater", NULL);
     if (repeater) {
 	/* create repeater fifo */
 	status = mknod(repeater, 666, S_IFIFO);
@@ -533,6 +459,92 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	}
 	free(repeater);
     }
+}
+
+/*
+ *  called by the module loader for initialization
+ */
+static InputInfoPtr
+SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
+{
+    LocalDevicePtr local;
+    SynapticsPrivate *priv;
+
+    /* allocate memory for SynapticsPrivateRec */
+    priv = xcalloc(1, sizeof(SynapticsPrivate));
+    if (!priv)
+	return NULL;
+
+    /* Allocate a new InputInfoRec and add it to the head xf86InputDevs. */
+    local = xf86AllocateInput(drv, 0);
+    if (!local) {
+	xfree(priv);
+	return NULL;
+    }
+
+    /* initialize the InputInfoRec */
+    local->name                    = dev->identifier;
+    local->type_name               = XI_TOUCHPAD;
+    local->device_control          = DeviceControl;
+    local->read_input              = ReadInput;
+    local->control_proc            = ControlProc;
+    local->close_proc              = CloseProc;
+    local->switch_mode             = SwitchMode;
+    local->conversion_proc         = ConvertProc;
+    local->reverse_conversion_proc = NULL;
+    local->dev                     = NULL;
+    local->private                 = priv;
+    local->private_flags           = 0;
+    local->flags                   = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
+    local->conf_idev               = dev;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
+    local->motion_history_proc     = xf86GetMotionEvents;
+    local->history_size            = 0;
+#endif
+    local->always_core_feedback    = 0;
+
+    xf86Msg(X_INFO, "Synaptics touchpad driver version %s\n", PACKAGE_VERSION);
+
+    xf86CollectInputOptions(local, NULL, NULL);
+
+    xf86OptionListReport(local->options);
+
+    /* may change local->options */
+    SetDeviceAndProtocol(local);
+
+    /* open the touchpad device */
+    local->fd = xf86OpenSerial(local->options);
+    if (local->fd == -1) {
+	ErrorF("Synaptics driver unable to open device\n");
+	goto SetupProc_fail;
+    }
+    xf86ErrorFVerb(6, "port opened successfully\n");
+
+    /* initialize variables */
+    priv->timer = NULL;
+    priv->repeatButtons = 0;
+    priv->nextRepeat = 0;
+    priv->count_packet_finger = 0;
+    priv->tap_state = TS_START;
+    priv->tap_button = 0;
+    priv->tap_button_state = TBS_BUTTON_UP;
+    priv->touch_on.millis = 0;
+
+    /* install shared memory or normal memory for parameters */
+    priv->shm_config = xf86SetBoolOption(local->options, "SHMConfig", FALSE);
+
+    set_default_parameters(local);
+
+    priv->largest_valid_x = MIN(priv->synpara_default.right_edge, XMAX_NOMINAL);
+
+    if (!alloc_param_data(local))
+	goto SetupProc_fail;
+
+    priv->comm.buffer = XisbNew(local->fd, 200);
+    DBG(9, XisbTrace(priv->comm.buffer, 1));
+
+    priv->fifofd = -1;
+    set_repeater_fifo(local);
 
     if (!QueryHardware(local)) {
 	xf86Msg(X_ERROR, "%s Unable to query/initialize Synaptics hardware.\n", local->name);
@@ -543,7 +555,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     local->history_size = xf86SetIntOption(opts, "HistorySize", 0);
 #endif
 
-    xf86ProcessCommonOptions(local, opts);
+    xf86ProcessCommonOptions(local, local->options);
     local->flags |= XI86_CONFIGURED;
 
     if (local->fd != -1) {
