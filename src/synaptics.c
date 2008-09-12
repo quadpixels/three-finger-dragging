@@ -308,6 +308,7 @@ static void set_default_parameters(LocalDevicePtr local)
     float minSpeed, maxSpeed;
     int horizScrollDelta, vertScrollDelta,
         edgeMotionMinSpeed, edgeMotionMaxSpeed;
+    int tapMove;
     int l, r, t, b; /* left, right, top, bottom */
 
     /* read the parameters */
@@ -346,6 +347,7 @@ static void set_default_parameters(LocalDevicePtr local)
         vertScrollDelta = height * .04;
         edgeMotionMinSpeed = 1;
         edgeMotionMaxSpeed = width * .1;
+        tapMove = width * .072;
     } else {
         l = 1900;
         r = 5400;
@@ -358,6 +360,7 @@ static void set_default_parameters(LocalDevicePtr local)
         vertScrollDelta = 100;
         edgeMotionMinSpeed = 1;
         edgeMotionMaxSpeed = 400;
+        tapMove = 220;
     }
 
     pars->left_edge = xf86SetIntOption(opts, "LeftEdge", l);
@@ -369,7 +372,7 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->finger_high = xf86SetIntOption(opts, "FingerHigh", 30);
     pars->finger_press = xf86SetIntOption(opts, "FingerPress", 256);
     pars->tap_time = xf86SetIntOption(opts, "MaxTapTime", 180);
-    pars->tap_move = xf86SetIntOption(opts, "MaxTapMove", 25);
+    pars->tap_move = xf86SetIntOption(opts, "MaxTapMove", tapMove);
     pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 180);
     pars->click_time = xf86SetIntOption(opts, "ClickTime", 100);
     pars->fast_taps = xf86SetIntOption(opts, "FastTaps", FALSE);
