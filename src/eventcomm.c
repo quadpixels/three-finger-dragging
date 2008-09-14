@@ -110,13 +110,13 @@ event_query_is_touchpad(int fd)
 
 /* Query device for axis ranges */
 static void
-event_query_axis_ranges(int fd, LocalDevicePtr local)
+event_query_axis_ranges(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
     struct input_absinfo abs;
     int rc;
 
-    SYSCALL(rc = ioctl(fd, EVIOCGABS(ABS_X), &abs));
+    SYSCALL(rc = ioctl(local->fd, EVIOCGABS(ABS_X), &abs));
     if (rc == 0)
     {
 	xf86Msg(X_INFO, "%s: x-axis range %d - %d\n", local->name,
@@ -127,7 +127,7 @@ event_query_axis_ranges(int fd, LocalDevicePtr local)
 	xf86Msg(X_ERROR, "%s: failed to query axis range (%s)\n", local->name,
 		strerror(errno));
 
-    SYSCALL(rc = ioctl(fd, EVIOCGABS(ABS_Y), &abs));
+    SYSCALL(rc = ioctl(local->fd, EVIOCGABS(ABS_Y), &abs));
     if (rc == 0)
     {
 	xf86Msg(X_INFO, "%s: y-axis range %d - %d\n", local->name,
@@ -306,28 +306,13 @@ static int EventDevOnly(const struct dirent *dir) {
 }
 
 /**
- * Probe the given device name for axis ranges, if appropriate.
+ * Probe the open device for dimensions.
  */
-static Bool
-EventProbeDevice(LocalDevicePtr local, char* device)
+static void
+EventReadDevDimensions(LocalDevicePtr local)
 {
-    int fd;
-
-    SYSCALL(fd = open(device, O_RDONLY));
-    if (fd < 0)
-        goto out;
-
-    if (!event_query_is_touchpad(fd))
-        goto out;
-
-    event_query_axis_ranges(fd, local);
-
-out:
-    if (fd >= 0)
-        SYSCALL(close(fd));
-
-    /* Always return TRUE, PreInit will complain for us if necessary */
-    return TRUE;
+    if (event_query_is_touchpad(local->fd))
+	event_query_axis_ranges(local);
 }
 
 static Bool
@@ -367,7 +352,6 @@ EventAutoDevProbe(LocalDevicePtr local)
 				    local->name, fname);
 			    local->options =
 			    	xf86ReplaceStrOption(local->options, "Device", fname);
-			    event_query_axis_ranges(fd, local);
 			}
 			SYSCALL(close(fd));
 		}
@@ -388,5 +372,5 @@ struct SynapticsProtocolOperations event_proto_operations = {
     EventQueryHardware,
     EventReadHwState,
     EventAutoDevProbe,
-    EventProbeDevice
+    EventReadDevDimensions
 };

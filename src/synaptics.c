@@ -125,6 +125,7 @@ static Bool DeviceOn(DeviceIntPtr);
 static Bool DeviceOff(DeviceIntPtr);
 static Bool DeviceClose(DeviceIntPtr);
 static Bool QueryHardware(LocalDevicePtr);
+static void ReadDevDimensions(LocalDevicePtr);
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
 void InitDeviceProperties(LocalDevicePtr local);
@@ -185,9 +186,7 @@ SetDeviceAndProtocol(LocalDevicePtr local)
     }
     if (device && strstr(device, "/dev/input/event")) {
 #ifdef BUILD_EVENTCOMM
-        if (event_proto_operations.ProbeDevice &&
-            event_proto_operations.ProbeDevice(local, device))
-            proto = SYN_PROTO_EVENT;
+	proto = SYN_PROTO_EVENT;
 #endif
     } else {
 	str_par = xf86FindOptionValue(local->options, "Protocol");
@@ -532,6 +531,9 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->tap_button = 0;
     priv->tap_button_state = TBS_BUTTON_UP;
     priv->touch_on.millis = 0;
+
+    /* read hardware dimensions */
+    ReadDevDimensions(local);
 
     /* install shared memory or normal memory for parameters */
     priv->shm_config = xf86SetBoolOption(local->options, "SHMConfig", FALSE);
@@ -2136,6 +2138,15 @@ ConvertProc(LocalDevicePtr local,
     return TRUE;
 }
 
+
+static void
+ReadDevDimensions(LocalDevicePtr local)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
+
+    if (priv->proto_ops->ReadDevDimensions)
+	priv->proto_ops->ReadDevDimensions(local);
+}
 
 static Bool
 QueryHardware(LocalDevicePtr local)

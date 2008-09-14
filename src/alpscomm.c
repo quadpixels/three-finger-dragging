@@ -263,5 +263,5 @@ struct SynapticsProtocolOperations alps_proto_operations = {
     ALPSQueryHardware,
     ALPSReadHwState,
     ALPSAutoDevProbe,
-    NULL /* ProbeDevice */
+    NULL /* ReadDevDimensions */
 };
