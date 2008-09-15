@@ -309,6 +309,15 @@ static void set_default_parameters(LocalDevicePtr local)
         edgeMotionMinSpeed, edgeMotionMaxSpeed;
     int tapMove;
     int l, r, t, b; /* left, right, top, bottom */
+    int fingerLow, fingerHigh, fingerPress;
+    int emulateTwoFingerMinZ;
+    int edgeMotionMinZ, edgeMotionMaxZ;
+    int pressureMotionMinZ, pressureMotionMaxZ;
+    int palmMinWidth, palmMinZ;
+    int tapButton1, tapButton2, tapButton3;
+    int clickFinger1, clickFinger2, clickFinger3;
+    Bool vertEdgeScroll, horizEdgeScroll;
+    Bool vertTwoFingerScroll, horizTwoFingerScroll;
 
     /* read the parameters */
     pars->version = (PACKAGE_VERSION_MAJOR*10000+PACKAGE_VERSION_MINOR*100+PACKAGE_VERSION_PATCHLEVEL);
@@ -346,7 +355,7 @@ static void set_default_parameters(LocalDevicePtr local)
         vertScrollDelta = height * .04;
         edgeMotionMinSpeed = 1;
         edgeMotionMaxSpeed = width * .1;
-        tapMove = width * .072;
+        tapMove = width * .055;
     } else {
         l = 1900;
         r = 5400;
@@ -362,31 +371,86 @@ static void set_default_parameters(LocalDevicePtr local)
         tapMove = 220;
     }
 
+    if (priv->minp < priv->maxp) {
+	int range = priv->maxp - priv->minp;
+
+	/* scaling based on defaults below and a pressure of 256 */
+	fingerLow = priv->minp + range * .098;
+	fingerHigh = priv->minp + range * .117;
+	fingerPress = priv->minp + range * 1.000;
+	emulateTwoFingerMinZ = priv->minp + range * 1.1;
+	edgeMotionMinZ = priv->minp + range * .117;
+	edgeMotionMaxZ = priv->minp + range * .625;
+	pressureMotionMinZ = priv->minp + range * .117;
+	pressureMotionMaxZ = priv->minp + range * .625;
+	palmMinZ = priv->minp + range * .781;
+    } else {
+	fingerLow = 25;
+	fingerHigh = 30;
+	fingerPress = 256;
+	emulateTwoFingerMinZ = 257;
+	edgeMotionMinZ = 30;
+	edgeMotionMaxZ = 160;
+	pressureMotionMinZ = 30;
+	pressureMotionMaxZ = 160;
+	palmMinZ = 200;
+    }
+
+    if (priv->minw < priv->maxw) {
+	int range = priv->maxw - priv->minw;
+
+	/* scaling based on defaults below and a tool width of 16 */
+	palmMinWidth = priv->minw + range * .625;
+
+    } else {
+	palmMinWidth = 10;
+    }
+
+    /* Enable tap if we don't have a phys left button */
+    tapButton1 = priv->has_left ? 0 : 1;
+    tapButton2 = 0;
+    tapButton3 = 0;
+
+    /* Enable multifinger-click if we don't have right/middle button,
+       otherwise clickFinger is always button 1. */
+    clickFinger1 = 1;
+    clickFinger2 = priv->has_right ? 1 : 3;
+    clickFinger3 = priv->has_middle ? 1 : 2;
+
+    /* Enable vert edge scroll if we can't detect doubletap */
+    vertEdgeScroll = priv->has_double ? FALSE : TRUE;
+    horizEdgeScroll = FALSE;
+
+    /* Enable twofinger scroll if we can detect doubletap */
+    vertTwoFingerScroll = priv->has_double ? TRUE : FALSE;
+    horizTwoFingerScroll = FALSE;
+
+    /* set the parameters */
     pars->left_edge = xf86SetIntOption(opts, "LeftEdge", l);
     pars->right_edge = xf86SetIntOption(opts, "RightEdge", r);
     pars->top_edge = xf86SetIntOption(opts, "TopEdge", t);
     pars->bottom_edge = xf86SetIntOption(opts, "BottomEdge", b);
 
-    pars->finger_low = xf86SetIntOption(opts, "FingerLow", 25);
-    pars->finger_high = xf86SetIntOption(opts, "FingerHigh", 30);
-    pars->finger_press = xf86SetIntOption(opts, "FingerPress", 256);
+    pars->finger_low = xf86SetIntOption(opts, "FingerLow", fingerLow);
+    pars->finger_high = xf86SetIntOption(opts, "FingerHigh", fingerHigh);
+    pars->finger_press = xf86SetIntOption(opts, "FingerPress", fingerPress);
     pars->tap_time = xf86SetIntOption(opts, "MaxTapTime", 180);
     pars->tap_move = xf86SetIntOption(opts, "MaxTapMove", tapMove);
     pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 180);
     pars->click_time = xf86SetIntOption(opts, "ClickTime", 100);
     pars->fast_taps = xf86SetIntOption(opts, "FastTaps", FALSE);
     pars->emulate_mid_button_time = xf86SetIntOption(opts, "EmulateMidButtonTime", 75);
-    pars->emulate_twofinger_z = xf86SetIntOption(opts, "EmulateTwoFingerMinZ", 257);
+    pars->emulate_twofinger_z = xf86SetIntOption(opts, "EmulateTwoFingerMinZ", emulateTwoFingerMinZ);
     pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", horizScrollDelta);
     pars->scroll_dist_horiz = xf86SetIntOption(opts, "HorizScrollDelta", vertScrollDelta);
-    pars->scroll_edge_vert = xf86SetBoolOption(opts, "VertEdgeScroll", TRUE);
+    pars->scroll_edge_vert = xf86SetBoolOption(opts, "VertEdgeScroll", vertEdgeScroll);
     pars->special_scroll_area_right  = xf86SetBoolOption(opts, "SpecialScrollAreaRight", TRUE);
-    pars->scroll_edge_horiz = xf86SetBoolOption(opts, "HorizEdgeScroll", TRUE);
+    pars->scroll_edge_horiz = xf86SetBoolOption(opts, "HorizEdgeScroll", horizEdgeScroll);
     pars->scroll_edge_corner = xf86SetBoolOption(opts, "CornerCoasting", FALSE);
-    pars->scroll_twofinger_vert = xf86SetBoolOption(opts, "VertTwoFingerScroll", FALSE);
-    pars->scroll_twofinger_horiz = xf86SetBoolOption(opts, "HorizTwoFingerScroll", FALSE);
-    pars->edge_motion_min_z = xf86SetIntOption(opts, "EdgeMotionMinZ", 30);
-    pars->edge_motion_max_z = xf86SetIntOption(opts, "EdgeMotionMaxZ", 160);
+    pars->scroll_twofinger_vert = xf86SetBoolOption(opts, "VertTwoFingerScroll", vertTwoFingerScroll);
+    pars->scroll_twofinger_horiz = xf86SetBoolOption(opts, "HorizTwoFingerScroll", horizTwoFingerScroll);
+    pars->edge_motion_min_z = xf86SetIntOption(opts, "EdgeMotionMinZ", edgeMotionMinZ);
+    pars->edge_motion_max_z = xf86SetIntOption(opts, "EdgeMotionMaxZ", edgeMotionMaxZ);
     pars->edge_motion_min_speed = xf86SetIntOption(opts, "EdgeMotionMinSpeed", edgeMotionMinSpeed);
     pars->edge_motion_max_speed = xf86SetIntOption(opts, "EdgeMotionMaxSpeed", edgeMotionMaxSpeed);
     pars->edge_motion_use_always = xf86SetBoolOption(opts, "EdgeMotionUseAlways", FALSE);
@@ -403,25 +467,25 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->tap_action[RB_TAP] = xf86SetIntOption(opts, "RBCornerButton", 0);
     pars->tap_action[LT_TAP] = xf86SetIntOption(opts, "LTCornerButton", 0);
     pars->tap_action[LB_TAP] = xf86SetIntOption(opts, "LBCornerButton", 0);
-    pars->tap_action[F1_TAP] = xf86SetIntOption(opts, "TapButton1",     1);
-    pars->tap_action[F2_TAP] = xf86SetIntOption(opts, "TapButton2",     2);
-    pars->tap_action[F3_TAP] = xf86SetIntOption(opts, "TapButton3",     3);
-    pars->click_action[F1_CLICK1] = xf86SetIntOption(opts, "ClickFinger1",     1);
-    pars->click_action[F2_CLICK1] = xf86SetIntOption(opts, "ClickFinger2",     1);
-    pars->click_action[F3_CLICK1] = xf86SetIntOption(opts, "ClickFinger3",     1);
+    pars->tap_action[F1_TAP] = xf86SetIntOption(opts, "TapButton1",     tapButton1);
+    pars->tap_action[F2_TAP] = xf86SetIntOption(opts, "TapButton2",     tapButton2);
+    pars->tap_action[F3_TAP] = xf86SetIntOption(opts, "TapButton3",     tapButton3);
+    pars->click_action[F1_CLICK1] = xf86SetIntOption(opts, "ClickFinger1", clickFinger1);
+    pars->click_action[F2_CLICK1] = xf86SetIntOption(opts, "ClickFinger2", clickFinger2);
+    pars->click_action[F3_CLICK1] = xf86SetIntOption(opts, "ClickFinger3", clickFinger3);
     pars->circular_scrolling = xf86SetBoolOption(opts, "CircularScrolling", FALSE);
     pars->circular_trigger   = xf86SetIntOption(opts, "CircScrollTrigger", 0);
     pars->circular_pad       = xf86SetBoolOption(opts, "CircularPad", FALSE);
-    pars->palm_detect        = xf86SetBoolOption(opts, "PalmDetect", TRUE);
-    pars->palm_min_width     = xf86SetIntOption(opts, "PalmMinWidth", 10);
-    pars->palm_min_z         = xf86SetIntOption(opts, "PalmMinZ", 200);
+    pars->palm_detect        = xf86SetBoolOption(opts, "PalmDetect", FALSE);
+    pars->palm_min_width     = xf86SetIntOption(opts, "PalmMinWidth", palmMinWidth);
+    pars->palm_min_z         = xf86SetIntOption(opts, "PalmMinZ", palmMinZ);
     pars->single_tap_timeout = xf86SetIntOption(opts, "SingleTapTimeout", 180);
-    pars->press_motion_min_z = xf86SetIntOption(opts, "PressureMotionMinZ", pars->edge_motion_min_z);
-    pars->press_motion_max_z = xf86SetIntOption(opts, "PressureMotionMaxZ", pars->edge_motion_max_z);
+    pars->press_motion_min_z = xf86SetIntOption(opts, "PressureMotionMinZ", pressureMotionMinZ);
+    pars->press_motion_max_z = xf86SetIntOption(opts, "PressureMotionMaxZ", pressureMotionMaxZ);
 
     pars->min_speed = synSetFloatOption(opts, "MinSpeed", minSpeed);
     pars->max_speed = synSetFloatOption(opts, "MaxSpeed", maxSpeed);
-    pars->accl = synSetFloatOption(opts, "AccelFactor", 0.0015);
+    pars->accl = synSetFloatOption(opts, "AccelFactor", 0.050);
     pars->trackstick_speed = synSetFloatOption(opts, "TrackstickSpeed", 40);
     pars->scroll_dist_circ = synSetFloatOption(opts, "CircScrollDelta", 0.1);
     pars->coasting_speed = synSetFloatOption(opts, "CoastingSpeed", 0.0);

@@ -140,6 +140,12 @@ typedef struct _SynapticsPrivateRec
     int avg_width;			/* weighted average of previous fingerWidth values */
 
     int minx, maxx, miny, maxy;         /* min/max dimensions as detected */
+    int minp, maxp, minw, maxw;		/* min/max pressure and finger width as detected */
+    Bool has_left;			/* left button detected for this device */
+    Bool has_right;			/* right button detected for this device */
+    Bool has_middle;			/* middle button detected for this device */
+    Bool has_double;			/* double click detected for this device */
+    Bool has_triple;			/* triple click detected for this device */
 } SynapticsPrivate;
 
 #endif /* _SYNAPTICSSTR_H_ */

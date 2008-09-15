@@ -114,6 +114,8 @@ event_query_axis_ranges(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
     struct input_absinfo abs;
+    unsigned long evbits[NBITS(KEY_MAX)];
+    char buf[256];
     int rc;
 
     SYSCALL(rc = ioctl(local->fd, EVIOCGABS(ABS_X), &abs));
@@ -137,6 +139,41 @@ event_query_axis_ranges(LocalDevicePtr local)
     } else
 	xf86Msg(X_ERROR, "%s: failed to query axis range (%s)\n", local->name,
 		strerror(errno));
+
+    SYSCALL(rc = ioctl(local->fd, EVIOCGABS(ABS_PRESSURE), &abs));
+    if (rc == 0)
+    {
+	xf86Msg(X_INFO, "%s: pressure range %d - %d\n", local->name,
+		abs.minimum, abs.maximum);
+	priv->minp = abs.minimum;
+	priv->maxp = abs.maximum;
+    }
+
+    SYSCALL(rc = ioctl(local->fd, EVIOCGABS(ABS_TOOL_WIDTH), &abs));
+    if (rc == 0)
+    {
+	xf86Msg(X_INFO, "%s: finger width range %d - %d\n", local->name,
+		abs.minimum, abs.maximum);
+	priv->minw = abs.minimum;
+	priv->maxw = abs.maximum;
+    }
+
+    SYSCALL(rc = ioctl(local->fd, EVIOCGBIT(EV_KEY, sizeof(evbits)), evbits));
+    if (rc >= 0)
+    {
+	buf[0] = 0;
+	if ((priv->has_left = TEST_BIT(BTN_LEFT, evbits)))
+	   strcat(buf, " left");
+	if ((priv->has_right = TEST_BIT(BTN_RIGHT, evbits)))
+	   strcat(buf, " right");
+	if ((priv->has_middle = TEST_BIT(BTN_MIDDLE, evbits)))
+	   strcat(buf, " middle");
+	if ((priv->has_double = TEST_BIT(BTN_TOOL_DOUBLETAP, evbits)))
+	   strcat(buf, " double");
+	if ((priv->has_triple = TEST_BIT(BTN_TOOL_TRIPLETAP, evbits)))
+	   strcat(buf, " triple");
+	xf86Msg(X_INFO, "%s: buttons:%s\n", local->name, buf);
+    }
 }
 
 static Bool
