@@ -320,7 +320,7 @@ static void set_default_parameters(LocalDevicePtr local)
      * If the range was autodetected, apply these edge widths to all four
      * sides.
      */
-    if (priv->maxx && priv->maxy)
+    if (priv->minx < priv->maxx && priv->miny < priv->maxy)
     {
         int width, height;
         int ewidth, eheight; /* edge width/height */
