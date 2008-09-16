@@ -782,6 +782,7 @@ static Bool
 DeviceInit(DeviceIntPtr dev)
 {
     LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
+    SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
     unsigned char map[SYN_MAX_BUTTONS + 1];
     int i;
 
@@ -807,11 +808,18 @@ DeviceInit(DeviceIntPtr dev)
 #endif
 			    );
     /* X valuator */
-    xf86InitValuatorAxisStruct(dev, 0, 0, -1, 1, 0, 1);
+    if (priv->minx < priv->maxx)
+	xf86InitValuatorAxisStruct(dev, 0, priv->minx, priv->maxx, 1, 0, 1);
+    else
+	xf86InitValuatorAxisStruct(dev, 0, 0, -1, 1, 0, 1);
     xf86InitValuatorDefaults(dev, 0);
     /* Y valuator */
-    xf86InitValuatorAxisStruct(dev, 1, 0, -1, 1, 0, 1);
+    if (priv->miny < priv->maxy)
+	xf86InitValuatorAxisStruct(dev, 1, priv->miny, priv->maxy, 1, 0, 1);
+    else
+	xf86InitValuatorAxisStruct(dev, 1, 0, -1, 1, 0, 1);
     xf86InitValuatorDefaults(dev, 1);
+
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
     xf86MotionHistoryAllocate(local);
 #endif
