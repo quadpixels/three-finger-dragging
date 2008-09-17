@@ -304,16 +304,16 @@ static void set_default_parameters(LocalDevicePtr local)
     pointer opts = local->options; /* read-only */
     SynapticsSHM *pars = &priv->synpara_default; /* modified */
 
-    float minSpeed, maxSpeed;
-    int horizScrollDelta, vertScrollDelta,
-        edgeMotionMinSpeed, edgeMotionMaxSpeed;
-    int tapMove;
+    int horizScrollDelta, vertScrollDelta;		/* pixels */
+    int tapMove;					/* pixels */
     int l, r, t, b; /* left, right, top, bottom */
-    int fingerLow, fingerHigh, fingerPress;
-    int emulateTwoFingerMinZ;
-    int edgeMotionMinZ, edgeMotionMaxZ;
-    int pressureMotionMinZ, pressureMotionMaxZ;
-    int palmMinWidth, palmMinZ;
+    int edgeMotionMinSpeed, edgeMotionMaxSpeed;		/* pixels/second */
+    double accelFactor;					/* 1/pixels */
+    int fingerLow, fingerHigh, fingerPress;		/* pressure */
+    int emulateTwoFingerMinZ;				/* pressure */
+    int edgeMotionMinZ, edgeMotionMaxZ;			/* pressure */
+    int pressureMotionMinZ, pressureMotionMaxZ;		/* pressure */
+    int palmMinWidth, palmMinZ;				/* pressure */
     int tapButton1, tapButton2, tapButton3;
     int clickFinger1, clickFinger2, clickFinger3;
     Bool vertEdgeScroll, horizEdgeScroll;
@@ -331,11 +331,12 @@ static void set_default_parameters(LocalDevicePtr local)
      */
     if (priv->minx < priv->maxx && priv->miny < priv->maxy)
     {
-        int width, height;
+        int width, height, diag;
         int ewidth, eheight; /* edge width/height */
 
         width = abs(priv->maxx - priv->minx);
         height = abs(priv->maxy - priv->miny);
+        diag = sqrt(width * width + height * height);
         ewidth = width * .04;
         eheight = height * .055;
 
@@ -344,31 +345,25 @@ static void set_default_parameters(LocalDevicePtr local)
         t = priv->miny + eheight;
         b = priv->maxy - eheight;
 
-        /* Default min/max speed are 0.09/0.18. Assuming we have a device that
-         * reports height 3040 (typical y range in synaptics specs) this gives
-         * us the same result. */
-        minSpeed = 273.0/height;
-        maxSpeed = 547.0/height;
-
         /* Again, based on typical x/y range and defaults */
-        horizScrollDelta = width * .025;
-        vertScrollDelta = height * .04;
+        horizScrollDelta = diag * .020;
+        vertScrollDelta = diag * .020;
+        tapMove = diag * .044;
         edgeMotionMinSpeed = 1;
-        edgeMotionMaxSpeed = width * .1;
-        tapMove = width * .055;
+        edgeMotionMaxSpeed = diag * .080;
+        accelFactor = 50.0 / diag;
     } else {
         l = 1900;
         r = 5400;
         t = 1900;
         b = 4000;
-        minSpeed = 0.09;
-        maxSpeed = 0.18;
 
         horizScrollDelta = 100;
         vertScrollDelta = 100;
+        tapMove = 220;
         edgeMotionMinSpeed = 1;
         edgeMotionMaxSpeed = 400;
-        tapMove = 220;
+        accelFactor = 0.010;
     }
 
     if (priv->minp < priv->maxp) {
@@ -483,9 +478,9 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->press_motion_min_z = xf86SetIntOption(opts, "PressureMotionMinZ", pressureMotionMinZ);
     pars->press_motion_max_z = xf86SetIntOption(opts, "PressureMotionMaxZ", pressureMotionMaxZ);
 
-    pars->min_speed = synSetFloatOption(opts, "MinSpeed", minSpeed);
-    pars->max_speed = synSetFloatOption(opts, "MaxSpeed", maxSpeed);
-    pars->accl = synSetFloatOption(opts, "AccelFactor", 0.050);
+    pars->min_speed = synSetFloatOption(opts, "MinSpeed", 0.4);
+    pars->max_speed = synSetFloatOption(opts, "MaxSpeed", 0.7);
+    pars->accl = synSetFloatOption(opts, "AccelFactor", accelFactor);
     pars->trackstick_speed = synSetFloatOption(opts, "TrackstickSpeed", 40);
     pars->scroll_dist_circ = synSetFloatOption(opts, "CircScrollDelta", 0.1);
     pars->coasting_speed = synSetFloatOption(opts, "CoastingSpeed", 0.0);
