@@ -20,3 +20,7 @@
 
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = include src man tools fdi
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = xorg-synaptics.pc
+

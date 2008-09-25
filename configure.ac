@@ -104,6 +104,7 @@ XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XORG, xorg-server xproto $REQUIRED_MODULES)
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
+AC_SUBST([sdkdir])
 
 CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
 AC_SUBST([CFLAGS])
@@ -122,4 +123,5 @@ AC_OUTPUT([Makefile
            man/Makefile
            tools/Makefile
            fdi/Makefile
-           include/Makefile])
+           include/Makefile
+           xorg-synaptics.pc])
