@@ -129,7 +129,7 @@ static void ReadDevDimensions(LocalDevicePtr);
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
 void InitDeviceProperties(LocalDevicePtr local);
-Bool SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop);
+int SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop);
 #endif
 
 InputDriverRec SYNAPTICS = {
@@ -824,7 +824,7 @@ DeviceInit(DeviceIntPtr dev)
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
     InitDeviceProperties(local);
-    XIRegisterPropertyHandler(local->dev, SetProperty, NULL);
+    XIRegisterPropertyHandler(local->dev, SetProperty, NULL, NULL);
 #endif
 
     return Success;

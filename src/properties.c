@@ -103,18 +103,9 @@ InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
     atom = MakeAtom(name, strlen(name), TRUE);
     XIChangeDeviceProperty(dev, atom, XA_INTEGER, format,
                            PropModeReplace, nvalues,
-                           converted, FALSE, FALSE, FALSE);
+                           converted, FALSE);
+    XISetDevicePropertyDeletable(dev, atom, FALSE);
     return atom;
-}
-
-/**
- * Configure the property if the atom is valid.
- */
-static void
-ConfigureProperty(DeviceIntPtr dev, Atom atom, int nvalues, long* values)
-{
-    if (atom)
-        XIConfigureDeviceProperty(dev, atom, FALSE, FALSE, FALSE, nvalues, values);
 }
 
 void
@@ -123,9 +114,7 @@ InitDeviceProperties(LocalDevicePtr local)
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
     SynapticsSHM *para = priv->synpara;
 
-    int i;
     int values[9]; /* we never have more than 9 values in an atom */
-    long valid_values[9];
 
     values[0] = para->left_edge;
     values[1] = para->right_edge;
@@ -216,36 +205,9 @@ InitDeviceProperties(LocalDevicePtr local)
 
     prop_grab = InitAtom(local->dev, SYNAPTICS_PROP_GRAB, 8, 1, &para->grab_event_device);
 
-    /* Configure value ranges as appropriate */
-
-    /* boolean properties */
-    valid_values[0] = TRUE;
-    valid_values[0] = FALSE;
-    ConfigureProperty(local->dev, prop_tap_fast, 2, valid_values);
-    ConfigureProperty(local->dev, prop_scrolledge, 2, valid_values);
-    ConfigureProperty(local->dev, prop_scrolltwofinger, 2, valid_values);
-    ConfigureProperty(local->dev, prop_edgemotion_always, 2, valid_values);
-    ConfigureProperty(local->dev, prop_buttonscroll, 2, valid_values);
-    ConfigureProperty(local->dev, prop_buttonscroll_repeat, 2, valid_values);
-    ConfigureProperty(local->dev, prop_guestmouse, 2, valid_values);
-    ConfigureProperty(local->dev, prop_lockdrags, 2, valid_values);
-    ConfigureProperty(local->dev, prop_circscroll, 2, valid_values);
-    ConfigureProperty(local->dev, prop_circpad, 2, valid_values);
-    ConfigureProperty(local->dev, prop_palm, 2, valid_values);
-    ConfigureProperty(local->dev, prop_grab, 2, valid_values);
-    /* end of boolean props */
-
-    valid_values[0] = 0;
-    valid_values[1] = 1;
-    valid_values[2] = 2;
-    ConfigureProperty(local->dev, prop_off, 3, valid_values);
-
-    for (i = 0; i <= 8; i++)
-        valid_values[i] = i;
-    ConfigureProperty(local->dev, prop_circscroll_trigger, 8, valid_values);
 }
 
-Bool
+int
 SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
 {
     LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
@@ -256,11 +218,11 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
     {
         INT32 *edges;
         if (prop->size != 4 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         edges = (INT32*)prop->data;
         if (edges[0] > edges[1] || edges[2] > edges[3])
-            return FALSE;
+            return BadValue;
 
         para->left_edge   = edges[0];
         para->right_edge  = edges[1];
@@ -271,11 +233,11 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
     {
         INT32 *finger;
         if (prop->size != 3 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         finger = (INT32*)prop->data;
         if (finger[0] > finger[1])
-            return FALSE;
+            return BadValue;
 
         para->finger_low   = finger[0];
         para->finger_high  = finger[1];
@@ -284,14 +246,14 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
     } else if (property == prop_tap_time)
     {
         if (prop->size != 1 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->tap_time = *(INT32*)prop->data;
 
     } else if (property == prop_tap_move)
     {
         if (prop->size != 1 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->tap_move = *(INT32*)prop->data;
     } else if (property == prop_tap_durations)
@@ -299,7 +261,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
         INT32 *timeouts;
 
         if (prop->size != 3 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         timeouts = (INT32*)prop->data;
 
@@ -310,27 +272,27 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
     } else if (property == prop_tap_fast)
     {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->fast_taps = *(BOOL*)prop->data;
 
     } else if (property == prop_middle_timeout)
     {
         if (prop->size != 1 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->emulate_mid_button_time = *(INT32*)prop->data;
     } else if (property == prop_twofinger_pressure)
     {
         if (prop->size != 1 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->emulate_twofinger_z = *(INT32*)prop->data;
     } else if (property == prop_scrolldist)
     {
         INT32 *dist;
         if (prop->size != 2 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         dist = (INT32*)prop->data;
         para->scroll_dist_vert = dist[0];
@@ -339,7 +301,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
     {
         CARD8 *edge;
         if (prop->size != 3 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         edge = (BOOL*)prop->data;
         para->scroll_edge_vert   = edge[0];
@@ -350,7 +312,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
         CARD8 *twofinger;
 
         if (prop->size != 2 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         twofinger = (BOOL*)prop->data;
         para->scroll_twofinger_vert  = twofinger[0];
@@ -363,11 +325,11 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
         CARD32 *pressure;
 
         if (prop->size != 2 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         pressure = (CARD32*)prop->data;
         if (pressure[0] > pressure[1])
-            return FALSE;
+            return BadValue;
 
         para->edge_motion_min_z = pressure[0];
         para->edge_motion_max_z = pressure[1];
@@ -377,11 +339,11 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
         CARD32 *speed;
 
         if (prop->size != 2 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         speed = (CARD32*)prop->data;
         if (speed[0] > speed[1])
-            return FALSE;
+            return BadValue;
 
         para->edge_motion_min_speed = speed[0];
         para->edge_motion_max_speed = speed[1];
@@ -389,7 +351,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
     } else if (property == prop_edgemotion_always)
     {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->edge_motion_use_always = *(BOOL*)prop->data;
 
@@ -398,7 +360,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
         BOOL *scroll;
 
         if (prop->size != 2 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         scroll = (BOOL*)prop->data;
         para->updown_button_scrolling    = scroll[0];
@@ -409,7 +371,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
         BOOL *repeat;
 
         if (prop->size != 2 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         repeat = (BOOL*)prop->data;
         para->updown_button_repeat    = repeat[0];
@@ -417,7 +379,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
     } else if (property == prop_buttonscroll_time)
     {
         if (prop->size != 1 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->scroll_button_repeat = *(INT32*)prop->data;
 
@@ -425,30 +387,30 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
     {
         CARD8 off;
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         off = *(CARD8*)prop->data;
 
         if (off > 2)
-            return FALSE;
+            return BadValue;
 
         para->touchpad_off = off;
     } else if (property == prop_guestmouse)
     {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->guestmouse_off = *(BOOL*)prop->data;
     } else if (property == prop_lockdrags)
     {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->locked_drags = *(BOOL*)prop->data;
     } else if (property == prop_lockdrags_time)
     {
         if (prop->size != 1 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->locked_drag_time = *(INT32*)prop->data;
     } else if (property == prop_tapaction)
@@ -457,7 +419,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
         CARD8 *action;
 
         if (prop->size > MAX_TAP || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         action = (CARD8*)prop->data;
 
@@ -469,7 +431,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
         CARD8 *action;
 
         if (prop->size > MAX_CLICK || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         action = (CARD8*)prop->data;
 
@@ -478,7 +440,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
     } else if (property == prop_circscroll)
     {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->circular_scrolling = *(BOOL*)prop->data;
 
@@ -489,24 +451,24 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
     {
         int trigger;
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         trigger = *(CARD8*)prop->data;
         if (trigger > 8)
-            return FALSE;
+            return BadValue;
 
         para->circular_trigger = trigger;
 
     } else if (property == prop_circpad)
     {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->circular_pad = *(BOOL*)prop->data;
     } else if (property == prop_palm)
     {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->palm_detect = *(BOOL*)prop->data;
     } else if (property == prop_palm_dim)
@@ -514,7 +476,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
         INT32 *dim;
 
         if (prop->size != 2 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         dim = (INT32*)prop->data;
 
@@ -527,18 +489,18 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
     {
         INT32 *press;
         if (prop->size != 2 || prop->format != 32 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         press = (INT32*)prop->data;
         if (press[0] > press[1])
-            return FALSE;
+            return BadValue;
 
         para->press_motion_min_z = press[0];
         para->press_motion_max_z = press[1];
     } else if (property == prop_grab)
     {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
-            return FALSE;
+            return BadMatch;
 
         para->grab_event_device = *(BOOL*)prop->data;
     }
