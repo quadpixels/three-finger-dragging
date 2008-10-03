@@ -498,30 +498,6 @@ static void set_default_parameters(LocalDevicePtr local)
     }
 }
 
-static void set_repeater_fifo(LocalDevicePtr local)
-{
-    SynapticsPrivate *priv = local->private;
-    pointer optList;
-    char *repeater;
-    int status;
-
-    repeater = xf86SetStrOption(local->options, "Repeater", NULL);
-    if (repeater) {
-	/* create repeater fifo */
-	status = mknod(repeater, 666, S_IFIFO);
-	if ((status != 0) && (status != EEXIST)) {
-	    xf86Msg(X_ERROR, "%s can't create repeater fifo\n", local->name);
-	} else {
-	    /* open the repeater fifo */
-	    optList = xf86NewOption("Device", repeater);
-	    if ((priv->fifofd = xf86OpenSerial(optList)) == -1) {
-		xf86Msg(X_ERROR, "%s repeater device open failed\n", local->name);
-	    }
-	}
-	free(repeater);
-    }
-}
-
 /*
  *  called by the module loader for initialization
  */
@@ -606,9 +582,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     priv->comm.buffer = XisbNew(local->fd, 200);
     DBG(9, XisbTrace(priv->comm.buffer, 1));
-
-    priv->fifofd = -1;
-    set_repeater_fifo(local);
 
     if (!QueryHardware(local)) {
 	xf86Msg(X_ERROR, "%s Unable to query/initialize Synaptics hardware.\n", local->name);
@@ -977,18 +950,6 @@ static Bool
 SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivate *priv,
 		    struct SynapticsHwState *hw)
 {
-    if (priv->fifofd >= 0) {
-	/* when there is no synaptics touchpad pipe the data to the repeater fifo */
-	int count = 0;
-	int c;
-	while ((c = XisbRead(priv->comm.buffer)) >= 0) {
-	    unsigned char u = (unsigned char)c;
-	    write(priv->fifofd, &u, 1);
-	    if (++count >= 3)
-		break;
-	}
-	return FALSE;
-    }
     return priv->proto_ops->ReadHwState(local, &priv->synhw, priv->proto_ops,
 					&priv->comm, hw);
 }
@@ -2225,19 +2186,9 @@ QueryHardware(LocalDevicePtr local)
 
     if (priv->proto_ops->QueryHardware(local, &priv->synhw)) {
 	para->synhw = priv->synhw;
-	if (priv->fifofd != -1) {
-	    xf86CloseSerial(priv->fifofd);
-	    priv->fifofd = -1;
-	}
 	return TRUE;
     }
 
-    if (priv->fifofd == -1) {
-	xf86Msg(X_ERROR, "%s no synaptics touchpad detected and no repeater device\n",
-		local->name);
-	return FALSE;
-    }
-    xf86Msg(X_PROBED, "%s no synaptics touchpad, data piped to repeater fifo\n", local->name);
     priv->proto_ops->DeviceOffHook(local);
     return TRUE;
 }

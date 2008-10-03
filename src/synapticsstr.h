@@ -95,7 +95,6 @@ typedef struct _SynapticsPrivateRec
     OsTimerPtr timer;			/* for up/down-button repeat, tap processing, etc */
 
     struct CommData comm;
-    int fifofd;		 		/* fd for fifo */
 
     SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY]; /* movement history */
     int hist_index;			/* Last added entry in move_hist[] */

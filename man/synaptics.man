@@ -185,9 +185,6 @@ If on, edge motion is also used for normal movements.
 .
 If off, egde motion is used only when dragging.
 .TP
-.BI "Option \*qRepeater\*q \*q" string \*q
-Repeater device.
-.TP
 .BI "Option \*qMinSpeed\*q \*q" float \*q
 Minimum speed factor.
 .TP
@@ -620,6 +617,11 @@ is availabe. Fell free to copy it to
 and customize it to your needs. You can pass custom options to the driver
 using x11_options properties. Note that this requires xorg-server-1.5 or
 higher.
+
+.SH "REMOVED OPTIONS"
+The following options are no longer part of the driver configuration:
+.TP
+.BI "Option \*qRepeater\*q \*q" string \*q
 
 .SH "AUTHORS"
 .LP

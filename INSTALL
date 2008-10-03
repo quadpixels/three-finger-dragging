@@ -48,11 +48,9 @@ Section "InputDevice"
   Option	"MinSpeed"		"0.09"
   Option	"MaxSpeed"		"0.18"
   Option	"AccelFactor"		"0.0015"
-#  Option	"Repeater"		"/dev/ps2mouse"
 EndSection
 
 Change the Identifier to the same name as in the ServerLayout section.
-The Option "Repeater" is at the moment for testing.
 
 5. Add the "CorePointer" option to the InputDevice line at the
    ServerLayout section:
