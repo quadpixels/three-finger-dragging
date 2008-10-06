@@ -2186,10 +2186,10 @@ QueryHardware(LocalDevicePtr local)
 
     if (priv->proto_ops->QueryHardware(local, &priv->synhw)) {
 	para->synhw = priv->synhw;
-	return TRUE;
+    } else {
+	priv->proto_ops->DeviceOffHook(local);
     }
 
-    priv->proto_ops->DeviceOffHook(local);
     return TRUE;
 }
 
