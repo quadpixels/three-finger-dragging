@@ -59,15 +59,10 @@
 #endif
 
 #include <unistd.h>
-#include <sys/ioctl.h>
 #include <misc.h>
 #include <xf86.h>
 #include <sys/shm.h>
-#include <sys/ipc.h>
-#include <sys/stat.h>
-#include <errno.h>
 #include <math.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <xf86_OSproc.h>
 #include <xf86Xinput.h>
@@ -92,7 +87,6 @@ typedef enum {
 #define MAX(a, b) (((a)>(b))?(a):(b))
 #define MIN(a, b) (((a)<(b))?(a):(b))
 #define TIME_DIFF(a, b) ((int)((a)-(b)))
-#define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
 #define SQR(x) ((x) * (x))
 
