@@ -2187,6 +2187,7 @@ QueryHardware(LocalDevicePtr local)
     if (priv->proto_ops->QueryHardware(local, &priv->synhw)) {
 	para->synhw = priv->synhw;
     } else {
+	xf86Msg(X_PROBED, "%s: no supported touchpad found\n", local->name);
 	priv->proto_ops->DeviceOffHook(local);
     }
 
