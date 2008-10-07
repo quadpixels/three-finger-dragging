@@ -617,6 +617,17 @@ is available. Fell free to copy it to
 and customize it to your needs. You can pass custom options to the driver
 using x11_options properties. Note that this requires xorg-server-1.5 or
 higher.
+.LP
+If either of
+.BI "Protocol \*q" auto-dev \*q
+(default) or
+.BI "Protocol \*q" event \*q
+is used, the driver initializes defaults based on the capabilities reported by
+the kernel driver. Acceleration and edges are based on the dimensions reported
+by the kernel. If the kernel reports multi-finger detection, two-finger
+vertical scrolling is enabled, horizontal two-finger scrolling is disabled and
+edge scrolling is disabled. If no multi-finger capabilities are reported,
+edge scrolling is enabled for both horizontal and vertical scrolling.
 
 .SH "REMOVED OPTIONS"
 The following options are no longer part of the driver configuration:
