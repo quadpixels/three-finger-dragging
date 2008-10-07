@@ -612,7 +612,7 @@ from the initial position.
 There is an example hal policy file in
 .I ${sourcecode}/fdi/11-x11-synaptics.fdi
 which will enable the driver based on the information if the hardware
-is availabe. Fell free to copy it to
+is available. Fell free to copy it to
 .I /etc/hal/fdi/policy
 and customize it to your needs. You can pass custom options to the driver
 using x11_options properties. Note that this requires xorg-server-1.5 or
