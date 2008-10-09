@@ -22,9 +22,9 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-synaptics],
-        0.15.2,
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
-        xf86-input-synaptics)
+	0.15.2,
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+	xf86-input-synaptics)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)
@@ -90,10 +90,10 @@ fi
 #fi
 
 AC_ARG_WITH(xorg-module-dir,
-            AC_HELP_STRING([--with-xorg-module-dir=DIR],
-                           [Default xorg module directory [[default=$libdir/xorg/modules]]]),
-            [moduledir="$withval"],
-            [moduledir="$libdir/xorg/modules"])
+	    AC_HELP_STRING([--with-xorg-module-dir=DIR],
+			   [Default xorg module directory [[default=$libdir/xorg/modules]]]),
+	    [moduledir="$withval"],
+	    [moduledir="$libdir/xorg/modules"])
 inputdir=${moduledir}/input
 AC_SUBST(inputdir)
 
@@ -111,6 +111,7 @@ AC_SUBST([CFLAGS])
 
 # Checks for libraries.
 PKG_CHECK_MODULES(XLIB, x11) # needed for syndaemon
+PKG_CHECK_MODULES(XRECORD, xtst, AC_DEFINE([HAVE_XRECORD],[],[Use XRecord]), true)
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -119,9 +120,9 @@ XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
 
 AC_OUTPUT([Makefile
-           src/Makefile
-           man/Makefile
-           tools/Makefile
-           fdi/Makefile
-           include/Makefile
-           xorg-synaptics.pc])
+	   src/Makefile
+	   man/Makefile
+	   tools/Makefile
+	   fdi/Makefile
+	   include/Makefile
+	   xorg-synaptics.pc])

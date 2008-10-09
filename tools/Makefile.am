@@ -28,4 +28,4 @@ synclient_SOURCES = synclient.c
 synclient_LDFLAGS = -lm
 
 syndaemon_SOURCES = syndaemon.c
-syndaemon_LDFLAGS = $(XLIB_LIBS)
+syndaemon_LDFLAGS = $(XLIB_LIBS) $(XRECORD_LIBS)
