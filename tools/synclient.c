@@ -240,7 +240,7 @@ is_equal(SynapticsSHM *s1, SynapticsSHM *s2)
 }
 
 static double
-get_time()
+get_time(void)
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -285,7 +285,7 @@ monitor(SynapticsSHM *synshm, int delay)
 }
 
 static void
-usage()
+usage(void)
 {
     fprintf(stderr, "Usage: synclient [-m interval] [-h] [-l] [-V] [-?] [var1=value1 [var2=value2] ...]\n");
     fprintf(stderr, "  -m monitor changes to the touchpad state.\n"

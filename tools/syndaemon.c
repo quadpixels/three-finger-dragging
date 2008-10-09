@@ -52,7 +52,7 @@ static const char *pid_file;
 static unsigned char keyboard_mask[KEYMAP_SIZE];
 
 static void
-usage()
+usage(void)
 {
     fprintf(stderr, "Usage: syndaemon [-i idle-time] [-m poll-delay] [-d] [-t] [-k]\n");
     fprintf(stderr, "  -i How many seconds to wait after the last key press before\n");
@@ -68,7 +68,7 @@ usage()
 }
 
 static int
-enable_touchpad()
+enable_touchpad(void)
 {
     int ret = 0;
     if (pad_disabled) {
@@ -89,7 +89,7 @@ signal_handler(int signum)
 }
 
 static void
-install_signal_handler()
+install_signal_handler(void)
 {
     static int signals[] = {
 	SIGHUP, SIGINT, SIGQUIT, SIGILL, SIGTRAP, SIGABRT,
@@ -156,7 +156,7 @@ keyboard_activity(Display *display)
  * Return non-zero if any physical touchpad button is currently pressed.
  */
 static int
-touchpad_buttons_active()
+touchpad_buttons_active(void)
 {
     int i;
 
@@ -171,7 +171,7 @@ touchpad_buttons_active()
 }
 
 static double
-get_time()
+get_time(void)
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
