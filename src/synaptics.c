@@ -66,8 +66,11 @@
 #include <stdio.h>
 #include <xf86_OSproc.h>
 #include <xf86Xinput.h>
-#include "mipointer.h"
 #include <exevents.h>
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
+#include "mipointer.h"
+#endif
 
 #include "synaptics.h"
 #include "synapticsstr.h"
