@@ -113,7 +113,7 @@ install_signal_handler()
 #endif
 
     for (i = 0; i < sizeof(signals) / sizeof(int); i++) {
-	if (sigaction(signals[i], &act, 0) == -1) {
+	if (sigaction(signals[i], &act, NULL) == -1) {
 	    perror("sigaction");
 	    exit(2);
 	}

@@ -123,7 +123,7 @@ static struct Parameter params[] = {
     DEFINE_PAR("PressureMotionMinFactor", press_motion_min_factor, PT_DOUBLE, 0, 10.0),
     DEFINE_PAR("PressureMotionMaxFactor", press_motion_max_factor, PT_DOUBLE, 0, 10.0),
     DEFINE_PAR("GrabEventDevice",      grab_event_device,       PT_BOOL,   0, 1),
-    { 0, 0, 0, 0, 0 }
+    { NULL, 0, 0, 0, 0 }
 };
 
 static void
