@@ -549,7 +549,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     /* open the touchpad device */
     local->fd = xf86OpenSerial(local->options);
     if (local->fd == -1) {
-	ErrorF("Synaptics driver unable to open device\n");
+	xf86Msg(X_ERROR, "Synaptics driver unable to open device\n");
 	goto SetupProc_fail;
     }
     xf86ErrorFVerb(6, "port opened successfully\n");
