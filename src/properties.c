@@ -505,7 +505,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
         para->grab_event_device = *(BOOL*)prop->data;
     }
 
-    return TRUE;
+    return Success;
 }
 
 #endif
