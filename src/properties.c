@@ -208,11 +208,21 @@ InitDeviceProperties(LocalDevicePtr local)
 }
 
 int
-SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop)
+SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
+            BOOL checkonly)
 {
     LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
     SynapticsSHM *para = priv->synpara;
+    SynapticsSHM tmp;
+
+    /* If checkonly is set, no parameters may be changed. So just let the code
+     * change temporary variables and forget about it. */
+    if (checkonly)
+    {
+        tmp = *para;
+        para = &tmp;
+    }
 
     if (property == prop_edges)
     {

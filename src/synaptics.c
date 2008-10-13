@@ -126,7 +126,8 @@ static void ReadDevDimensions(LocalDevicePtr);
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
 void InitDeviceProperties(LocalDevicePtr local);
-int SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop);
+int SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
+                BOOL checkonly);
 #endif
 
 InputDriverRec SYNAPTICS = {
