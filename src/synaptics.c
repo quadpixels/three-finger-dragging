@@ -401,8 +401,8 @@ static void set_default_parameters(LocalDevicePtr local)
 
     /* Enable tap if we don't have a phys left button */
     tapButton1 = priv->has_left ? 0 : 1;
-    tapButton2 = 0;
-    tapButton3 = 0;
+    tapButton2 = priv->has_left ? 0 : 3;
+    tapButton3 = priv->has_left ? 0 : 2;
 
     /* Enable multifinger-click if we don't have right/middle button,
        otherwise clickFinger is always button 1. */
