@@ -145,6 +145,7 @@ typedef struct _SynapticsPrivateRec
     Bool has_middle;			/* middle button detected for this device */
     Bool has_double;			/* double click detected for this device */
     Bool has_triple;			/* triple click detected for this device */
+    Bool has_pressure;			/* device reports pressure */
 } SynapticsPrivate;
 
 #endif /* _SYNAPTICSSTR_H_ */
