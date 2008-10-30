@@ -29,9 +29,6 @@
 #endif
 
 #include <X11/Xlib.h>
-#include <X11/Xproto.h>
-#include <X11/extensions/record.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -48,7 +45,6 @@ static SynapticsSHM *synshm;
 static int pad_disabled;
 static int disable_taps_only;
 static int ignore_modifier_combos;
-static int ignore_modifier_keys = 0;
 static int background;
 static const char *pid_file;
 
@@ -68,7 +64,6 @@ usage(void)
     fprintf(stderr, "  -t Only disable tapping and scrolling, not mouse movements.\n");
     fprintf(stderr, "  -k Ignore modifier keys when monitoring keyboard activity.\n");
     fprintf(stderr, "  -K Like -k but also ignore Modifier+Key combos.\n");
-    fprintf(stderr, "  -R Don't use the XRecord extension.\n");
     exit(1);
 }
 
@@ -171,7 +166,7 @@ touchpad_buttons_active(void)
 	if (synshm->multi[i])
 	    return 1;
     if (synshm->guest_left || synshm->guest_mid || synshm->guest_right)
-	return 1;
+        return 1;
     return 0;
 }
 
@@ -248,194 +243,6 @@ setup_keyboard_mask(Display *display, int ignore_modifier_keys)
     }
 }
 
-/* ---- the following code is for using the xrecord extension ----- */
-#ifdef HAVE_XRECORD
-
-#define MAX_MODIFIERS 16
-
-/* used for exchanging information with the callback function */
-struct xrecord_callback_results {
-    XModifierKeymap *modifiers;
-    Bool key_event;
-    Bool non_modifier_event;
-    KeyCode pressed_modifiers[MAX_MODIFIERS];
-};
-
-/* test if the xrecord extension is found */
-Bool check_xrecord(Display *display) {
-
-    Bool   found;
-    Status status;
-    int    major_opcode, minor_opcode, first_error;
-    int    version[2];
-
-    found = XQueryExtension(display,
-			    "RECORD",
-			    &major_opcode,
-			    &minor_opcode,
-			    &first_error);
-
-    status = XRecordQueryVersion(display, version, version+1);
-    if (!background && status) {
-	printf("X RECORD extension version %d.%d\n", version[0], version[1]);
-    }
-    return found;
-}
-
-/* called by XRecordProcessReplies() */
-void xrecord_callback( XPointer closure, XRecordInterceptData* recorded_data) {
-
-    struct xrecord_callback_results *cbres;
-    xEvent *xev;
-    int nxev;
-
-    cbres = (struct xrecord_callback_results *)closure;
-    /*printf("something happend, category=%d\n", recorded_data->category); */
-
-    if (recorded_data->category != XRecordFromServer) {
-	XRecordFreeData(recorded_data);
-	return;
-    }
-
-    nxev = recorded_data->data_len / 8;
-    xev = (xEvent *)recorded_data->data;
-    while(nxev--) {
-
-	if ( (xev->u.u.type == KeyPress) || (xev->u.u.type == KeyRelease)) {
-	    int i;
-	    int is_modifier = 0;
-
-	    cbres->key_event = 1; /* remember, a key was pressed. */
-
-	    /* test if it was a modifier */
-	    for (i = 0; i < 8 * cbres->modifiers->max_keypermod; i++) {
-		KeyCode kc = cbres->modifiers->modifiermap[i];
-
-		if (kc == xev->u.u.detail) {
-		    is_modifier = 1; /* yes, it is a modifier. */
-		    break;
-		}
-	    }
-
-	    if (is_modifier) {
-		if (xev->u.u.type == KeyPress) {
-		    for (i=0; i < MAX_MODIFIERS; ++i)
-			if (!cbres->pressed_modifiers[i]) {
-			    cbres->pressed_modifiers[i] = xev->u.u.detail;
-			    break;
-			}
-		} else { /* KeyRelease */
-		    for (i=0; i < MAX_MODIFIERS; ++i)
-			if (cbres->pressed_modifiers[i] == xev->u.u.detail)
-			    cbres->pressed_modifiers[i] = 0;
-		}
-
-	    } else {
-		/* remember, a non-modifier was pressed. */
-		cbres->non_modifier_event = 1;
-	    }
-	}
-
-	xev++;
-    }
-
-    XRecordFreeData(recorded_data); /* cleanup */
-}
-
-static int is_modifier_pressed(const struct xrecord_callback_results *cbres) {
-    int i;
-
-    for (i = 0; i < MAX_MODIFIERS; ++i)
-	if (cbres->pressed_modifiers[i])
-	    return 1;
-
-    return 0;
-}
-
-void record_main_loop(Display* display, double idle_time) {
-
-    struct xrecord_callback_results cbres;
-    XRecordContext context;
-    XRecordClientSpec cspec = XRecordAllClients;
-    Display *dpy_data;
-    XRecordRange *range;
-    int i;
-
-    pad_disabled = 0;
-
-    dpy_data = XOpenDisplay(NULL); /* we need an additional data connection. */
-    range  = XRecordAllocRange();
-
-    range->device_events.first = KeyPress;
-    range->device_events.last  = KeyRelease;
-
-    context =  XRecordCreateContext(dpy_data, 0,
-				    &cspec,1,
-				    &range, 1);
-
-    XRecordEnableContextAsync(dpy_data, context, xrecord_callback, (XPointer)&cbres);
-
-    cbres.modifiers  = XGetModifierMapping(display);
-    /* clear list of modifiers */
-    for (i = 0; i < MAX_MODIFIERS; ++i)
-	cbres.pressed_modifiers[i] = 0;
-
-    while (1) {
-
-	int fd = ConnectionNumber(dpy_data);
-	fd_set read_fds;
-	int ret;
-	int disable_event = 0;
-	struct timeval timeout;
-
-	FD_ZERO(&read_fds);
-	FD_SET(fd, &read_fds);
-
-	ret = select(fd+1, &read_fds, NULL, NULL,
-		     pad_disabled ? &timeout : NULL /* timeout only required for enabling */ );
-
-	if (FD_ISSET(fd, &read_fds)) {
-
-	    cbres.key_event = 0;
-	    cbres.non_modifier_event = 0;
-
-	    XRecordProcessReplies(dpy_data);
-
-	    if (!ignore_modifier_keys && cbres.key_event) {
-		disable_event = 1;
-	    }
-
-	    if (cbres.non_modifier_event &&
-		!(ignore_modifier_combos && is_modifier_pressed(&cbres)) ) {
-		disable_event = 1;
-	    }
-	}
-
-	if (disable_event) {
-	    /* adjust the enable_time */
-	    timeout.tv_sec  = (int)idle_time;
-	    timeout.tv_usec = (idle_time-(double)timeout.tv_sec) * 100000.;
-
-	    if (!pad_disabled) {
-		pad_disabled=1;
-		if (!background) printf("disable touchpad\n");
-
-		if (!synshm->touchpad_off)
-		    synshm->touchpad_off = disable_taps_only ? 2 : 1;
-	    }
-	}
-
-	if (ret == 0 && pad_disabled) { /* timeout => enable event */
-	    enable_touchpad();
-	    if (!background) printf("enable touchpad\n");
-	}
-
-    } /* end while(1) */
-
-    XFreeModifiermap(cbres.modifiers);
-}
-#endif // HAVE_XRECORD
-
 int
 main(int argc, char *argv[])
 {
@@ -444,11 +251,10 @@ main(int argc, char *argv[])
     Display *display;
     int c;
     int shmid;
-    int use_xrecord = 1;
-
+    int ignore_modifier_keys = 0;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "i:m:dtp:kKR?")) != EOF) {
+    while ((c = getopt(argc, argv, "i:m:dtp:kK?")) != EOF) {
 	switch(c) {
 	case 'i':
 	    idle_time = atof(optarg);
@@ -471,9 +277,6 @@ main(int argc, char *argv[])
 	case 'K':
 	    ignore_modifier_combos = 1;
 	    ignore_modifier_keys = 1;
-	    break;
-	case 'R':
-	    use_xrecord = 0;
 	    break;
 	default:
 	    usage();
@@ -530,16 +333,11 @@ main(int argc, char *argv[])
 	    fclose(fd);
 	}
     }
-#ifdef HAVE_XRECORD
-    if (use_xrecord && check_xrecord(display)) {
-	record_main_loop(display, idle_time);
-    } else
-#endif HAVE_XRECORD
-      {
-	setup_keyboard_mask(display, ignore_modifier_keys);
 
-	/* Run the main loop */
-	main_loop(display, idle_time, poll_delay);
-      }
+    setup_keyboard_mask(display, ignore_modifier_keys);
+
+    /* Run the main loop */
+    main_loop(display, idle_time, poll_delay);
+
     return 0;
 }
