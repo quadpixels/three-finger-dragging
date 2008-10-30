@@ -22,7 +22,6 @@
  *
  * Authors:
  *      Peter Osterlund (petero2@telia.com)
- *      William Grant (wgrant@ubuntu.com)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -43,13 +42,9 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 
-#include <X11/Xatom.h>
-#include <X11/extensions/XInput.h>
-
 #include "synaptics.h"
 
 static SynapticsSHM *synshm;
-static int using_synshm;
 static int pad_disabled;
 static int disable_taps_only;
 static int ignore_modifier_combos;
@@ -74,113 +69,15 @@ usage(void)
     fprintf(stderr, "  -k Ignore modifier keys when monitoring keyboard activity.\n");
     fprintf(stderr, "  -K Like -k but also ignore Modifier+Key combos.\n");
     fprintf(stderr, "  -R Don't use the XRecord extension.\n");
-    fprintf(stderr, "  -S Use SHMConfig even if input device properties are available.\n");
     exit(1);
 }
 
-static XDevice
-*device_is_touchpad(Display *display, XDeviceInfo deviceinfo)
-{
-    XDevice *device;
-    Atom *props;
-    int nprops;
-    char *name;
-
-    device = XOpenDevice(display, deviceinfo.id);
-    if (!device)
-	return NULL;
-
-    props = XListDeviceProperties(display, device, &nprops);
-    while (nprops--) {
-	name = XGetAtomName(display, props[nprops]);
-	if (!strcmp(name, "Synaptics Off")) {
-	    free(name);
-	    XFree(props);
-	    return device;
-	}
-	free(name);
-    }
-
-    XFree(props);
-    XCloseDevice(display, device);
-    return NULL;
-}
-
 static int
-get_touchpad_off(Display *display)
-{
-    int numdevices, i;
-    XDeviceInfo *devicelist;
-    XDevice *device;
-    Atom realtype, prop;
-    int realformat;
-    unsigned long nitems, bytes_after;
-    unsigned char *data;
-    int result;
-
-    if (using_synshm)
-	return synshm->touchpad_off;
-
-    devicelist = XListInputDevices (display, &numdevices);
-
-    prop = XInternAtom(display, "Synaptics Off", False);
-
-    for (i = 0; i < numdevices; i++) {
-	if ((devicelist[i].use >= IsXExtensionDevice) &&
-	    (device = device_is_touchpad(display, devicelist[i]))) {
-	    XGetDeviceProperty(display, device, prop, 0, 1, False,
-	                       XA_INTEGER, &realtype, &realformat, &nitems,
-	                       &bytes_after, &data);
-	    if (nitems < 1) {
-		fprintf(stderr, "Touchpad didn't return status information.\n");
-		exit(2);
-	    }
-
-	    result = data[0];
-	    XFree(devicelist);
-	    XFree(data);
-	    XCloseDevice(display, device);
-	    return result;
-	}
-    }
-    XFree(devicelist);
-    return 1;
-}
-
-static void
-set_touchpad_off(Display *display, int value)
-{
-    int numdevices, i;
-    XDeviceInfo *devicelist;
-    XDevice *device;
-    Atom realtype, prop;
-
-    if (using_synshm) {
-	synshm->touchpad_off = value;
-	return;
-    }
-
-    devicelist = XListInputDevices (display, &numdevices);
-
-    prop = XInternAtom(display, "Synaptics Off", False);
-
-    for (i = 0; i < numdevices; i++) {
-	if ((devicelist[i].use >= IsXExtensionDevice) &&
-	    (device = device_is_touchpad(display, devicelist[i]))) {
-	    XChangeDeviceProperty(display, device, prop, XA_INTEGER, 8, PropModeReplace,
-	                          (unsigned char *)&value, 1);
-	    XCloseDevice(display, device);
-	}
-    }
-    XFree(devicelist);
-}
-
-static int
-enable_touchpad(Display *display)
+enable_touchpad(void)
 {
     int ret = 0;
     if (pad_disabled) {
-	set_touchpad_off(display, 0);
+	synshm->touchpad_off = 0;
 	pad_disabled = 0;
 	ret = 1;
     }
@@ -190,10 +87,7 @@ enable_touchpad(Display *display)
 static void
 signal_handler(int signum)
 {
-    Display *display = XOpenDisplay(NULL);
-    enable_touchpad(display);
-    XCloseDisplay(display);
-
+    enable_touchpad();
     if (pid_file)
 	unlink(pid_file);
     kill(getpid(), signum);
@@ -267,54 +161,18 @@ keyboard_activity(Display *display)
  * Return non-zero if any physical touchpad button is currently pressed.
  */
 static int
-touchpad_buttons_active(Display *display)
+touchpad_buttons_active(void)
 {
     int i;
 
-    if (using_synshm) {
-	if (synshm->left || synshm->right || synshm->up || synshm->down)
+    if (synshm->left || synshm->right || synshm->up || synshm->down)
+	return 1;
+    for (i = 0; i < 8; i++)
+	if (synshm->multi[i])
 	    return 1;
-	for (i = 0; i < 8; i++)
-	    if (synshm->multi[i])
-		return 1;
-	if (synshm->guest_left || synshm->guest_mid || synshm->guest_right)
-	    return 1;
-	return 0;
-    }
-    else {
-	XDevice *device;
-	XDeviceInfo *devicelist;
-	XDeviceState *state;
-	XButtonState *buttonstate;
-	XInputClass *class;
-	int numdevices, classno, buttonno;
-	int pressed = 0;
-
-	devicelist = XListInputDevices (display, &numdevices);
-	for (i = 0; i < numdevices; i++)
-	    if ((devicelist[i].use >= IsXExtensionDevice) &&
-	        (device = device_is_touchpad(display, devicelist[i]))) {
-		state = XQueryDeviceState(display, device);
-		class = state->data;
-
-		for (classno = 0; classno < state->num_classes; classno++)
-		{
-		    if (class->class == ButtonClass)
-		    {
-			buttonstate = (XButtonState *)class;
-			for (buttonno = 1; buttonno <= buttonstate->num_buttons; buttonno++)
-			    if (buttonstate->buttons[buttonno / 8] & (1 << (buttonno % 8)))
-				pressed = 1;
-		    }
-		    class = (XInputClass *)((char *) class + class->length);
-		}
-		XFree(state);
-		XCloseDevice(display, device);
-		break;
-	    }
-	XFree(devicelist);
-	return pressed;
-    }
+    if (synshm->guest_left || synshm->guest_mid || synshm->guest_right)
+	return 1;
+    return 0;
 }
 
 static double
@@ -338,20 +196,23 @@ main_loop(Display *display, double idle_time, int poll_delay)
 	current_time = get_time();
 	if (keyboard_activity(display))
 	    last_activity = current_time;
-	if (touchpad_buttons_active(display))
+	if (touchpad_buttons_active())
 	    last_activity = 0.0;
 
 	if (current_time > last_activity + idle_time) {	/* Enable touchpad */
-	    if (enable_touchpad(display)) {
+	    if (enable_touchpad()) {
 		if (!background)
 		    printf("Enable\n");
 	    }
 	} else {			    /* Disable touchpad */
-	    if (!pad_disabled && !get_touchpad_off(display)) {
+	    if (!pad_disabled && !synshm->touchpad_off) {
 		if (!background)
 		    printf("Disable\n");
 		pad_disabled = 1;
-		set_touchpad_off(display, disable_taps_only ? 2 : 1);
+		if (disable_taps_only)
+		    synshm->touchpad_off = 2;
+		else
+		    synshm->touchpad_off = 1;
 	    }
 	}
 
@@ -565,7 +426,7 @@ void record_main_loop(Display* display, double idle_time) {
 	}
 
 	if (ret == 0 && pad_disabled) { /* timeout => enable event */
-	    enable_touchpad(display);
+	    enable_touchpad();
 	    if (!background) printf("enable touchpad\n");
 	}
 
@@ -587,7 +448,7 @@ main(int argc, char *argv[])
 
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "i:m:dtp:kKRS?")) != EOF) {
+    while ((c = getopt(argc, argv, "i:m:dtp:kKR?")) != EOF) {
 	switch(c) {
 	case 'i':
 	    idle_time = atof(optarg);
@@ -614,9 +475,6 @@ main(int argc, char *argv[])
 	case 'R':
 	    use_xrecord = 0;
 	    break;
-	case 'S':
-	    using_synshm = 1;
-	    break;
 	default:
 	    usage();
 	    break;
@@ -632,41 +490,19 @@ main(int argc, char *argv[])
 	exit(2);
     }
 
-    if (!using_synshm) {
-	XDeviceInfo *devicelist;
-	XDevice *device;
-	int numdevices, i;
-
-	using_synshm = 1;
-
-	devicelist = XListInputDevices (display, &numdevices);
-	for (i =0; i < numdevices; i++)
-	    if ((devicelist[i].use >= IsXExtensionDevice) &&
-		(device = device_is_touchpad(display, devicelist[i]))) {
-		XCloseDevice(display, device);
-		using_synshm = 0;
-		break;
-	    }
-	XFree(devicelist);
-    }	
-
-
-    if (using_synshm) {
-        /* Connect to the shared memory area */
-        if ((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0)) == -1) {
-	    if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) == -1) {
-	        fprintf(stderr, "Can't access shared memory area. SHMConfig disabled?\n");
-	        exit(2);
-	    } else {
-	        fprintf(stderr, "Incorrect size of shared memory area. Incompatible driver version?\n");
-	        exit(2);
-	    }
-	}
-
-	if ((synshm = (SynapticsSHM*) shmat(shmid, NULL, 0)) == NULL) {
-	    perror("shmat");
+    /* Connect to the shared memory area */
+    if ((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0)) == -1) {
+	if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) == -1) {
+	    fprintf(stderr, "Can't access shared memory area. SHMConfig disabled?\n");
+	    exit(2);
+	} else {
+	    fprintf(stderr, "Incorrect size of shared memory area. Incompatible driver version?\n");
 	    exit(2);
 	}
+    }
+    if ((synshm = (SynapticsSHM*) shmat(shmid, NULL, 0)) == NULL) {
+	perror("shmat");
+	exit(2);
     }
 
     /* Install a signal handler to restore synaptics parameters on exit */
@@ -698,7 +534,7 @@ main(int argc, char *argv[])
     if (use_xrecord && check_xrecord(display)) {
 	record_main_loop(display, idle_time);
     } else
-#endif /* HAVE_XRECORD */
+#endif HAVE_XRECORD
       {
 	setup_keyboard_mask(display, ignore_modifier_keys);
 

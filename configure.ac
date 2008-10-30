@@ -110,7 +110,7 @@ CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
 AC_SUBST([CFLAGS])
 
 # Checks for libraries.
-PKG_CHECK_MODULES(XLIB, x11 xi) # needed for syndaemon
+PKG_CHECK_MODULES(XLIB, x11) # needed for syndaemon
 PKG_CHECK_MODULES(XRECORD, xtst, AC_DEFINE([HAVE_XRECORD],[],[Use XRecord]), true)
 
 # Checks for header files.
