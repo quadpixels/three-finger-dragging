@@ -48,6 +48,11 @@ Ignore modifier keys when monitoring keyboard activity.
 .TP
 \fB\-K\fP
 Like \-k but also ignore Modifier+Key combos.
+.LP
+.TP
+\fB\-R\fP
+Disable the use of the XRecord extension for detecting keyboard activity.
+This will force the use of polling the keyboard state.
 .SH "ENVIRONMENT VARIABLES"
 .LP
 .TP
