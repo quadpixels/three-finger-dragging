@@ -2,22 +2,13 @@
 <deviceinfo version="0.2">
   <device>
     <match key="info.capabilities" contains="input.touchpad">
-      <match key="info.product" contains="Synaptics TouchPad">
+      <match key="info.product" contains_outof="Synaptics TouchPad;AlpsPS/2 ALPS;appletouch;bcm5974">
         <merge key="input.x11_driver" type="string">synaptics</merge>
 	<!-- Arbitrary options can be passed to the driver using 
 	     the input.x11_options property since xorg-server-1.5. -->
 	<!-- EXAMPLE:
 	<merge key="input.x11_options.LeftEdge" type="string">120</merge>
 	-->
-      </match>
-      <match key="info.product" contains="AlpsPS/2 ALPS">
-        <merge key="input.x11_driver" type="string">synaptics</merge>
-      </match>
-      <match key="info.product" contains="appletouch">
-        <merge key="input.x11_driver" type="string">synaptics</merge>
-      </match>
-      <match key="info.product" contains="bcm5974">
-        <merge key="input.x11_driver" type="string">synaptics</merge>
       </match>
     </match>
   </device>
