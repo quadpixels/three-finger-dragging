@@ -1671,7 +1671,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    priv->circ_scroll_on = FALSE;
 	}
 
-	if (hw->numFingers < 2) {
+	if (!finger || hw->numFingers < 2) {
 	    if (priv->vert_scroll_twofinger_on) {
 		DBG(7, ErrorF("vert two-finger scroll off\n"));
 		priv->vert_scroll_twofinger_on = FALSE;
