@@ -160,7 +160,11 @@ SetupProc(pointer module, pointer options, int *errmaj, int *errmin)
     return module;
 }
 
-XF86ModuleData synapticsModuleData = {&VersionRec, &SetupProc, NULL };
+_X_EXPORT XF86ModuleData synapticsModuleData = {
+    &VersionRec,
+    &SetupProc,
+    NULL
+};
 
 
 /*****************************************************************************
