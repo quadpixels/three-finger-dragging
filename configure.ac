@@ -66,7 +66,7 @@ AM_CONDITIONAL([BUILD_EVENTCOMM], [test "x${BUILD_EVENTCOMM}" = "xyes"])
 if test "x${BUILD_EVENTCOMM}" = "xyes" ; then
 	AC_DEFINE(BUILD_EVENTCOMM, 1, [Optional backend eventcomm enabled])
 fi
-AM_CONDITIONAL([BUILD_PSMCOMM], [test "x$BUILD_PSMCOMM}" = "xyes"])
+AM_CONDITIONAL([BUILD_PSMCOMM], [test "x${BUILD_PSMCOMM}" = "xyes"])
 if test "x${BUILD_PSMCOMM}" = "xyes" ; then
 	AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])
 fi
