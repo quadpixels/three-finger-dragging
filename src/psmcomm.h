@@ -24,6 +24,6 @@
 
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <freebsd/mouse.h>
+#include <sys/mouse.h>
 
 #endif
