@@ -441,7 +441,11 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", horizScrollDelta);
     pars->scroll_dist_horiz = xf86SetIntOption(opts, "HorizScrollDelta", vertScrollDelta);
     pars->scroll_edge_vert = xf86SetBoolOption(opts, "VertEdgeScroll", vertEdgeScroll);
-    pars->special_scroll_area_right  = xf86SetBoolOption(opts, "SpecialScrollAreaRight", TRUE);
+    if (xf86CheckIfOptionUsedByName(opts, "RightEdge")) {
+      pars->special_scroll_area_right  = FALSE;
+    } else {
+      pars->special_scroll_area_right  = xf86SetBoolOption(opts, "SpecialScrollAreaRight", TRUE);
+    }
     pars->scroll_edge_horiz = xf86SetBoolOption(opts, "HorizEdgeScroll", horizEdgeScroll);
     pars->scroll_edge_corner = xf86SetBoolOption(opts, "CornerCoasting", FALSE);
     pars->scroll_twofinger_vert = xf86SetBoolOption(opts, "VertTwoFingerScroll", vertTwoFingerScroll);
@@ -891,7 +895,7 @@ edge_detection(SynapticsPrivate *priv, int x, int y)
     if (priv->synpara->circular_pad)
 	return circular_edge_detection(priv, x, y);
 
-    if (x >= priv->synpara->right_edge)
+    if (x > priv->synpara->right_edge)
 	edge |= RIGHT_EDGE;
     else if (x < priv->synpara->left_edge)
 	edge |= LEFT_EDGE;
@@ -1970,32 +1974,20 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 
     /*
      * Some touchpads have a scroll wheel region where a very large X
-     * coordinate is reported. 
-     *
-     *    We suggest two  solution this problem:
+     * coordinate is reported. In this case for eliminate discontinuity,
+     * we adjust X and simulate new zone which adjacent to right edge.
      */
     if (hw->x <= XMAX_VALID) {
 	if (priv->largest_valid_x < hw->x)
 	    priv->largest_valid_x = hw->x;
     } else {
-      if (!(para->special_scroll_area_right))
-      /*               First:
-      * Adjust the X coordinate to eliminate the discontinuity 
-      * and use it region as 1 coordinate size line.
-      */
 	hw->x = priv->largest_valid_x + 1;
-      else {
-      /*               Second (default):
-       * Adjust the X coordinate to eliminate the discontinuity
-       * and use it region as scroll area automaticly.
-       */	
-	
-	if (priv->synpara->right_edge > priv->largest_valid_x + 1)
-	  priv->synpara->right_edge=priv->largest_valid_x + 1;
-	para->special_scroll_area_right = FALSE;
-       
-	hw->x = priv->largest_valid_x + 1;
-      }
+    /*
+     * If user didn't set right_edge manualy, auto-adjust to bounds of
+     * hardware scroll area.
+     */
+	if (para->special_scroll_area_right)
+	  priv->synpara->right_edge = priv->largest_valid_x;
     }
 
     edge = edge_detection(priv, hw->x, hw->y);
