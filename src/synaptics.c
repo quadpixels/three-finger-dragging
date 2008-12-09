@@ -595,7 +595,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     }
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-    local->history_size = xf86SetIntOption(opts, "HistorySize", 0);
+    local->history_size = xf86SetIntOption(local->options, "HistorySize", 0);
 #endif
 
     xf86ProcessCommonOptions(local, local->options);

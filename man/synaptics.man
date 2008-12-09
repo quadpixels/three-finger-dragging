@@ -634,6 +634,8 @@ edge scrolling is enabled for both horizontal and vertical scrolling.
 The following options are no longer part of the driver configuration:
 .TP
 .BI "Option \*qRepeater\*q \*q" string \*q
+.TP
+.BI "Option \*qHistorySize\*q \*q" integer \*q
 
 .SH "AUTHORS"
 .LP
