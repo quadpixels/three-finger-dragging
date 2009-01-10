@@ -642,4 +642,4 @@ The following options are no longer part of the driver configuration:
 Peter Osterlund <petero2@telia.com> and many others.
 .SH "SEE ALSO"
 .LP
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), synclient(__appmansuffix__), syndaemon(__appmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), synclient(__appmansuffix__), syndaemon(__appmansuffix__)
