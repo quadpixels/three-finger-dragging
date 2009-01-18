@@ -31,12 +31,18 @@
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
 
 #include <X11/Xatom.h>
+#include <xf86.h>
 #include <xf86Xinput.h>
 #include <exevents.h>
 
 #include "synaptics.h"
 #include "synapticsstr.h"
 #include "synaptics-properties.h"
+
+#ifndef XATOM_FLOAT
+#define XATOM_FLOAT "FLOAT"
+#endif
+static Atom float_type;
 
 Atom prop_edges                 = 0;
 Atom prop_finger                = 0;
@@ -70,6 +76,7 @@ Atom prop_palm                  = 0;
 Atom prop_palm_dim              = 0;
 Atom prop_coastspeed            = 0;
 Atom prop_pressuremotion        = 0;
+Atom prop_pressuremotion_factor = 0;
 Atom prop_grab                  = 0;
 
 static Atom
@@ -108,13 +115,37 @@ InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
     return atom;
 }
 
+static Atom
+InitFloatAtom(DeviceIntPtr dev, char *name, int nvalues, float *values)
+{
+    Atom atom;
+
+    atom = MakeAtom(name, strlen(name), TRUE);
+    XIChangeDeviceProperty(dev, atom, float_type, 32, PropModeReplace,
+                           nvalues, values, FALSE);
+    XISetDevicePropertyDeletable(dev, atom, FALSE);
+    return atom;
+}
+
 void
 InitDeviceProperties(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
     SynapticsSHM *para = priv->synpara;
-
     int values[9]; /* we never have more than 9 values in an atom */
+    float fvalues[4]; /* never have more than 4 float values */
+
+    float_type = XIGetKnownProperty(XATOM_FLOAT);
+    if (!float_type)
+    {
+        float_type = MakeAtom(XATOM_FLOAT, strlen(XATOM_FLOAT), TRUE);
+        if (!float_type)
+        {
+            xf86Msg(X_ERROR, "%s: Failed to init float atom. "
+                             "Disabling property support.\n", local->name);
+            return;
+        }
+    }
 
     values[0] = para->left_edge;
     values[1] = para->right_edge;
@@ -154,7 +185,11 @@ InitDeviceProperties(LocalDevicePtr local)
     values[1] = para->scroll_twofinger_horiz;
     prop_scrolltwofinger = InitAtom(local->dev, SYNAPTICS_PROP_SCROLL_TWOFINGER,8, 2, values);
 
-    /* FIXME: MISSING: speed is a float */
+    fvalues[0] = para->min_speed;
+    fvalues[1] = para->max_speed;
+    fvalues[2] = para->accl;
+    fvalues[3] = para->trackstick_speed;
+    prop_speed = InitFloatAtom(local->dev, SYNAPTICS_PROP_SPEED, 4, fvalues);
 
     values[0] = para->edge_motion_min_z;
     values[1] = para->edge_motion_max_z;
@@ -185,7 +220,10 @@ InitDeviceProperties(LocalDevicePtr local)
     prop_clickaction = InitAtom(local->dev, SYNAPTICS_PROP_CLICK_ACTION, 8, MAX_CLICK, values);
 
     prop_circscroll = InitAtom(local->dev, SYNAPTICS_PROP_CIRCULAR_SCROLLING, 8, 1, &para->circular_scrolling);
-    /* FIXME: missing: scroll_dist_circ is a float */
+
+    fvalues[0] = para->scroll_dist_circ;
+    prop_circscroll_dist = InitFloatAtom(local->dev, SYNAPTICS_PROP_CIRCULAR_SCROLLING_DIST, 1, fvalues);
+
     prop_circscroll_trigger = InitAtom(local->dev, SYNAPTICS_PROP_CIRCULAR_SCROLLING_TRIGGER, 8, 1, &para->circular_trigger);
     prop_circpad = InitAtom(local->dev, SYNAPTICS_PROP_CIRCULAR_PAD, 8, 1, &para->circular_pad);
     prop_palm = InitAtom(local->dev, SYNAPTICS_PROP_PALM_DETECT, 8, 1, &para->palm_detect);
@@ -195,13 +233,17 @@ InitDeviceProperties(LocalDevicePtr local)
 
     prop_palm_dim = InitAtom(local->dev, SYNAPTICS_PROP_PALM_DIMENSIONS, 32, 2, values);
 
-    /* FIXME: missing, coastspeed is a float */
+    fvalues[0] = para->coasting_speed;
+    prop_coastspeed = InitFloatAtom(local->dev, SYNAPTICS_PROP_COASTING_SPEED, 1, fvalues);
 
     values[0] = para->press_motion_min_z;
     values[1] = para->press_motion_max_z;
     prop_pressuremotion = InitAtom(local->dev, SYNAPTICS_PROP_PRESSURE_MOTION, 32, 2, values);
 
-    /* FIXME: missing, motion_min/max is a float */
+    fvalues[0] = para->press_motion_min_factor;
+    fvalues[1] = para->press_motion_max_factor;
+
+    prop_pressuremotion_factor = InitFloatAtom(local->dev, SYNAPTICS_PROP_PRESSURE_MOTION_FACTOR, 2, fvalues);
 
     prop_grab = InitAtom(local->dev, SYNAPTICS_PROP_GRAB, 8, 1, &para->grab_event_device);
 
@@ -329,7 +371,17 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->scroll_twofinger_horiz = twofinger[1];
     } else if (property == prop_speed)
     {
-        /* XXX */
+        float *speed;
+
+        if (prop->size != 4 || prop->format != 32 || prop->type != float_type)
+            return BadMatch;
+
+        speed = (float*)prop->data;
+        para->min_speed = speed[0];
+        para->max_speed = speed[1];
+        para->accl = speed[2];
+        para->trackstick_speed = speed[3];
+
     } else if (property == prop_edgemotion_pressure)
     {
         CARD32 *pressure;
@@ -456,7 +508,13 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
 
     } else if (property == prop_circscroll_dist)
     {
-        /* FIXME */
+        float circdist;
+
+        if (prop->size != 1 || prop->format != 32 || prop->type != float_type)
+            return BadMatch;
+
+        circdist = *(float*)prop->data;
+        para->scroll_dist_circ = circdist;
     } else if (property == prop_circscroll_trigger)
     {
         int trigger;
@@ -494,14 +552,21 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->palm_min_z     = dim[1];
     } else if (property == prop_coastspeed)
     {
-        /* FIXME */
-    } else if (property == prop_pressuremotion)
-    {
-        INT32 *press;
-        if (prop->size != 2 || prop->format != 32 || prop->type != XA_INTEGER)
+        float speed;
+
+        if (prop->size != 1 || prop->format != 32 || prop->type != float_type)
             return BadMatch;
 
-        press = (INT32*)prop->data;
+        speed = *(float*)prop->data;
+        para->coasting_speed = speed;
+
+    } else if (property == prop_pressuremotion)
+    {
+        float *press;
+        if (prop->size != 2 || prop->format != 32 || prop->type != float_type)
+            return BadMatch;
+
+        press = (float*)prop->data;
         if (press[0] > press[1])
             return BadValue;
 
