@@ -362,15 +362,15 @@ static void set_default_parameters(LocalDevicePtr local)
 	int range = priv->maxp - priv->minp;
 
 	/* scaling based on defaults below and a pressure of 256 */
-	fingerLow = priv->minp + range * .098;
-	fingerHigh = priv->minp + range * .117;
+	fingerLow = priv->minp + range * (25.0/256);
+	fingerHigh = priv->minp + range * (30.0/256);
 	fingerPress = priv->minp + range * 1.000;
-	emulateTwoFingerMinZ = priv->minp + range * 1.1;
-	edgeMotionMinZ = priv->minp + range * .117;
-	edgeMotionMaxZ = priv->minp + range * .625;
-	pressureMotionMinZ = priv->minp + range * .117;
-	pressureMotionMaxZ = priv->minp + range * .625;
-	palmMinZ = priv->minp + range * .781;
+	emulateTwoFingerMinZ = priv->minp + range * (282.0/256);
+	edgeMotionMinZ = priv->minp + range * (30.0/256);
+	edgeMotionMaxZ = priv->minp + range * (160.0/256);
+	pressureMotionMinZ = priv->minp + range * (30.0/256);
+	pressureMotionMaxZ = priv->minp + range * (160.0/256);
+	palmMinZ = priv->minp + range * (200.0/256);
     } else {
 	fingerLow = 25;
 	fingerHigh = 30;
@@ -387,8 +387,8 @@ static void set_default_parameters(LocalDevicePtr local)
 	int range = priv->maxw - priv->minw;
 
 	/* scaling based on defaults below and a tool width of 16 */
-	palmMinWidth = priv->minw + range * .625;
-	emulateTwoFingerMinW = priv->minw + range * .438;
+	palmMinWidth = priv->minw + range * (10.0/16);
+	emulateTwoFingerMinW = priv->minw + range * (7.0/16);
     } else {
 	palmMinWidth = 10;
 	emulateTwoFingerMinW = 7;
