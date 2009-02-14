@@ -88,6 +88,7 @@ typedef struct _SynapticsSHM
     int emulate_mid_button_time;	    /* Max time between left and right button presses to
 					       emulate a middle button press. */
     int emulate_twofinger_z;		    /* pressure threshold to emulate two finger touch (for Alps) */
+    int emulate_twofinger_w;		    /* Finger width threshold to emulate two finger touch */
     int scroll_dist_vert;		    /* Scrolling distance in absolute coordinates */
     int scroll_dist_horiz;		    /* Scrolling distance in absolute coordinates */
     Bool scroll_edge_vert;		    /* Enable/disable vertical scrolling on right edge */

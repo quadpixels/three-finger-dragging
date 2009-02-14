@@ -57,6 +57,9 @@
 /* 32 bit */
 #define SYNAPTICS_PROP_TWOFINGER_PRESSURE "Synaptics Two-Finger Pressure"
 
+/* 32 bit */
+#define SYNAPTICS_PROP_TWOFINGER_WIDTH "Synaptics Two-Finger Width"
+
 /* 32 bit, 2 values, vert, horiz */
 #define SYNAPTICS_PROP_SCROLL_DISTANCE "Synaptics Scrolling Distance"
 

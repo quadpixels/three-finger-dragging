@@ -302,6 +302,7 @@ static void set_default_parameters(LocalDevicePtr local)
     double accelFactor;					/* 1/pixels */
     int fingerLow, fingerHigh, fingerPress;		/* pressure */
     int emulateTwoFingerMinZ;				/* pressure */
+    int emulateTwoFingerMinW;				/* width */
     int edgeMotionMinZ, edgeMotionMaxZ;			/* pressure */
     int pressureMotionMinZ, pressureMotionMaxZ;		/* pressure */
     int palmMinWidth, palmMinZ;				/* pressure */
@@ -387,9 +388,10 @@ static void set_default_parameters(LocalDevicePtr local)
 
 	/* scaling based on defaults below and a tool width of 16 */
 	palmMinWidth = priv->minw + range * .625;
-
+	emulateTwoFingerMinW = priv->minw + range * .438;
     } else {
 	palmMinWidth = 10;
+	emulateTwoFingerMinW = 7;
     }
 
     /* Enable tap if we don't have a phys left button */
@@ -427,6 +429,7 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->fast_taps = xf86SetBoolOption(opts, "FastTaps", FALSE);
     pars->emulate_mid_button_time = xf86SetIntOption(opts, "EmulateMidButtonTime", 75);
     pars->emulate_twofinger_z = xf86SetIntOption(opts, "EmulateTwoFingerMinZ", emulateTwoFingerMinZ);
+    pars->emulate_twofinger_w = xf86SetIntOption(opts, "EmulateTwoFingerMinW", emulateTwoFingerMinW);
     pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", horizScrollDelta);
     pars->scroll_dist_horiz = xf86SetIntOption(opts, "HorizScrollDelta", vertScrollDelta);
     pars->scroll_edge_vert = xf86SetBoolOption(opts, "VertEdgeScroll", vertEdgeScroll);
@@ -1931,7 +1934,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     }
 
     /* Two finger emulation */
-    if (hw->z >= para->emulate_twofinger_z && hw->numFingers == 1) {
+    if (hw->numFingers == 1 && hw->z >= para->emulate_twofinger_z &&
+        hw->fingerWidth >= para->emulate_twofinger_w) {
 	hw->numFingers = 2;
     }
 

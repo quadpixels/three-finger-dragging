@@ -75,6 +75,7 @@ static struct Parameter params[] = {
     DEFINE_PAR("FastTaps",             fast_taps,               PT_BOOL,   0, 1),
     DEFINE_PAR("EmulateMidButtonTime", emulate_mid_button_time, PT_INT,    0, 1000),
     DEFINE_PAR("EmulateTwoFingerMinZ", emulate_twofinger_z,     PT_INT,    0, 1000),
+    DEFINE_PAR("EmulateTwoFingerMinW", emulate_twofinger_w,     PT_INT,    0, 15),
     DEFINE_PAR("VertScrollDelta",      scroll_dist_vert,        PT_INT,    0, 1000),
     DEFINE_PAR("HorizScrollDelta",     scroll_dist_horiz,       PT_INT,    0, 1000),
     DEFINE_PAR("VertEdgeScroll",       scroll_edge_vert,        PT_BOOL,   0, 1),

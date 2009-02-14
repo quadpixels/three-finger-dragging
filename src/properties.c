@@ -52,6 +52,7 @@ Atom prop_tap_durations         = 0;
 Atom prop_tap_fast              = 0;
 Atom prop_middle_timeout        = 0;
 Atom prop_twofinger_pressure    = 0;
+Atom prop_twofinger_width       = 0;
 Atom prop_scrolldist            = 0;
 Atom prop_scrolledge            = 0;
 Atom prop_scrolltwofinger       = 0;
@@ -172,6 +173,8 @@ InitDeviceProperties(LocalDevicePtr local)
                                    32, 1, &para->emulate_mid_button_time);
     prop_twofinger_pressure = InitAtom(local->dev, SYNAPTICS_PROP_TWOFINGER_PRESSURE,
                                        32, 1, &para->emulate_twofinger_z);
+    prop_twofinger_width = InitAtom(local->dev, SYNAPTICS_PROP_TWOFINGER_WIDTH,
+                                       32, 1, &para->emulate_twofinger_w);
 
     values[0] = para->scroll_dist_vert;
     values[1] = para->scroll_dist_horiz;
@@ -340,6 +343,12 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
             return BadMatch;
 
         para->emulate_twofinger_z = *(INT32*)prop->data;
+    } else if (property == prop_twofinger_width)
+    {
+        if (prop->size != 1 || prop->format != 32 || prop->type != XA_INTEGER)
+            return BadMatch;
+
+        para->emulate_twofinger_w = *(INT32*)prop->data;
     } else if (property == prop_scrolldist)
     {
         INT32 *dist;

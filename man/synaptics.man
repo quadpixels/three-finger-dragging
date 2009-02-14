@@ -242,6 +242,11 @@ Maximum time (in milliseconds) for middle button emulation.
 For touchpads not capable of detecting multiple fingers (Alps), this sets the
 Z pressure threshold to emulate a two finger press.
 .TP
+.BI "Option \*qEmulateTwoFingerMinW\*q \*q" integer \*q
+Some touchpads report a two-finger touch as wide finger. This sets the finger
+width threshold to emulate a two finger press. This feature works best with
+(\fBPalmDetect\fR) off.
+.TP
 .BI "Option \*qTouchpadOff\*q \*q" integer \*q
 Switch off the touchpad.
 .
