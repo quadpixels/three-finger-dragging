@@ -289,17 +289,6 @@ free_param_data(SynapticsPrivate *priv)
     priv->synpara = NULL;
 }
 
-static double
-synSetFloatOption(pointer options, const char *optname, double default_value)
-{
-    char *str_par;
-    double value;
-    str_par = xf86FindOptionValue(options, optname);
-    if ((!str_par) || (sscanf(str_par, "%lf", &value) != 1))
-	return default_value;
-    return value;
-}
-
 static void set_default_parameters(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = local->private; /* read-only */
@@ -484,14 +473,14 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->press_motion_min_z = xf86SetIntOption(opts, "PressureMotionMinZ", pressureMotionMinZ);
     pars->press_motion_max_z = xf86SetIntOption(opts, "PressureMotionMaxZ", pressureMotionMaxZ);
 
-    pars->min_speed = synSetFloatOption(opts, "MinSpeed", 0.4);
-    pars->max_speed = synSetFloatOption(opts, "MaxSpeed", 0.7);
-    pars->accl = synSetFloatOption(opts, "AccelFactor", accelFactor);
-    pars->trackstick_speed = synSetFloatOption(opts, "TrackstickSpeed", 40);
-    pars->scroll_dist_circ = synSetFloatOption(opts, "CircScrollDelta", 0.1);
-    pars->coasting_speed = synSetFloatOption(opts, "CoastingSpeed", 0.0);
-    pars->press_motion_min_factor = synSetFloatOption(opts, "PressureMotionMinFactor", 1.0);
-    pars->press_motion_max_factor = synSetFloatOption(opts, "PressureMotionMaxFactor", 1.0);
+    pars->min_speed = xf86SetRealOption(opts, "MinSpeed", 0.4);
+    pars->max_speed = xf86SetRealOption(opts, "MaxSpeed", 0.7);
+    pars->accl = xf86SetRealOption(opts, "AccelFactor", accelFactor);
+    pars->trackstick_speed = xf86SetRealOption(opts, "TrackstickSpeed", 40);
+    pars->scroll_dist_circ = xf86SetRealOption(opts, "CircScrollDelta", 0.1);
+    pars->coasting_speed = xf86SetRealOption(opts, "CoastingSpeed", 0.0);
+    pars->press_motion_min_factor = xf86SetRealOption(opts, "PressureMotionMinFactor", 1.0);
+    pars->press_motion_max_factor = xf86SetRealOption(opts, "PressureMotionMaxFactor", 1.0);
     pars->grab_event_device = xf86SetBoolOption(opts, "GrabEventDevice", TRUE);
 
     /* Warn about (and fix) incorrectly configured TopEdge/BottomEdge parameters */
