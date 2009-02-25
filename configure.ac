@@ -94,6 +94,7 @@ AC_SUBST([CFLAGS])
 # Checks for libraries.
 PKG_CHECK_MODULES(XLIB, x11) # needed for syndaemon
 PKG_CHECK_MODULES(XRECORD, xtst, AC_DEFINE([HAVE_XRECORD],[],[Use XRecord]), true)
+PKG_CHECK_MODULES(XI, xi);
 
 # Checks for header files.
 AC_HEADER_STDC

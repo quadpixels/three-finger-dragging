@@ -13,13 +13,14 @@ synclient [\fI\-hlV?\fP] [var1=value1 [var2=value2] ...]
 .SH "DESCRIPTION"
 .LP
 This program lets you change your Synaptics TouchPad driver for
-XOrg/XFree86 server parameters while X is running if you enabled
-SHMConfig "on" in your XOrg/XFree86 configuration.
-.TP
-WARNING: This is not secure if you are in an untrusted multiuser
-environment.
-.
-All local users can change the parameters at any time.
+XOrg/XFree86 server parameters while X is running. 
+
+This program provides two mechanism: via input device properties (default) and
+via a shared memory (SHM) area. SHM must be enabled through SHMConfig "on" in
+your XOrg/XFree86 configuration.
+
+WARNING: The SHM mechanism is not secure if you are in an untrusted multiuser
+environment.  All local users can change the parameters at any time.
 .SH "OPTIONS"
 .LP
 .TP
@@ -30,6 +31,7 @@ Interval specifies how often (in ms) to poll the touchpad state.
 .
 Whenever a change in the touchpad state is detected, one line of
 output is generated that describes the current state of the touchpad.
+This option is only available in SHM mode.
 .
 The following data is included in the output.
 .RS
@@ -98,7 +100,7 @@ positions, called gdx and gdy.
 .RE
 .TP
 \fB\-h\fR
-Show detected hardware properties.
+Show detected hardware properties. Only available in SHM mode.
 .TP
 \fB\-l\fR
 List current user settings.
@@ -108,6 +110,9 @@ Print version number and exit.
 .TP
 \fB\-?\fR
 Show the help message.
+.TP
+\fB\-s\fR
+Force SHM mode. Implicit if -m or -h is specified.
 .TP
 \fBvar=value\fR
 Set user parameter \fIvar\fR to \fIvalue\fR.
@@ -124,7 +129,7 @@ To disable EdgeMotionSpeed:
 .LP
 synclient EdgeMotionSpeed=0
 .LP
-To monitor touchpad events:
+To monitor touchpad events (requires SHM):
 .LP
 synclient \-m 100
 .SH "AUTHORS"
