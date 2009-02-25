@@ -71,24 +71,6 @@ if test "x${BUILD_PSMCOMM}" = "xyes" ; then
 	AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])
 fi
 
-#AC_DEFINE(XFree86LOADER,1,[Stub define for loadable drivers])
-#
-#AC_ARG_ENABLE(XINPUT, AS_HELP_STRING([--enable-xinput],
-#              [Build XInput support (default: yes)]),
-#              [XINPUT=$enableval],[XINPUT=yes])
-#AM_CONDITIONAL(XINPUT, test "x$XINPUT" = "xyes")
-#if test "x$XINPUT" = "xyes" ; then
-#    AC_DEFINE(XINPUT,1,[Enable XInput support])
-#fi
-#
-#AC_ARG_ENABLE(XKB, AS_HELP_STRING([--enable-xkb],
-#              [Build XKB support (default: yes)]),
-#              [XKB=$enableval],[XKB=yes])
-#AM_CONDITIONAL(XKB, test "x$XKB" = "xyes")
-#if test "x$XKB" = "xyes" ; then
-#    AC_DEFINE(XKB,1,[Enable XKB support])
-#fi
-
 AC_ARG_WITH(xorg-module-dir,
             AC_HELP_STRING([--with-xorg-module-dir=DIR],
                            [Default xorg module directory [[default=$libdir/xorg/modules]]]),
