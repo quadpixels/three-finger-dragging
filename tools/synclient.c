@@ -128,7 +128,7 @@ static struct Parameter params[] = {
 };
 
 static void
-show_hw_info(SynapticsSHM *synshm)
+shm_show_hw_info(SynapticsSHM *synshm)
 {
     printf("Hardware properties:\n");
     if (synshm->synhw.model_id) {
@@ -144,7 +144,7 @@ show_hw_info(SynapticsSHM *synshm)
 }
 
 static void
-show_settings(SynapticsSHM *synshm)
+shm_show_settings(SynapticsSHM *synshm)
 {
     int i;
 
@@ -166,7 +166,7 @@ show_settings(SynapticsSHM *synshm)
 }
 
 static void
-set_variables(SynapticsSHM *synshm, int argc, char *argv[], int first_cmd)
+shm_set_variables(SynapticsSHM *synshm, int argc, char *argv[], int first_cmd)
 {
     int i;
     for (i = first_cmd; i < argc; i++) {
@@ -249,7 +249,7 @@ get_time(void)
 }
 
 static void
-monitor(SynapticsSHM *synshm, int delay)
+shm_monitor(SynapticsSHM *synshm, int delay)
 {
     int header = 0;
     SynapticsSHM old;
@@ -285,6 +285,24 @@ monitor(SynapticsSHM *synshm, int delay)
     }
 }
 
+/** Init and return SHM area or NULL on error */
+static  SynapticsSHM*
+shm_init()
+{
+    SynapticsSHM *synshm = NULL;
+    int shmid = 0;
+
+    if ((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0)) == -1) {
+	if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) == -1)
+	    fprintf(stderr, "Can't access shared memory area. SHMConfig disabled?\n");
+	else
+	    fprintf(stderr, "Incorrect size of shared memory area. Incompatible driver version?\n");
+    } else if ((synshm = (SynapticsSHM*) shmat(shmid, NULL, 0)) == NULL)
+	perror("shmat");
+
+    return synshm;
+}
+
 static void
 usage(void)
 {
@@ -302,8 +320,7 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-    SynapticsSHM *synshm;
-    int shmid;
+    SynapticsSHM *synshm = NULL;
 
     int c;
     int delay = -1;
@@ -338,31 +355,20 @@ main(int argc, char *argv[])
 	usage();
 
     /* Connect to the shared memory area */
-    if ((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0)) == -1) {
-	if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) == -1) {
-	    fprintf(stderr, "Can't access shared memory area. SHMConfig disabled?\n");
-	    exit(1);
-	} else {
-	    fprintf(stderr, "Incorrect size of shared memory area. Incompatible driver version?\n");
-	    exit(1);
-	}
-    }
-    if ((synshm = (SynapticsSHM*) shmat(shmid, NULL, 0)) == NULL) {
-	perror("shmat");
-	exit(1);
-    }
+    synshm = shm_init();
+    if (!synshm)
+	return 1;
 
     /* Perform requested actions */
-    if (dump_hw) {
-	show_hw_info(synshm);
-    }
-    set_variables(synshm, argc, argv, first_cmd);
-    if (dump_settings) {
-	show_settings(synshm);
-    }
-    if (do_monitor) {
-	monitor(synshm, delay);
-    }
+    if (dump_hw)
+	shm_show_hw_info(synshm);
 
-    exit(0);
+    shm_set_variables(synshm, argc, argv, first_cmd);
+
+    if (dump_settings)
+	shm_show_settings(synshm);
+    if (do_monitor)
+	shm_monitor(synshm, delay);
+
+    return 0;
 }
