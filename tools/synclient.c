@@ -165,48 +165,65 @@ shm_show_settings(SynapticsSHM *synshm)
     }
 }
 
+static double
+parse_cmd(char* cmd, struct Parameter** par)
+{
+    char *eqp = index(cmd, '=');
+    *par = NULL;
+
+    if (eqp) {
+	int j;
+	int found = 0;
+	*eqp = 0;
+	for (j = 0; params[j].name; j++) {
+	    if (strcasecmp(cmd, params[j].name) == 0) {
+		found = 1;
+		break;
+	    }
+	}
+	if (found) {
+	    double val = atof(&eqp[1]);
+	    *par = &params[j];
+
+	    if (val < (*par)->min_val)
+		val = (*par)->min_val;
+	    if (val > (*par)->max_val)
+		val = (*par)->max_val;
+
+	    return val;
+	} else {
+	    printf("Unknown parameter %s\n", cmd);
+	}
+    } else {
+	printf("Invalid command: %s\n", cmd);
+    }
+
+    return 0;
+}
+
 static void
 shm_set_variables(SynapticsSHM *synshm, int argc, char *argv[], int first_cmd)
 {
     int i;
+    struct Parameter *par;
+    double val;
+
     for (i = first_cmd; i < argc; i++) {
-	char *cmd = argv[i];
-	char *eqp = index(cmd, '=');
-	if (eqp) {
-	    int j;
-	    int found = 0;
-	    *eqp = 0;
-	    for (j = 0; params[j].name; j++) {
-		if (strcasecmp(cmd, params[j].name) == 0) {
-		    found = 1;
-		    break;
-		}
-	    }
-	    if (found) {
-		double val = atof(&eqp[1]);
-		struct Parameter* par = &params[j];
+	val = parse_cmd(argv[i], &par);
 
-		if (val < par->min_val)
-		    val = par->min_val;
-		if (val > par->max_val)
-		    val = par->max_val;
+	if (!par)
+	    continue;
 
-		switch (par->type) {
-		case PT_INT:
-		    *(int*)((char*)synshm + par->offset) = (int)rint(val);
-		    break;
-		case PT_BOOL:
-		    *(Bool*)((char*)synshm + par->offset) = (Bool)rint(val);
-		    break;
-		case PT_DOUBLE:
-		    *(double*)((char*)synshm + par->offset) = val;
-		    break;
-		}
-	    } else {
-		printf("Unknown parameter %s\n", cmd);
-	    }
-	} else {
-	    printf("Invalid command: %s\n", cmd);
+	switch (par->type) {
+	    case PT_INT:
+		*(int*)((char*)synshm + par->offset) = (int)rint(val);
+		break;
+	    case PT_BOOL:
+		*(Bool*)((char*)synshm + par->offset) = (Bool)rint(val);
+		break;
+	    case PT_DOUBLE:
+		*(double*)((char*)synshm + par->offset) = val;
+		break;
 	}
     }
 }
