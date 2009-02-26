@@ -80,7 +80,6 @@ inputdir=${moduledir}/input
 AC_SUBST(inputdir)
 
 # Checks for extensions
-XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
 
 # Checks for pkg-config packages
