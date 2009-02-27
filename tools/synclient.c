@@ -525,7 +525,7 @@ dp_set_variables(Display *dpy, XDevice* dev, int argc, char *argv[], int first_c
 
     float *f;
     int *n;
-    BOOL *b;
+    char *b;
 
     float_type = XInternAtom(dpy, XATOM_FLOAT, True);
     if (!float_type)
@@ -600,7 +600,7 @@ dp_show_settings(Display *dpy, XDevice *dev)
 
     float *f;
     int *i;
-    BOOL *b;
+    char *b;
 
     float_type = XInternAtom(dpy, XATOM_FLOAT, True);
     if (!float_type)
@@ -630,7 +630,7 @@ dp_show_settings(Display *dpy, XDevice *dev)
 		    break;
 		}
 
-		b = (BOOL*)data;
+		b = (char*)data;
 		printf("    %-23s = %d\n", par->name, b[par->prop_offset]);
 		break;
 	    case 32:
