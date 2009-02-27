@@ -47,6 +47,10 @@
 #include "synaptics-properties.h"
 #include <xserver-properties.h>
 
+#ifndef XATOM_FLOAT
+#define XATOM_FLOAT "FLOAT"
+#endif
+
 enum ParaType {
     PT_INT,
     PT_BOOL,
