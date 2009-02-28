@@ -508,7 +508,9 @@ dp_get_device(Display *dpy)
 unwind:
     XFree(properties);
     XFreeDeviceList(info);
-    if (error && dev)
+    if (!dev)
+        fprintf(stderr, "Unable to find a synaptics device.\n");
+    else if (error && dev)
     {
 	XCloseDevice(dpy, dev);
 	dev = NULL;
