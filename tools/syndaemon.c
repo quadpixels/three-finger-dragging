@@ -46,6 +46,13 @@
 
 #include "synaptics.h"
 
+enum TouchpadState {
+    TouchpadOn = 0,
+    TouchpadOff = 1,
+    TappingOff = 2
+};
+
+
 static SynapticsSHM *synshm;
 static int pad_disabled;
 static int disable_taps_only;
@@ -74,22 +81,32 @@ usage(void)
     exit(1);
 }
 
-static int
-enable_touchpad(void)
+/**
+ * Toggle touchpad enabled/disabled state, decided by value.
+ */
+static void
+toggle_touchpad(enum TouchpadState value)
 {
-    int ret = 0;
-    if (pad_disabled) {
-	synshm->touchpad_off = 0;
-	pad_disabled = 0;
-	ret = 1;
-    }
-    return ret;
+    if (pad_disabled && !value)
+    {
+        if (!background)
+            printf("Enable\n");
+    } else if (!pad_disabled && value)
+    {
+        if (!background)
+            printf("Disable\n");
+    } else
+        return;
+
+    pad_disabled = value;
+    synshm->touchpad_off = value;
 }
 
 static void
 signal_handler(int signum)
 {
-    enable_touchpad();
+    toggle_touchpad(TouchpadOn);
+
     if (pid_file)
 	unlink(pid_file);
     kill(getpid(), signum);
@@ -202,20 +219,9 @@ main_loop(Display *display, double idle_time, int poll_delay)
 	    last_activity = 0.0;
 
 	if (current_time > last_activity + idle_time) {	/* Enable touchpad */
-	    if (enable_touchpad()) {
-		if (!background)
-		    printf("Enable\n");
-	    }
+	    toggle_touchpad(TouchpadOn);
 	} else {			    /* Disable touchpad */
-	    if (!pad_disabled && !synshm->touchpad_off) {
-		if (!background)
-		    printf("Disable\n");
-		pad_disabled = 1;
-		if (disable_taps_only)
-		    synshm->touchpad_off = 2;
-		else
-		    synshm->touchpad_off = 1;
-	    }
+	    toggle_touchpad(disable_taps_only ? TappingOff : TouchpadOff);
 	}
 
 	usleep(poll_delay);
@@ -418,17 +424,11 @@ void record_main_loop(Display* display, double idle_time) {
 	    timeout.tv_sec  = (int)idle_time;
 	    timeout.tv_usec = (idle_time-(double)timeout.tv_sec) * 1.e6;
 
-	    if (!pad_disabled) {
-		pad_disabled=1;
-		if (!background) printf("disable touchpad\n");
-
-		if (!synshm->touchpad_off)
-		    synshm->touchpad_off = disable_taps_only ? 2 : 1;
-	    }
+	    toggle_touchpad(disable_taps_only ? TappingOff : TouchpadOff);
 	}
 
 	if (ret == 0 && pad_disabled) { /* timeout => enable event */
-	    enable_touchpad();
+	    toggle_touchpad(TouchpadOn);
 	    if (!background) printf("enable touchpad\n");
 	}
 
