@@ -84,7 +84,7 @@ usage(void)
     fprintf(stderr, "  -t Only disable tapping and scrolling, not mouse movements.\n");
     fprintf(stderr, "  -k Ignore modifier keys when monitoring keyboard activity.\n");
     fprintf(stderr, "  -K Like -k but also ignore Modifier+Key combos.\n");
-    fprintf(stderr, "  -R Don't use the XRecord extension.\n");
+    fprintf(stderr, "  -R Use the XRecord extension.\n");
     exit(1);
 }
 
@@ -546,7 +546,7 @@ main(int argc, char *argv[])
     double idle_time = 2.0;
     int poll_delay = 200000;	    /* 200 ms */
     int c;
-    int use_xrecord = 1;
+    int use_xrecord = 0;
 
     /* Parse command line parameters */
     while ((c = getopt(argc, argv, "i:m:dtp:kKR?")) != EOF) {
@@ -577,7 +577,7 @@ main(int argc, char *argv[])
             use_shm = 1;
             break;
 	case 'R':
-	    use_xrecord = 0;
+	    use_xrecord = 1;
 	    break;
 	default:
 	    usage();

@@ -8,7 +8,7 @@ the touchpad when the keyboard is being used.
 .SH "SYNTAX"
 .LP
 syndaemon [\fI\-i idle\-time\fP] [\fI\-d\fP] [\fI\-p pid\-file\fP]
-[\fI\-t\fP] [\fI\-k\fP] [\fI\-K\fP] [\fI\-s\fP]
+[\fI\-t\fP] [\fI\-k\fP] [\fI\-K\fP] [\fI\-R\fP] [\fI\-s\fP]
 .SH "DESCRIPTION"
 .LP
 Disabling the touchpad while typing avoids unwanted movements of the
@@ -49,8 +49,8 @@ Like \-k but also ignore Modifier+Key combos.
 .LP
 .TP
 \fB\-R\fP
-Disable the use of the XRecord extension for detecting keyboard activity.
-This will force the use of polling the keyboard state.
+Use the XRecord extension for detecting keyboard activity instead of polling
+the keyboard state.
 .LP
 .TP
 \fB\-s\fP
