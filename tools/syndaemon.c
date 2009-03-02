@@ -438,6 +438,28 @@ void record_main_loop(Display* display, double idle_time) {
 }
 #endif /* HAVE_XRECORD */
 
+static int
+shm_init()
+{
+    int shmid;
+
+    /* Connect to the shared memory area */
+    if ((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0)) == -1) {
+	if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) == -1) {
+	    fprintf(stderr, "Can't access shared memory area. SHMConfig disabled?\n");
+	    return 0;
+	} else {
+	    fprintf(stderr, "Incorrect size of shared memory area. Incompatible driver version?\n");
+	    return 0;
+	}
+    }
+    if ((synshm = (SynapticsSHM*) shmat(shmid, NULL, 0)) == NULL) {
+	perror("shmat");
+	return 0;
+    }
+    return 1;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -445,7 +467,6 @@ main(int argc, char *argv[])
     int poll_delay = 200000;	    /* 200 ms */
     Display *display;
     int c;
-    int shmid;
     int use_xrecord = 1;
 
 
@@ -492,20 +513,8 @@ main(int argc, char *argv[])
 	exit(2);
     }
 
-    /* Connect to the shared memory area */
-    if ((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0)) == -1) {
-	if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) == -1) {
-	    fprintf(stderr, "Can't access shared memory area. SHMConfig disabled?\n");
-	    exit(2);
-	} else {
-	    fprintf(stderr, "Incorrect size of shared memory area. Incompatible driver version?\n");
-	    exit(2);
-	}
-    }
-    if ((synshm = (SynapticsSHM*) shmat(shmid, NULL, 0)) == NULL) {
-	perror("shmat");
+    if (!shm_init())
 	exit(2);
-    }
 
     /* Install a signal handler to restore synaptics parameters on exit */
     install_signal_handler();
