@@ -542,8 +542,15 @@ main(int argc, char *argv[])
 	}
     }
 #ifdef HAVE_XRECORD
-    if (use_xrecord && check_xrecord(display)) {
-	record_main_loop(display, idle_time);
+    if (use_xrecord)
+    {
+	if(check_xrecord(display))
+	    record_main_loop(display, idle_time);
+	else {
+	    fprintf(stderr, "Use of XRecord requested, but failed to "
+		    " initialize.\n");
+            exit(2);
+        }
     } else
 #endif /* HAVE_XRECORD */
       {
