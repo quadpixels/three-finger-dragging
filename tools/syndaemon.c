@@ -65,7 +65,7 @@ usage(void)
     fprintf(stderr, "     enabling the touchpad. (default is 2.0s)\n");
     fprintf(stderr, "  -m How many milli-seconds to wait until next poll.\n");
     fprintf(stderr, "     (default is 200ms)\n");
-    fprintf(stderr, "  -d Start as a daemon, ie in the background.\n");
+    fprintf(stderr, "  -d Start as a daemon, i.e. in the background.\n");
     fprintf(stderr, "  -p Create a pid file with the specified name.\n");
     fprintf(stderr, "  -t Only disable tapping and scrolling, not mouse movements.\n");
     fprintf(stderr, "  -k Ignore modifier keys when monitoring keyboard activity.\n");
