@@ -29,6 +29,8 @@
 #endif
 
 #include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/extensions/XInput.h>
 #ifdef HAVE_XRECORD
 #include <X11/Xproto.h>
 #include <X11/extensions/record.h>
@@ -45,6 +47,7 @@
 #include <sys/stat.h>
 
 #include "synaptics.h"
+#include "synaptics-properties.h"
 
 enum TouchpadState {
     TouchpadOn = 0,
@@ -60,6 +63,10 @@ static int ignore_modifier_combos;
 static int ignore_modifier_keys;
 static int background;
 static const char *pid_file;
+static int use_shm;
+static Display *display;
+static XDevice *dev;
+static Atom touchpad_off_prop;
 
 #define KEYMAP_SIZE 32
 static unsigned char keyboard_mask[KEYMAP_SIZE];
@@ -99,7 +106,15 @@ toggle_touchpad(enum TouchpadState value)
         return;
 
     pad_disabled = value;
-    synshm->touchpad_off = value;
+    if (use_shm)
+        synshm->touchpad_off = value;
+    else {
+        unsigned char data = value;
+        /* This potentially overwrites a different client's setting, but ...*/
+	XChangeDeviceProperty(display, dev, touchpad_off_prop, XA_INTEGER, 8,
+				PropModeReplace, &data, 1);
+	XFlush(display);
+    }
 }
 
 static void
@@ -215,7 +230,7 @@ main_loop(Display *display, double idle_time, int poll_delay)
 	current_time = get_time();
 	if (keyboard_activity(display))
 	    last_activity = current_time;
-	if (touchpad_buttons_active())
+	if (use_shm && touchpad_buttons_active())
 	    last_activity = 0.0;
 
 	if (current_time > last_activity + idle_time) {	/* Enable touchpad */
@@ -438,6 +453,71 @@ void record_main_loop(Display* display, double idle_time) {
 }
 #endif /* HAVE_XRECORD */
 
+static XDevice *
+dp_get_device(Display *dpy)
+{
+    XDevice* dev		= NULL;
+    XDeviceInfo *info		= NULL;
+    int ndevices		= 0;
+    Atom touchpad_type		= 0;
+    Atom synaptics_property	= 0;
+    Atom *properties		= NULL;
+    int nprops			= 0;
+    int error			= 0;
+
+    touchpad_type = XInternAtom(dpy, XI_TOUCHPAD, True);
+    touchpad_off_prop = XInternAtom(dpy, SYNAPTICS_PROP_OFF, True);
+    info = XListInputDevices(dpy, &ndevices);
+
+    while(ndevices--) {
+	if (info[ndevices].type == touchpad_type) {
+	    dev = XOpenDevice(dpy, info[ndevices].id);
+	    if (!dev) {
+		fprintf(stderr, "Failed to open device '%s'.\n",
+			info[ndevices].name);
+		error = 1;
+		goto unwind;
+	    }
+
+	    properties = XListDeviceProperties(dpy, dev, &nprops);
+	    if (!properties || !nprops)
+	    {
+	  fprintf(stderr, "No properties on device '%s'.\n",
+		  info[ndevices].name);
+	  error = 1;
+	  goto unwind;
+      }
+
+	    while(nprops--)
+	    {
+	  if (properties[nprops] == synaptics_property)
+	      break;
+      }
+	    if (!nprops)
+	    {
+	  fprintf(stderr, "No synaptics properties on device '%s'.\n",
+		  info[ndevices].name);
+	  error = 1;
+	  goto unwind;
+      }
+
+	    break; /* Yay, device is suitable */
+	}
+    }
+
+unwind:
+    XFree(properties);
+    XFreeDeviceList(info);
+    if (!dev)
+	fprintf(stderr, "Unable to find a synaptics device.\n");
+    else if (error && dev)
+    {
+	XCloseDevice(dpy, dev);
+	dev = NULL;
+    }
+    return dev;
+}
+
 static int
 shm_init()
 {
@@ -465,10 +545,8 @@ main(int argc, char *argv[])
 {
     double idle_time = 2.0;
     int poll_delay = 200000;	    /* 200 ms */
-    Display *display;
     int c;
     int use_xrecord = 1;
-
 
     /* Parse command line parameters */
     while ((c = getopt(argc, argv, "i:m:dtp:kKR?")) != EOF) {
@@ -495,6 +573,9 @@ main(int argc, char *argv[])
 	    ignore_modifier_combos = 1;
 	    ignore_modifier_keys = 1;
 	    break;
+        case 's':
+            use_shm = 1;
+            break;
 	case 'R':
 	    use_xrecord = 0;
 	    break;
@@ -513,7 +594,9 @@ main(int argc, char *argv[])
 	exit(2);
     }
 
-    if (!shm_init())
+    if (use_shm && !shm_init())
+	exit(2);
+    else if (!use_shm && !(dev = dp_get_device(display)))
 	exit(2);
 
     /* Install a signal handler to restore synaptics parameters on exit */

@@ -8,14 +8,12 @@ the touchpad when the keyboard is being used.
 .SH "SYNTAX"
 .LP
 syndaemon [\fI\-i idle\-time\fP] [\fI\-d\fP] [\fI\-p pid\-file\fP]
-[\fI\-t\fP] [\fI\-k\fP] [\fI\-K\fP]
+[\fI\-t\fP] [\fI\-k\fP] [\fI\-K\fP] [\fI\-s\fP]
 .SH "DESCRIPTION"
 .LP
 Disabling the touchpad while typing avoids unwanted movements of the
 pointer that could lead to giving focus to the wrong window.
 .
-This program needs SHMConfig "on" in your XOrg/XFree86 Synaptics
-Touchpad configuration.
 .SH "OPTIONS"
 .LP
 .TP
@@ -53,6 +51,13 @@ Like \-k but also ignore Modifier+Key combos.
 \fB\-R\fP
 Disable the use of the XRecord extension for detecting keyboard activity.
 This will force the use of polling the keyboard state.
+.LP
+.TP
+\fB\-s\fP
+Use a shared memory area to enable/disable the touchpad instead of device
+properties. WARNING: The SHM mechanism is not secure if you are in an untrusted multiuser
+environment. All local users can change the parameters at any time. This
+option requires the driver Option "SHMConfig" to be enabled.
 .SH "ENVIRONMENT VARIABLES"
 .LP
 .TP
