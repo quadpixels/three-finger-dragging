@@ -42,8 +42,6 @@ AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CC
 
-AH_TOP([#include "xorg-server.h"])
-
 AC_MSG_CHECKING([which optional backends will be build])
 case "${host}" in
 *linux*)

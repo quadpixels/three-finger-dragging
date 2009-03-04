@@ -72,6 +72,7 @@
 #include "mipointer.h"
 #endif
 
+#include "xorg-server.h"
 #include "synaptics.h"
 #include "synapticsstr.h"
 #include "synaptics-properties.h"
