@@ -445,7 +445,7 @@ dp_init()
 
 unwind:
     XFree(v);
-    if (error)
+    if (error && dpy)
     {
 	XCloseDisplay(dpy);
 	dpy = NULL;
