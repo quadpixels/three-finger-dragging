@@ -58,6 +58,7 @@
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
 #include <unistd.h>
 #include <misc.h>
 #include <xf86.h>
@@ -72,7 +73,6 @@
 #include "mipointer.h"
 #endif
 
-#include "xorg-server.h"
 #include "synaptics.h"
 #include "synapticsstr.h"
 #include "synaptics-properties.h"

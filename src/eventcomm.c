@@ -28,6 +28,7 @@
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
 #include "eventcomm.h"
 #include <errno.h>
 #include <sys/types.h>

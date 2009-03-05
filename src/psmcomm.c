@@ -38,6 +38,7 @@
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
 #include "psmcomm.h"
 #include <errno.h>
 #include <string.h>

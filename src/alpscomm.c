@@ -32,6 +32,7 @@
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
 #include "alpscomm.h"
 #include "synproto.h"
 #include "synaptics.h"

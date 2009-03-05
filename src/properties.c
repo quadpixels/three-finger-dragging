@@ -27,6 +27,7 @@
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
 #include "xf86Module.h"
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
 
