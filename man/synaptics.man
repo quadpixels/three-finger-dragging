@@ -199,14 +199,14 @@ Motion Always"
 .BI "Option \*qMinSpeed\*q \*q" float \*q
 Minimum speed factor. Property: "Synaptics Move Speed"
 .TP
-.BI "Option \*qMaxSpeed\fR (\*q \*q" float \*q)
+.BI "Option \*qMaxSpeed\*q \*q" float \*q
 Maximum speed factor. Property: "Synaptics Move Speed"
 .TP
-.BI "Option \*qAccelFactor\fR (\*q \*q" float \*q)
+.BI "Option \*qAccelFactor\*q \*q" float \*q
 Acceleration factor for normal pointer movements. Property: "Synaptics Move
 Speed"
 .TP
-.BI "Option \*qTrackstickSpeed\fR (\*q \*q" float \*q)
+.BI "Option \*qTrackstickSpeed\*q \*q" float \*q
 Speed scale when in trackstick emulation mode. Property: "Synaptics Move Speed"
 .TP
 .BI "Option \*qPressureMotionMinZ\*q \*q" integer \*q
@@ -348,7 +348,7 @@ Set to 0 to disable. Property: "Synaptics Click Action"
 .BI "Option \*qCircularScrolling\*q \*q" boolean \*q
 If on, circular scrolling is used. Property: "Synaptics Circular Scrolling"
 .TP
-.BI "Option \*qCircScrollDelta\fR (\*q \*q" float \*q)
+.BI "Option \*qCircScrollDelta\*q \*q" float \*q
 Move angle (radians) of finger to generate a scroll event. Property: "Synaptics
 Circular Scrolling Distance"
 .TP
@@ -389,7 +389,7 @@ Palm Dimensions"
 Minimum finger pressure at which touch is considered a palm. Property:
 "Synaptics Palm Dimensions"
 .TP
-.BI "Option \*qCoastingSpeed\fR (\*q \*q" float \*q)
+.BI "Option \*qCoastingSpeed\*q \*q" float \*q
 Coasting threshold scrolling speed.
 .
 0 disables coasting. Property: "Synaptics Coasting Speed"
