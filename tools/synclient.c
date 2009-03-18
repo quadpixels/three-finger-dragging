@@ -45,10 +45,12 @@
 #include <X11/extensions/XInput.h>
 #include "synaptics.h"
 #include "synaptics-properties.h"
+#ifdef HAVE_PROPERTIES
 #include <xserver-properties.h>
 
 #ifndef XATOM_FLOAT
 #define XATOM_FLOAT "FLOAT"
+#endif
 #endif
 
 enum ParaType {
@@ -397,6 +399,7 @@ shm_init()
 }
 
 
+#ifdef HAVE_PROPERTIES
 /** Init display connection or NULL on error */
 static Display*
 dp_init()
@@ -665,12 +668,15 @@ dp_show_settings(Display *dpy, XDevice *dev)
 	XFree(data);
     }
 }
+#endif
 
 static void
 usage(void)
 {
     fprintf(stderr, "Usage: synclient [-s] [-m interval] [-h] [-l] [-V] [-?] [var1=value1 [var2=value2] ...]\n");
+#ifdef HAVE_PROPERTIES
     fprintf(stderr, "  -s Use SHM area instead of device properties.\n");
+#endif
     fprintf(stderr, "  -m monitor changes to the touchpad state (implies -s)\n"
 	    "     interval specifies how often (in ms) to poll the touchpad state\n");
     fprintf(stderr, "  -h Show detected hardware properties (implies -s)\n");
@@ -689,8 +695,12 @@ main(int argc, char *argv[])
     int do_monitor = 0;
     int dump_hw = 0;
     int dump_settings = 0;
-    int use_shm = 0;
+    int use_shm = 1;
     int first_cmd;
+
+#ifdef HAVE_PROPERTIES
+    use_shm = 0;
+#endif
 
     /* Parse command line parameters */
     while ((c = getopt(argc, argv, "sm:hlV")) != -1) {
@@ -718,6 +728,7 @@ main(int argc, char *argv[])
 	    usage();
 	}
     }
+
     first_cmd = optind;
     if (!do_monitor && !dump_hw && !dump_settings && first_cmd == argc)
 	usage();
@@ -741,7 +752,9 @@ main(int argc, char *argv[])
 	    shm_show_settings(synshm);
 	if (do_monitor)
 	    shm_monitor(synshm, delay);
-    } else /* Device properties */
+    }
+#ifdef HAVE_PROPERTIES
+    else /* Device properties */
     {
 	Display *dpy;
 	XDevice *dev;
@@ -757,6 +770,7 @@ main(int argc, char *argv[])
 	XCloseDevice(dpy, dev);
 	XCloseDisplay(dpy);
     }
+#endif
 
     return 0;
 }

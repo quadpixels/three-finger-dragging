@@ -85,6 +85,13 @@ PKG_CHECK_MODULES(XORG, xorg-server xproto $REQUIRED_MODULES)
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 AC_SUBST([sdkdir])
 
+PKG_CHECK_MODULES(XORG16, [xorg-server >= 1.6],
+                  HAVE_PROPERTIES="yes"; AC_DEFINE(HAVE_PROPERTIES, 1,
+                                                   "Input Device Property support"),
+                  HAVE_PROPERTIES="no");
+AM_CONDITIONAL(HAVE_PROPERTIES, [ test "$HAVE_PROPERTIES" = "yes" ])
+AC_SUBST(HAVE_PROPERTIES)
+
 CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
 AC_SUBST([CFLAGS])
 

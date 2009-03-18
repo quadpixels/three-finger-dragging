@@ -63,7 +63,7 @@ static int ignore_modifier_combos;
 static int ignore_modifier_keys;
 static int background;
 static const char *pid_file;
-static int use_shm;
+static int use_shm = 1;
 static Display *display;
 static XDevice *dev;
 static Atom touchpad_off_prop;
@@ -108,6 +108,7 @@ toggle_touchpad(enum TouchpadState value)
     pad_disabled = value;
     if (use_shm)
         synshm->touchpad_off = value;
+#ifdef HAVE_PROPERTIES
     else {
         unsigned char data = value;
         /* This potentially overwrites a different client's setting, but ...*/
@@ -115,6 +116,7 @@ toggle_touchpad(enum TouchpadState value)
 				PropModeReplace, &data, 1);
 	XFlush(display);
     }
+#endif
 }
 
 static void
@@ -453,6 +455,7 @@ void record_main_loop(Display* display, double idle_time) {
 }
 #endif /* HAVE_XRECORD */
 
+#ifdef HAVE_PROPERTIES
 static XDevice *
 dp_get_device(Display *dpy)
 {
@@ -517,6 +520,7 @@ unwind:
     }
     return dev;
 }
+#endif
 
 static int
 shm_init()
@@ -547,6 +551,10 @@ main(int argc, char *argv[])
     int poll_delay = 200000;	    /* 200 ms */
     int c;
     int use_xrecord = 0;
+
+#ifdef HAVE_PROPERTIES
+    use_shm = 0;
+#endif
 
     /* Parse command line parameters */
     while ((c = getopt(argc, argv, "i:m:dtp:kKR?")) != EOF) {
@@ -596,8 +604,10 @@ main(int argc, char *argv[])
 
     if (use_shm && !shm_init())
 	exit(2);
+#ifdef HAVE_PROPERTIES
     else if (!use_shm && !(dev = dp_get_device(display)))
 	exit(2);
+#endif
 
     /* Install a signal handler to restore synaptics parameters on exit */
     install_signal_handler();
