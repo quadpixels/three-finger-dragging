@@ -78,9 +78,9 @@ static Bool
 event_query_is_touchpad(int fd)
 {
     int ret;
-    unsigned long evbits[NBITS(EV_MAX)];
-    unsigned long absbits[NBITS(ABS_MAX)];
-    unsigned long keybits[NBITS(KEY_MAX)];
+    unsigned long evbits[NBITS(EV_MAX)] = {0};
+    unsigned long absbits[NBITS(ABS_MAX)] = {0};
+    unsigned long keybits[NBITS(KEY_MAX)] = {0};
 
     /* Check for ABS_X, ABS_Y, ABS_PRESSURE and BTN_TOOL_FINGER */
 
@@ -121,8 +121,8 @@ event_query_axis_ranges(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
     struct input_absinfo abs;
-    unsigned long absbits[NBITS(ABS_MAX)];
-    unsigned long keybits[NBITS(KEY_MAX)];
+    unsigned long absbits[NBITS(ABS_MAX)] = {0};
+    unsigned long keybits[NBITS(KEY_MAX)] = {0};
     char buf[256];
     int rc;
 
