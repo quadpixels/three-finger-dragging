@@ -532,7 +532,7 @@ dp_set_variables(Display *dpy, XDevice* dev, int argc, char *argv[], int first_c
     unsigned long nitems, bytes_after;
 
     float *f;
-    int *n;
+    long *n;
     char *b;
 
     float_type = XInternAtom(dpy, XATOM_FLOAT, True);
@@ -573,7 +573,7 @@ dp_set_variables(Display *dpy, XDevice* dev, int argc, char *argv[], int first_c
 			    par->name, format);
 		    break;
 		}
-		n = (int*)data;
+		n = (long*)data;
 		n[par->prop_offset] = rint(val);
 		break;
 	    case 0: /* float */
@@ -607,7 +607,7 @@ dp_show_settings(Display *dpy, XDevice *dev)
     int len;
 
     float *f;
-    int *i;
+    long *i;
     char *b;
 
     float_type = XInternAtom(dpy, XATOM_FLOAT, True);
@@ -648,8 +648,8 @@ dp_show_settings(Display *dpy, XDevice *dev)
 		    break;
 		}
 
-		i = (int*)data;
-		printf("    %-23s = %d\n", par->name, i[par->prop_offset]);
+		i = (long*)data;
+		printf("    %-23s = %ld\n", par->name, i[par->prop_offset]);
 		break;
 	    case 0: /* Float */
 		if (!float_type)
