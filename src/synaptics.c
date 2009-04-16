@@ -511,9 +511,17 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     if (!priv)
 	return NULL;
 
+    /* allocate now so we don't allocate in the signal handler */
+    priv->timer = TimerSet(NULL, 0, 0, NULL, NULL);
+    if (!priv->timer) {
+	xfree(priv);
+	return NULL;
+    }
+
     /* Allocate a new InputInfoRec and add it to the head xf86InputDevs. */
     local = xf86AllocateInput(drv, 0);
     if (!local) {
+	xfree(priv->timer);
 	xfree(priv);
 	return NULL;
     }
@@ -614,6 +622,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     if (priv->comm.buffer)
 	XisbFree(priv->comm.buffer);
     free_param_data(priv);
+    xfree(priv->timer);
     xfree(priv);
     local->private = NULL;
     return local;
@@ -627,6 +636,7 @@ static void SynapticsUnInit(InputDriverPtr drv,
                             InputInfoPtr   local,
                             int            flags)
 {
+    xfree(((SynapticsPrivate *)local->private)->timer);
     xfree(local->private);
     local->private = NULL;
     xf86DeleteInput(local, 0);
