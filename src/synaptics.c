@@ -13,7 +13,7 @@
  * Copyright © 2006 Christian Thaeter
  * Copyright © 2007 Joseph P. Skudlarek
  * Copyright © 2008 Fedor P. Goncharov
- * Copyright © 2008 Red Hat, Inc.
+ * Copyright © 2008-2009 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -233,10 +233,9 @@ SetDeviceAndProtocol(LocalDevicePtr local)
 }
 
 /*
- * Allocate and initialize memory for the SynapticsSHM data to hold driver
- * parameter settings.
+ * Allocate and initialize read-only memory for the SynapticsParameters data to hold
+ * driver settings.
  * The function will allocate shared memory if priv->shm_config is TRUE.
- * The allocated data is initialized from priv->synpara_default.
  */
 static Bool
 alloc_param_data(LocalDevicePtr local)
@@ -244,57 +243,56 @@ alloc_param_data(LocalDevicePtr local)
     int shmid;
     SynapticsPrivate *priv = local->private;
 
-    if (priv->synpara)
+    if (priv->synshm)
 	return TRUE;			    /* Already allocated */
 
     if (priv->shm_config) {
 	if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) != -1)
 	    shmctl(shmid, IPC_RMID, NULL);
 	if ((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM),
-				0777 | IPC_CREAT)) == -1) {
+				0774 | IPC_CREAT)) == -1) {
 	    xf86Msg(X_ERROR, "%s error shmget\n", local->name);
 	    return FALSE;
 	}
-	if ((priv->synpara = (SynapticsSHM*)shmat(shmid, NULL, 0)) == NULL) {
+	if ((priv->synshm = (SynapticsSHM*)shmat(shmid, NULL, 0)) == NULL) {
 	    xf86Msg(X_ERROR, "%s error shmat\n", local->name);
 	    return FALSE;
 	}
     } else {
-	priv->synpara = xcalloc(1, sizeof(SynapticsSHM));
-	if (!priv->synpara)
+	priv->synshm = xcalloc(1, sizeof(SynapticsSHM));
+	if (!priv->synshm)
 	    return FALSE;
     }
 
-    *(priv->synpara) = priv->synpara_default;
     return TRUE;
 }
 
 /*
- * Free SynapticsSHM data previously allocated by alloc_param_data().
+ * Free SynapticsParameters data previously allocated by alloc_param_data().
  */
 static void
 free_param_data(SynapticsPrivate *priv)
 {
     int shmid;
 
-    if (!priv->synpara)
+    if (!priv->synshm)
 	return;
 
     if (priv->shm_config) {
 	if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) != -1)
 	    shmctl(shmid, IPC_RMID, NULL);
     } else {
-	xfree(priv->synpara);
+	xfree(priv->synshm);
     }
 
-    priv->synpara = NULL;
+    priv->synshm = NULL;
 }
 
 static void set_default_parameters(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = local->private; /* read-only */
     pointer opts = local->options; /* read-only */
-    SynapticsSHM *pars = &priv->synpara_default; /* modified */
+    SynapticsParameters *pars = &priv->synpara; /* modified */
 
     int horizScrollDelta, vertScrollDelta;		/* pixels */
     int tapMove;					/* pixels */
@@ -313,7 +311,8 @@ static void set_default_parameters(LocalDevicePtr local)
     Bool vertTwoFingerScroll, horizTwoFingerScroll;
 
     /* read the parameters */
-    pars->version = (PACKAGE_VERSION_MAJOR*10000+PACKAGE_VERSION_MINOR*100+PACKAGE_VERSION_PATCHLEVEL);
+    if (priv->synshm)
+        priv->synshm->version = (PACKAGE_VERSION_MAJOR*10000+PACKAGE_VERSION_MINOR*100+PACKAGE_VERSION_PATCHLEVEL);
 
     /* The synaptics specs specify typical edge widths of 4% on x, and 5.4% on
      * y (page 7) [Synaptics TouchPad Interfacing Guide, 510-000080 - A
@@ -582,7 +581,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     set_default_parameters(local);
 
-    priv->largest_valid_x = MIN(priv->synpara_default.right_edge, XMAX_NOMINAL);
+    priv->largest_valid_x = MIN(priv->synpara.right_edge, XMAX_NOMINAL);
 
     if (!alloc_param_data(local))
 	goto SetupProc_fail;
@@ -701,7 +700,7 @@ DeviceOn(DeviceIntPtr dev)
 	return !Success;
     }
 
-    priv->proto_ops->DeviceOnHook(local, priv->synpara);
+    priv->proto_ops->DeviceOnHook(local, &priv->synpara);
 
     priv->comm.buffer = XisbNew(local->fd, 64);
     if (!priv->comm.buffer) {
@@ -827,10 +826,10 @@ static void
 relative_coords(SynapticsPrivate *priv, int x, int y,
 		double *relX, double *relY)
 {
-    int minX = priv->synpara->left_edge;
-    int maxX = priv->synpara->right_edge;
-    int minY = priv->synpara->top_edge;
-    int maxY = priv->synpara->bottom_edge;
+    int minX = priv->synpara.left_edge;
+    int maxX = priv->synpara.right_edge;
+    int minY = priv->synpara.top_edge;
+    int maxY = priv->synpara.bottom_edge;
     double xCenter = (minX + maxX) / 2.0;
     double yCenter = (minY + maxY) / 2.0;
 
@@ -847,8 +846,8 @@ relative_coords(SynapticsPrivate *priv, int x, int y,
 static double
 angle(SynapticsPrivate *priv, int x, int y)
 {
-    double xCenter = (priv->synpara->left_edge + priv->synpara->right_edge) / 2.0;
-    double yCenter = (priv->synpara->top_edge + priv->synpara->bottom_edge) / 2.0;
+    double xCenter = (priv->synpara.left_edge + priv->synpara.right_edge) / 2.0;
+    double yCenter = (priv->synpara.top_edge + priv->synpara.bottom_edge) / 2.0;
 
     return atan2(-(y - yCenter), x - xCenter);
 }
@@ -895,17 +894,17 @@ edge_detection(SynapticsPrivate *priv, int x, int y)
 {
     edge_type edge = 0;
 
-    if (priv->synpara->circular_pad)
+    if (priv->synpara.circular_pad)
 	return circular_edge_detection(priv, x, y);
 
-    if (x > priv->synpara->right_edge)
+    if (x > priv->synpara.right_edge)
 	edge |= RIGHT_EDGE;
-    else if (x < priv->synpara->left_edge)
+    else if (x < priv->synpara.left_edge)
 	edge |= LEFT_EDGE;
 
-    if (y < priv->synpara->top_edge)
+    if (y < priv->synpara.top_edge)
 	edge |= TOP_EDGE;
-    else if (y > priv->synpara->bottom_edge)
+    else if (y > priv->synpara.bottom_edge)
 	edge |= BOTTOM_EDGE;
 
     return edge;
@@ -988,7 +987,7 @@ ReadInput(LocalDevicePtr local)
 static int
 HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, int *delay)
 {
-    SynapticsSHM *para = priv->synpara;
+    SynapticsParameters *para = &priv->synpara;
     Bool done = FALSE;
     int timeleft;
     int mid = 0;
@@ -1072,7 +1071,7 @@ HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, in
 static int
 SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 {
-    SynapticsSHM *para = priv->synpara;
+    SynapticsParameters *para = &priv->synpara;
     int finger;
 
     /* finger detection thru pressure and threshold */
@@ -1125,7 +1124,7 @@ SelectTapButton(SynapticsPrivate *priv, edge_type edge)
 {
     TapEvent tap;
 
-    if (priv->synpara->touchpad_off == 2) {
+    if (priv->synpara.touchpad_off == 2) {
 	priv->tap_button = 0;
 	return;
     }
@@ -1166,14 +1165,14 @@ SelectTapButton(SynapticsPrivate *priv, edge_type edge)
 	break;
     }
 
-    priv->tap_button = priv->synpara->tap_action[tap];
+    priv->tap_button = priv->synpara.tap_action[tap];
     priv->tap_button = clamp(priv->tap_button, 0, SYN_MAX_BUTTONS);
 }
 
 static void
 SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
 {
-    SynapticsSHM *para = priv->synpara;
+    SynapticsParameters *para = &priv->synpara;
     DBG(7, ErrorF("SetTapState - %d -> %d (millis:%d)\n", priv->tap_state, tap_state, millis));
     switch (tap_state) {
     case TS_START:
@@ -1224,7 +1223,7 @@ SetMovingState(SynapticsPrivate *priv, enum MovingState moving_state, int millis
 static int
 GetTimeOut(SynapticsPrivate *priv)
 {
-    SynapticsSHM *para = priv->synpara;
+    SynapticsParameters *para = &priv->synpara;
 
     switch (priv->tap_state) {
     case TS_1:
@@ -1248,7 +1247,7 @@ static int
 HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		    edge_type edge, enum FingerState finger)
 {
-    SynapticsSHM *para = priv->synpara;
+    SynapticsParameters *para = &priv->synpara;
     Bool touch, release, is_timeout, move;
     int timeleft, timeout;
     int delay = 1000000000;
@@ -1412,7 +1411,7 @@ static int
 ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	      edge_type edge, int *dxP, int *dyP)
 {
-    SynapticsSHM *para = priv->synpara;
+    SynapticsParameters *para = &priv->synpara;
     enum MovingState moving_state;
     int dist;
     double dx, dy;
@@ -1473,7 +1472,7 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		    } else {
 			edge_speed = minSpd + (hw->z - minZ) * (maxSpd - minSpd) / (maxZ - minZ);
 		    }
-		    if (!priv->synpara->circular_pad) {
+		    if (!priv->synpara.circular_pad) {
 			/* on rectangular pad */
 			if (edge & RIGHT_EDGE) {
 			    x_edge_speed = edge_speed;
@@ -1558,7 +1557,7 @@ static void
 start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw, edge_type edge,
 	       Bool vertical)
 {
-    SynapticsSHM *para = priv->synpara;
+    SynapticsParameters *para = &priv->synpara;
 
     priv->autoscroll_y = 0.0;
     priv->autoscroll_x = 0.0;
@@ -1602,12 +1601,12 @@ static int
 HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		edge_type edge, Bool finger, struct ScrollData *sd)
 {
-    SynapticsSHM *para = priv->synpara;
+    SynapticsParameters *para = &priv->synpara;
     int delay = 1000000000;
 
     sd->left = sd->right = sd->up = sd->down = 0;
 
-    if (priv->synpara->touchpad_off == 2) {
+    if (priv->synpara.touchpad_off == 2) {
 	stop_coasting(priv);
 	priv->circ_scroll_on = FALSE;
 	priv->vert_scroll_edge_on = FALSE;
@@ -1852,7 +1851,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 }
 
 static void
-HandleClickWithFingers(SynapticsSHM *para, struct SynapticsHwState *hw)
+HandleClickWithFingers(SynapticsParameters *para, struct SynapticsHwState *hw)
 {
     int action = 0;
     switch(hw->numFingers){
@@ -1892,7 +1891,8 @@ static int
 HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
-    SynapticsSHM *para = priv->synpara;
+    SynapticsSHM *shm = priv->synshm;
+    SynapticsParameters *para = &priv->synpara;
     int finger;
     int dx, dy, buttons, rep_buttons, id;
     edge_type edge;
@@ -1904,23 +1904,26 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     int i;
 
     /* update hardware state in shared memory */
-    para->x = hw->x;
-    para->y = hw->y;
-    para->z = hw->z;
-    para->numFingers = hw->numFingers;
-    para->fingerWidth = hw->fingerWidth;
-    para->left = hw->left;
-    para->right = hw->right;
-    para->up = hw->up;
-    para->down = hw->down;
-    for (i = 0; i < 8; i++)
-	para->multi[i] = hw->multi[i];
-    para->middle = hw->middle;
-    para->guest_left = hw->guest_left;
-    para->guest_mid = hw->guest_mid;
-    para->guest_right = hw->guest_right;
-    para->guest_dx = hw->guest_dx;
-    para->guest_dy = hw->guest_dy;
+    if (shm)
+    {
+        shm->x = hw->x;
+        shm->y = hw->y;
+        shm->z = hw->z;
+        shm->numFingers = hw->numFingers;
+        shm->fingerWidth = hw->fingerWidth;
+        shm->left = hw->left;
+        shm->right = hw->right;
+        shm->up = hw->up;
+        shm->down = hw->down;
+        for (i = 0; i < 8; i++)
+            shm->multi[i] = hw->multi[i];
+        shm->middle = hw->middle;
+        shm->guest_left = hw->guest_left;
+        shm->guest_mid = hw->guest_mid;
+        shm->guest_right = hw->guest_right;
+        shm->guest_dx = hw->guest_dx;
+        shm->guest_dy = hw->guest_dy;
+    }
 
     /* If touchpad is switched off, we skip the whole thing and return delay */
     if (para->touchpad_off == 1)
@@ -1991,7 +1994,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
      * hardware scroll area.
      */
 	if (para->special_scroll_area_right)
-	  priv->synpara->right_edge = priv->largest_valid_x;
+	  priv->synpara.right_edge = priv->largest_valid_x;
     }
 
     edge = edge_detection(priv, hw->x, hw->y);
@@ -2179,12 +2182,13 @@ static Bool
 QueryHardware(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
-    SynapticsSHM *para = priv->synpara;
+    SynapticsSHM *shm = priv->synshm;
 
     priv->comm.protoBufTail = 0;
 
     if (priv->proto_ops->QueryHardware(local, &priv->synhw)) {
-	para->synhw = priv->synhw;
+	if (shm)
+	    shm->synhw = priv->synhw;
     } else {
 	xf86Msg(X_PROBED, "%s: no supported touchpad found\n", local->name);
 	priv->proto_ops->DeviceOffHook(local);

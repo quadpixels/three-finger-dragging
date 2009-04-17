@@ -44,6 +44,7 @@
 #include <string.h>
 #include "synproto.h"
 #include "synaptics.h"
+#include "synapticsstr.h"
 #include "ps2comm.h"			    /* ps2_print_ident() */
 #include <xf86.h>
 
@@ -100,7 +101,7 @@ PSMQueryIsSynaptics(LocalDevicePtr local)
 }
 
 static void
-PSMDeviceOnHook(LocalDevicePtr local, SynapticsSHM *para)
+PSMDeviceOnHook(LocalDevicePtr local, SynapticsParameters *para)
 {
 }
 

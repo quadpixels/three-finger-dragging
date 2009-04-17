@@ -36,6 +36,7 @@
 #include "alpscomm.h"
 #include "synproto.h"
 #include "synaptics.h"
+#include "synapticsstr.h"
 #include <xf86.h>
 
 
@@ -86,7 +87,7 @@ ALPS_initialize(int fd)
 }
 
 static void
-ALPSDeviceOnHook(LocalDevicePtr local, SynapticsSHM *para)
+ALPSDeviceOnHook(LocalDevicePtr local, SynapticsParameters *para)
 {
 }
 

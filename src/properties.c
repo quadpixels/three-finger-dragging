@@ -133,7 +133,7 @@ void
 InitDeviceProperties(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
-    SynapticsSHM *para = priv->synpara;
+    SynapticsParameters *para = &priv->synpara;
     int values[9]; /* we never have more than 9 values in an atom */
     float fvalues[4]; /* never have more than 4 float values */
 
@@ -259,8 +259,8 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
 {
     LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
-    SynapticsSHM *para = priv->synpara;
-    SynapticsSHM tmp;
+    SynapticsParameters *para = &priv->synpara;
+    SynapticsParameters tmp;
 
     /* If checkonly is set, no parameters may be changed. So just let the code
      * change temporary variables and forget about it. */

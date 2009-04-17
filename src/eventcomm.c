@@ -56,7 +56,7 @@
  ****************************************************************************/
 
 static void
-EventDeviceOnHook(LocalDevicePtr local, SynapticsSHM *para)
+EventDeviceOnHook(LocalDevicePtr local, SynapticsParameters *para)
 {
     if (para->grab_event_device) {
 	/* Try to grab the event device so that data don't leak to /dev/input/mice */
@@ -234,7 +234,7 @@ EventReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
     Bool v;
     struct SynapticsHwState *hw = &(comm->hwState);
     SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
-    SynapticsSHM *para = priv->synpara;
+    SynapticsParameters *para = &priv->synpara;
 
     while (SynapticsReadEvent(comm, &ev)) {
 	switch (ev.type) {

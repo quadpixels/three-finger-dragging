@@ -84,12 +84,12 @@ enum SynapticsProtocol {
     SYN_PROTO_ALPS		/* ALPS touchpad protocol */
 };
 
-struct _SynapticsSHM;
+struct _SynapticsParameters;
 struct SynapticsHwInfo;
 struct CommData;
 
 struct SynapticsProtocolOperations {
-    void (*DeviceOnHook)(LocalDevicePtr local, struct _SynapticsSHM *para);
+    void (*DeviceOnHook)(LocalDevicePtr local, struct _SynapticsParameters *para);
     void (*DeviceOffHook)(LocalDevicePtr local);
     Bool (*QueryHardware)(LocalDevicePtr local, struct SynapticsHwInfo *synhw);
     Bool (*ReadHwState)(LocalDevicePtr local, struct SynapticsHwInfo *synhw,

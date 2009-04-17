@@ -40,6 +40,7 @@
 #include "ps2comm.h"
 #include "synproto.h"
 #include "synaptics.h"
+#include "synapticsstr.h"
 #include <xf86.h>
 
 #define MAX_UNSYNC_PACKETS 10				/* i.e. 10 to 60 bytes */
@@ -445,7 +446,7 @@ ps2_print_ident(const struct SynapticsHwInfo *synhw)
 
 
 static void
-PS2DeviceOnHook(LocalDevicePtr local, SynapticsSHM* para)
+PS2DeviceOnHook(LocalDevicePtr local, SynapticsParameters* para)
 {
 }
 
