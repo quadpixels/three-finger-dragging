@@ -18,6 +18,7 @@
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+if BUILD_TOOLS
 bin_PROGRAMS = \
 	synclient \
 	syndaemon
@@ -25,7 +26,11 @@ bin_PROGRAMS = \
 INCLUDES=-I$(top_srcdir)/include/
 
 synclient_SOURCES = synclient.c
-synclient_LDFLAGS = -lm $(XLIB_LIBS) $(XI_LIBS)
+synclient_LDFLAGS = -lm $(XI_LIBS)
 
 syndaemon_SOURCES = syndaemon.c
-syndaemon_LDFLAGS = $(XLIB_LIBS) $(XRECORD_LIBS) $(XI_LIBS)
+syndaemon_LDFLAGS = $(XRECORD_LIBS) $(XI_LIBS)
+else
+all:
+	@echo "Not building syndaemon and synclient."
+endif

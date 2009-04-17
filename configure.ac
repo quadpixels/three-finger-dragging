@@ -96,9 +96,25 @@ CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
 AC_SUBST([CFLAGS])
 
 # Checks for libraries.
-PKG_CHECK_MODULES(XLIB, x11) # needed for syndaemon
-PKG_CHECK_MODULES(XRECORD, xtst, AC_DEFINE([HAVE_XRECORD],[],[Use XRecord]), true)
-PKG_CHECK_MODULES(XI, xi);
+AC_ARG_ENABLE(tools,
+              AC_HELP_STRING([--enable-tools], [Build synclient and syndaemon [[default=auto]]]),
+              [build_tools="$enableval"],
+              [build_tools="auto"])
+
+if test "x$build_tools" != "xno"; then
+    PKG_CHECK_MODULES(XRECORD, xtst, AC_DEFINE([HAVE_XRECORD],[],[Use XRecord]), true)
+    PKG_CHECK_MODULES(XI, x11 [xi >= 1.2] [xorg-server >= 1.6],
+                      BUILD_TOOLS="yes"; AC_DEFINE(BUILD_TOOLS, 1, "Build synclient and syndaemon"),
+                      BUILD_TOOLS="no"; 
+                      if test "x$build_tools" = "xyes"; then
+                          AC_MSG_ERROR([Dependencies failed for synclient and syndaemon.])
+                      else
+                          AC_MSG_WARN([Not building synclient and syndaemon.])
+                      fi
+                      )
+fi
+AM_CONDITIONAL(BUILD_TOOLS, [ test "$BUILD_TOOLS" = "yes" ])
+AC_SUBST(BUILD_TOOLS)
 
 # Checks for header files.
 AC_HEADER_STDC
