@@ -45,12 +45,10 @@
 #include <X11/extensions/XInput.h>
 #include "synaptics.h"
 #include "synaptics-properties.h"
-#ifdef HAVE_PROPERTIES
 #include <xserver-properties.h>
 
 #ifndef XATOM_FLOAT
 #define XATOM_FLOAT "FLOAT"
-#endif
 #endif
 
 enum ParaType {
@@ -61,7 +59,6 @@ enum ParaType {
 
 struct Parameter {
     char *name;				    /* Name of parameter */
-    int offset;				    /* Offset in shared memory area */
     enum ParaType type;			    /* Type of parameter */
     double min_val;			    /* Minimum allowed value */
     double max_val;			    /* Maximum allowed value */
@@ -70,139 +67,71 @@ struct Parameter {
     int prop_offset;			    /* Offset inside property */
 };
 
-#define DEFINE_PAR(name, memb, type, min_val, max_val, pname, pformat, poffset) \
-{ name, offsetof(SynapticsSHM, memb), (type), (min_val), (max_val), \
-  (pname), (pformat), (poffset) }
-
 static struct Parameter params[] = {
-    DEFINE_PAR("LeftEdge",             left_edge,               PT_INT,    0, 10000,
-		SYNAPTICS_PROP_EDGES,		32,	0),
-    DEFINE_PAR("RightEdge",            right_edge,              PT_INT,    0, 10000,
-		SYNAPTICS_PROP_EDGES,		32,	1),
-    DEFINE_PAR("TopEdge",              top_edge,                PT_INT,    0, 10000,
-		SYNAPTICS_PROP_EDGES,		32,	2),
-    DEFINE_PAR("BottomEdge",           bottom_edge,             PT_INT,    0, 10000,
-		SYNAPTICS_PROP_EDGES,		32,	3),
-    DEFINE_PAR("FingerLow",            finger_low,              PT_INT,    0, 255,
-		SYNAPTICS_PROP_FINGER,		32,	0),
-    DEFINE_PAR("FingerHigh",           finger_high,             PT_INT,    0, 255,
-		SYNAPTICS_PROP_FINGER,		32,	1),
-    DEFINE_PAR("FingerPress",          finger_press,            PT_INT,    0, 256,
-		SYNAPTICS_PROP_FINGER,		32,	2),
-    DEFINE_PAR("MaxTapTime",           tap_time,                PT_INT,    0, 1000,
-		SYNAPTICS_PROP_TAP_TIME,	32,	0),
-    DEFINE_PAR("MaxTapMove",           tap_move,                PT_INT,    0, 2000,
-		SYNAPTICS_PROP_TAP_MOVE,	32,	0),
-    DEFINE_PAR("MaxDoubleTapTime",     tap_time_2,              PT_INT,    0, 1000,
-		SYNAPTICS_PROP_TAP_DURATIONS,	32,	1),
-    DEFINE_PAR("SingleTapTimeout",     single_tap_timeout,      PT_INT,    0, 1000,
-		SYNAPTICS_PROP_TAP_DURATIONS,	32,	0),
-    DEFINE_PAR("ClickTime",            click_time,              PT_INT,    0, 1000,
-		SYNAPTICS_PROP_TAP_DURATIONS,	32,	2),
-    DEFINE_PAR("FastTaps",             fast_taps,               PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_TAP_FAST,	8,	0),
-    DEFINE_PAR("EmulateMidButtonTime", emulate_mid_button_time, PT_INT,    0, 1000,
-		SYNAPTICS_PROP_MIDDLE_TIMEOUT,	32,	0),
-    DEFINE_PAR("EmulateTwoFingerMinZ", emulate_twofinger_z,     PT_INT,    0, 1000,
-		SYNAPTICS_PROP_TWOFINGER_PRESSURE,	32,	0),
-    DEFINE_PAR("EmulateTwoFingerMinW", emulate_twofinger_w,     PT_INT,    0, 15,
-		SYNAPTICS_PROP_TWOFINGER_WIDTH,	32,	0),
-    DEFINE_PAR("VertScrollDelta",      scroll_dist_vert,        PT_INT,    0, 1000,
-		SYNAPTICS_PROP_SCROLL_DISTANCE,	32,	0),
-    DEFINE_PAR("HorizScrollDelta",     scroll_dist_horiz,       PT_INT,    0, 1000,
-		SYNAPTICS_PROP_SCROLL_DISTANCE,	32,	1),
-    DEFINE_PAR("VertEdgeScroll",       scroll_edge_vert,        PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_SCROLL_EDGE,	8,	0),
-    DEFINE_PAR("HorizEdgeScroll",      scroll_edge_horiz,       PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_SCROLL_EDGE,	8,	1),
-    DEFINE_PAR("CornerCoasting",       scroll_edge_corner,      PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_SCROLL_EDGE,	8,	2),
-    DEFINE_PAR("VertTwoFingerScroll",  scroll_twofinger_vert,   PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_SCROLL_TWOFINGER,	8,	0),
-    DEFINE_PAR("HorizTwoFingerScroll", scroll_twofinger_horiz,  PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_SCROLL_TWOFINGER,	8,	1),
-    DEFINE_PAR("MinSpeed",             min_speed,               PT_DOUBLE, 0, 1.0,
-		SYNAPTICS_PROP_SPEED,		0, /*float */	0),
-    DEFINE_PAR("MaxSpeed",             max_speed,               PT_DOUBLE, 0, 1.0,
-		SYNAPTICS_PROP_SPEED,		0, /*float */	1),
-    DEFINE_PAR("AccelFactor",          accl,                    PT_DOUBLE, 0, 0.2,
-		SYNAPTICS_PROP_SPEED,		0, /*float */	2),
-    DEFINE_PAR("TrackstickSpeed",      trackstick_speed,        PT_DOUBLE, 0, 200.0,
-		SYNAPTICS_PROP_SPEED,		0, /*float */ 3),
-    DEFINE_PAR("EdgeMotionMinZ",       edge_motion_min_z,       PT_INT,    1, 255,
-		SYNAPTICS_PROP_EDGEMOTION_PRESSURE, 32,	0),
-    DEFINE_PAR("EdgeMotionMaxZ",       edge_motion_max_z,       PT_INT,    1, 255,
-		SYNAPTICS_PROP_EDGEMOTION_PRESSURE, 32,	1),
-    DEFINE_PAR("EdgeMotionMinSpeed",   edge_motion_min_speed,   PT_INT,    0, 1000,
-		SYNAPTICS_PROP_EDGEMOTION_SPEED, 32,	0),
-    DEFINE_PAR("EdgeMotionMaxSpeed",   edge_motion_max_speed,   PT_INT,    0, 1000,
-		SYNAPTICS_PROP_EDGEMOTION_SPEED, 32,	1),
-    DEFINE_PAR("EdgeMotionUseAlways",  edge_motion_use_always,  PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_EDGEMOTION,	 8,	0),
-    DEFINE_PAR("UpDownScrolling",      updown_button_scrolling, PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_BUTTONSCROLLING,	 8,	0),
-    DEFINE_PAR("LeftRightScrolling",   leftright_button_scrolling, PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_BUTTONSCROLLING,	 8,	1),
-    DEFINE_PAR("UpDownScrollRepeat",   updown_button_repeat,    PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_BUTTONSCROLLING_REPEAT, 8,	0),
-    DEFINE_PAR("LeftRightScrollRepeat",leftright_button_repeat, PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_BUTTONSCROLLING_REPEAT, 8,	1),
-    DEFINE_PAR("ScrollButtonRepeat",   scroll_button_repeat,    PT_INT,    SBR_MIN , SBR_MAX,
-		SYNAPTICS_PROP_BUTTONSCROLLING_TIME, 32,	0),
-    DEFINE_PAR("TouchpadOff",          touchpad_off,            PT_INT,    0, 2,
-		SYNAPTICS_PROP_OFF,		8,	0),
-    DEFINE_PAR("GuestMouseOff",        guestmouse_off,          PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_GUESTMOUSE,	8,	0),
-    DEFINE_PAR("LockedDrags",          locked_drags,            PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_LOCKED_DRAGS,	8,	0),
-    DEFINE_PAR("LockedDragTimeout",    locked_drag_time,        PT_INT,    0, 30000,
-		SYNAPTICS_PROP_LOCKED_DRAGS_TIMEOUT,	32,	0),
-    DEFINE_PAR("RTCornerButton",       tap_action[RT_TAP],      PT_INT,    0, SYN_MAX_BUTTONS,
-		SYNAPTICS_PROP_TAP_ACTION,	8,	0),
-    DEFINE_PAR("RBCornerButton",       tap_action[RB_TAP],      PT_INT,    0, SYN_MAX_BUTTONS,
-		SYNAPTICS_PROP_TAP_ACTION,	8,	1),
-    DEFINE_PAR("LTCornerButton",       tap_action[LT_TAP],      PT_INT,    0, SYN_MAX_BUTTONS,
-		SYNAPTICS_PROP_TAP_ACTION,	8,	2),
-    DEFINE_PAR("LBCornerButton",       tap_action[LB_TAP],      PT_INT,    0, SYN_MAX_BUTTONS,
-		SYNAPTICS_PROP_TAP_ACTION,	8,	3),
-    DEFINE_PAR("TapButton1",           tap_action[F1_TAP],      PT_INT,    0, SYN_MAX_BUTTONS,
-		SYNAPTICS_PROP_TAP_ACTION,	8,	4),
-    DEFINE_PAR("TapButton2",           tap_action[F2_TAP],      PT_INT,    0, SYN_MAX_BUTTONS,
-		SYNAPTICS_PROP_TAP_ACTION,	8,	5),
-    DEFINE_PAR("TapButton3",           tap_action[F3_TAP],      PT_INT,    0, SYN_MAX_BUTTONS,
-		SYNAPTICS_PROP_TAP_ACTION,	8,	6),
-    DEFINE_PAR("ClickFinger1",         click_action[F1_CLICK1], PT_INT,    0, SYN_MAX_BUTTONS,
-		SYNAPTICS_PROP_CLICK_ACTION,	8,	0),
-    DEFINE_PAR("ClickFinger2",         click_action[F2_CLICK1], PT_INT,    0, SYN_MAX_BUTTONS,
-		SYNAPTICS_PROP_CLICK_ACTION,	8,	1),
-    DEFINE_PAR("ClickFinger3",         click_action[F3_CLICK1], PT_INT,    0, SYN_MAX_BUTTONS,
-		SYNAPTICS_PROP_CLICK_ACTION,	8,	2),
-    DEFINE_PAR("CircularScrolling",    circular_scrolling,      PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_CIRCULAR_SCROLLING,	8,	0),
-    DEFINE_PAR("CircScrollDelta",      scroll_dist_circ,        PT_DOUBLE, .01, 3,
-		SYNAPTICS_PROP_CIRCULAR_SCROLLING_DIST,	0 /* float */,	0),
-    DEFINE_PAR("CircScrollTrigger",    circular_trigger,        PT_INT,    0, 8,
-		SYNAPTICS_PROP_CIRCULAR_SCROLLING_TRIGGER,	8,	0),
-    DEFINE_PAR("CircularPad",          circular_pad,            PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_CIRCULAR_PAD,	8,	0),
-    DEFINE_PAR("PalmDetect",           palm_detect,             PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_PALM_DETECT,	8,	0),
-    DEFINE_PAR("PalmMinWidth",         palm_min_width,          PT_INT,    0, 15,
-		SYNAPTICS_PROP_PALM_DIMENSIONS,	32,	0),
-    DEFINE_PAR("PalmMinZ",             palm_min_z,              PT_INT,    0, 255,
-		SYNAPTICS_PROP_PALM_DIMENSIONS,	32,	1),
-    DEFINE_PAR("CoastingSpeed",        coasting_speed,          PT_DOUBLE, 0, 20,
-		SYNAPTICS_PROP_COASTING_SPEED,	0 /* float*/,	0),
-    DEFINE_PAR("PressureMotionMinZ",   press_motion_min_z,      PT_INT,    1, 255,
-		SYNAPTICS_PROP_PRESSURE_MOTION,	32,	0),
-    DEFINE_PAR("PressureMotionMaxZ",   press_motion_max_z,      PT_INT,    1, 255,
-		SYNAPTICS_PROP_PRESSURE_MOTION,	32,	1),
-    DEFINE_PAR("PressureMotionMinFactor", press_motion_min_factor, PT_DOUBLE, 0, 10.0,
-		SYNAPTICS_PROP_PRESSURE_MOTION_FACTOR,	0 /*float*/,	0),
-    DEFINE_PAR("PressureMotionMaxFactor", press_motion_max_factor, PT_DOUBLE, 0, 10.0,
-		SYNAPTICS_PROP_PRESSURE_MOTION_FACTOR,	0 /*float*/,	1),
-    DEFINE_PAR("GrabEventDevice",      grab_event_device,       PT_BOOL,   0, 1,
-		SYNAPTICS_PROP_GRAB,	8,	0),
+    {"LeftEdge",              PT_INT,    0, 10000, SYNAPTICS_PROP_EDGES,	32,	0},
+    {"RightEdge",             PT_INT,    0, 10000, SYNAPTICS_PROP_EDGES,	32,	1},
+    {"TopEdge",               PT_INT,    0, 10000, SYNAPTICS_PROP_EDGES,	32,	2},
+    {"BottomEdge",            PT_INT,    0, 10000, SYNAPTICS_PROP_EDGES,	32,	3},
+    {"FingerLow",             PT_INT,    0, 255,   SYNAPTICS_PROP_FINGER,	32,	0},
+    {"FingerHigh",            PT_INT,    0, 255,   SYNAPTICS_PROP_FINGER,	32,	1},
+    {"FingerPress",           PT_INT,    0, 256,   SYNAPTICS_PROP_FINGER,	32,	2},
+    {"MaxTapTime",            PT_INT,    0, 1000,  SYNAPTICS_PROP_TAP_TIME,	32,	0},
+    {"MaxTapMove",            PT_INT,    0, 2000,  SYNAPTICS_PROP_TAP_MOVE,	32,	0},
+    {"MaxDoubleTapTime",      PT_INT,    0, 1000,  SYNAPTICS_PROP_TAP_DURATIONS,32,	1},
+    {"SingleTapTimeout",      PT_INT,    0, 1000,  SYNAPTICS_PROP_TAP_DURATIONS,32,	0},
+    {"ClickTime",             PT_INT,    0, 1000,  SYNAPTICS_PROP_TAP_DURATIONS,32,	2},
+    {"FastTaps",              PT_BOOL,   0, 1,     SYNAPTICS_PROP_TAP_FAST,	8,	0},
+    {"EmulateMidButtonTime",  PT_INT,    0, 1000,  SYNAPTICS_PROP_MIDDLE_TIMEOUT,32,	0},
+    {"EmulateTwoFingerMinZ",  PT_INT,    0, 1000,  SYNAPTICS_PROP_TWOFINGER_PRESSURE,	32,	0},
+    {"EmulateTwoFingerMinW",  PT_INT,    0, 15,    SYNAPTICS_PROP_TWOFINGER_WIDTH,	32,	0},
+    {"VertScrollDelta",       PT_INT,    0, 1000,  SYNAPTICS_PROP_SCROLL_DISTANCE,	32,	0},
+    {"HorizScrollDelta",      PT_INT,    0, 1000,  SYNAPTICS_PROP_SCROLL_DISTANCE,	32,	1},
+    {"VertEdgeScroll",        PT_BOOL,   0, 1,     SYNAPTICS_PROP_SCROLL_EDGE,	8,	0},
+    {"HorizEdgeScroll",       PT_BOOL,   0, 1,     SYNAPTICS_PROP_SCROLL_EDGE,	8,	1},
+    {"CornerCoasting",        PT_BOOL,   0, 1,     SYNAPTICS_PROP_SCROLL_EDGE,	8,	2},
+    {"VertTwoFingerScroll",   PT_BOOL,   0, 1,     SYNAPTICS_PROP_SCROLL_TWOFINGER,	8,	0},
+    {"HorizTwoFingerScroll",  PT_BOOL,   0, 1,     SYNAPTICS_PROP_SCROLL_TWOFINGER,	8,	1},
+    {"MinSpeed",              PT_DOUBLE, 0, 1.0,   SYNAPTICS_PROP_SPEED,	0, /*float */	0},
+    {"MaxSpeed",              PT_DOUBLE, 0, 1.0,   SYNAPTICS_PROP_SPEED,	0, /*float */	1},
+    {"AccelFactor",           PT_DOUBLE, 0, 0.2,   SYNAPTICS_PROP_SPEED,	0, /*float */	2},
+    {"TrackstickSpeed",       PT_DOUBLE, 0, 200.0, SYNAPTICS_PROP_SPEED,	0, /*float */ 3},
+    {"EdgeMotionMinZ",        PT_INT,    1, 255,   SYNAPTICS_PROP_EDGEMOTION_PRESSURE,  32,	0},
+    {"EdgeMotionMaxZ",        PT_INT,    1, 255,   SYNAPTICS_PROP_EDGEMOTION_PRESSURE,  32,	1},
+    {"EdgeMotionMinSpeed",    PT_INT,    0, 1000,  SYNAPTICS_PROP_EDGEMOTION_SPEED,     32,	0},
+    {"EdgeMotionMaxSpeed",    PT_INT,    0, 1000,  SYNAPTICS_PROP_EDGEMOTION_SPEED,     32,	1},
+    {"EdgeMotionUseAlways",   PT_BOOL,   0, 1,     SYNAPTICS_PROP_EDGEMOTION,   8,	0},
+    {"UpDownScrolling",       PT_BOOL,   0, 1,     SYNAPTICS_PROP_BUTTONSCROLLING,  8,	0},
+    {"LeftRightScrolling",    PT_BOOL,   0, 1,     SYNAPTICS_PROP_BUTTONSCROLLING,  8,	1},
+    {"UpDownScrollRepeat",    PT_BOOL,   0, 1,     SYNAPTICS_PROP_BUTTONSCROLLING_REPEAT,   8,	0},
+    {"LeftRightScrollRepeat", PT_BOOL,   0, 1,     SYNAPTICS_PROP_BUTTONSCROLLING_REPEAT,   8,	1},
+    {"ScrollButtonRepeat",    PT_INT,    SBR_MIN , SBR_MAX, SYNAPTICS_PROP_BUTTONSCROLLING_TIME, 32,	0},
+    {"TouchpadOff",           PT_INT,    0, 2,     SYNAPTICS_PROP_OFF,		8,	0},
+    {"GuestMouseOff",         PT_BOOL,   0, 1,     SYNAPTICS_PROP_GUESTMOUSE,	8,	0},
+    {"LockedDrags",           PT_BOOL,   0, 1,     SYNAPTICS_PROP_LOCKED_DRAGS,	8,	0},
+    {"LockedDragTimeout",     PT_INT,    0, 30000, SYNAPTICS_PROP_LOCKED_DRAGS_TIMEOUT,	32,	0},
+    {"RTCornerButton",        PT_INT,    0, SYN_MAX_BUTTONS, SYNAPTICS_PROP_TAP_ACTION,	8,	0},
+    {"RBCornerButton",        PT_INT,    0, SYN_MAX_BUTTONS, SYNAPTICS_PROP_TAP_ACTION,	8,	1},
+    {"LTCornerButton",        PT_INT,    0, SYN_MAX_BUTTONS, SYNAPTICS_PROP_TAP_ACTION,	8,	2},
+    {"LBCornerButton",        PT_INT,    0, SYN_MAX_BUTTONS, SYNAPTICS_PROP_TAP_ACTION,	8,	3},
+    {"TapButton1",            PT_INT,    0, SYN_MAX_BUTTONS, SYNAPTICS_PROP_TAP_ACTION,	8,	4},
+    {"TapButton2",            PT_INT,    0, SYN_MAX_BUTTONS, SYNAPTICS_PROP_TAP_ACTION,	8,	5},
+    {"TapButton3",            PT_INT,    0, SYN_MAX_BUTTONS, SYNAPTICS_PROP_TAP_ACTION,	8,	6},
+    {"ClickFinger1",          PT_INT,    0, SYN_MAX_BUTTONS, SYNAPTICS_PROP_CLICK_ACTION,	8,	0},
+    {"ClickFinger2",          PT_INT,    0, SYN_MAX_BUTTONS, SYNAPTICS_PROP_CLICK_ACTION,	8,	1},
+    {"ClickFinger3",          PT_INT,    0, SYN_MAX_BUTTONS, SYNAPTICS_PROP_CLICK_ACTION,	8,	2},
+    {"CircularScrolling",     PT_BOOL,   0, 1,     SYNAPTICS_PROP_CIRCULAR_SCROLLING,	8,	0},
+    {"CircScrollDelta",       PT_DOUBLE, .01, 3,   SYNAPTICS_PROP_CIRCULAR_SCROLLING_DIST,	0 /* float */,	0},
+    {"CircScrollTrigger",     PT_INT,    0, 8,     SYNAPTICS_PROP_CIRCULAR_SCROLLING_TRIGGER,	8,	0},
+    {"CircularPad",           PT_BOOL,   0, 1,     SYNAPTICS_PROP_CIRCULAR_PAD,	8,	0},
+    {"PalmDetect",            PT_BOOL,   0, 1,     SYNAPTICS_PROP_PALM_DETECT,	8,	0},
+    {"PalmMinWidth",          PT_INT,    0, 15,    SYNAPTICS_PROP_PALM_DIMENSIONS,	32,	0},
+    {"PalmMinZ",              PT_INT,    0, 255,   SYNAPTICS_PROP_PALM_DIMENSIONS,	32,	1},
+    {"CoastingSpeed",         PT_DOUBLE, 0, 20,    SYNAPTICS_PROP_COASTING_SPEED,	0 /* float*/,	0},
+    {"PressureMotionMinZ",    PT_INT,    1, 255,   SYNAPTICS_PROP_PRESSURE_MOTION,	32,	0},
+    {"PressureMotionMaxZ",    PT_INT,    1, 255,   SYNAPTICS_PROP_PRESSURE_MOTION,	32,	1},
+    {"PressureMotionMinFactor", PT_DOUBLE, 0, 10.0,SYNAPTICS_PROP_PRESSURE_MOTION_FACTOR,	0 /*float*/,	0},
+    {"PressureMotionMaxFactor", PT_DOUBLE, 0, 10.0,SYNAPTICS_PROP_PRESSURE_MOTION_FACTOR,	0 /*float*/,	1},
+    {"GrabEventDevice",       PT_BOOL,   0, 1,     SYNAPTICS_PROP_GRAB,	8,	0},
     { NULL, 0, 0, 0, 0 }
 };
 
@@ -218,28 +147,6 @@ shm_show_hw_info(SynapticsSHM *synshm)
 	printf("    Can't detect hardware properties.\n");
 	printf("    This is normal if you are running linux kernel 2.6.\n");
 	printf("    Check the kernel log for touchpad hardware information.\n");
-    }
-}
-
-static void
-shm_show_settings(SynapticsSHM *synshm)
-{
-    int i;
-
-    printf("Parameter settings:\n");
-    for (i = 0; params[i].name; i++) {
-	struct Parameter* par = &params[i];
-	switch (par->type) {
-	case PT_INT:
-	    printf("    %-23s = %d\n", par->name, *(int*)((char*)synshm + par->offset));
-	    break;
-	case PT_BOOL:
-	    printf("    %-23s = %d\n", par->name, *(Bool*)((char*)synshm + par->offset));
-	    break;
-	case PT_DOUBLE:
-	    printf("    %-23s = %g\n", par->name, *(double*)((char*)synshm + par->offset));
-	    break;
-	}
     }
 }
 
@@ -277,33 +184,6 @@ parse_cmd(char* cmd, struct Parameter** par)
     }
 
     return 0;
-}
-
-static void
-shm_set_variables(SynapticsSHM *synshm, int argc, char *argv[], int first_cmd)
-{
-    int i;
-    struct Parameter *par;
-    double val;
-
-    for (i = first_cmd; i < argc; i++) {
-	val = parse_cmd(argv[i], &par);
-
-	if (!par)
-	    continue;
-
-	switch (par->type) {
-	    case PT_INT:
-		*(int*)((char*)synshm + par->offset) = (int)rint(val);
-		break;
-	    case PT_BOOL:
-		*(Bool*)((char*)synshm + par->offset) = (Bool)rint(val);
-		break;
-	    case PT_DOUBLE:
-		*(double*)((char*)synshm + par->offset) = val;
-		break;
-	}
-    }
 }
 
 static int
@@ -392,14 +272,29 @@ shm_init()
 	    fprintf(stderr, "Can't access shared memory area. SHMConfig disabled?\n");
 	else
 	    fprintf(stderr, "Incorrect size of shared memory area. Incompatible driver version?\n");
-    } else if ((synshm = (SynapticsSHM*) shmat(shmid, NULL, 0)) == NULL)
+    } else if ((synshm = (SynapticsSHM*) shmat(shmid, NULL, SHM_RDONLY)) == NULL)
 	perror("shmat");
 
     return synshm;
 }
 
+static void
+shm_process_commands(int dump_hw, int do_monitor, int delay)
+{
+    SynapticsSHM *synshm = NULL;
 
-#ifdef HAVE_PROPERTIES
+    synshm = shm_init();
+    if (!synshm)
+        return;
+
+    /* Perform requested actions */
+    if (dump_hw)
+        shm_show_hw_info(synshm);
+
+    if (do_monitor)
+        shm_monitor(synshm, delay);
+}
+
 /** Init display connection or NULL on error */
 static Display*
 dp_init()
@@ -668,15 +563,11 @@ dp_show_settings(Display *dpy, XDevice *dev)
 	XFree(data);
     }
 }
-#endif
 
 static void
 usage(void)
 {
     fprintf(stderr, "Usage: synclient [-s] [-m interval] [-h] [-l] [-V] [-?] [var1=value1 [var2=value2] ...]\n");
-#ifdef HAVE_PROPERTIES
-    fprintf(stderr, "  -s Use SHM area instead of device properties.\n");
-#endif
     fprintf(stderr, "  -m monitor changes to the touchpad state (implies -s)\n"
 	    "     interval specifies how often (in ms) to poll the touchpad state\n");
     fprintf(stderr, "  -h Show detected hardware properties (implies -s)\n");
@@ -695,27 +586,20 @@ main(int argc, char *argv[])
     int do_monitor = 0;
     int dump_hw = 0;
     int dump_settings = 0;
-    int use_shm = 1;
     int first_cmd;
 
-#ifdef HAVE_PROPERTIES
-    use_shm = 0;
-#endif
+    Display *dpy;
+    XDevice *dev;
 
     /* Parse command line parameters */
     while ((c = getopt(argc, argv, "sm:hlV")) != -1) {
 	switch (c) {
-	case 's':
-	    use_shm = 1;
-	    break;
 	case 'm':
-	    use_shm = 1;
 	    do_monitor = 1;
 	    if ((delay = atoi(optarg)) < 0)
 		usage();
 	    break;
 	case 'h':
-	    use_shm = 1;
 	    dump_hw = 1;
 	    break;
 	case 'l':
@@ -734,43 +618,19 @@ main(int argc, char *argv[])
 	usage();
 
     /* Connect to the shared memory area */
-    if (use_shm)
-    {
-	SynapticsSHM *synshm = NULL;
+    if (do_monitor || dump_hw)
+        shm_process_commands(dump_hw, do_monitor, delay);
 
-	synshm = shm_init();
-	if (!synshm)
-	    return 1;
+    dpy = dp_init();
+    if (!dpy || !(dev = dp_get_device(dpy)))
+        return 1;
 
-	/* Perform requested actions */
-	if (dump_hw)
-	    shm_show_hw_info(synshm);
+    dp_set_variables(dpy, dev, argc, argv, first_cmd);
+    if (dump_settings)
+        dp_show_settings(dpy, dev);
 
-	shm_set_variables(synshm, argc, argv, first_cmd);
-
-	if (dump_settings)
-	    shm_show_settings(synshm);
-	if (do_monitor)
-	    shm_monitor(synshm, delay);
-    }
-#ifdef HAVE_PROPERTIES
-    else /* Device properties */
-    {
-	Display *dpy;
-	XDevice *dev;
-
-	dpy = dp_init();
-	if (!dpy || !(dev = dp_get_device(dpy)))
-	    return 1;
-
-	dp_set_variables(dpy, dev, argc, argv, first_cmd);
-	if (dump_settings)
-	    dp_show_settings(dpy, dev);
-
-	XCloseDevice(dpy, dev);
-	XCloseDisplay(dpy);
-    }
-#endif
+    XCloseDevice(dpy, dev);
+    XCloseDisplay(dpy);
 
     return 0;
 }

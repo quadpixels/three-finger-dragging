@@ -15,12 +15,8 @@ synclient [\fI\-hlV?\fP] [var1=value1 [var2=value2] ...]
 This program lets you change your Synaptics TouchPad driver for
 XOrg/XFree86 server parameters while X is running. 
 
-This program provides two mechanism: via input device properties (default) and
-via a shared memory (SHM) area. SHM must be enabled through SHMConfig "on" in
-your XOrg/XFree86 configuration.
-
-WARNING: The SHM mechanism is not secure if you are in an untrusted multiuser
-environment.  All local users can change the parameters at any time.
+For the -m and -h options, SHM must be enabled by setting the option SHMConfig
+"on" in your XOrg/XFree86 configuration.
 .SH "OPTIONS"
 .LP
 .TP
@@ -110,9 +106,6 @@ Print version number and exit.
 .TP
 \fB\-?\fR
 Show the help message.
-.TP
-\fB\-s\fR
-Force SHM mode. Implicit if -m or -h is specified.
 .TP
 \fBvar=value\fR
 Set user parameter \fIvar\fR to \fIvalue\fR.
