@@ -41,8 +41,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <signal.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 
@@ -56,14 +54,12 @@ enum TouchpadState {
 };
 
 
-static SynapticsSHM *synshm;
 static int pad_disabled;
 static int disable_taps_only;
 static int ignore_modifier_combos;
 static int ignore_modifier_keys;
 static int background;
 static const char *pid_file;
-static int use_shm = 1;
 static Display *display;
 static XDevice *dev;
 static Atom touchpad_off_prop;
@@ -94,6 +90,7 @@ usage(void)
 static void
 toggle_touchpad(enum TouchpadState value)
 {
+    unsigned char data = value;
     if (pad_disabled && !value)
     {
         if (!background)
@@ -106,17 +103,10 @@ toggle_touchpad(enum TouchpadState value)
         return;
 
     pad_disabled = value;
-    if (use_shm)
-        synshm->touchpad_off = value;
-#ifdef HAVE_PROPERTIES
-    else {
-        unsigned char data = value;
-        /* This potentially overwrites a different client's setting, but ...*/
-	XChangeDeviceProperty(display, dev, touchpad_off_prop, XA_INTEGER, 8,
-				PropModeReplace, &data, 1);
-	XFlush(display);
-    }
-#endif
+    /* This potentially overwrites a different client's setting, but ...*/
+    XChangeDeviceProperty(display, dev, touchpad_off_prop, XA_INTEGER, 8,
+            PropModeReplace, &data, 1);
+    XFlush(display);
 }
 
 static void
@@ -193,24 +183,6 @@ keyboard_activity(Display *display)
     return ret;
 }
 
-/**
- * Return non-zero if any physical touchpad button is currently pressed.
- */
-static int
-touchpad_buttons_active(void)
-{
-    int i;
-
-    if (synshm->left || synshm->right || synshm->up || synshm->down)
-	return 1;
-    for (i = 0; i < 8; i++)
-	if (synshm->multi[i])
-	    return 1;
-    if (synshm->guest_left || synshm->guest_mid || synshm->guest_right)
-        return 1;
-    return 0;
-}
-
 static double
 get_time(void)
 {
@@ -232,8 +204,6 @@ main_loop(Display *display, double idle_time, int poll_delay)
 	current_time = get_time();
 	if (keyboard_activity(display))
 	    last_activity = current_time;
-	if (use_shm && touchpad_buttons_active())
-	    last_activity = 0.0;
 
 	if (current_time > last_activity + idle_time) {	/* Enable touchpad */
 	    toggle_touchpad(TouchpadOn);
@@ -455,7 +425,6 @@ void record_main_loop(Display* display, double idle_time) {
 }
 #endif /* HAVE_XRECORD */
 
-#ifdef HAVE_PROPERTIES
 static XDevice *
 dp_get_device(Display *dpy)
 {
@@ -520,29 +489,6 @@ unwind:
     }
     return dev;
 }
-#endif
-
-static int
-shm_init()
-{
-    int shmid;
-
-    /* Connect to the shared memory area */
-    if ((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0)) == -1) {
-	if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) == -1) {
-	    fprintf(stderr, "Can't access shared memory area. SHMConfig disabled?\n");
-	    return 0;
-	} else {
-	    fprintf(stderr, "Incorrect size of shared memory area. Incompatible driver version?\n");
-	    return 0;
-	}
-    }
-    if ((synshm = (SynapticsSHM*) shmat(shmid, NULL, 0)) == NULL) {
-	perror("shmat");
-	return 0;
-    }
-    return 1;
-}
 
 int
 main(int argc, char *argv[])
@@ -551,10 +497,6 @@ main(int argc, char *argv[])
     int poll_delay = 200000;	    /* 200 ms */
     int c;
     int use_xrecord = 0;
-
-#ifdef HAVE_PROPERTIES
-    use_shm = 0;
-#endif
 
     /* Parse command line parameters */
     while ((c = getopt(argc, argv, "i:m:dtp:kKR?")) != EOF) {
@@ -581,9 +523,6 @@ main(int argc, char *argv[])
 	    ignore_modifier_combos = 1;
 	    ignore_modifier_keys = 1;
 	    break;
-        case 's':
-            use_shm = 1;
-            break;
 	case 'R':
 	    use_xrecord = 1;
 	    break;
@@ -602,12 +541,8 @@ main(int argc, char *argv[])
 	exit(2);
     }
 
-    if (use_shm && !shm_init())
+    if (!(dev = dp_get_device(display)))
 	exit(2);
-#ifdef HAVE_PROPERTIES
-    else if (!use_shm && !(dev = dp_get_device(display)))
-	exit(2);
-#endif
 
     /* Install a signal handler to restore synaptics parameters on exit */
     install_signal_handler();
