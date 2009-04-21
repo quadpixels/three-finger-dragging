@@ -444,12 +444,6 @@ ps2_print_ident(const struct SynapticsHwInfo *synhw)
     }
 }
 
-
-static void
-PS2DeviceOnHook(LocalDevicePtr local, SynapticsParameters* para)
-{
-}
-
 static void
 PS2DeviceOffHook(LocalDevicePtr local)
 {
@@ -756,7 +750,7 @@ PS2AutoDevProbe(LocalDevicePtr local)
 }
 
 struct SynapticsProtocolOperations psaux_proto_operations = {
-    PS2DeviceOnHook,
+    NULL,
     PS2DeviceOffHook,
     PS2QueryHardware,
     PS2ReadHwState,

@@ -86,16 +86,6 @@ ALPS_initialize(int fd)
     ALPS_sync(fd);
 }
 
-static void
-ALPSDeviceOnHook(LocalDevicePtr local, SynapticsParameters *para)
-{
-}
-
-static void
-ALPSDeviceOffHook(LocalDevicePtr local)
-{
-}
-
 static Bool
 ALPSQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 {
@@ -260,8 +250,8 @@ ALPSAutoDevProbe(LocalDevicePtr local)
 }
 
 struct SynapticsProtocolOperations alps_proto_operations = {
-    ALPSDeviceOnHook,
-    ALPSDeviceOffHook,
+    NULL,
+    NULL,
     ALPSQueryHardware,
     ALPSReadHwState,
     ALPSAutoDevProbe,

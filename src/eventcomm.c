@@ -69,11 +69,6 @@ EventDeviceOnHook(LocalDevicePtr local, SynapticsParameters *para)
     }
 }
 
-static void
-EventDeviceOffHook(LocalDevicePtr local)
-{
-}
-
 static Bool
 event_query_is_touchpad(int fd)
 {
@@ -415,7 +410,7 @@ EventAutoDevProbe(LocalDevicePtr local)
 
 struct SynapticsProtocolOperations event_proto_operations = {
     EventDeviceOnHook,
-    EventDeviceOffHook,
+    NULL,
     EventQueryHardware,
     EventReadHwState,
     EventAutoDevProbe,

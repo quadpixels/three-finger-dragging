@@ -101,16 +101,6 @@ PSMQueryIsSynaptics(LocalDevicePtr local)
 }
 
 static void
-PSMDeviceOnHook(LocalDevicePtr local, SynapticsParameters *para)
-{
-}
-
-static void
-PSMDeviceOffHook(LocalDevicePtr local)
-{
-}
-
-static void
 convert_hw_info(const synapticshw_t *psm_ident, struct SynapticsHwInfo *synhw)
 {
     memset(synhw, 0, sizeof(*synhw));
@@ -175,8 +165,8 @@ static Bool PSMAutoDevProbe(LocalDevicePtr local)
 }
 
 struct SynapticsProtocolOperations psm_proto_operations = {
-    PSMDeviceOnHook,
-    PSMDeviceOffHook,
+    NULL,
+    NULL,
     PSMQueryHardware,
     PSMReadHwState,
     PSMAutoDevProbe,

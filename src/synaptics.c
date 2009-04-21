@@ -700,7 +700,8 @@ DeviceOn(DeviceIntPtr dev)
 	return !Success;
     }
 
-    priv->proto_ops->DeviceOnHook(local, &priv->synpara);
+    if (priv->proto_ops->DeviceOnHook)
+        priv->proto_ops->DeviceOnHook(local, &priv->synpara);
 
     priv->comm.buffer = XisbNew(local->fd, 64);
     if (!priv->comm.buffer) {
@@ -731,7 +732,8 @@ DeviceOff(DeviceIntPtr dev)
 	TimerFree(priv->timer);
 	priv->timer = NULL;
 	xf86RemoveEnabledDevice(local);
-	priv->proto_ops->DeviceOffHook(local);
+        if (priv->proto_ops->DeviceOffHook)
+            priv->proto_ops->DeviceOffHook(local);
 	if (priv->comm.buffer) {
 	    XisbFree(priv->comm.buffer);
 	    priv->comm.buffer = NULL;
@@ -2191,7 +2193,8 @@ QueryHardware(LocalDevicePtr local)
 	    shm->synhw = priv->synhw;
     } else {
 	xf86Msg(X_PROBED, "%s: no supported touchpad found\n", local->name);
-	priv->proto_ops->DeviceOffHook(local);
+	if (priv->proto_ops->DeviceOffHook)
+            priv->proto_ops->DeviceOffHook(local);
     }
 
     return TRUE;
