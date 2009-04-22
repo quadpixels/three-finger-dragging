@@ -79,6 +79,12 @@ enum TapButtonState {
     TBS_BUTTON_DOWN_UP		/* Send button down event + set up state */
 };
 
+enum TouchpadModel {
+    MODEL_UNKNOWN = 0,
+    MODEL_SYNAPTICS,
+    MODEL_ALPS
+};
+
 typedef struct _SynapticsParameters
 {
     /* Parameter data */
@@ -209,6 +215,8 @@ typedef struct _SynapticsPrivateRec
     Bool has_double;			/* double click detected for this device */
     Bool has_triple;			/* triple click detected for this device */
     Bool has_pressure;			/* device reports pressure */
+
+    enum TouchpadModel model;          /* The detected model */
 } SynapticsPrivate;
 
 #endif /* _SYNAPTICSSTR_H_ */

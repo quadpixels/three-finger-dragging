@@ -110,6 +110,24 @@ event_query_is_touchpad(int fd)
     return TRUE;
 }
 
+static void
+event_query_info(LocalDevicePtr local)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
+    short id[4];
+    int rc;
+
+    SYSCALL(rc = ioctl(local->fd, EVIOCGID, id));
+    if (rc < 0)
+        return;
+
+    if (id[ID_VENDOR] == 0x2 && id[ID_PRODUCT] == 0x7)
+        priv->model = MODEL_SYNAPTICS;
+    else if (id[ID_VENDOR] == 0x2 && id[ID_PRODUCT] == 0x8)
+        priv->model = MODEL_ALPS;
+
+}
+
 /* Query device for axis ranges */
 static void
 event_query_axis_ranges(LocalDevicePtr local)
@@ -355,6 +373,7 @@ EventReadDevDimensions(LocalDevicePtr local)
 {
     if (event_query_is_touchpad(local->fd))
 	event_query_axis_ranges(local);
+    event_query_info(local);
 }
 
 static Bool

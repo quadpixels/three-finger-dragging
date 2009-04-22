@@ -317,7 +317,10 @@ static void set_default_parameters(LocalDevicePtr local)
     /* The synaptics specs specify typical edge widths of 4% on x, and 5.4% on
      * y (page 7) [Synaptics TouchPad Interfacing Guide, 510-000080 - A
      * Second Edition, http://www.synaptics.com/support/dev_support.cfm, 8 Sep
-     * 2008]
+     * 2008]. We use 7% for both instead for synaptics devices, and 15% for
+     * ALPS models.
+     * http://bugs.freedesktop.org/show_bug.cgi?id=21214
+     *
      * If the range was autodetected, apply these edge widths to all four
      * sides.
      */
@@ -329,8 +332,19 @@ static void set_default_parameters(LocalDevicePtr local)
         width = abs(priv->maxx - priv->minx);
         height = abs(priv->maxy - priv->miny);
         diag = sqrt(width * width + height * height);
-        ewidth = width * .04;
-        eheight = height * .055;
+        if (priv->model == MODEL_SYNAPTICS)
+        {
+            ewidth = width * .07;
+            eheight = height * .07;
+        } else if (priv->model == MODEL_ALPS)
+        {
+            ewidth = width * .15;
+            eheight = height * .15;
+        } else
+        {
+            ewidth = width * .04;
+            eheight = height * .04;
+        }
 
         l = priv->minx + ewidth;
         r = priv->maxx - ewidth;
