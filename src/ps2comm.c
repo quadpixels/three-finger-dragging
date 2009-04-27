@@ -606,6 +606,8 @@ PS2ReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
     int newabs = SYN_MODEL_NEWABS(*synhw);
     unsigned char *buf = comm->protoBuf;
     struct SynapticsHwState *hw = &(comm->hwState);
+    SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
+    SynapticsParameters *para = &priv->synpara;
     int w, i;
 
     if (!ps2_synaptics_get_packet(local, synhw, proto_ops, comm))
@@ -704,7 +706,7 @@ PS2ReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 
     hw->y = YMAX_NOMINAL + YMIN_NOMINAL - hw->y;
 
-    if (hw->z > 0) {
+    if (hw->z >= para->finger_high) {
 	int w_ok = 0;
 	/*
 	 * Use capability bits to decide if the w value is valid.
