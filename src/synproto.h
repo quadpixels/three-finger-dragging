@@ -91,8 +91,8 @@ struct CommData;
 struct SynapticsProtocolOperations {
     void (*DeviceOnHook)(LocalDevicePtr local, struct _SynapticsParameters *para);
     void (*DeviceOffHook)(LocalDevicePtr local);
-    Bool (*QueryHardware)(LocalDevicePtr local, struct SynapticsHwInfo *synhw);
-    Bool (*ReadHwState)(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
+    Bool (*QueryHardware)(LocalDevicePtr local);
+    Bool (*ReadHwState)(LocalDevicePtr local,
 			struct SynapticsProtocolOperations *proto_ops,
 			struct CommData *comm, struct SynapticsHwState *hwRet);
     Bool (*AutoDevProbe)(LocalDevicePtr local);

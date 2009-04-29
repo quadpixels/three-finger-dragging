@@ -48,15 +48,6 @@ typedef enum {
 
 #define SYN_MAX_BUTTONS 12		    /* Max number of mouse buttons */
 
-struct SynapticsHwInfo {
-    unsigned int model_id;		    /* Model-ID */
-    unsigned int capabilities;		    /* Capabilities */
-    unsigned int ext_cap;		    /* Extended Capabilities */
-    unsigned int identity;		    /* Identification */
-    Bool hasGuest;			    /* Has a guest mouse */
-};
-
-
 #define SHM_SYNAPTICS 23947
 typedef struct _SynapticsSHM
 {
@@ -72,9 +63,6 @@ typedef struct _SynapticsSHM
     Bool middle;
     int guest_left, guest_mid, guest_right; /* guest device buttons */
     int guest_dx, guest_dy; 		    /* guest device movement */
-
-    /* Probed hardware properties */
-    struct SynapticsHwInfo synhw;
 } SynapticsSHM;
 
 /*

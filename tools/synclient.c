@@ -141,21 +141,6 @@ static struct Parameter params[] = {
     { NULL, 0, 0, 0, 0 }
 };
 
-static void
-shm_show_hw_info(SynapticsSHM *synshm)
-{
-    printf("Hardware properties:\n");
-    if (synshm->synhw.model_id) {
-	printf("    Model Id     = %08x\n", synshm->synhw.model_id);
-	printf("    Capabilities = %08x\n", synshm->synhw.capabilities);
-	printf("    Identity     = %08x\n", synshm->synhw.identity);
-    } else {
-	printf("    Can't detect hardware properties.\n");
-	printf("    This is normal if you are running linux kernel 2.6.\n");
-	printf("    Check the kernel log for touchpad hardware information.\n");
-    }
-}
-
 static double
 parse_cmd(char* cmd, struct Parameter** par)
 {
@@ -285,17 +270,13 @@ shm_init()
 }
 
 static void
-shm_process_commands(int dump_hw, int do_monitor, int delay)
+shm_process_commands(int do_monitor, int delay)
 {
     SynapticsSHM *synshm = NULL;
 
     synshm = shm_init();
     if (!synshm)
         return;
-
-    /* Perform requested actions */
-    if (dump_hw)
-        shm_show_hw_info(synshm);
 
     if (do_monitor)
         shm_monitor(synshm, delay);
@@ -576,7 +557,6 @@ usage(void)
     fprintf(stderr, "Usage: synclient [-s] [-m interval] [-h] [-l] [-V] [-?] [var1=value1 [var2=value2] ...]\n");
     fprintf(stderr, "  -m monitor changes to the touchpad state (implies -s)\n"
 	    "     interval specifies how often (in ms) to poll the touchpad state\n");
-    fprintf(stderr, "  -h Show detected hardware properties (implies -s)\n");
     fprintf(stderr, "  -l List current user settings\n");
     fprintf(stderr, "  -V Print synclient version string and exit\n");
     fprintf(stderr, "  -? Show this help message\n");
@@ -590,7 +570,6 @@ main(int argc, char *argv[])
     int c;
     int delay = -1;
     int do_monitor = 0;
-    int dump_hw = 0;
     int dump_settings = 0;
     int first_cmd;
 
@@ -605,9 +584,6 @@ main(int argc, char *argv[])
 	    if ((delay = atoi(optarg)) < 0)
 		usage();
 	    break;
-	case 'h':
-	    dump_hw = 1;
-	    break;
 	case 'l':
 	    dump_settings = 1;
 	    break;
@@ -620,12 +596,12 @@ main(int argc, char *argv[])
     }
 
     first_cmd = optind;
-    if (!do_monitor && !dump_hw && !dump_settings && first_cmd == argc)
+    if (!do_monitor && !dump_settings && first_cmd == argc)
 	usage();
 
     /* Connect to the shared memory area */
-    if (do_monitor || dump_hw)
-        shm_process_commands(dump_hw, do_monitor, delay);
+    if (do_monitor)
+        shm_process_commands(do_monitor, delay);
 
     dpy = dp_init();
     if (!dpy || !(dev = dp_get_device(dpy)))

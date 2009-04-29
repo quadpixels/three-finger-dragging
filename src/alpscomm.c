@@ -87,7 +87,7 @@ ALPS_initialize(int fd)
 }
 
 static Bool
-ALPSQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
+ALPSQueryHardware(LocalDevicePtr local)
 {
     ALPS_initialize(local->fd);
     return TRUE;
@@ -227,7 +227,7 @@ ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
 }
 
 static Bool
-ALPSReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
+ALPSReadHwState(LocalDevicePtr local,
 		struct SynapticsProtocolOperations *proto_ops,
 		struct CommData *comm, struct SynapticsHwState *hwRet)
 {

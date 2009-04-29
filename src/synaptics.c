@@ -639,6 +639,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     if (priv->comm.buffer)
 	XisbFree(priv->comm.buffer);
     free_param_data(priv);
+    xfree(priv->proto_data);
     xfree(priv->timer);
     xfree(priv);
     local->private = NULL;
@@ -656,6 +657,8 @@ static void SynapticsUnInit(InputDriverPtr drv,
     SynapticsPrivate *priv = ((SynapticsPrivate *)local->private);
     if (priv && priv->timer)
         xfree(priv->timer);
+    if (priv && priv->proto_data)
+        xfree(priv->proto_data);
     xfree(local->private);
     local->private = NULL;
     xf86DeleteInput(local, 0);
@@ -988,7 +991,7 @@ static Bool
 SynapticsGetHwState(LocalDevicePtr local, SynapticsPrivate *priv,
 		    struct SynapticsHwState *hw)
 {
-    return priv->proto_ops->ReadHwState(local, &priv->synhw, priv->proto_ops,
+    return priv->proto_ops->ReadHwState(local, priv->proto_ops,
 					&priv->comm, hw);
 }
 
@@ -2212,14 +2215,10 @@ static Bool
 QueryHardware(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
-    SynapticsSHM *shm = priv->synshm;
 
     priv->comm.protoBufTail = 0;
 
-    if (priv->proto_ops->QueryHardware(local, &priv->synhw)) {
-	if (shm)
-	    shm->synhw = priv->synhw;
-    } else {
+    if (!priv->proto_ops->QueryHardware(local)) {
 	xf86Msg(X_PROBED, "%s: no supported touchpad found\n", local->name);
 	if (priv->proto_ops->DeviceOffHook)
             priv->proto_ops->DeviceOffHook(local);

@@ -95,9 +95,6 @@ Pointer movements from the guest device are reported as relative x/y
 positions, called gdx and gdy.
 .RE
 .TP
-\fB\-h\fR
-Show detected hardware properties. Only available in SHM mode.
-.TP
 \fB\-l\fR
 List current user settings.
 .TP

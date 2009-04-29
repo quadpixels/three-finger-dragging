@@ -227,7 +227,7 @@ event_query_axis_ranges(LocalDevicePtr local)
 }
 
 static Bool
-EventQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
+EventQueryHardware(LocalDevicePtr local)
 {
     if (!event_query_is_touchpad(local->fd))
 	return FALSE;
@@ -254,7 +254,7 @@ SynapticsReadEvent(struct CommData *comm, struct input_event *ev)
 }
 
 static Bool
-EventReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
+EventReadHwState(LocalDevicePtr local,
 		 struct SynapticsProtocolOperations *proto_ops,
 		 struct CommData *comm, struct SynapticsHwState *hwRet)
 {

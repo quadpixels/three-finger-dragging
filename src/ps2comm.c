@@ -77,6 +77,14 @@
 #define DBG(a,b)
 #endif
 
+struct SynapticsHwInfo {
+    unsigned int model_id;		    /* Model-ID */
+    unsigned int capabilities;		    /* Capabilities */
+    unsigned int ext_cap;		    /* Extended Capabilities */
+    unsigned int identity;		    /* Identification */
+    Bool hasGuest;			    /* Has a guest mouse */
+};
+
 /*****************************************************************************
  *	PS/2 Utility functions.
  *     Many parts adapted from tpconfig.c by C. Scott Ananian
@@ -327,8 +335,8 @@ ps2_synaptics_capability(int fd, struct SynapticsHwInfo *synhw)
 	ps2_getbyte(fd, &cap[2])) {
 	synhw->capabilities = (cap[0] << 16) | (cap[1] << 8) | cap[2];
 	PS2DBG(ErrorF("capabilities %06X\n", synhw->capabilities));
-	if (SYN_CAP_VALID(*synhw)) {
-	    if (SYN_EXT_CAP_REQUESTS(*synhw)) {
+	if (SYN_CAP_VALID(synhw)) {
+	    if (SYN_EXT_CAP_REQUESTS(synhw)) {
 		if (ps2_send_cmd(fd, SYN_QUE_EXT_CAPAB) &&
 		    ps2_getbyte(fd, &cap[0]) &&
 		    ps2_getbyte(fd, &cap[1]) &&
@@ -366,7 +374,7 @@ ps2_synaptics_identify(int fd, struct SynapticsHwInfo *synhw)
 	ps2_getbyte(fd, &id[2])) {
 	synhw->identity = (id[0] << 16) | (id[1] << 8) | id[2];
 	PS2DBG(ErrorF("ident %06X\n", synhw->identity));
-	if (SYN_ID_IS_SYNAPTICS(*synhw)) {
+	if (SYN_ID_IS_SYNAPTICS(synhw)) {
 	    PS2DBG(ErrorF("...done.\n"));
 	    return TRUE;
 	}
@@ -389,9 +397,8 @@ ps2_synaptics_disable_device(int fd)
 }
 
 static Bool
-ps2_query_is_synaptics(int fd)
+ps2_query_is_synaptics(int fd, struct SynapticsHwInfo* synhw)
 {
-    struct SynapticsHwInfo synhw;
     int i;
 
     for (i = 0; i < 3; i++) {
@@ -401,10 +408,10 @@ ps2_query_is_synaptics(int fd)
 
     xf86WaitForInput(fd, 20000);
     xf86FlushInput(fd);
-    if (ps2_synaptics_identify(fd, &synhw)) {
+    if (ps2_synaptics_identify(fd, synhw)) {
 	return TRUE;
     } else {
-	ErrorF("Query no Synaptics: %06X\n", synhw.identity);
+	ErrorF("Query no Synaptics: %06X\n", synhw->identity);
 	return FALSE;
     }
 }
@@ -412,34 +419,34 @@ ps2_query_is_synaptics(int fd)
 void
 ps2_print_ident(const struct SynapticsHwInfo *synhw)
 {
-    xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(*synhw));
-    xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(*synhw),
-	    SYN_ID_MINOR(*synhw));
+    xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(synhw));
+    xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(synhw),
+	    SYN_ID_MINOR(synhw));
 
-    if (SYN_MODEL_ROT180(*synhw))
+    if (SYN_MODEL_ROT180(synhw))
 	xf86Msg(X_PROBED, " 180 degree mounted touchpad\n");
-    if (SYN_MODEL_PORTRAIT(*synhw))
+    if (SYN_MODEL_PORTRAIT(synhw))
 	xf86Msg(X_PROBED, " portrait touchpad\n");
-    xf86Msg(X_PROBED, " Sensor: %d\n", SYN_MODEL_SENSOR(*synhw));
-    if (SYN_MODEL_NEWABS(*synhw))
+    xf86Msg(X_PROBED, " Sensor: %d\n", SYN_MODEL_SENSOR(synhw));
+    if (SYN_MODEL_NEWABS(synhw))
 	xf86Msg(X_PROBED, " new absolute packet format\n");
-    if (SYN_MODEL_PEN(*synhw))
+    if (SYN_MODEL_PEN(synhw))
 	xf86Msg(X_PROBED, " pen detection\n");
 
-    if (SYN_CAP_EXTENDED(*synhw)) {
+    if (SYN_CAP_EXTENDED(synhw)) {
 	xf86Msg(X_PROBED, " Touchpad has extended capability bits\n");
-	if (SYN_CAP_MULTI_BUTTON_NO(*synhw))
+	if (SYN_CAP_MULTI_BUTTON_NO(synhw))
 	    xf86Msg(X_PROBED, " -> %d multi buttons, i.e. besides standard buttons\n",
-		    (int)(SYN_CAP_MULTI_BUTTON_NO(*synhw)));
-	if (SYN_CAP_MIDDLE_BUTTON(*synhw))
+		    (int)(SYN_CAP_MULTI_BUTTON_NO(synhw)));
+	if (SYN_CAP_MIDDLE_BUTTON(synhw))
 	    xf86Msg(X_PROBED, " -> middle button\n");
-	if (SYN_CAP_FOUR_BUTTON(*synhw))
+	if (SYN_CAP_FOUR_BUTTON(synhw))
 	    xf86Msg(X_PROBED, " -> four buttons\n");
-	if (SYN_CAP_MULTIFINGER(*synhw))
+	if (SYN_CAP_MULTIFINGER(synhw))
 	    xf86Msg(X_PROBED, " -> multifinger detection\n");
-	if (SYN_CAP_PALMDETECT(*synhw))
+	if (SYN_CAP_PALMDETECT(synhw))
 	    xf86Msg(X_PROBED, " -> palm detection\n");
-	if (SYN_CAP_PASSTHROUGH(*synhw))
+	if (SYN_CAP_PASSTHROUGH(synhw))
 	    xf86Msg(X_PROBED, " -> pass-through port\n");
     }
 }
@@ -452,12 +459,18 @@ PS2DeviceOffHook(LocalDevicePtr local)
 }
 
 static Bool
-PS2QueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
+PS2QueryHardware(LocalDevicePtr local)
 {
     int mode;
+    SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
+    struct SynapticsHwInfo *synhw;
+
+    if (!priv->proto_data)
+        priv->proto_data = xcalloc(1, sizeof(struct SynapticsHwInfo));
+    synhw = (struct SynapticsHwInfo*)priv->proto_data;
 
     /* is the synaptics touchpad active? */
-    if (!ps2_query_is_synaptics(local->fd))
+    if (!ps2_query_is_synaptics(local->fd, synhw))
 	return FALSE;
 
     xf86Msg(X_PROBED, "%s synaptics touchpad found\n", local->name);
@@ -475,16 +488,16 @@ PS2QueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 	return FALSE;
 
     mode = SYN_BIT_ABSOLUTE_MODE | SYN_BIT_HIGH_RATE;
-    if (SYN_ID_MAJOR(*synhw) >= 4)
+    if (SYN_ID_MAJOR(synhw) >= 4)
 	mode |= SYN_BIT_DISABLE_GESTURE;
-    if (SYN_CAP_EXTENDED(*synhw))
+    if (SYN_CAP_EXTENDED(synhw))
 	mode |= SYN_BIT_W_MODE;
     if (!ps2_synaptics_set_mode(local->fd, mode))
 	return FALSE;
 
     /* Check to see if the host mouse supports a guest */
     synhw->hasGuest = FALSE;
-    if (SYN_CAP_PASSTHROUGH(*synhw)) {
+    if (SYN_CAP_PASSTHROUGH(synhw)) {
         synhw->hasGuest = TRUE;
 
 	/* Enable the guest mouse.  Set it to relative mode, three byte
@@ -512,7 +525,7 @@ static Bool
 ps2_packet_ok(struct SynapticsHwInfo *synhw, struct CommData *comm)
 {
     unsigned char *buf = comm->protoBuf;
-    int newabs = SYN_MODEL_NEWABS(*synhw);
+    int newabs = SYN_MODEL_NEWABS(synhw);
 
     if (newabs ? ((buf[0] & 0xC0) != 0x80) : ((buf[0] & 0xC0) != 0xC0)) {
 	DBG(4, ErrorF("Synaptics driver lost sync at 1st byte\n"));
@@ -553,7 +566,7 @@ ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 	if ((c == 0x00) && (comm->lastByte == 0xAA)) {
 	    if (xf86WaitForInput(local->fd, 50000) == 0) {
 		DBG(7, ErrorF("Reset received\n"));
-		proto_ops->QueryHardware(local, synhw);
+		proto_ops->QueryHardware(local);
 	    } else
 		DBG(3, ErrorF("faked reset received\n"));
 	}
@@ -579,7 +592,7 @@ ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 		if (comm->outOfSync > MAX_UNSYNC_PACKETS) {
 		    comm->outOfSync = 0;
 		    DBG(3, ErrorF("Synaptics synchronization lost too long -> reset touchpad.\n"));
-		    proto_ops->QueryHardware(local, synhw); /* including a reset */
+		    proto_ops->QueryHardware(local); /* including a reset */
 		    continue;
 		}
 	    }
@@ -599,16 +612,28 @@ ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 }
 
 static Bool
-PS2ReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
+PS2ReadHwState(LocalDevicePtr local,
 	       struct SynapticsProtocolOperations *proto_ops,
 	       struct CommData *comm, struct SynapticsHwState *hwRet)
 {
-    int newabs = SYN_MODEL_NEWABS(*synhw);
     unsigned char *buf = comm->protoBuf;
     struct SynapticsHwState *hw = &(comm->hwState);
     SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
     SynapticsParameters *para = &priv->synpara;
+    struct SynapticsHwInfo *synhw;
+    int newabs;
     int w, i;
+
+    synhw = (struct SynapticsHwInfo*)priv->proto_data;
+    if (!synhw)
+    {
+        xf86Msg(X_ERROR,
+                "%s: PS2ReadHwState, synhw is NULL. This is a bug.\n",
+                local->name);
+        return FALSE;
+    }
+
+    newabs = SYN_MODEL_NEWABS(synhw);
 
     if (!ps2_synaptics_get_packet(local, synhw, proto_ops, comm))
 	return FALSE;
@@ -655,11 +680,11 @@ PS2ReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 	hw->left  = (buf[0] & 0x01) ? 1 : 0;
 	hw->right = (buf[0] & 0x02) ? 1 : 0;
 
-	if (SYN_CAP_EXTENDED(*synhw)) {
-	    if (SYN_CAP_MIDDLE_BUTTON(*synhw)) {
+	if (SYN_CAP_EXTENDED(synhw)) {
+	    if (SYN_CAP_MIDDLE_BUTTON(synhw)) {
 		hw->middle = ((buf[0] ^ buf[3]) & 0x01) ? 1 : 0;
 	    }
-	    if (SYN_CAP_FOUR_BUTTON(*synhw)) {
+	    if (SYN_CAP_FOUR_BUTTON(synhw)) {
 		hw->up = ((buf[3] & 0x01)) ? 1 : 0;
 		if (hw->left)
 		    hw->up = !hw->up;
@@ -667,9 +692,9 @@ PS2ReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 		if (hw->right)
 		    hw->down = !hw->down;
 	    }
-	    if (SYN_CAP_MULTI_BUTTON_NO(*synhw)) {
+	    if (SYN_CAP_MULTI_BUTTON_NO(synhw)) {
 		if ((buf[3] & 2) ? !hw->right : hw->right) {
-		    switch (SYN_CAP_MULTI_BUTTON_NO(*synhw) & ~0x01) {
+		    switch (SYN_CAP_MULTI_BUTTON_NO(synhw) & ~0x01) {
 		    default:
 			break;
 		    case 8:
@@ -713,13 +738,13 @@ PS2ReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 	 * If not, set it to 5, which corresponds to a finger of
 	 * normal width.
 	 */
-	if (SYN_CAP_EXTENDED(*synhw)) {
+	if (SYN_CAP_EXTENDED(synhw)) {
 	    if ((w >= 0) && (w <= 1)) {
-		w_ok = SYN_CAP_MULTIFINGER(*synhw);
+		w_ok = SYN_CAP_MULTIFINGER(synhw);
 	    } else if (w == 2) {
-		w_ok = SYN_MODEL_PEN(*synhw);
+		w_ok = SYN_MODEL_PEN(synhw);
 	    } else if ((w >= 4) && (w <= 15)) {
-		w_ok = SYN_CAP_PALMDETECT(*synhw);
+		w_ok = SYN_CAP_PALMDETECT(synhw);
 	    }
 	}
 	if (!w_ok)
