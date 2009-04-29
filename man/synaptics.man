@@ -813,6 +813,12 @@ by the kernel. If the kernel reports multi-finger detection, two-finger
 vertical scrolling is enabled, horizontal two-finger scrolling is disabled and
 edge scrolling is disabled. If no multi-finger capabilities are reported,
 edge scrolling is enabled for both horizontal and vertical scrolling.
+.LP
+Button mapping for physical buttons is handled in the server.
+If the device is switched to left-handed (an in-server mapping of physical
+buttons 1, 2, 3 to the logical buttons 3, 2, 1, respectively), both physical
+and TapButtons are affected. To counteract this, the TapButtons need to be set
+up in reverse order (TapButton1=3, TapButton2=1).
 
 .SH "REMOVED OPTIONS"
 The following options are no longer part of the driver configuration:
