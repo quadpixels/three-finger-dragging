@@ -199,7 +199,7 @@ EventQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
     if (!event_query_is_touchpad(local->fd))
 	return FALSE;
 
-    xf86Msg(X_PROBED, "%s touchpad found\n", local->name);
+    xf86Msg(X_PROBED, "%s: touchpad found\n", local->name);
 
     return TRUE;
 }
