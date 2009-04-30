@@ -715,7 +715,15 @@ DeviceOn(DeviceIntPtr dev)
     xf86FlushInput(local->fd);
 
     /* reinit the pad */
-    QueryHardware(local);
+    if (!QueryHardware(local))
+    {
+        XisbFree(priv->comm.buffer);
+        priv->comm.buffer = NULL;
+        xf86CloseSerial(local->fd);
+        local->fd = -1;
+        return !Success;
+    }
+
     xf86AddEnabledDevice(local);
     dev->public.on = TRUE;
 
@@ -2197,6 +2205,7 @@ QueryHardware(LocalDevicePtr local)
 	xf86Msg(X_PROBED, "%s: no supported touchpad found\n", local->name);
 	if (priv->proto_ops->DeviceOffHook)
             priv->proto_ops->DeviceOffHook(local);
+        return FALSE;
     }
 
     return TRUE;
