@@ -635,7 +635,9 @@ static void SynapticsUnInit(InputDriverPtr drv,
                             InputInfoPtr   local,
                             int            flags)
 {
-    xfree(((SynapticsPrivate *)local->private)->timer);
+    SynapticsPrivate *priv = ((SynapticsPrivate *)local->private);
+    if (priv && priv->timer)
+        xfree(priv->timer);
     xfree(local->private);
     local->private = NULL;
     xf86DeleteInput(local, 0);
