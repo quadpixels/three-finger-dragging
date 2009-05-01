@@ -300,7 +300,7 @@ ps2_synaptics_model_id(int fd, struct SynapticsHwInfo *synhw)
 	ps2_getbyte(fd, &mi[1]) &&
 	ps2_getbyte(fd, &mi[2])) {
 	synhw->model_id = (mi[0] << 16) | (mi[1] << 8) | mi[2];
-	PS2DBG(ErrorF("mode-id %06X\n", synhw->model_id));
+	PS2DBG(ErrorF("model-id %06X\n", synhw->model_id));
 	PS2DBG(ErrorF("...done.\n"));
 	return TRUE;
     }
