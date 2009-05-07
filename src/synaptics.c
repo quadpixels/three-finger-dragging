@@ -340,10 +340,14 @@ static void set_default_parameters(LocalDevicePtr local)
         {
             ewidth = width * .15;
             eheight = height * .15;
+        } else if (priv->model == MODEL_APPLETOUCH)
+        {
+            ewidth = width * .085;
+            eheight = height * .085;
         } else
         {
             ewidth = width * .04;
-            eheight = height * .04;
+            eheight = height * .054;
         }
 
         l = priv->minx + ewidth;

@@ -82,7 +82,8 @@ enum TapButtonState {
 enum TouchpadModel {
     MODEL_UNKNOWN = 0,
     MODEL_SYNAPTICS,
-    MODEL_ALPS
+    MODEL_ALPS,
+    MODEL_APPLETOUCH
 };
 
 typedef struct _SynapticsParameters

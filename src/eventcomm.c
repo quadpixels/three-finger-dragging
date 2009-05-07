@@ -110,22 +110,37 @@ event_query_is_touchpad(int fd)
     return TRUE;
 }
 
+typedef struct {
+	short vendor;
+	short product;
+	enum TouchpadModel model;
+} model_lookup_t;
+#define PRODUCT_ANY 0x0000
+
+static model_lookup_t model_lookup_table[] = {
+	{0x0002, 0x0007, MODEL_SYNAPTICS},
+	{0x0002, 0x0008, MODEL_ALPS},
+	{0x05ac, PRODUCT_ANY, MODEL_APPLETOUCH},
+	{0x0, 0x0, 0x0}
+};
+
 static void
 event_query_info(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
     short id[4];
     int rc;
+    model_lookup_t *model_lookup;
 
     SYSCALL(rc = ioctl(local->fd, EVIOCGID, id));
     if (rc < 0)
         return;
 
-    if (id[ID_VENDOR] == 0x2 && id[ID_PRODUCT] == 0x7)
-        priv->model = MODEL_SYNAPTICS;
-    else if (id[ID_VENDOR] == 0x2 && id[ID_PRODUCT] == 0x8)
-        priv->model = MODEL_ALPS;
-
+    for(model_lookup = model_lookup_table; model_lookup->vendor; model_lookup++) {
+        if(model_lookup->vendor == id[ID_VENDOR] &&
+           (model_lookup->product == id[ID_PRODUCT] || model_lookup->product == PRODUCT_ANY))
+            priv->model = model_lookup->model;
+    }
 }
 
 /* Query device for axis ranges */
