@@ -80,6 +80,7 @@ Atom prop_coastspeed            = 0;
 Atom prop_pressuremotion        = 0;
 Atom prop_pressuremotion_factor = 0;
 Atom prop_grab                  = 0;
+Atom prop_gestures              = 0;
 
 static Atom
 InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
@@ -251,6 +252,8 @@ InitDeviceProperties(LocalDevicePtr local)
 
     prop_grab = InitAtom(local->dev, SYNAPTICS_PROP_GRAB, 8, 1, &para->grab_event_device);
 
+    values[0] = para->tap_and_drag_gesture;
+    prop_gestures = InitAtom(local->dev, SYNAPTICS_PROP_GESTURES, 8, 1, values);
 }
 
 int
@@ -473,6 +476,15 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
             return BadMatch;
 
         para->guestmouse_off = *(BOOL*)prop->data;
+    } else if (property == prop_gestures)
+    {
+        BOOL *gestures;
+
+        if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
+            return BadMatch;
+
+        gestures = (BOOL*)prop->data;
+        para->tap_and_drag_gesture = gestures[0];
     } else if (property == prop_lockdrags)
     {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)

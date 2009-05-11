@@ -146,6 +146,7 @@ typedef struct _SynapticsParameters
     double press_motion_min_factor;	    /* factor applied on speed when finger pressure is at minimum */
     double press_motion_max_factor; 	    /* factor applied on speed when finger pressure is at minimum */
     Bool grab_event_device;		    /* grab event device for exclusive use? */
+    Bool tap_and_drag_gesture;		    /* Switches the tap-and-drag gesture on/off */
 } SynapticsParameters;
 
 

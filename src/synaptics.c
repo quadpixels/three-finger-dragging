@@ -503,6 +503,7 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->press_motion_min_factor = xf86SetRealOption(opts, "PressureMotionMinFactor", 1.0);
     pars->press_motion_max_factor = xf86SetRealOption(opts, "PressureMotionMaxFactor", 1.0);
     pars->grab_event_device = xf86SetBoolOption(opts, "GrabEventDevice", TRUE);
+    pars->tap_and_drag_gesture = xf86SetBoolOption(opts, "TapAndDragGesture", TRUE);
 
     /* Warn about (and fix) incorrectly configured TopEdge/BottomEdge parameters */
     if (pars->top_edge > pars->bottom_edge) {
@@ -1225,7 +1226,10 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
 	priv->tap_button_state = TBS_BUTTON_UP;
 	break;
     case TS_3:
-	priv->tap_button_state = TBS_BUTTON_DOWN;
+	if (para->tap_and_drag_gesture)
+	    priv->tap_button_state = TBS_BUTTON_DOWN;
+	else
+	    priv->tap_button_state = TBS_BUTTON_UP;
 	break;
     case TS_SINGLETAP:
 	if (para->fast_taps)
@@ -1363,16 +1367,24 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	break;
     case TS_3:
 	if (move) {
-	    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
-	    SetTapState(priv, TS_DRAG, hw->millis);
+	    if (para->tap_and_drag_gesture) {
+		SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
+		SetTapState(priv, TS_DRAG, hw->millis);
+	    } else {
+		SetTapState(priv, TS_1, hw->millis);
+	    }
 	    goto restart;
 	} else if (is_timeout) {
-	    if (finger == FS_TOUCHED) {
-		SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
-	    } else if (finger == FS_PRESSED) {
-		SetMovingState(priv, MS_TRACKSTICK, hw->millis);
+	    if (para->tap_and_drag_gesture) {
+		if (finger == FS_TOUCHED) {
+		    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
+		} else if (finger == FS_PRESSED) {
+		    SetMovingState(priv, MS_TRACKSTICK, hw->millis);
+		}
+		SetTapState(priv, TS_DRAG, hw->millis);
+	    } else {
+		SetTapState(priv, TS_1, hw->millis);
 	    }
-	    SetTapState(priv, TS_DRAG, hw->millis);
 	    goto restart;
 	} else if (release) {
 	    SetTapState(priv, TS_2B, hw->millis);

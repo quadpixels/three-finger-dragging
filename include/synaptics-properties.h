@@ -142,4 +142,7 @@
 /* 8 bit (BOOL) */
 #define SYNAPTICS_PROP_GRAB "Synaptics Grab Event Device"
 
+/* 8 bit (BOOL), 1 value, tap-and-drag */
+#define SYNAPTICS_PROP_GESTURES "Synaptics Gestures"
+
 #endif /* _SYNAPTICS_PROPERTIES_H_ */
