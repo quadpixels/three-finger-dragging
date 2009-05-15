@@ -235,15 +235,15 @@ event_query_axis_ranges(LocalDevicePtr local)
     if (rc >= 0)
     {
 	buf[0] = 0;
-	if ((priv->has_left = TEST_BIT(BTN_LEFT, keybits)))
+	if ((priv->has_left = (TEST_BIT(BTN_LEFT, keybits) != 0)))
 	   strcat(buf, " left");
-	if ((priv->has_right = TEST_BIT(BTN_RIGHT, keybits)))
+	if ((priv->has_right = (TEST_BIT(BTN_RIGHT, keybits) != 0)))
 	   strcat(buf, " right");
-	if ((priv->has_middle = TEST_BIT(BTN_MIDDLE, keybits)))
+	if ((priv->has_middle = (TEST_BIT(BTN_MIDDLE, keybits) != 0)))
 	   strcat(buf, " middle");
-	if ((priv->has_double = TEST_BIT(BTN_TOOL_DOUBLETAP, keybits)))
+	if ((priv->has_double = (TEST_BIT(BTN_TOOL_DOUBLETAP, keybits) != 0)))
 	   strcat(buf, " double");
-	if ((priv->has_triple = TEST_BIT(BTN_TOOL_TRIPLETAP, keybits)))
+	if ((priv->has_triple = (TEST_BIT(BTN_TOOL_TRIPLETAP, keybits) != 0)))
 	   strcat(buf, " triple");
 	xf86Msg(X_INFO, "%s: buttons:%s\n", local->name, buf);
     }
