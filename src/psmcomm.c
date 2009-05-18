@@ -50,6 +50,14 @@
 
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
+struct SynapticsHwInfo {
+    unsigned int model_id;		    /* Model-ID */
+    unsigned int capabilities;		    /* Capabilities */
+    unsigned int ext_cap;		    /* Extended Capabilities */
+    unsigned int identity;		    /* Identification */
+    Bool hasGuest;			    /* Has a guest mouse */
+};
+
 /*
  * Identify Touchpad
  * See also the SYN_ID_* macros
@@ -125,9 +133,17 @@ convert_hw_info(const synapticshw_t *psm_ident, struct SynapticsHwInfo *synhw)
 }
 
 static Bool
-PSMQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
+PSMQueryHardware(LocalDevicePtr local)
 {
     synapticshw_t psm_ident;
+    struct SynapticsHwInfo *synhw;
+    SynapticsPrivate *priv;
+
+    priv = (SynapticsPrivate *)local->private;
+
+    if(!priv->proto_data)
+        priv->proto_data = xcalloc(1, sizeof(struct SynapticsHwInfo));
+    synhw = (struct SynapticsHwInfo*)priv->proto_data;
 
     /* is the synaptics touchpad active? */
     if (!PSMQueryIsSynaptics(local))
@@ -152,11 +168,11 @@ PSMQueryHardware(LocalDevicePtr local, struct SynapticsHwInfo *synhw)
 }
 
 static Bool
-PSMReadHwState(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
+PSMReadHwState(LocalDevicePtr local,
 	       struct SynapticsProtocolOperations *proto_ops,
 	       struct CommData *comm, struct SynapticsHwState *hwRet)
 {
-    return psaux_proto_operations.ReadHwState(local, synhw, proto_ops, comm, hwRet);
+    return psaux_proto_operations.ReadHwState(local, proto_ops, comm, hwRet);
 }
 
 static Bool PSMAutoDevProbe(LocalDevicePtr local)
