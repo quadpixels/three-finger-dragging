@@ -130,7 +130,7 @@ unwind:
     if (grab)
         SYSCALL(ioctl(fd, EVIOCGRAB, (pointer)0));
 
-    return ret;
+    return (ret == TRUE);
 }
 
 typedef struct {
