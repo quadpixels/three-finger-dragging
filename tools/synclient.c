@@ -99,7 +99,7 @@ static struct Parameter params[] = {
     {"HorizTwoFingerScroll",  PT_BOOL,   0, 1,     SYNAPTICS_PROP_SCROLL_TWOFINGER,	8,	1},
     {"MinSpeed",              PT_DOUBLE, 0, 1.0,   SYNAPTICS_PROP_SPEED,	0, /*float */	0},
     {"MaxSpeed",              PT_DOUBLE, 0, 1.0,   SYNAPTICS_PROP_SPEED,	0, /*float */	1},
-    {"AccelFactor",           PT_DOUBLE, 0, 0.2,   SYNAPTICS_PROP_SPEED,	0, /*float */	2},
+    {"AccelFactor",           PT_DOUBLE, 0, 1.0,   SYNAPTICS_PROP_SPEED,	0, /*float */	2},
     {"TrackstickSpeed",       PT_DOUBLE, 0, 200.0, SYNAPTICS_PROP_SPEED,	0, /*float */ 3},
     {"EdgeMotionMinZ",        PT_INT,    1, 255,   SYNAPTICS_PROP_EDGEMOTION_PRESSURE,  32,	0},
     {"EdgeMotionMaxZ",        PT_INT,    1, 255,   SYNAPTICS_PROP_EDGEMOTION_PRESSURE,  32,	1},
