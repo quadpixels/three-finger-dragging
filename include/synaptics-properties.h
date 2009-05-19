@@ -145,4 +145,8 @@
 /* 8 bit (BOOL), 1 value, tap-and-drag */
 #define SYNAPTICS_PROP_GESTURES "Synaptics Gestures"
 
+/* 8 bit (BOOL), 5 values (read-only), has_left, has_middle, has_right,
+ * has_double, has_triple */
+#define SYNAPTICS_PROP_CAPABILITIES "Synaptics Capabilities"
+
 #endif /* _SYNAPTICS_PROPERTIES_H_ */

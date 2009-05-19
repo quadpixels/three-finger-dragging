@@ -81,6 +81,7 @@ Atom prop_pressuremotion        = 0;
 Atom prop_pressuremotion_factor = 0;
 Atom prop_grab                  = 0;
 Atom prop_gestures              = 0;
+Atom prop_capabilities          = 0;
 
 static Atom
 InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
@@ -254,6 +255,13 @@ InitDeviceProperties(LocalDevicePtr local)
 
     values[0] = para->tap_and_drag_gesture;
     prop_gestures = InitAtom(local->dev, SYNAPTICS_PROP_GESTURES, 8, 1, values);
+
+    values[0] = priv->has_left;
+    values[1] = priv->has_middle;
+    values[2] = priv->has_right;
+    values[3] = priv->has_double;
+    values[4] = priv->has_triple;
+    prop_capabilities = InitAtom(local->dev, SYNAPTICS_PROP_CAPABILITIES, 8, 5, values);
 }
 
 int
@@ -600,6 +608,10 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
             return BadMatch;
 
         para->grab_event_device = *(BOOL*)prop->data;
+    } else if (property == prop_capabilities)
+    {
+        /* read-only */
+        return BadValue;
     }
 
     return Success;

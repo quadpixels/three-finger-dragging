@@ -809,6 +809,15 @@ FLOAT, 2 values, min, max.
 .BI "Synaptics Gestures"
 8 bit (BOOL), 1 value, tap-and-drag.
 
+.TP 7
+.BI "Synaptics Capabilities"
+This read-only property expresses the physical capability of the touchpad,
+most notably whether the touchpad hardware supports multi-finger tapping and
+scrolling.
+
+8 bit (BOOL), 5 values (read-only), has left button, has middle button, has
+right button, two-finger detection, three-finger detection.
+
 .SH "NOTES"
 There is an example hal policy file in
 .I ${sourcecode}/fdi/11-x11-synaptics.fdi
