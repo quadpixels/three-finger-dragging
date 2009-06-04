@@ -838,6 +838,9 @@ by the kernel. If the kernel reports multi-finger detection, two-finger
 vertical scrolling is enabled, horizontal two-finger scrolling is disabled and
 edge scrolling is disabled. If no multi-finger capabilities are reported,
 edge scrolling is enabled for both horizontal and vertical scrolling.
+Tapping is disabled by default for touchpads with one or more physical buttons.
+To enable it you need to map tap actions to buttons. See the "TapButton1",
+"TapButton2" and "TapButton3" options.
 .LP
 Button mapping for physical buttons is handled in the server.
 If the device is switched to left-handed (an in-server mapping of physical
