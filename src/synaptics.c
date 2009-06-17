@@ -795,6 +795,7 @@ DeviceInit(DeviceIntPtr dev)
     SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
     unsigned char map[SYN_MAX_BUTTONS + 1];
     int i;
+    int min, max;
 
     DBG(3, ErrorF("Synaptics DeviceInit called\n"));
 
@@ -819,15 +820,30 @@ DeviceInit(DeviceIntPtr dev)
 			    );
     /* X valuator */
     if (priv->minx < priv->maxx)
-	xf86InitValuatorAxisStruct(dev, 0, priv->minx, priv->maxx, 1, 0, 1);
-    else
-	xf86InitValuatorAxisStruct(dev, 0, 0, -1, 1, 0, 1);
+    {
+        min = priv->minx;
+        max = priv->maxx;
+    } else
+    {
+        min = 0;
+        max = -1;
+    }
+
+    xf86InitValuatorAxisStruct(dev, 0, min, max, 1, 0, 1);
     xf86InitValuatorDefaults(dev, 0);
+
     /* Y valuator */
     if (priv->miny < priv->maxy)
-	xf86InitValuatorAxisStruct(dev, 1, priv->miny, priv->maxy, 1, 0, 1);
-    else
-	xf86InitValuatorAxisStruct(dev, 1, 0, -1, 1, 0, 1);
+    {
+        min = priv->miny;
+        max = priv->maxy;
+    } else
+    {
+        min = 0;
+        max = -1;
+    }
+
+    xf86InitValuatorAxisStruct(dev, 1, min, max, 1, 0, 1);
     xf86InitValuatorDefaults(dev, 1);
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
