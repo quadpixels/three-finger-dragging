@@ -77,6 +77,11 @@
 #include "synapticsstr.h"
 #include "synaptics-properties.h"
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+#include <X11/Xatom.h>
+#include <xserver-properties.h>
+#endif
+
 typedef enum {
     BOTTOM_EDGE = 1,
     TOP_EDGE = 2,
@@ -788,6 +793,46 @@ DeviceClose(DeviceIntPtr dev)
     return RetValue;
 }
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+static void InitAxesLabels(Atom *labels, int nlabels)
+{
+    memset(labels, 0, nlabels * sizeof(Atom));
+    switch(nlabels)
+    {
+        default:
+        case 2:
+            labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y);
+        case 1:
+            labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_X);
+            break;
+    }
+}
+
+static void InitButtonLabels(Atom *labels, int nlabels)
+{
+    memset(labels, 0, nlabels * sizeof(Atom));
+    switch(nlabels)
+    {
+        default:
+        case 7:
+            labels[6] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_RIGHT);
+        case 6:
+            labels[5] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_LEFT);
+        case 5:
+            labels[4] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_DOWN);
+        case 4:
+            labels[3] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_UP);
+        case 3:
+            labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_RIGHT);
+        case 2:
+            labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_MIDDLE);
+        case 1:
+            labels[0] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_LEFT);
+            break;
+    }
+}
+#endif
+
 static Bool
 DeviceInit(DeviceIntPtr dev)
 {
@@ -796,6 +841,13 @@ DeviceInit(DeviceIntPtr dev)
     unsigned char map[SYN_MAX_BUTTONS + 1];
     int i;
     int min, max;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+    Atom btn_labels[SYN_MAX_BUTTONS] = { 0 };
+    Atom axes_labels[2] = { 0 };
+
+    InitAxesLabels(axes_labels, 2);
+    InitButtonLabels(btn_labels, SYN_MAX_BUTTONS);
+#endif
 
     DBG(3, ErrorF("Synaptics DeviceInit called\n"));
 
@@ -806,6 +858,9 @@ DeviceInit(DeviceIntPtr dev)
 
     InitPointerDeviceStruct((DevicePtr)dev, map,
 			    SYN_MAX_BUTTONS,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                            btn_labels,
+#endif
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
 			    miPointerGetMotionEvents,
 #elif GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
@@ -816,6 +871,9 @@ DeviceInit(DeviceIntPtr dev)
 			    miPointerGetMotionBufferSize()
 #else
 			    GetMotionHistorySize(), 2
+#endif
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+                            , axes_labels
 #endif
 			    );
     /* X valuator */
@@ -829,7 +887,11 @@ DeviceInit(DeviceIntPtr dev)
         max = -1;
     }
 
-    xf86InitValuatorAxisStruct(dev, 0, min, max, 1, 0, 1);
+    xf86InitValuatorAxisStruct(dev, 0,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+            axes_labels[0],
+#endif
+            min, max, 1, 0, 1);
     xf86InitValuatorDefaults(dev, 0);
 
     /* Y valuator */
@@ -843,7 +905,11 @@ DeviceInit(DeviceIntPtr dev)
         max = -1;
     }
 
-    xf86InitValuatorAxisStruct(dev, 1, min, max, 1, 0, 1);
+    xf86InitValuatorAxisStruct(dev, 1,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+            axes_labels[1],
+#endif
+            min, max, 1, 0, 1);
     xf86InitValuatorDefaults(dev, 1);
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
