@@ -293,6 +293,40 @@ free_param_data(SynapticsPrivate *priv)
     priv->synshm = NULL;
 }
 
+static void
+calculate_edge_widths(SynapticsPrivate *priv, int *l, int *r, int *t, int *b)
+{
+    int width, height;
+    int ewidth, eheight; /* edge width/height */
+
+    width = abs(priv->maxx - priv->minx);
+    height = abs(priv->maxy - priv->miny);
+
+    if (priv->model == MODEL_SYNAPTICS)
+    {
+        ewidth = width * .07;
+        eheight = height * .07;
+    } else if (priv->model == MODEL_ALPS)
+    {
+        ewidth = width * .15;
+        eheight = height * .15;
+    } else if (priv->model == MODEL_APPLETOUCH)
+    {
+        ewidth = width * .085;
+        eheight = height * .085;
+    } else
+    {
+        ewidth = width * .04;
+        eheight = height * .054;
+    }
+
+    *l = priv->minx + ewidth;
+    *r = priv->maxx - ewidth;
+    *t = priv->miny + eheight;
+    *b = priv->maxy - eheight;
+}
+
+
 static void set_default_parameters(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = local->private; /* read-only */
@@ -332,33 +366,12 @@ static void set_default_parameters(LocalDevicePtr local)
     if (priv->minx < priv->maxx && priv->miny < priv->maxy)
     {
         int width, height, diag;
-        int ewidth, eheight; /* edge width/height */
 
         width = abs(priv->maxx - priv->minx);
         height = abs(priv->maxy - priv->miny);
         diag = sqrt(width * width + height * height);
-        if (priv->model == MODEL_SYNAPTICS)
-        {
-            ewidth = width * .07;
-            eheight = height * .07;
-        } else if (priv->model == MODEL_ALPS)
-        {
-            ewidth = width * .15;
-            eheight = height * .15;
-        } else if (priv->model == MODEL_APPLETOUCH)
-        {
-            ewidth = width * .085;
-            eheight = height * .085;
-        } else
-        {
-            ewidth = width * .04;
-            eheight = height * .054;
-        }
 
-        l = priv->minx + ewidth;
-        r = priv->maxx - ewidth;
-        t = priv->miny + eheight;
-        b = priv->maxy - eheight;
+        calculate_edge_widths(priv, &l, &r, &t, &b);
 
         /* Again, based on typical x/y range and defaults */
         horizScrollDelta = diag * .020;
