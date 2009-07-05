@@ -86,6 +86,23 @@ enum TouchpadModel {
     MODEL_APPLETOUCH
 };
 
+typedef enum {
+    BOTTOM_EDGE = 1,
+    TOP_EDGE = 2,
+    LEFT_EDGE = 4,
+    RIGHT_EDGE = 8,
+    LEFT_BOTTOM_EDGE = BOTTOM_EDGE | LEFT_EDGE,
+    RIGHT_BOTTOM_EDGE = BOTTOM_EDGE | RIGHT_EDGE,
+    RIGHT_TOP_EDGE = TOP_EDGE | RIGHT_EDGE,
+    LEFT_TOP_EDGE = TOP_EDGE | LEFT_EDGE,
+
+    /* EDGE_CHANGED and EDGE_CHANGED_WAITING are flags to signal that there
+     * at least one edge has changed and that there is a property notify
+     * event waiting to be sent, respectively. */
+    EDGE_CHANGED = 16,
+    EDGE_CHANGE_WAITING = 32
+} edge_type;
+
 typedef struct _SynapticsParameters
 {
     /* Parameter data */
@@ -169,7 +186,6 @@ typedef struct _SynapticsPrivateRec
 
     SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY]; /* movement history */
     int hist_index;			/* Last added entry in move_hist[] */
-    int largest_valid_x;		/* Largest valid X coordinate seen so far */
     int scroll_y;			/* last y-scroll position */
     int scroll_x;			/* last x-scroll position */
     double scroll_a;			/* last angle-scroll position */
@@ -219,6 +235,12 @@ typedef struct _SynapticsPrivateRec
     Bool has_pressure;			/* device reports pressure */
 
     enum TouchpadModel model;          /* The detected model */
+
+    /* edges_forces is set to RIGHT_EDGE | LEFT_EDGE | ... when the matching
+     * edge is specified in the xorg.conf. When the edges are auto-adjusted,
+     * edges_forces may be flagged EDGE_CHANGED and EDGE_CHANGED_WAITING */
+    int edges_forced;                   /* edges set manually? RIGHT_EDGE | LEFT_EDGE | ... */
+    OsTimerPtr property_notify_timer;   /* For sending off property notify events */
 } SynapticsPrivate;
 
 #endif /* _SYNAPTICSSTR_H_ */

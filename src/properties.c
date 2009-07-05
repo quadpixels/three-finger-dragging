@@ -617,5 +617,22 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
     return Success;
 }
 
+void
+SetEdgeProperty(LocalDevicePtr local)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate*)local->private;
+    SynapticsParameters *para = &priv->synpara;
+    uint32_t values[4];
+
+    values[0] = para->left_edge;
+    values[1] = para->right_edge;
+    values[2] = para->top_edge;
+    values[3] = para->bottom_edge;
+
+    XIChangeDeviceProperty(local->dev, prop_edges, XA_INTEGER, 32,
+                           PropModeReplace, 4, values, FALSE);
+}
+
+
 #endif
 
