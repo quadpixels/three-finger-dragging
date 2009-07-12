@@ -82,6 +82,7 @@ Atom prop_pressuremotion_factor = 0;
 Atom prop_grab                  = 0;
 Atom prop_gestures              = 0;
 Atom prop_capabilities          = 0;
+Atom prop_resolution            = 0;
 
 static Atom
 InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
@@ -262,6 +263,11 @@ InitDeviceProperties(LocalDevicePtr local)
     values[3] = priv->has_double;
     values[4] = priv->has_triple;
     prop_capabilities = InitAtom(local->dev, SYNAPTICS_PROP_CAPABILITIES, 8, 5, values);
+
+    values[0] = para->resolution_vert;
+    values[1] = para->resolution_horiz;
+    prop_resolution = InitAtom(local->dev, SYNAPTICS_PROP_RESOLUTION, 32, 2, values);
+
 }
 
 int
@@ -609,6 +615,10 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
 
         para->grab_event_device = *(BOOL*)prop->data;
     } else if (property == prop_capabilities)
+    {
+        /* read-only */
+        return BadValue;
+    } else if (property == prop_resolution)
     {
         /* read-only */
         return BadValue;

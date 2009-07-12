@@ -171,7 +171,7 @@ static void
 event_query_axis_ranges(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
-    struct input_absinfo abs;
+    struct input_absinfo abs = {0};
     unsigned long absbits[NBITS(ABS_MAX)] = {0};
     unsigned long keybits[NBITS(KEY_MAX)] = {0};
     char buf[256];
@@ -184,6 +184,9 @@ event_query_axis_ranges(LocalDevicePtr local)
 		abs.minimum, abs.maximum);
 	priv->minx = abs.minimum;
 	priv->maxx = abs.maximum;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)
+	priv->resx = abs.resolution;
+#endif
     } else
 	xf86Msg(X_ERROR, "%s: failed to query axis range (%s)\n", local->name,
 		strerror(errno));
@@ -195,6 +198,9 @@ event_query_axis_ranges(LocalDevicePtr local)
 		abs.minimum, abs.maximum);
 	priv->miny = abs.minimum;
 	priv->maxy = abs.maximum;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)
+	priv->resy = abs.resolution;
+#endif
     } else
 	xf86Msg(X_ERROR, "%s: failed to query axis range (%s)\n", local->name,
 		strerror(errno));

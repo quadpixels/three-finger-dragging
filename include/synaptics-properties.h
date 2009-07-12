@@ -149,4 +149,7 @@
  * has_double, has_triple */
 #define SYNAPTICS_PROP_CAPABILITIES "Synaptics Capabilities"
 
+/* 32 bit unsigned, 2 values, vertical, horizontal in units/millimeter */
+#define SYNAPTICS_PROP_RESOLUTION "Synaptics Pad Resolution"
+
 #endif /* _SYNAPTICS_PROPERTIES_H_ */

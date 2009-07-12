@@ -118,6 +118,8 @@ static Bool DeviceOff(DeviceIntPtr);
 static Bool DeviceClose(DeviceIntPtr);
 static Bool QueryHardware(LocalDevicePtr);
 static void ReadDevDimensions(LocalDevicePtr);
+static void ScaleCoordinates(SynapticsPrivate *priv, struct SynapticsHwState *hw);
+static void CalculateScalingCoeffs(SynapticsPrivate *priv);
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
 void InitDeviceProperties(LocalDevicePtr local);
@@ -338,6 +340,8 @@ static void set_default_parameters(LocalDevicePtr local)
     int clickFinger1, clickFinger2, clickFinger3;
     Bool vertEdgeScroll, horizEdgeScroll;
     Bool vertTwoFingerScroll, horizTwoFingerScroll;
+    int horizResolution = 1;
+    int vertResolution = 1;
 
     /* read the parameters */
     if (priv->synshm)
@@ -439,6 +443,12 @@ static void set_default_parameters(LocalDevicePtr local)
     vertTwoFingerScroll = priv->has_double ? TRUE : FALSE;
     horizTwoFingerScroll = FALSE;
 
+    /* Use resolution reported by hardware if available */
+    if ((priv->resx > 0) && (priv->resy > 0)) {
+        horizResolution = priv->resx;
+        vertResolution = priv->resy;
+    }
+
     /* set the parameters */
     priv->edges_forced = 0;
     if (xf86CheckIfOptionUsedByName(opts, "LeftEdge"))
@@ -517,6 +527,8 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->press_motion_max_factor = xf86SetRealOption(opts, "PressureMotionMaxFactor", 1.0);
     pars->grab_event_device = xf86SetBoolOption(opts, "GrabEventDevice", TRUE);
     pars->tap_and_drag_gesture = xf86SetBoolOption(opts, "TapAndDragGesture", TRUE);
+    pars->resolution_horiz = xf86SetIntOption(opts, "HorizResolution", horizResolution);
+    pars->resolution_vert = xf86SetIntOption(opts, "VertResolution", vertResolution);
 
     /* Warn about (and fix) incorrectly configured TopEdge/BottomEdge parameters */
     if (pars->top_edge > pars->bottom_edge) {
@@ -618,6 +630,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->shm_config = xf86SetBoolOption(local->options, "SHMConfig", FALSE);
 
     set_default_parameters(local);
+
+    CalculateScalingCoeffs(priv);
 
     if (!alloc_param_data(local))
 	goto SetupProc_fail;
@@ -905,7 +919,7 @@ DeviceInit(DeviceIntPtr dev)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
             axes_labels[0],
 #endif
-            min, max, 1, 0, 1);
+            min, max, priv->resx * 1000, 0, priv->resx * 1000);
     xf86InitValuatorDefaults(dev, 0);
 
     /* Y valuator */
@@ -923,7 +937,7 @@ DeviceInit(DeviceIntPtr dev)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
             axes_labels[1],
 #endif
-            min, max, 1, 0, 1);
+            min, max, priv->resy * 1000, 0, priv->resy * 1000);
     xf86InitValuatorDefaults(dev, 1);
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
@@ -2229,6 +2243,13 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     if (timeleft > 0)
 	delay = MIN(delay, timeleft);
 
+    /*
+     * Compensate for unequal x/y resolution. This needs to be done after
+     * calculations that require unadjusted coordinates, for example edge
+     * detection.
+     */
+    ScaleCoordinates(priv, hw);
+
     timeleft = ComputeDeltas(priv, hw, edge, &dx, &dy);
     delay = MIN(delay, timeleft);
 
@@ -2414,3 +2435,30 @@ QueryHardware(LocalDevicePtr local)
     return TRUE;
 }
 
+static void
+ScaleCoordinates(SynapticsPrivate *priv, struct SynapticsHwState *hw)
+{
+    int xCenter = (priv->synpara.left_edge + priv->synpara.right_edge) / 2;
+    int yCenter = (priv->synpara.top_edge + priv->synpara.bottom_edge) / 2;
+
+    hw->x = (hw->x - xCenter) * priv->horiz_coeff + xCenter;
+    hw->y = (hw->y - yCenter) * priv->vert_coeff + yCenter;
+}
+
+void
+CalculateScalingCoeffs(SynapticsPrivate *priv)
+{
+    int vertRes = priv->synpara.resolution_vert;
+    int horizRes = priv->synpara.resolution_horiz;
+
+    if ((horizRes > vertRes) && (horizRes > 0)) {
+        priv->horiz_coeff = vertRes / (double)horizRes;
+        priv->vert_coeff = 1;
+    } else if ((horizRes < vertRes) && (vertRes > 0)) {
+        priv->horiz_coeff = 1;
+        priv->vert_coeff = horizRes / (double)vertRes;
+    } else {
+        priv->horiz_coeff = 1;
+        priv->vert_coeff = 1;
+    }
+}

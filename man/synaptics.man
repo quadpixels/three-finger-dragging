@@ -425,6 +425,23 @@ touching again and moving the finger on the touchpad.
 The gesture is enabled by default and can be disabled by setting the
 TapAndDragGesture option to false. Property: "Synaptics Gestures"
 .
+.TP
+.BI "Option \*qVertResolution\*q \*q" integer \*q
+Resolution of X coordinates in units/millimeter. The value is used
+together with HorizResolution to compensate unequal vertical and
+horizontal sensitivity. Setting VertResolution and HorizResolution
+equal values means no compensation. Default value is read from
+the touchpad or set to 1 if value could not be read.
+Property: "Synaptics Pad Resolution"
+.
+.TP
+.BI "Option \*qHorizResolution\*q \*q" integer \*q
+Resolution of Y coordinates in units/millimeter. The value is used
+together with VertResolution to compensate unequal vertical and
+horizontal sensitivity. Setting VertResolution and HorizResolution
+equal values means no compensation. Default value is read from
+the touchpad or set to 1 if value could not be read.
+Property: "Synaptics Pad Resolution"
 .LP
 The LeftEdge, RightEdge, TopEdge and BottomEdge parameters are used to
 define the edge and corner areas of the touchpad.
@@ -812,6 +829,10 @@ scrolling.
 8 bit (BOOL), 5 values (read-only), has left button, has middle button, has
 right button, two-finger detection, three-finger detection.
 
+.TP 7
+.BI "Synaptics Pad Resolution"
+32 bit unsigned, 2 values (read-only), vertical, horizontal in units/millimeter.
+
 .SH "NOTES"
 There is an example hal policy file in
 .I ${sourcecode}/fdi/11-x11-synaptics.fdi
@@ -827,8 +848,8 @@ If either of
 (default) or
 .BI "Protocol \*q" event \*q
 is used, the driver initializes defaults based on the capabilities reported by
-the kernel driver. Acceleration and edges are based on the dimensions reported
-by the kernel. If the kernel reports multi-finger detection, two-finger
+the kernel driver. Acceleration, edges and resolution are based on the dimensions
+reported by the kernel. If the kernel reports multi-finger detection, two-finger
 vertical scrolling is enabled, horizontal two-finger scrolling is disabled and
 edge scrolling is disabled. If no multi-finger capabilities are reported,
 edge scrolling is enabled for both horizontal and vertical scrolling.

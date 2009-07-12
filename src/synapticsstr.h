@@ -164,6 +164,8 @@ typedef struct _SynapticsParameters
     double press_motion_max_factor; 	    /* factor applied on speed when finger pressure is at minimum */
     Bool grab_event_device;		    /* grab event device for exclusive use? */
     Bool tap_and_drag_gesture;		    /* Switches the tap-and-drag gesture on/off */
+    unsigned int resolution_horiz;          /* horizontal resolution of touchpad in units/mm */
+    unsigned int resolution_vert;           /* vertical resolution of touchpad in units/mm */
 } SynapticsParameters;
 
 
@@ -224,9 +226,12 @@ typedef struct _SynapticsPrivateRec
 					   palm/finger contact disappears */
     int prev_z;				/* previous z value, for palm detection */
     int avg_width;			/* weighted average of previous fingerWidth values */
+    double horiz_coeff;                 /* normalization factor for x coordintes */
+    double vert_coeff;                  /* normalization factor for y coordintes */
 
     int minx, maxx, miny, maxy;         /* min/max dimensions as detected */
     int minp, maxp, minw, maxw;		/* min/max pressure and finger width as detected */
+    int resx, resy;                     /* resolution of coordinates as detected in units/mm */
     Bool has_left;			/* left button detected for this device */
     Bool has_right;			/* right button detected for this device */
     Bool has_middle;			/* middle button detected for this device */

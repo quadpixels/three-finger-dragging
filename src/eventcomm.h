@@ -28,6 +28,7 @@
 #define _EVENTCOMM_H_
 
 #include <linux/input.h>
+#include <linux/version.h>
 
 /* for auto-dev: */
 #define DEV_INPUT_EVENT "/dev/input"
