@@ -465,6 +465,11 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->top_edge = xf86SetIntOption(opts, "TopEdge", t);
     pars->bottom_edge = xf86SetIntOption(opts, "BottomEdge", b);
 
+    pars->area_top_edge = xf86SetIntOption(opts, "AreaTopEdge", 0);
+    pars->area_bottom_edge = xf86SetIntOption(opts, "AreaBottomEdge", 0);
+    pars->area_left_edge = xf86SetIntOption(opts, "AreaLeftEdge", 0);
+    pars->area_right_edge = xf86SetIntOption(opts, "AreaRightEdge", 0);
+
     pars->finger_low = xf86SetIntOption(opts, "FingerLow", fingerLow);
     pars->finger_high = xf86SetIntOption(opts, "FingerHigh", fingerHigh);
     pars->finger_press = xf86SetIntOption(opts, "FingerPress", fingerPress);
@@ -1079,6 +1084,29 @@ propertyTimerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 }
 #endif
 
+/* Checks whether coordinates are in the Synaptics Area
+ * or not. If no Synaptics Area is defined (i.e. if
+ * priv->synpara.area_{left|right|top|bottom}_edge are
+ * all set to zero), the function returns TRUE.
+ */
+static Bool
+is_inside_active_area(SynapticsPrivate *priv, int x, int y)
+{
+    Bool inside_area = TRUE;
+
+    if ((priv->synpara.area_left_edge != 0) && (x < priv->synpara.area_left_edge))
+	inside_area = FALSE;
+    else if ((priv->synpara.area_right_edge != 0) && (x > priv->synpara.area_right_edge))
+	inside_area = FALSE;
+
+    if ((priv->synpara.area_top_edge != 0) && (y < priv->synpara.area_top_edge))
+	inside_area = FALSE;
+    else if ((priv->synpara.area_bottom_edge != 0) && (y > priv->synpara.area_bottom_edge))
+	inside_area = FALSE;
+
+    return inside_area;
+}
+
 static CARD32
 timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 {
@@ -1427,7 +1455,7 @@ GetTimeOut(SynapticsPrivate *priv)
 
 static int
 HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
-		    edge_type edge, enum FingerState finger)
+		    edge_type edge, enum FingerState finger, Bool inside_active_area)
 {
     SynapticsParameters *para = &priv->synpara;
     Bool touch, release, is_timeout, move;
@@ -1478,6 +1506,10 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    goto restart;
 	} else if (release) {
 	    SelectTapButton(priv, edge);
+	    /* Disable taps outside of the active area */
+	    if (!inside_active_area) {
+		priv->tap_button = 0;
+	    }
 	    SetTapState(priv, TS_2A, hw->millis);
 	}
 	break;
@@ -2092,6 +2124,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     int delay = 1000000000;
     int timeleft;
     int i;
+    Bool inside_active_area;
 
     /* update hardware state in shared memory */
     if (shm)
@@ -2231,11 +2264,12 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     }
 
     edge = edge_detection(priv, hw->x, hw->y);
+    inside_active_area = is_inside_active_area(priv, hw->x, hw->y);
 
     finger = SynapticsDetectFinger(priv, hw);
 
     /* tap and drag detection */
-    timeleft = HandleTapProcessing(priv, hw, edge, finger);
+    timeleft = HandleTapProcessing(priv, hw, edge, finger, inside_active_area);
     if (timeleft > 0)
 	delay = MIN(delay, timeleft);
 
@@ -2278,6 +2312,13 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     }
 
     /* Post events */
+
+    /* Process movements only if coordinates are
+     * in the Synaptics Area
+     */
+    if (!inside_active_area)
+	dx = dy = 0;
+
     if (dx || dy)
 	xf86PostMotionEvent(local->dev, 0, 0, 2, dx, dy);
 
@@ -2300,22 +2341,28 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 	xf86PostButtonEvent(local->dev, FALSE, id, (buttons & (1 << (id - 1))), 0, 0);
     }
 
-    while (scroll.up-- > 0) {
-	xf86PostButtonEvent(local->dev, FALSE, 4, !hw->up, 0, 0);
-	xf86PostButtonEvent(local->dev, FALSE, 4, hw->up, 0, 0);
+    /* Process scroll events only if coordinates are
+     * in the Synaptics Area
+     */
+    if (inside_active_area) {
+        while (scroll.up-- > 0) {
+		xf86PostButtonEvent(local->dev, FALSE, 4, !hw->up, 0, 0);
+		xf86PostButtonEvent(local->dev, FALSE, 4, hw->up, 0, 0);
+        }
+        while (scroll.down-- > 0) {
+		xf86PostButtonEvent(local->dev, FALSE, 5, !hw->down, 0, 0);
+		xf86PostButtonEvent(local->dev, FALSE, 5, hw->down, 0, 0);
+        }
+        while (scroll.left-- > 0) {
+		xf86PostButtonEvent(local->dev, FALSE, 6, TRUE, 0, 0);
+		xf86PostButtonEvent(local->dev, FALSE, 6, FALSE, 0, 0);
+        }
+        while (scroll.right-- > 0) {
+		xf86PostButtonEvent(local->dev, FALSE, 7, TRUE, 0, 0);
+		xf86PostButtonEvent(local->dev, FALSE, 7, FALSE, 0, 0);
+        }
     }
-    while (scroll.down-- > 0) {
-	xf86PostButtonEvent(local->dev, FALSE, 5, !hw->down, 0, 0);
-	xf86PostButtonEvent(local->dev, FALSE, 5, hw->down, 0, 0);
-    }
-    while (scroll.left-- > 0) {
-	xf86PostButtonEvent(local->dev, FALSE, 6, TRUE, 0, 0);
-	xf86PostButtonEvent(local->dev, FALSE, 6, FALSE, 0, 0);
-    }
-    while (scroll.right-- > 0) {
-	xf86PostButtonEvent(local->dev, FALSE, 7, TRUE, 0, 0);
-	xf86PostButtonEvent(local->dev, FALSE, 7, FALSE, 0, 0);
-    }
+
     if (double_click) {
 	int i;
 	for (i = 0; i < 2; i++) {

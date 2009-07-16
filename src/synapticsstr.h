@@ -166,6 +166,7 @@ typedef struct _SynapticsParameters
     Bool tap_and_drag_gesture;		    /* Switches the tap-and-drag gesture on/off */
     unsigned int resolution_horiz;          /* horizontal resolution of touchpad in units/mm */
     unsigned int resolution_vert;           /* vertical resolution of touchpad in units/mm */
+    int area_left_edge, area_right_edge, area_top_edge, area_bottom_edge; /* area coordinates absolute */
 } SynapticsParameters;
 
 

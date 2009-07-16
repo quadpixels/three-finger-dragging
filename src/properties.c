@@ -83,6 +83,7 @@ Atom prop_grab                  = 0;
 Atom prop_gestures              = 0;
 Atom prop_capabilities          = 0;
 Atom prop_resolution            = 0;
+Atom prop_area                  = 0;
 
 static Atom
 InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
@@ -268,6 +269,11 @@ InitDeviceProperties(LocalDevicePtr local)
     values[1] = para->resolution_horiz;
     prop_resolution = InitAtom(local->dev, SYNAPTICS_PROP_RESOLUTION, 32, 2, values);
 
+    values[0] = para->area_left_edge;
+    values[1] = para->area_right_edge;
+    values[2] = para->area_top_edge;
+    values[3] = para->area_bottom_edge;
+    prop_area = InitAtom(local->dev, SYNAPTICS_PROP_AREA, 32, 4, values);
 }
 
 int
@@ -622,6 +628,20 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
     {
         /* read-only */
         return BadValue;
+    } else if (property == prop_area)
+    {
+        INT32 *area;
+        if (prop->size != 4 || prop->format != 32 || prop->type != XA_INTEGER)
+            return BadMatch;
+
+        area = (INT32*)prop->data;
+        if ((((area[0] != 0) && (area[1] != 0)) && (area[0] > area[1]) ) || (((area[2] != 0) && (area[3] != 0)) && (area[2] > area[3])))
+            return BadValue;
+
+        para->area_left_edge   = area[0];
+        para->area_right_edge  = area[1];
+        para->area_top_edge    = area[2];
+        para->area_bottom_edge = area[3];
     }
 
     return Success;

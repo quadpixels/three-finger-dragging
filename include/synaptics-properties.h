@@ -152,4 +152,7 @@
 /* 32 bit unsigned, 2 values, vertical, horizontal in units/millimeter */
 #define SYNAPTICS_PROP_RESOLUTION "Synaptics Pad Resolution"
 
+/* 32 bit, 4 values, left, right, top, bottom */
+#define SYNAPTICS_PROP_AREA "Synaptics Area"
+
 #endif /* _SYNAPTICS_PROPERTIES_H_ */
