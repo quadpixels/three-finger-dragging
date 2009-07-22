@@ -82,6 +82,17 @@
 #include <xserver-properties.h>
 #endif
 
+typedef enum {
+    BOTTOM_EDGE = 1,
+    TOP_EDGE = 2,
+    LEFT_EDGE = 4,
+    RIGHT_EDGE = 8,
+    LEFT_BOTTOM_EDGE = BOTTOM_EDGE | LEFT_EDGE,
+    RIGHT_BOTTOM_EDGE = BOTTOM_EDGE | RIGHT_EDGE,
+    RIGHT_TOP_EDGE = TOP_EDGE | RIGHT_EDGE,
+    LEFT_TOP_EDGE = TOP_EDGE | LEFT_EDGE
+} edge_type;
+
 #define MAX(a, b) (((a)>(b))?(a):(b))
 #define MIN(a, b) (((a)<(b))?(a):(b))
 #define TIME_DIFF(a, b) ((int)((a)-(b)))
@@ -125,7 +136,6 @@ static void CalculateScalingCoeffs(SynapticsPrivate *priv);
 void InitDeviceProperties(LocalDevicePtr local);
 int SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
                 BOOL checkonly);
-int SetEdgeProperty(LocalDevicePtr local);
 #endif
 
 InputDriverRec SYNAPTICS = {
@@ -450,16 +460,6 @@ static void set_default_parameters(LocalDevicePtr local)
     }
 
     /* set the parameters */
-    priv->edges_forced = 0;
-    if (xf86CheckIfOptionUsedByName(opts, "LeftEdge"))
-        priv->edges_forced |= LEFT_EDGE;
-    if (xf86CheckIfOptionUsedByName(opts, "RightEdge"))
-        priv->edges_forced |= RIGHT_EDGE;
-    if (xf86CheckIfOptionUsedByName(opts, "TopEdge"))
-        priv->edges_forced |= TOP_EDGE;
-    if (xf86CheckIfOptionUsedByName(opts, "BottomEdge"))
-        priv->edges_forced |= BOTTOM_EDGE;
-
     pars->left_edge = xf86SetIntOption(opts, "LeftEdge", l);
     pars->right_edge = xf86SetIntOption(opts, "RightEdge", r);
     pars->top_edge = xf86SetIntOption(opts, "TopEdge", t);
@@ -484,6 +484,11 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", horizScrollDelta);
     pars->scroll_dist_horiz = xf86SetIntOption(opts, "HorizScrollDelta", vertScrollDelta);
     pars->scroll_edge_vert = xf86SetBoolOption(opts, "VertEdgeScroll", vertEdgeScroll);
+    if (xf86CheckIfOptionUsedByName(opts, "RightEdge")) {
+      pars->special_scroll_area_right  = FALSE;
+    } else {
+      pars->special_scroll_area_right  = xf86SetBoolOption(opts, "SpecialScrollAreaRight", TRUE);
+    }
     pars->scroll_edge_horiz = xf86SetBoolOption(opts, "HorizEdgeScroll", horizEdgeScroll);
     pars->scroll_edge_corner = xf86SetBoolOption(opts, "CornerCoasting", FALSE);
     pars->scroll_twofinger_vert = xf86SetBoolOption(opts, "VertTwoFingerScroll", vertTwoFingerScroll);
@@ -566,12 +571,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	return NULL;
     }
 
-    priv->property_notify_timer = TimerSet(NULL, 0, 0, NULL, NULL);
-    if (!priv->property_notify_timer) {
-	xfree(priv);
-	return NULL;
-    }
-
     /* Allocate a new InputInfoRec and add it to the head xf86InputDevs. */
     local = xf86AllocateInput(drv, 0);
     if (!local) {
@@ -637,6 +636,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     set_default_parameters(local);
 
     CalculateScalingCoeffs(priv);
+
+    priv->largest_valid_x = MIN(priv->synpara.right_edge, XMAX_NOMINAL);
 
     if (!alloc_param_data(local))
 	goto SetupProc_fail;
@@ -798,9 +799,7 @@ DeviceOff(DeviceIntPtr dev)
 
     if (local->fd != -1) {
 	TimerFree(priv->timer);
-	TimerFree(priv->property_notify_timer);
 	priv->timer = NULL;
-	priv->property_notify_timer = NULL;
 	xf86RemoveEnabledDevice(local);
         if (priv->proto_ops->DeviceOffHook)
             priv->proto_ops->DeviceOffHook(local);
@@ -1059,31 +1058,6 @@ edge_detection(SynapticsPrivate *priv, int x, int y)
     return edge;
 }
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
-/**
- * Timer function. Called whenever the edges were auto-adjusted and the
- * matching property must be updated to reflect the new state.
- */
-static CARD32
-propertyTimerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
-{
-    LocalDevicePtr local = (LocalDevicePtr)arg;
-    SynapticsPrivate *priv = (SynapticsPrivate*)local->private;
-    int sigstate;
-
-    if (!(priv->edges_forced & EDGE_CHANGE_WAITING))
-        return 0;
-
-    sigstate = xf86BlockSIGIO();
-
-    SetEdgeProperty(local);
-
-    priv->edges_forced &= ~(EDGE_CHANGED | EDGE_CHANGE_WAITING);
-    xf86UnblockSIGIO(sigstate);
-    return 0;
-}
-#endif
-
 /* Checks whether coordinates are in the Synaptics Area
  * or not. If no Synaptics Area is defined (i.e. if
  * priv->synpara.area_{left|right|top|bottom}_edge are
@@ -1179,16 +1153,6 @@ ReadInput(LocalDevicePtr local)
 
     if (newDelay)
 	priv->timer = TimerSet(priv->timer, 0, delay, timerFunc, local);
-
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
-    /* Set a timer to change the edges property ASAP if we auto-adjusted */
-    if ((priv->edges_forced & EDGE_CHANGED) &&
-        !(priv->edges_forced & EDGE_CHANGE_WAITING)) {
-	priv->property_notify_timer =
-	    TimerSet(priv->property_notify_timer, 0, 100, propertyTimerFunc, local);
-	priv->edges_forced |= EDGE_CHANGE_WAITING;
-    }
-#endif
 }
 
 static int
@@ -2202,65 +2166,22 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 	hw->multi[2] = hw->multi[3] = FALSE;
     }
 
-    /* The kernel doesn't clip into min/max, so auto-adjust the edges if we
-     * go beyond min/max */
-    if (hw->x > priv->maxx || hw->x < priv->minx ||
-        hw->y > priv->maxy || hw->y < priv->miny)
-    {
-        int l, r, t, b;
-        Bool changed = FALSE;
-
-        if (hw->x > priv->maxx && !(priv->edges_forced & RIGHT_EDGE))
-        {
-            priv->maxx = hw->x;
-            changed = TRUE;
-        } else if (hw->x < priv->minx && !(priv->edges_forced & LEFT_EDGE))
-        {
-            priv->minx = hw->x;
-            changed = TRUE;
-        }
-
-        if (hw->y > priv->maxy && !(priv->edges_forced & BOTTOM_EDGE))
-        {
-            priv->maxy = hw->y;
-            changed = TRUE;
-        } else if (hw->y < priv->miny && !(priv->edges_forced & TOP_EDGE))
-        {
-            priv->miny = hw->y;
-            changed = TRUE;
-        }
-
-        if (changed)
-        {
-            Bool adjusted = FALSE;
-            calculate_edge_widths(priv, &l, &r, &t, &b);
-            if (!(priv->edges_forced & LEFT_EDGE))
-            {
-                para->left_edge = l;
-                adjusted = TRUE;
-            }
-            if (!(priv->edges_forced & RIGHT_EDGE))
-            {
-                para->right_edge = r;
-                adjusted = TRUE;
-            }
-            if (!(priv->edges_forced & TOP_EDGE))
-            {
-                para->top_edge = t;
-                adjusted = TRUE;
-            }
-            if (!(priv->edges_forced & BOTTOM_EDGE))
-            {
-                para->bottom_edge = b;
-                adjusted = TRUE;
-            }
-
-            /* We're inside a signal handler, can't change the edges
-             * property directly. Instead, set a flag and (later) a timer to
-             * set the property ASAP */
-            if (adjusted)
-                priv->edges_forced |= EDGE_CHANGED;
-        }
+    /*
+     * Some touchpads have a scroll wheel region where a very large X
+     * coordinate is reported. In this case for eliminate discontinuity,
+     * we adjust X and simulate new zone which adjacent to right edge.
+     */
+    if (hw->x <= XMAX_VALID) {
+	if (priv->largest_valid_x < hw->x)
+	    priv->largest_valid_x = hw->x;
+    } else {
+	hw->x = priv->largest_valid_x + 1;
+    /*
+     * If user didn't set right_edge manualy, auto-adjust to bounds of
+     * hardware scroll area.
+     */
+	if (para->special_scroll_area_right)
+	  priv->synpara.right_edge = priv->largest_valid_x;
     }
 
     edge = edge_detection(priv, hw->x, hw->y);
