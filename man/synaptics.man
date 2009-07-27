@@ -99,19 +99,13 @@ option is not needed with synaptics 1.0 or later. See section
 X coordinate for left edge. Property: "Synaptics Edges"
 .TP 7
 .BI "Option \*qRightEdge\*q \*q" integer \*q
-X coordinate for right edge. If this option is set,
-.BI SpecialScrollAreaRight
-is ignored. Property: "Synaptics Edges"
+X coordinate for right edge. Property: "Synaptics Edges"
 .TP 7
 .BI "Option \*qTopEdge\*q \*q" integer \*q
 Y coordinate for top edge. Property: "Synaptics Edges"
 .TP 7
 .BI "Option \*qBottomEdge\*q \*q" integer \*q
 Y coordinate for bottom edge. Property: "Synaptics Edges"
-.TP 7
-.BI "Option \*qSpecialScrollAreaRight\*q \*q" boolean \*q
-Some touchpads have a scroll region on the right edge. Disable this option if
-you have one but don't want use it as scroll wheel region.
 .TP 7
 .BI "Option \*qFingerLow\*q \*q" integer \*q
 When finger pressure drops below this value, the driver counts it as a
@@ -912,6 +906,8 @@ The following options are no longer part of the driver configuration:
 .BI "Option \*qRepeater\*q \*q" string \*q
 .TP
 .BI "Option \*qHistorySize\*q \*q" integer \*q
+.TP
+.BI "Option \*qSpecialScrollAreaRight\*q \*q" boolean \*q
 
 .SH "AUTHORS"
 .LP

@@ -484,11 +484,6 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", horizScrollDelta);
     pars->scroll_dist_horiz = xf86SetIntOption(opts, "HorizScrollDelta", vertScrollDelta);
     pars->scroll_edge_vert = xf86SetBoolOption(opts, "VertEdgeScroll", vertEdgeScroll);
-    if (xf86CheckIfOptionUsedByName(opts, "RightEdge")) {
-      pars->special_scroll_area_right  = FALSE;
-    } else {
-      pars->special_scroll_area_right  = xf86SetBoolOption(opts, "SpecialScrollAreaRight", TRUE);
-    }
     pars->scroll_edge_horiz = xf86SetBoolOption(opts, "HorizEdgeScroll", horizEdgeScroll);
     pars->scroll_edge_corner = xf86SetBoolOption(opts, "CornerCoasting", FALSE);
     pars->scroll_twofinger_vert = xf86SetBoolOption(opts, "VertTwoFingerScroll", vertTwoFingerScroll);
@@ -636,8 +631,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     set_default_parameters(local);
 
     CalculateScalingCoeffs(priv);
-
-    priv->largest_valid_x = MIN(priv->synpara.right_edge, XMAX_NOMINAL);
 
     if (!alloc_param_data(local))
 	goto SetupProc_fail;
@@ -2164,24 +2157,6 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 
 	/* reset left/right button events */
 	hw->multi[2] = hw->multi[3] = FALSE;
-    }
-
-    /*
-     * Some touchpads have a scroll wheel region where a very large X
-     * coordinate is reported. In this case for eliminate discontinuity,
-     * we adjust X and simulate new zone which adjacent to right edge.
-     */
-    if (hw->x <= XMAX_VALID) {
-	if (priv->largest_valid_x < hw->x)
-	    priv->largest_valid_x = hw->x;
-    } else {
-	hw->x = priv->largest_valid_x + 1;
-    /*
-     * If user didn't set right_edge manualy, auto-adjust to bounds of
-     * hardware scroll area.
-     */
-	if (para->special_scroll_area_right)
-	  priv->synpara.right_edge = priv->largest_valid_x;
     }
 
     edge = edge_detection(priv, hw->x, hw->y);
