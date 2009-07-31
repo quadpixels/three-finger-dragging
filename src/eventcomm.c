@@ -82,37 +82,37 @@ EventDeviceOnHook(LocalDevicePtr local, SynapticsParameters *para)
 static Bool
 event_query_is_touchpad(int fd, BOOL grab)
 {
-    int ret = FALSE;
+    int ret = FALSE, rc;
     unsigned long evbits[NBITS(EV_MAX)] = {0};
     unsigned long absbits[NBITS(ABS_MAX)] = {0};
     unsigned long keybits[NBITS(KEY_MAX)] = {0};
 
     if (grab)
     {
-        SYSCALL(ret = ioctl(fd, EVIOCGRAB, (pointer)1));
-        if (ret < 0)
+        SYSCALL(rc = ioctl(fd, EVIOCGRAB, (pointer)1));
+        if (rc < 0)
             return FALSE;
     }
 
     /* Check for ABS_X, ABS_Y, ABS_PRESSURE and BTN_TOOL_FINGER */
 
-    SYSCALL(ret = ioctl(fd, EVIOCGBIT(0, sizeof(evbits)), evbits));
-    if (ret < 0)
+    SYSCALL(rc = ioctl(fd, EVIOCGBIT(0, sizeof(evbits)), evbits));
+    if (rc < 0)
 	goto unwind;
     if (!TEST_BIT(EV_SYN, evbits) ||
 	!TEST_BIT(EV_ABS, evbits) ||
 	!TEST_BIT(EV_KEY, evbits))
 	goto unwind;
 
-    SYSCALL(ret = ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absbits)), absbits));
-    if (ret < 0)
+    SYSCALL(rc = ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absbits)), absbits));
+    if (rc < 0)
 	goto unwind;
     if (!TEST_BIT(ABS_X, absbits) ||
 	!TEST_BIT(ABS_Y, absbits))
 	goto unwind;
 
-    SYSCALL(ret = ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits));
-    if (ret < 0)
+    SYSCALL(rc = ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits));
+    if (rc < 0)
 	goto unwind;
 
     /* we expect touchpad either report raw pressure or touches */
