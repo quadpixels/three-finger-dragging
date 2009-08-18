@@ -1239,10 +1239,14 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
     int finger;
 
     /* finger detection thru pressure and threshold */
-    finger = ((hw->z > para->finger_press) && priv->finger_state < FS_PRESSED) ? FS_PRESSED
-	: ((hw->z > para->finger_high) && priv->finger_state < FS_TOUCHED) ? FS_TOUCHED
-	: ((hw->z < para->finger_low)  &&  priv->finger_state > FS_UNTOUCHED) ? FS_UNTOUCHED
-	: priv->finger_state;
+    if (hw->z > para->finger_press && priv->finger_state < FS_PRESSED)
+        finger = FS_PRESSED;
+    else if (hw->z > para->finger_high && priv->finger_state < FS_TOUCHED)
+        finger = FS_TOUCHED;
+    else if (hw->z < para->finger_low &&  priv->finger_state > FS_UNTOUCHED)
+        finger = FS_UNTOUCHED;
+    else
+	finger = priv->finger_state;
 
     if (!para->palm_detect)
 	return finger;
