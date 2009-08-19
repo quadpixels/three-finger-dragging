@@ -1232,11 +1232,11 @@ HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, in
     return mid;
 }
 
-static int
+static enum FingerState
 SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 {
     SynapticsParameters *para = &priv->synpara;
-    int finger;
+    enum FingerState finger;
 
     /* finger detection thru pressure and threshold */
     if (hw->z > para->finger_press && priv->finger_state < FS_PRESSED)
@@ -1264,25 +1264,25 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 	priv->avg_width += (hw->fingerWidth - priv->avg_width + 1) / 2;
     if (finger && !priv->finger_state) {
 	int safe_width = MAX(hw->fingerWidth, priv->avg_width);
-	if (hw->numFingers > 1)
-	    finger = TRUE;			/* more than one finger -> not a palm */
-	else if ((safe_width < 6) && (priv->prev_z < para->finger_high))
-	    finger = TRUE;			/* thin finger, distinct touch -> not a palm */
-	else if ((safe_width < 7) && (priv->prev_z < para->finger_high / 2))
-	    finger = TRUE;			/* thin finger, distinct touch -> not a palm */
-	else if (hw->z > priv->prev_z + 1)	/* z not stable, may be a palm */
-	    finger = FALSE;
+
+	if (hw->numFingers > 1 ||	/* more than one finger -> not a palm */
+	    ((safe_width < 6) && (priv->prev_z < para->finger_high)) ||  /* thin finger, distinct touch -> not a palm */
+	    ((safe_width < 7) && (priv->prev_z < para->finger_high / 2)))/* thin finger, distinct touch -> not a palm */
+	{
+	    /* leave finger value as is */
+	} else if (hw->z > priv->prev_z + 1)	/* z not stable, may be a palm */
+	    finger = FS_UNTOUCHED;
 	else if (hw->z < priv->prev_z - 5)	/* z not stable, may be a palm */
-	    finger = FALSE;
+	    finger = FS_UNTOUCHED;
 	else if (hw->z > para->palm_min_z)	/* z too large -> probably palm */
-	    finger = FALSE;
+	    finger = FS_UNTOUCHED;
 	else if (hw->fingerWidth > para->palm_min_width) /* finger width too large -> probably palm */
-	    finger = FALSE;
+	    finger = FS_UNTOUCHED;
     }
     priv->prev_z = hw->z;
 
     if (priv->palm)
-	finger = FALSE;
+	finger = FS_UNTOUCHED;
 
     return finger;
 }
