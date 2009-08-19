@@ -126,7 +126,7 @@ emulation mode. Property: "Synaptics Finger"
 Maximum time (in milliseconds) for detecting a tap. Property: "Synaptics Tap
 Durations"
 .TP 7
-.BI "Option \*qBMaxTapMove\*q \*q" integer \*q
+.BI "Option \*qMaxTapMove\*q \*q" integer \*q
 Maximum movement of the finger for detecting a tap. Property: "Synaptics Tap
 Move"
 .TP 7
