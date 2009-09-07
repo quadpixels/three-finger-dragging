@@ -5,7 +5,7 @@
 .LP
 synclient \- commandline utitlity to query and modify Synaptics driver
 options.
-.SH "SYNTAX"
+.SH "SYNOPSIS"
 .LP
 synclient [\fI\-m interval\fP]
 .br

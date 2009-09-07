@@ -5,7 +5,7 @@
 .LP
 syndaemon \- a program that monitors keyboard activity and disables
 the touchpad when the keyboard is being used.
-.SH "SYNTAX"
+.SH "SYNOPSIS"
 .LP
 syndaemon [\fI\-i idle\-time\fP] [\fI\-d\fP] [\fI\-p pid\-file\fP]
 [\fI\-t\fP] [\fI\-k\fP] [\fI\-K\fP] [\fI\-R\fP] [\fI\-s\fP]
