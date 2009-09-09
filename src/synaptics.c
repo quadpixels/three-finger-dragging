@@ -49,6 +49,7 @@
  *      Linuxcare Inc. David Kennedy <dkennedy@linuxcare.com>
  *      Fred Hucht <fred@thp.Uni-Duisburg.de>
  *      Fedor P. Goncharov <fedgo@gorodok.net>
+ *      Simon Thum <simon.thum@gmx.de>
  *
  * Trademarks are the property of their respective owners.
  */
@@ -80,6 +81,7 @@
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 #include <X11/Xatom.h>
 #include <xserver-properties.h>
+#include <ptrveloc.h>
 #endif
 
 typedef enum {
@@ -546,6 +548,44 @@ static void set_default_parameters(LocalDevicePtr local)
     }
 }
 
+static float SynapticsAccelerationProfile(DeviceIntPtr dev,
+                                          DeviceVelocityPtr vel,
+                                          float velocity,
+                                          float thr,
+                                          float acc) {
+    LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
+    SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
+    SynapticsParameters* para = &priv->synpara;
+
+    double accelfct;
+
+    /* speed up linear with finger velocity */
+    accelfct = velocity * para->accl;
+
+    /* clip acceleration factor */
+    if (accelfct > para->max_speed)
+	accelfct = para->max_speed;
+    else if (accelfct < para->min_speed)
+	accelfct = para->min_speed;
+
+    /* modify speed according to pressure */
+    if (priv->moving_state == MS_TOUCHPAD_RELATIVE) {
+	int minZ = para->press_motion_min_z;
+	int maxZ = para->press_motion_max_z;
+	double minFctr = para->press_motion_min_factor;
+	double maxFctr = para->press_motion_max_factor;
+	if (priv->hwState.z <= minZ) {
+	    accelfct *= minFctr;
+	} else if (priv->hwState.z >= maxZ) {
+	    accelfct *= maxFctr;
+	} else {
+	    accelfct *= minFctr + (priv->hwState.z - minZ) * (maxFctr - minFctr) / (maxZ - minZ);
+	}
+    }
+
+    return accelfct;
+}
+
 /*
  *  called by the module loader for initialization
  */
@@ -855,12 +895,15 @@ DeviceInit(DeviceIntPtr dev)
 {
     LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
     SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
+    Atom float_type, prop;
+    float tmpf;
     unsigned char map[SYN_MAX_BUTTONS + 1];
     int i;
     int min, max;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
     Atom btn_labels[SYN_MAX_BUTTONS] = { 0 };
     Atom axes_labels[2] = { 0 };
+    DeviceVelocityPtr pVel;
 
     InitAxesLabels(axes_labels, 2);
     InitButtonLabels(btn_labels, SYN_MAX_BUTTONS);
@@ -893,6 +936,51 @@ DeviceInit(DeviceIntPtr dev)
                             , axes_labels
 #endif
 			    );
+
+    /*
+     * setup dix acceleration to match legacy synaptics settings, and
+     * etablish a device-specific profile to do stuff like pressure-related
+     * acceleration.
+     */
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+    if (NULL != (pVel = GetDevicePredictableAccelData(dev))) {
+	SetDeviceSpecificAccelerationProfile(pVel,
+	                                     SynapticsAccelerationProfile);
+
+	/* float property type */
+	float_type = XIGetKnownProperty(XATOM_FLOAT);
+
+	/* translate MinAcc to constant deceleration.
+	 * May be overridden in xf86InitValuatorDefaults */
+	tmpf = 1.0 / priv->synpara.min_speed;
+
+	xf86Msg(X_CONFIG, "%s: (accel) MinSpeed is now constant deceleration "
+	        "%.1f\n", dev->name, tmpf);
+	prop = XIGetKnownProperty(ACCEL_PROP_CONSTANT_DECELERATION);
+	XIChangeDeviceProperty(dev, prop, float_type, 32,
+	                       PropModeReplace, 1, &tmpf, FALSE);
+
+	/* adjust accordingly */
+	priv->synpara.max_speed /= priv->synpara.min_speed;
+	priv->synpara.accl *= tmpf; /* dix velocity includes const decel */
+	priv->synpara.min_speed = 1.0;
+
+	/* synaptics seems to report 80 packet/s, but dix scales for
+	 * 100 packet/s by default. */
+	pVel->corr_mul = 12.5f; /*1000[ms]/80[/s] = 12.5 */
+
+	xf86Msg(X_CONFIG, "%s: MaxSpeed is now %.1f\n",
+		dev->name, priv->synpara.max_speed);
+	xf86Msg(X_CONFIG, "%s: AccelFactor is now %.1f\n",
+		dev->name, priv->synpara.accl);
+
+	prop = XIGetKnownProperty(ACCEL_PROP_PROFILE_NUMBER);
+	i = AccelProfileDeviceSpecific;
+	XIChangeDeviceProperty(dev, prop, XA_INTEGER, 32,
+	                       PropModeReplace, 1, &i, FALSE);
+    }
+#endif
+
     /* X valuator */
     if (priv->minx < priv->maxx)
     {
@@ -944,11 +1032,6 @@ DeviceInit(DeviceIntPtr dev)
     return Success;
 }
 
-static int
-move_distance(int dx, int dy)
-{
-    return sqrt(SQR(dx) + SQR(dy));
-}
 
 /*
  * Convert from absolute X/Y coordinates to a coordinate system where
@@ -1589,9 +1672,8 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
 {
     SynapticsParameters *para = &priv->synpara;
     enum MovingState moving_state;
-    int dist;
     double dx, dy;
-    double speed, integral;
+    double integral;
     int delay = 1000000000;
 
     dx = dy = 0;
@@ -1672,36 +1754,12 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
 		}
 	    }
 
-	    /* speed depending on distance/packet */
-	    dist = move_distance(dx, dy);
-	    speed = dist * para->accl;
-	    if (speed > para->max_speed) {  /* set max speed factor */
-		speed = para->max_speed;
-	    } else if (speed < para->min_speed) { /* set min speed factor */
-		speed = para->min_speed;
-	    }
-
-	    /* modify speed according to pressure */
-	    if (priv->moving_state == MS_TOUCHPAD_RELATIVE) {
-		int minZ = para->press_motion_min_z;
-		int maxZ = para->press_motion_max_z;
-		double minFctr = para->press_motion_min_factor;
-		double maxFctr = para->press_motion_max_factor;
-
-		if (hw->z <= minZ) {
-		    speed *= minFctr;
-		} else if (hw->z >= maxZ) {
-		    speed *= maxFctr;
-		} else {
-		    speed *= minFctr + (hw->z - minZ) * (maxFctr - minFctr) / (maxZ - minZ);
-		}
-	    }
-
-	    /* save the fraction, report the integer part */
-	    tmpf = dx * speed + x_edge_speed * dtime + priv->frac_x;
+	    /* report edge speed as synthetic motion. Of course, it would be
+	     * cooler to report floats than to buffer, but anyway. */
+	    tmpf = dx + x_edge_speed * dtime + priv->frac_x;
 	    priv->frac_x = modf(tmpf, &integral);
 	    dx = integral;
-	    tmpf = dy * speed + y_edge_speed * dtime + priv->frac_y;
+	    tmpf = dy + y_edge_speed * dtime + priv->frac_y;
 	    priv->frac_y = modf(tmpf, &integral);
 	    dy = integral;
 	}
