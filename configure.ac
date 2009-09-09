@@ -32,6 +32,8 @@ AM_INIT_AUTOMAKE([dist-bzip2])
 
 AM_MAINTAINER_MODE
 
+AC_CONFIG_FILES([shave shave-libtool])
+
 DRIVER_NAME=synaptics
 AC_SUBST([DRIVER_NAME])
 
@@ -121,6 +123,8 @@ AC_HEADER_STDC
 
 XORG_MANPAGE_SECTIONS
 XORG_RELEASE_VERSION
+
+SHAVE_INIT(.,enable)
 
 AC_OUTPUT([Makefile
            src/Makefile
