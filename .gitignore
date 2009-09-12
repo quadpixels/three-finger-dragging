@@ -24,6 +24,3 @@ synclient
 syndaemon
 *.[0-9]
 *.pc
-shave
-shave-libtool
-*~
