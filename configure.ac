@@ -106,7 +106,14 @@ AC_ARG_ENABLE(tools,
               [build_tools="auto"])
 
 if test "x$build_tools" != "xno"; then
-    PKG_CHECK_MODULES(XRECORD, xtst, AC_DEFINE([HAVE_XRECORD],[],[Use XRecord]), true)
+    # Record.h is either in recordproto up to 1.13.2 or in libXtst 1.1.
+    PKG_CHECK_MODULES(XTST_1_1, [xtst >= 1.0.99.1], HAVE_LIBXTST="yes", HAVE_LIBXTST="no")
+    PKG_CHECK_MODULES(RECORDPROTO_1_13, xtst [recordproto < 1.13.99.1], HAVE_RECORDPROTO="yes", HAVE_RECORDPROTO="no")
+
+    if test "x$HAVE_LIBXTST" = "xyes" || test "x$HAVE_RECORDPROTO" = "xyes" ; then
+        AC_DEFINE([HAVE_XRECORD],[],[Use XRecord])
+    fi
+
     PKG_CHECK_MODULES(XI, x11 [xi >= 1.2] [xorg-server >= 1.6],
                       BUILD_TOOLS="yes"; AC_DEFINE(BUILD_TOOLS, 1, "Build synclient and syndaemon"),
                       BUILD_TOOLS="no"; 
