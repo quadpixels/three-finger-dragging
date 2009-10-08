@@ -1396,8 +1396,6 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 	    finger = FS_UNTOUCHED;
 	else if (hw->z < priv->prev_z - 5)	/* z not stable, may be a palm */
 	    finger = FS_UNTOUCHED;
-	else if (hw->z > para->palm_min_z)	/* z too large -> probably palm */
-	    finger = FS_UNTOUCHED;
 	else if (hw->fingerWidth > para->palm_min_width) /* finger width too large -> probably palm */
 	    finger = FS_UNTOUCHED;
     }
