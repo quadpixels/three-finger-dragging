@@ -46,8 +46,8 @@ and button six/seven events for horizontal scrolling.
 .IP \(bu 4
 Adjustable finger detection.
 .IP \(bu 4
-Multifinger taps: two finger for middle button and three finger for
-right button events.
+Multifinger taps: two finger for right button and three finger for
+middle button events.
 .
 (Needs hardware support.
 .
