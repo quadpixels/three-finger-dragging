@@ -96,7 +96,7 @@ positions, called gdx and gdy.
 .RE
 .TP
 \fB\-l\fR
-List current user settings.
+List current user settings. This is the default if no option is given.
 .TP
 \fB\-V\fR
 Print version number and exit.

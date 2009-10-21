@@ -581,6 +581,9 @@ main(int argc, char *argv[])
     Display *dpy;
     XDevice *dev;
 
+    if (argc == 1)
+        dump_settings = 1;
+
     /* Parse command line parameters */
     while ((c = getopt(argc, argv, "sm:hlV")) != -1) {
 	switch (c) {
