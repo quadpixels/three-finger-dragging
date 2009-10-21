@@ -3,7 +3,7 @@
 .TH synclient __appmansuffix__ __vendorversion__
 .SH NAME
 .LP
-synclient \- commandline utitlity to query and modify Synaptics driver
+synclient \- commandline utility to query and modify Synaptics driver
 options.
 .SH "SYNOPSIS"
 .LP
