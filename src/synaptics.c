@@ -111,6 +111,8 @@ typedef enum {
 #define DBG(a,b)
 #endif
 
+#define INPUT_BUFFER_SIZE 200
+
 /*****************************************************************************
  * Forward declaration
  ****************************************************************************/
@@ -635,7 +637,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     if (!alloc_param_data(local))
 	goto SetupProc_fail;
 
-    priv->comm.buffer = XisbNew(local->fd, 200);
+    priv->comm.buffer = XisbNew(local->fd, INPUT_BUFFER_SIZE);
     DBG(9, XisbTrace(priv->comm.buffer, 1));
 
     if (!QueryHardware(local)) {
@@ -757,7 +759,7 @@ DeviceOn(DeviceIntPtr dev)
     if (priv->proto_ops->DeviceOnHook)
         priv->proto_ops->DeviceOnHook(local, &priv->synpara);
 
-    priv->comm.buffer = XisbNew(local->fd, 64);
+    priv->comm.buffer = XisbNew(local->fd, INPUT_BUFFER_SIZE);
     if (!priv->comm.buffer) {
 	xf86CloseSerial(local->fd);
 	local->fd = -1;
