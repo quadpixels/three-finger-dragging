@@ -270,19 +270,23 @@ EventQueryHardware(LocalDevicePtr local)
 }
 
 static Bool
-SynapticsReadEvent(struct CommData *comm, struct input_event *ev)
+SynapticsReadEvent(LocalDevicePtr local, struct input_event *ev)
 {
-    int i, c;
-    unsigned char *pBuf, u;
+    int rc = TRUE;
+    ssize_t len;
 
-    for (i = 0; i < sizeof(struct input_event); i++) {
-	if ((c = XisbRead(comm->buffer)) < 0)
-	    return FALSE;
-	u = (unsigned char)c;
-	pBuf = (unsigned char *)ev;
-	pBuf[i] = u;
+    len = read(local->fd, ev, sizeof(*ev));
+    if (len <= 0)
+    {
+        /* We use X_NONE here because it doesn't alloc */
+        if (errno != EAGAIN)
+            xf86MsgVerb(X_NONE, 0, "%s: Read error %s\n", local->name, strerror(errno));
+        rc = FALSE;
+    } else if (len % sizeof(*ev)) {
+        xf86MsgVerb(X_NONE, 0, "%s: Read error, invalid number of bytes.", local->name);
+        rc = FALSE;
     }
-    return TRUE;
+    return rc;
 }
 
 static Bool
@@ -296,7 +300,7 @@ EventReadHwState(LocalDevicePtr local,
     SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
     SynapticsParameters *para = &priv->synpara;
 
-    while (SynapticsReadEvent(comm, &ev)) {
+    while (SynapticsReadEvent(local, &ev)) {
 	switch (ev.type) {
 	case EV_SYN:
 	    switch (ev.code) {
