@@ -73,6 +73,15 @@ if test "x${BUILD_PSMCOMM}" = "xyes" ; then
 	AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])
 fi
 
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],
+                                    [Enable debugging (default: disabled)]),
+                                    [DEBUGGING=$enableval], [DEBUGGING=no])
+
+if test "x$DEBUGGING" = xyes; then
+       AC_DEFINE(DEBUG, 1, [Enable debugging code])
+fi
+AM_CONDITIONAL(DEBUG, [test "x$DEBUGGING" = xyes])
+
 AC_ARG_WITH(xorg-module-dir,
             AC_HELP_STRING([--with-xorg-module-dir=DIR],
                            [Default xorg module directory [[default=$libdir/xorg/modules]]]),

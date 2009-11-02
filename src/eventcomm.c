@@ -437,11 +437,11 @@ EventAutoDevProbe(LocalDevicePtr local)
 
     i = scandir(DEV_INPUT_EVENT, &namelist, EventDevOnly, alphasort);
     if (i < 0) {
-		ErrorF("Couldn't open %s\n", DEV_INPUT_EVENT);
+		xf86Msg(X_ERROR, "Couldn't open %s\n", DEV_INPUT_EVENT);
 		return FALSE;
     }
     else if (i == 0) {
-		ErrorF("%s The /dev/input/event* device nodes seem to be missing\n",
+		xf86Msg(X_ERROR, "%s The /dev/input/event* device nodes seem to be missing\n",
 				local->name);
 		free(namelist);
 		return FALSE;
@@ -471,7 +471,7 @@ EventAutoDevProbe(LocalDevicePtr local)
 	free(namelist);
 
 	if (!touchpad_found) {
-		ErrorF("%s no synaptics event device found\n", local->name);
+		xf86Msg(X_ERROR, "%s no synaptics event device found\n", local->name);
 		return FALSE;
 	}
     return TRUE;

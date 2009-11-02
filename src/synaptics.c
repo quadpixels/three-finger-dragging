@@ -107,10 +107,6 @@ typedef enum {
 #define M_SQRT1_2  0.70710678118654752440  /* 1/sqrt(2) */
 #endif
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 1
-#define DBG(a,b)
-#endif
-
 #define INPUT_BUFFER_SIZE 200
 
 /*****************************************************************************
@@ -638,7 +634,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	goto SetupProc_fail;
 
     priv->comm.buffer = XisbNew(local->fd, INPUT_BUFFER_SIZE);
-    DBG(9, XisbTrace(priv->comm.buffer, 1));
 
     if (!QueryHardware(local)) {
 	xf86Msg(X_ERROR, "%s Unable to query/initialize Synaptics hardware.\n", local->name);
@@ -705,7 +700,7 @@ static void SynapticsUnInit(InputDriverPtr drv,
 static void
 SynapticsCtrl(DeviceIntPtr device, PtrCtrl *ctrl)
 {
-    DBG(3, ErrorF("SynapticsCtrl called.\n"));
+    DBG(3, "SynapticsCtrl called.\n");
     /*
       pInfo = device->public.devicePrivate;
       pMse = pInfo->private;
@@ -747,7 +742,7 @@ DeviceOn(DeviceIntPtr dev)
     LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
     SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
 
-    DBG(3, ErrorF("Synaptics DeviceOn called\n"));
+    DBG(3, "Synaptics DeviceOn called\n");
 
     SetDeviceAndProtocol(local);
     local->fd = xf86OpenSerial(local->options);
@@ -790,7 +785,7 @@ DeviceOff(DeviceIntPtr dev)
     LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
     SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
 
-    DBG(3, ErrorF("Synaptics DeviceOff called\n"));
+    DBG(3, "Synaptics DeviceOff called\n");
 
     if (local->fd != -1) {
 	TimerFree(priv->timer);
@@ -876,7 +871,7 @@ DeviceInit(DeviceIntPtr dev)
     InitButtonLabels(btn_labels, SYN_MAX_BUTTONS);
 #endif
 
-    DBG(3, ErrorF("Synaptics DeviceInit called\n"));
+    DBG(3, "Synaptics DeviceInit called\n");
 
     for (i = 0; i <= SYN_MAX_BUTTONS; i++)
 	map[i] = i;
@@ -1304,33 +1299,33 @@ SelectTapButton(SynapticsPrivate *priv, edge_type edge)
     default:
 	switch (edge) {
 	case RIGHT_TOP_EDGE:
-	    DBG(7, ErrorF("right top edge\n"));
+	    DBG(7, "right top edge\n");
 	    tap = RT_TAP;
 	    break;
 	case RIGHT_BOTTOM_EDGE:
-	    DBG(7, ErrorF("right bottom edge\n"));
+	    DBG(7, "right bottom edge\n");
 	    tap = RB_TAP;
 	    break;
 	case LEFT_TOP_EDGE:
-	    DBG(7, ErrorF("left top edge\n"));
+	    DBG(7, "left top edge\n");
 	    tap = LT_TAP;
 	    break;
 	case LEFT_BOTTOM_EDGE:
-	    DBG(7, ErrorF("left bottom edge\n"));
+	    DBG(7, "left bottom edge\n");
 	    tap = LB_TAP;
 	    break;
 	default:
-	    DBG(7, ErrorF("no edge\n"));
+	    DBG(7, "no edge\n");
 	    tap = F1_TAP;
 	    break;
 	}
 	break;
     case 2:
-	DBG(7, ErrorF("two finger tap\n"));
+	DBG(7, "two finger tap\n");
 	tap = F2_TAP;
 	break;
     case 3:
-	DBG(7, ErrorF("three finger tap\n"));
+	DBG(7, "three finger tap\n");
 	tap = F3_TAP;
 	break;
     }
@@ -1343,7 +1338,7 @@ static void
 SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
 {
     SynapticsParameters *para = &priv->synpara;
-    DBG(7, ErrorF("SetTapState - %d -> %d (millis:%d)\n", priv->tap_state, tap_state, millis));
+    DBG(7, "SetTapState - %d -> %d (millis:%d)\n", priv->tap_state, tap_state, millis);
     switch (tap_state) {
     case TS_START:
 	priv->tap_button_state = TBS_BUTTON_UP;
@@ -1383,8 +1378,8 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
 static void
 SetMovingState(SynapticsPrivate *priv, enum MovingState moving_state, int millis)
 {
-    DBG(7, ErrorF("SetMovingState - %d -> %d center at %d/%d (millis:%d)\n", priv->moving_state,
-		  moving_state,priv->hwState.x, priv->hwState.y, millis));
+    DBG(7, "SetMovingState - %d -> %d center at %d/%d (millis:%d)\n", priv->moving_state,
+		  moving_state,priv->hwState.x, priv->hwState.y, millis);
 
     if (moving_state == MS_TRACKSTICK) {
 	priv->trackstick_neutral_x = priv->hwState.x;
@@ -1817,7 +1812,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		priv->circ_scroll_on = TRUE;
 		priv->circ_scroll_vert = TRUE;
 		priv->scroll_a = angle(priv, hw->x, hw->y);
-		DBG(7, ErrorF("circular scroll detected on edge\n"));
+		DBG(7, "circular scroll detected on edge\n");
 	    }
 	}
     }
@@ -1829,14 +1824,14 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		    priv->vert_scroll_twofinger_on = TRUE;
 		    priv->vert_scroll_edge_on = FALSE;
 		    priv->scroll_y = hw->y;
-		    DBG(7, ErrorF("vert two-finger scroll detected\n"));
+		    DBG(7, "vert two-finger scroll detected\n");
 		}
 		if (!priv->horiz_scroll_twofinger_on &&
 		    (para->scroll_twofinger_horiz) && (para->scroll_dist_horiz != 0)) {
 		    priv->horiz_scroll_twofinger_on = TRUE;
 		    priv->horiz_scroll_edge_on = FALSE;
 		    priv->scroll_x = hw->x;
-		    DBG(7, ErrorF("horiz two-finger scroll detected\n"));
+		    DBG(7, "horiz two-finger scroll detected\n");
 		}
 	    }
 	}
@@ -1846,13 +1841,13 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		    (edge & RIGHT_EDGE)) {
 		    priv->vert_scroll_edge_on = TRUE;
 		    priv->scroll_y = hw->y;
-		    DBG(7, ErrorF("vert edge scroll detected on right edge\n"));
+		    DBG(7, "vert edge scroll detected on right edge\n");
 		}
 		if ((para->scroll_edge_horiz) && (para->scroll_dist_horiz != 0) &&
 		    (edge & BOTTOM_EDGE)) {
 		    priv->horiz_scroll_edge_on = TRUE;
 		    priv->scroll_x = hw->x;
-		    DBG(7, ErrorF("horiz edge scroll detected on bottom edge\n"));
+		    DBG(7, "horiz edge scroll detected on bottom edge\n");
 		}
 	    }
 	}
@@ -1862,27 +1857,27 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	Bool oldh = priv->horiz_scroll_edge_on || (priv->circ_scroll_on && !priv->circ_scroll_vert);
 	if (priv->circ_scroll_on && !finger) {
 	    /* circular scroll locks in until finger is raised */
-	    DBG(7, ErrorF("cicular scroll off\n"));
+	    DBG(7, "cicular scroll off\n");
 	    priv->circ_scroll_on = FALSE;
 	}
 
 	if (!finger || hw->numFingers < 2) {
 	    if (priv->vert_scroll_twofinger_on) {
-		DBG(7, ErrorF("vert two-finger scroll off\n"));
+		DBG(7, "vert two-finger scroll off\n");
 		priv->vert_scroll_twofinger_on = FALSE;
 	    }
 	    if (priv->horiz_scroll_twofinger_on) {
-		DBG(7, ErrorF("horiz two-finger scroll off\n"));
+		DBG(7, "horiz two-finger scroll off\n");
 		priv->horiz_scroll_twofinger_on = FALSE;
 	    }
 	}
 
 	if (priv->vert_scroll_edge_on && (!(edge & RIGHT_EDGE) || !finger)) {
-	    DBG(7, ErrorF("vert edge scroll off\n"));
+	    DBG(7, "vert edge scroll off\n");
 	    priv->vert_scroll_edge_on = FALSE;
 	}
 	if (priv->horiz_scroll_edge_on && (!(edge & BOTTOM_EDGE) || !finger)) {
-	    DBG(7, ErrorF("horiz edge scroll off\n"));
+	    DBG(7, "horiz edge scroll off\n");
 	    priv->horiz_scroll_edge_on = FALSE;
 	}
 	/* If we were corner edge scrolling (coasting),
@@ -1892,7 +1887,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		((edge & RIGHT_EDGE)  && (edge & (TOP_EDGE | BOTTOM_EDGE))) ||
 		((edge & BOTTOM_EDGE) && (edge & (LEFT_EDGE | RIGHT_EDGE))) ;
 	    if (!is_in_corner || !finger) {
-		DBG(7, ErrorF("corner edge scroll off\n"));
+		DBG(7, "corner edge scroll off\n");
 		stop_coasting(priv);
 	    }
 	}
@@ -1915,7 +1910,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		/* FYI: We can generate multiple start_coasting requests if
 		 * we're in the corner, but we were moving so slowly when we
 		 * got here that we didn't actually start coasting. */
-		DBG(7, ErrorF("corner edge scroll on\n"));
+		DBG(7, "corner edge scroll on\n");
 		start_coasting(priv, hw, edge, TRUE);
 	    }
 	} else if (para->circular_scrolling) {
@@ -1923,7 +1918,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    priv->circ_scroll_on = TRUE;
 	    priv->circ_scroll_vert = TRUE;
 	    priv->scroll_a = angle(priv, hw->x, hw->y);
-	    DBG(7, ErrorF("switching to circular scrolling\n"));
+	    DBG(7, "switching to circular scrolling\n");
 	}
     }
     /* Same treatment for horizontal scrolling */
@@ -1934,7 +1929,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		/* FYI: We can generate multiple start_coasting requests if
 		 * we're in the corner, but we were moving so slowly when we
 		 * got here that we didn't actually start coasting. */
-		DBG(7, ErrorF("corner edge scroll on\n"));
+		DBG(7, "corner edge scroll on\n");
 		start_coasting(priv, hw, edge, FALSE);
 	    }
 	} else if (para->circular_scrolling) {
@@ -1942,7 +1937,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    priv->circ_scroll_on = TRUE;
 	    priv->circ_scroll_vert = FALSE;
 	    priv->scroll_a = angle(priv, hw->x, hw->y);
-	    DBG(7, ErrorF("switching to circular scrolling\n"));
+	    DBG(7, "switching to circular scrolling\n");
 	}
     }
 
@@ -2317,7 +2312,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 static int
 ControlProc(LocalDevicePtr local, xDeviceCtl * control)
 {
-    DBG(3, ErrorF("Control Proc called\n"));
+    DBG(3, "Control Proc called\n");
     return Success;
 }
 
@@ -2325,13 +2320,13 @@ ControlProc(LocalDevicePtr local, xDeviceCtl * control)
 static void
 CloseProc(LocalDevicePtr local)
 {
-    DBG(3, ErrorF("Close Proc called\n"));
+    DBG(3, "Close Proc called\n");
 }
 
 static int
 SwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
 {
-    ErrorF("SwitchMode called\n");
+    DBG(3, "SwitchMode called\n");
     return Success;
 }
 

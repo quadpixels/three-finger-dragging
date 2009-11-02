@@ -65,16 +65,10 @@
 #define PS2_RES_RESOLUTION(r)	(((r) >> 8) & 0x03)
 #define PS2_RES_SAMPLE_RATE(r)	((r) & 0xff)
 
-/* #define DEBUG */
-
 #ifdef DEBUG
 #define PS2DBG(x) (x)
 #else
 #define PS2DBG(x)
-#endif
-
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 1
-#define DBG(a,b)
 #endif
 
 struct SynapticsHwInfo {
@@ -411,7 +405,7 @@ ps2_query_is_synaptics(int fd, struct SynapticsHwInfo* synhw)
     if (ps2_synaptics_identify(fd, synhw)) {
 	return TRUE;
     } else {
-	ErrorF("Query no Synaptics: %06X\n", synhw->identity);
+	xf86Msg(X_ERROR, "Query no Synaptics: %06X\n", synhw->identity);
 	return FALSE;
     }
 }
@@ -528,22 +522,22 @@ ps2_packet_ok(struct SynapticsHwInfo *synhw, struct CommData *comm)
     int newabs = SYN_MODEL_NEWABS(synhw);
 
     if (newabs ? ((buf[0] & 0xC0) != 0x80) : ((buf[0] & 0xC0) != 0xC0)) {
-	DBG(4, ErrorF("Synaptics driver lost sync at 1st byte\n"));
+	DBG(4, "Synaptics driver lost sync at 1st byte\n");
 	return FALSE;
     }
 
     if (!newabs && ((buf[1] & 0x60) != 0x00)) {
-	DBG(4, ErrorF("Synaptics driver lost sync at 2nd byte\n"));
+	DBG(4, "Synaptics driver lost sync at 2nd byte\n");
 	return FALSE;
     }
 
     if ((newabs ? ((buf[3] & 0xC0) != 0xC0) : ((buf[3] & 0xC0) != 0x80))) {
-	DBG(4, ErrorF("Synaptics driver lost sync at 4th byte\n"));
+	DBG(4, "Synaptics driver lost sync at 4th byte\n");
 	return FALSE;
     }
 
     if (!newabs && ((buf[4] & 0x60) != 0x00)) {
-	DBG(4, ErrorF("Synaptics driver lost sync at 5th byte\n"));
+	DBG(4, "Synaptics driver lost sync at 5th byte\n");
 	return FALSE;
     }
 
@@ -565,16 +559,16 @@ ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 	/* test if there is a reset sequence received */
 	if ((c == 0x00) && (comm->lastByte == 0xAA)) {
 	    if (xf86WaitForInput(local->fd, 50000) == 0) {
-		DBG(7, ErrorF("Reset received\n"));
+		DBG(7, "Reset received\n");
 		proto_ops->QueryHardware(local);
 	    } else
-		DBG(3, ErrorF("faked reset received\n"));
+		DBG(3, "faked reset received\n");
 	}
 	comm->lastByte = u;
 
 	/* to avoid endless loops */
 	if (count++ > 30) {
-	    ErrorF("Synaptics driver lost sync... got gigantic packet!\n");
+	    xf86Msg(X_ERROR, "Synaptics driver lost sync... got gigantic packet!\n");
 	    return FALSE;
 	}
 
@@ -591,7 +585,7 @@ ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 		comm->outOfSync++;
 		if (comm->outOfSync > MAX_UNSYNC_PACKETS) {
 		    comm->outOfSync = 0;
-		    DBG(3, ErrorF("Synaptics synchronization lost too long -> reset touchpad.\n"));
+		    DBG(3, "Synaptics synchronization lost too long -> reset touchpad.\n");
 		    proto_ops->QueryHardware(local); /* including a reset */
 		    continue;
 		}
@@ -601,7 +595,7 @@ ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 	if (comm->protoBufTail >= 6) { /* Full packet received */
 	    if (comm->outOfSync > 0) {
 		comm->outOfSync = 0;
-		DBG(4, ErrorF("Synaptics driver resynced.\n"));
+		DBG(4, "Synaptics driver resynced.\n");
 	    }
 	    comm->protoBufTail = 0;
 	    return TRUE;
@@ -664,7 +658,7 @@ PS2ReadHwState(LocalDevicePtr local,
 	hw->multi[i] = FALSE;
 
     if (newabs) {			    /* newer protos...*/
-	DBG(7, ErrorF("using new protocols\n"));
+	DBG(7, "using new protocols\n");
 	hw->x = (((buf[3] & 0x10) << 8) |
 		 ((buf[1] & 0x0f) << 8) |
 		 buf[4]);
@@ -714,7 +708,7 @@ PS2ReadHwState(LocalDevicePtr local,
 	    }
 	}
     } else {			    /* old proto...*/
-	DBG(7, ErrorF("using old protocol\n"));
+	DBG(7, "using old protocol\n");
 	hw->x = (((buf[1] & 0x1F) << 8) |
 		 buf[2]);
 	hw->y = (((buf[4] & 0x1F) << 8) |

@@ -24,6 +24,17 @@
 
 #include "synproto.h"
 
+#ifdef DBG
+#  undef DBG
+#endif
+
+#ifdef DEBUG
+#define DBG(verb, ...) \
+    xf86MsgVerb(X_INFO, verb, __VA_ARGS__)
+#else
+#define DBG(verb, msg, ...) /* */
+#endif
+
 /******************************************************************************
  *		Definitions
  *					structs, typedefs, #defines, enums
