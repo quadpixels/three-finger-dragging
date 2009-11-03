@@ -700,15 +700,6 @@ static void SynapticsUnInit(InputDriverPtr drv,
 static void
 SynapticsCtrl(DeviceIntPtr device, PtrCtrl *ctrl)
 {
-    DBG(3, "SynapticsCtrl called.\n");
-    /*
-      pInfo = device->public.devicePrivate;
-      pMse = pInfo->private;
-
-      pMse->num       = ctrl->num;
-      pMse->den       = ctrl->den;
-      pMse->threshold = ctrl->threshold;
-    */
 }
 
 static Bool
