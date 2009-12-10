@@ -779,8 +779,7 @@ DeviceOff(DeviceIntPtr dev)
     DBG(3, "Synaptics DeviceOff called\n");
 
     if (local->fd != -1) {
-	TimerFree(priv->timer);
-	priv->timer = NULL;
+	TimerCancel(priv->timer);
 	xf86RemoveEnabledDevice(local);
         if (priv->proto_ops->DeviceOffHook)
             priv->proto_ops->DeviceOffHook(local);
@@ -802,6 +801,8 @@ DeviceClose(DeviceIntPtr dev)
     SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
 
     RetValue = DeviceOff(dev);
+    TimerFree(priv->timer);
+    priv->timer = NULL;
     free_param_data(priv);
     return RetValue;
 }
