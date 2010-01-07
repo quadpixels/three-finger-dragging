@@ -47,15 +47,14 @@
 #include "synaptics.h"
 #include "synaptics-properties.h"
 
-enum TouchpadState {
+typedef enum {
     TouchpadOn = 0,
     TouchpadOff = 1,
     TappingOff = 2
-};
+} TouchpadState;
 
 
-static int pad_disabled;
-static int disable_taps_only;
+static Bool pad_disabled /* internal flag, this does not correspond to device state */;
 static int ignore_modifier_combos;
 static int ignore_modifier_keys;
 static int background;
@@ -63,6 +62,8 @@ static const char *pid_file;
 static Display *display;
 static XDevice *dev;
 static Atom touchpad_off_prop;
+static TouchpadState previous_state;
+static TouchpadState disable_state = TouchpadOff;
 
 #define KEYMAP_SIZE 32
 static unsigned char keyboard_mask[KEYMAP_SIZE];
@@ -84,25 +85,44 @@ usage(void)
     exit(1);
 }
 
+static void
+store_current_touchpad_state(void)
+{
+    Atom real_type;
+    int real_format;
+    unsigned long nitems, bytes_after;
+    unsigned char *data;
+
+    if ((XGetDeviceProperty (display, dev, touchpad_off_prop, 0, 1, False,
+                             XA_INTEGER, &real_type, &real_format, &nitems,
+                             &bytes_after, &data) == Success) && (real_type != None)) {
+        previous_state = data[0];
+    }
+}
+
 /**
  * Toggle touchpad enabled/disabled state, decided by value.
  */
 static void
-toggle_touchpad(enum TouchpadState value)
+toggle_touchpad(Bool enable)
 {
-    unsigned char data = value;
-    if (pad_disabled && !value)
-    {
+    unsigned char data;
+    if (pad_disabled && enable) {
+        data = previous_state;
+        pad_disabled = False;
         if (!background)
             printf("Enable\n");
-    } else if (!pad_disabled && value)
-    {
+    } else if (!pad_disabled && !enable &&
+               previous_state != disable_state &&
+               previous_state != TouchpadOff) {
+        store_current_touchpad_state();
+        pad_disabled = True;
+        data = disable_state;
         if (!background)
             printf("Disable\n");
     } else
         return;
 
-    pad_disabled = value;
     /* This potentially overwrites a different client's setting, but ...*/
     XChangeDeviceProperty(display, dev, touchpad_off_prop, XA_INTEGER, 8,
             PropModeReplace, &data, 1);
@@ -112,7 +132,7 @@ toggle_touchpad(enum TouchpadState value)
 static void
 signal_handler(int signum)
 {
-    toggle_touchpad(TouchpadOn);
+    toggle_touchpad(True);
 
     if (pid_file)
 	unlink(pid_file);
@@ -197,7 +217,6 @@ main_loop(Display *display, double idle_time, int poll_delay)
     double last_activity = 0.0;
     double current_time;
 
-    pad_disabled = 0;
     keyboard_activity(display);
 
     for (;;) {
@@ -206,9 +225,9 @@ main_loop(Display *display, double idle_time, int poll_delay)
 	    last_activity = current_time;
 
 	if (current_time > last_activity + idle_time) {	/* Enable touchpad */
-	    toggle_touchpad(TouchpadOn);
+	    toggle_touchpad(True);
 	} else {			    /* Disable touchpad */
-	    toggle_touchpad(disable_taps_only ? TappingOff : TouchpadOff);
+	    toggle_touchpad(False);
 	}
 
 	usleep(poll_delay);
@@ -355,8 +374,6 @@ void record_main_loop(Display* display, double idle_time) {
     XRecordRange *range;
     int i;
 
-    pad_disabled = 0;
-
     dpy_data = XOpenDisplay(NULL); /* we need an additional data connection. */
     range  = XRecordAllocRange();
 
@@ -411,11 +428,11 @@ void record_main_loop(Display* display, double idle_time) {
 	    timeout.tv_sec  = (int)idle_time;
 	    timeout.tv_usec = (idle_time-(double)timeout.tv_sec) * 1.e6;
 
-	    toggle_touchpad(disable_taps_only ? TappingOff : TouchpadOff);
+	    toggle_touchpad(False);
 	}
 
 	if (ret == 0 && pad_disabled) { /* timeout => enable event */
-	    toggle_touchpad(TouchpadOn);
+	    toggle_touchpad(True);
 	    if (!background) printf("enable touchpad\n");
 	}
 
@@ -511,7 +528,7 @@ main(int argc, char *argv[])
 	    background = 1;
 	    break;
 	case 't':
-	    disable_taps_only = 1;
+	    disable_state = TappingOff;
 	    break;
 	case 'p':
 	    pid_file = optarg;
@@ -569,6 +586,10 @@ main(int argc, char *argv[])
 	    fclose(fd);
 	}
     }
+
+    pad_disabled = False;
+    store_current_touchpad_state();
+
 #ifdef HAVE_XRECORD
     if (use_xrecord)
     {
