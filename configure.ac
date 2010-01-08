@@ -105,9 +105,6 @@ PKG_CHECK_MODULES(XORG16, [xorg-server >= 1.6],
 AM_CONDITIONAL(HAVE_PROPERTIES, [ test "$HAVE_PROPERTIES" = "yes" ])
 AC_SUBST(HAVE_PROPERTIES)
 
-CFLAGS="$CFLAGS $XORG_CFLAGS "' -I$(top_srcdir)/src'
-AC_SUBST([CFLAGS])
-
 # Checks for libraries.
 AC_ARG_ENABLE(tools,
               AC_HELP_STRING([--enable-tools], [Build synclient and syndaemon [[default=auto]]]),
