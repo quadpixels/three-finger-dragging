@@ -123,15 +123,21 @@ if test "x$build_tools" != "xno"; then
         AC_DEFINE([HAVE_XRECORD],[],[Use XRecord])
     fi
 
-    PKG_CHECK_MODULES(XI, x11 [xi >= 1.2] [xorg-server >= 1.6],
-                      BUILD_TOOLS="yes"; AC_DEFINE(BUILD_TOOLS, 1, "Build synclient and syndaemon"),
-                      BUILD_TOOLS="no"; 
-                      if test "x$build_tools" = "xyes"; then
-                          AC_MSG_ERROR([Dependencies failed for synclient and syndaemon.])
-                      else
-                          AC_MSG_WARN([Not building synclient and syndaemon.])
-                      fi
-                      )
+    if test "x$HAVE_PROPERTIES" = "xyes"; then
+        PKG_CHECK_MODULES(XI, x11 [xi >= 1.2],
+                          BUILD_TOOLS="yes"; AC_DEFINE(BUILD_TOOLS, 1, "Build synclient and syndaemon"),
+                          BUILD_TOOLS="no")
+    else
+        BUILD_TOOLS="no"
+    fi
+
+    if test "x$BUILD_TOOLS" = "xno"; then
+        if test "x$build_tools" = "xyes"; then
+            AC_MSG_ERROR([Dependencies failed for synclient and syndaemon.])
+        else
+            AC_MSG_WARN([Not building synclient and syndaemon.])
+        fi
+    fi
 fi
 AM_CONDITIONAL(BUILD_TOOLS, [ test "$BUILD_TOOLS" = "yes" ])
 AC_SUBST(BUILD_TOOLS)
