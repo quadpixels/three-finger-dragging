@@ -23,7 +23,7 @@ bin_PROGRAMS = \
 	synclient \
 	syndaemon
 
-INCLUDES=-I$(top_srcdir)/include/ -I$(sdkdir)
+AM_CFLAGS = $(XORG_CFLAGS)
 
 synclient_SOURCES = synclient.c
 synclient_LDFLAGS = -lm $(XI_LIBS)
