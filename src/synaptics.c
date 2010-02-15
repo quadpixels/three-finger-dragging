@@ -559,6 +559,12 @@ static float SynapticsAccelerationProfile(DeviceIntPtr dev,
 
     double accelfct;
 
+    /*
+     * synaptics accel was originally base on device coordinate based
+     * velocity, which we recover this way so para->accl retains its scale.
+     */
+    velocity /= vel->const_acceleration;
+
     /* speed up linear with finger velocity */
     accelfct = velocity * para->accl;
 
@@ -962,7 +968,6 @@ DeviceInit(DeviceIntPtr dev)
 
 	/* adjust accordingly */
 	priv->synpara.max_speed /= priv->synpara.min_speed;
-	priv->synpara.accl *= tmpf; /* dix velocity includes const decel */
 	priv->synpara.min_speed = 1.0;
 
 	/* synaptics seems to report 80 packet/s, but dix scales for
