@@ -569,8 +569,8 @@ static float SynapticsAccelerationProfile(DeviceIntPtr dev,
     accelfct = velocity * para->accl;
 
     /* clip acceleration factor */
-    if (accelfct > para->max_speed)
-	accelfct = para->max_speed;
+    if (accelfct > para->max_speed * acc)
+	accelfct = para->max_speed * acc;
     else if (accelfct < para->min_speed)
 	accelfct = para->min_speed;
 
