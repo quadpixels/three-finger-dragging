@@ -787,6 +787,7 @@ DeviceOff(DeviceIntPtr dev)
 	    priv->comm.buffer = NULL;
 	}
 	xf86CloseSerial(local->fd);
+	local->fd = -1;
     }
     dev->public.on = FALSE;
     return Success;
