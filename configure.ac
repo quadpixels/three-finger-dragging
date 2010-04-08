@@ -139,6 +139,14 @@ fi
 AM_CONDITIONAL(BUILD_TOOLS, [ test "$BUILD_TOOLS" = "yes" ])
 AC_SUBST(BUILD_TOOLS)
 
+AC_ARG_WITH(xorg-conf-dir,
+            AC_HELP_STRING([--with-xorg-conf-dir=DIR],
+                           [Default xorg.conf.d directory [[default=from $PKG_CONFIG xorg-server]]]),
+            [XORG_CONF_DIR="$withval"],
+            [XORG_CONF_DIR="`$PKG_CONFIG --variable=sysconfigdir xorg-server`"])
+AC_SUBST(XORG_CONF_DIR)
+AM_CONDITIONAL(HAS_XORG_CONF_DIR, [test "x$XORG_CONF_DIR" != "x" && test "x$XORG_CONF_DIR" != "xno"])
+
 # Checks for header files.
 AC_HEADER_STDC
 
@@ -146,6 +154,6 @@ AC_OUTPUT([Makefile
            src/Makefile
            man/Makefile
            tools/Makefile
-           fdi/Makefile
+           conf/Makefile
            include/Makefile
            xorg-synaptics.pc])
