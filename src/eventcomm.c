@@ -180,7 +180,7 @@ event_query_axis_ranges(LocalDevicePtr local)
     SYSCALL(rc = ioctl(local->fd, EVIOCGABS(ABS_X), &abs));
     if (rc >= 0)
     {
-	xf86Msg(X_INFO, "%s: x-axis range %d - %d\n", local->name,
+	xf86Msg(X_PROBED, "%s: x-axis range %d - %d\n", local->name,
 		abs.minimum, abs.maximum);
 	priv->minx = abs.minimum;
 	priv->maxx = abs.maximum;
@@ -194,7 +194,7 @@ event_query_axis_ranges(LocalDevicePtr local)
     SYSCALL(rc = ioctl(local->fd, EVIOCGABS(ABS_Y), &abs));
     if (rc >= 0)
     {
-	xf86Msg(X_INFO, "%s: y-axis range %d - %d\n", local->name,
+	xf86Msg(X_PROBED, "%s: y-axis range %d - %d\n", local->name,
 		abs.minimum, abs.maximum);
 	priv->miny = abs.minimum;
 	priv->maxy = abs.maximum;
@@ -218,7 +218,7 @@ event_query_axis_ranges(LocalDevicePtr local)
 	SYSCALL(rc = ioctl(local->fd, EVIOCGABS(ABS_PRESSURE), &abs));
 	if (rc >= 0)
 	{
-	    xf86Msg(X_INFO, "%s: pressure range %d - %d\n", local->name,
+	    xf86Msg(X_PROBED, "%s: pressure range %d - %d\n", local->name,
 		    abs.minimum, abs.maximum);
 	    priv->minp = abs.minimum;
 	    priv->maxp = abs.maximum;
@@ -231,7 +231,7 @@ event_query_axis_ranges(LocalDevicePtr local)
     SYSCALL(rc = ioctl(local->fd, EVIOCGABS(ABS_TOOL_WIDTH), &abs));
     if (rc >= 0)
     {
-	xf86Msg(X_INFO, "%s: finger width range %d - %d\n", local->name,
+	xf86Msg(X_PROBED, "%s: finger width range %d - %d\n", local->name,
 		abs.minimum, abs.maximum);
 	priv->minw = abs.minimum;
 	priv->maxw = abs.maximum;
@@ -251,7 +251,7 @@ event_query_axis_ranges(LocalDevicePtr local)
 	   strcat(buf, " double");
 	if ((priv->has_triple = (TEST_BIT(BTN_TOOL_TRIPLETAP, keybits) != 0)))
 	   strcat(buf, " triple");
-	xf86Msg(X_INFO, "%s: buttons:%s\n", local->name, buf);
+	xf86Msg(X_PROBED, "%s: buttons:%s\n", local->name, buf);
     }
 }
 
