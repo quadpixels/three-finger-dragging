@@ -437,11 +437,11 @@ static void set_default_parameters(LocalDevicePtr local)
     tapButton2 = priv->has_left ? 0 : 3;
     tapButton3 = priv->has_left ? 0 : 2;
 
-    /* Enable multifinger-click if we don't have right/middle button,
+    /* Enable multifinger-click if only have one physical button,
        otherwise clickFinger is always button 1. */
     clickFinger1 = 1;
-    clickFinger2 = priv->has_right ? 1 : 3;
-    clickFinger3 = priv->has_middle ? 1 : 2;
+    clickFinger2 = (priv->has_right || priv->has_middle) ? 1 : 3;
+    clickFinger3 = (priv->has_right || priv->has_middle) ? 1 : 2;
 
     /* Enable vert edge scroll if we can't detect doubletap */
     vertEdgeScroll = priv->has_double ? FALSE : TRUE;
