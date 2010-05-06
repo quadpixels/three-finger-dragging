@@ -2126,6 +2126,30 @@ adjust_state_from_scrollbuttons(const LocalDevicePtr local, struct SynapticsHwSt
     return double_click;
 }
 
+static void
+post_button_click(const LocalDevicePtr local, const int button)
+{
+    xf86PostButtonEvent(local->dev, FALSE, button, TRUE, 0, 0);
+    xf86PostButtonEvent(local->dev, FALSE, button, FALSE, 0, 0);
+}
+
+
+static void
+post_scroll_events(const LocalDevicePtr local, struct ScrollData scroll)
+{
+    while (scroll.up-- > 0)
+        post_button_click(local, 4);
+
+    while (scroll.down-- > 0)
+        post_button_click(local, 5);
+
+    while (scroll.left-- > 0)
+        post_button_click(local, 6);
+
+    while (scroll.right-- > 0)
+        post_button_click(local, 7);
+}
+
 /*
  * React on changes in the hardware state. This function is called every time
  * the hardware state changes. The return value is used to specify how many
@@ -2260,24 +2284,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     /* Process scroll events only if coordinates are
      * in the Synaptics Area
      */
-    if (inside_active_area) {
-        while (scroll.up-- > 0) {
-		xf86PostButtonEvent(local->dev, FALSE, 4, TRUE, 0, 0);
-		xf86PostButtonEvent(local->dev, FALSE, 4, FALSE, 0, 0);
-        }
-        while (scroll.down-- > 0) {
-		xf86PostButtonEvent(local->dev, FALSE, 5, TRUE, 0, 0);
-		xf86PostButtonEvent(local->dev, FALSE, 5, FALSE, 0, 0);
-        }
-        while (scroll.left-- > 0) {
-		xf86PostButtonEvent(local->dev, FALSE, 6, TRUE, 0, 0);
-		xf86PostButtonEvent(local->dev, FALSE, 6, FALSE, 0, 0);
-        }
-        while (scroll.right-- > 0) {
-		xf86PostButtonEvent(local->dev, FALSE, 7, TRUE, 0, 0);
-		xf86PostButtonEvent(local->dev, FALSE, 7, FALSE, 0, 0);
-        }
-    }
+    if (inside_active_area)
+	post_scroll_events(local, scroll);
 
     if (double_click) {
 	int i;
