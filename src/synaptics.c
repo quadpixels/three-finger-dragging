@@ -2055,6 +2055,38 @@ HandleClickWithFingers(SynapticsParameters *para, struct SynapticsHwState *hw)
 }
 
 
+/* Update the hardware state in shared memory. This is read-only these days,
+ * nothing in the driver reads back from SHM. SHM configuration is a thing of the past.
+ */
+static void
+update_shm(const LocalDevicePtr local, const struct SynapticsHwState *hw)
+{
+    int i;
+    SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
+    SynapticsSHM *shm = priv->synshm;
+
+    if (!shm)
+	    return;
+
+    shm->x = hw->x;
+    shm->y = hw->y;
+    shm->z = hw->z;
+    shm->numFingers = hw->numFingers;
+    shm->fingerWidth = hw->fingerWidth;
+    shm->left = hw->left;
+    shm->right = hw->right;
+    shm->up = hw->up;
+    shm->down = hw->down;
+    for (i = 0; i < 8; i++)
+	    shm->multi[i] = hw->multi[i];
+    shm->middle = hw->middle;
+    shm->guest_left = hw->guest_left;
+    shm->guest_mid = hw->guest_mid;
+    shm->guest_right = hw->guest_right;
+    shm->guest_dx = hw->guest_dx;
+    shm->guest_dy = hw->guest_dy;
+}
+
 /*
  * React on changes in the hardware state. This function is called every time
  * the hardware state changes. The return value is used to specify how many
@@ -2065,7 +2097,6 @@ static int
 HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
-    SynapticsSHM *shm = priv->synshm;
     SynapticsParameters *para = &priv->synpara;
     int finger;
     int dx, dy, buttons, rep_buttons, id;
@@ -2075,30 +2106,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     int double_click, repeat_delay;
     int delay = 1000000000;
     int timeleft;
-    int i;
     Bool inside_active_area;
 
-    /* update hardware state in shared memory */
-    if (shm)
-    {
-        shm->x = hw->x;
-        shm->y = hw->y;
-        shm->z = hw->z;
-        shm->numFingers = hw->numFingers;
-        shm->fingerWidth = hw->fingerWidth;
-        shm->left = hw->left;
-        shm->right = hw->right;
-        shm->up = hw->up;
-        shm->down = hw->down;
-        for (i = 0; i < 8; i++)
-            shm->multi[i] = hw->multi[i];
-        shm->middle = hw->middle;
-        shm->guest_left = hw->guest_left;
-        shm->guest_mid = hw->guest_mid;
-        shm->guest_right = hw->guest_right;
-        shm->guest_dx = hw->guest_dx;
-        shm->guest_dy = hw->guest_dy;
-    }
+    update_shm(local, hw);
 
     /* If touchpad is switched off, we skip the whole thing and return delay */
     if (para->touchpad_off == 1)
