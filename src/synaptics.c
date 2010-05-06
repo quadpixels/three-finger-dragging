@@ -2262,12 +2262,12 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
      */
     if (inside_active_area) {
         while (scroll.up-- > 0) {
-		xf86PostButtonEvent(local->dev, FALSE, 4, !hw->up, 0, 0);
-		xf86PostButtonEvent(local->dev, FALSE, 4, hw->up, 0, 0);
+		xf86PostButtonEvent(local->dev, FALSE, 4, TRUE, 0, 0);
+		xf86PostButtonEvent(local->dev, FALSE, 4, FALSE, 0, 0);
         }
         while (scroll.down-- > 0) {
-		xf86PostButtonEvent(local->dev, FALSE, 5, !hw->down, 0, 0);
-		xf86PostButtonEvent(local->dev, FALSE, 5, hw->down, 0, 0);
+		xf86PostButtonEvent(local->dev, FALSE, 5, TRUE, 0, 0);
+		xf86PostButtonEvent(local->dev, FALSE, 5, FALSE, 0, 0);
         }
         while (scroll.left-- > 0) {
 		xf86PostButtonEvent(local->dev, FALSE, 6, TRUE, 0, 0);
@@ -2282,8 +2282,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     if (double_click) {
 	int i;
 	for (i = 0; i < 2; i++) {
-	    xf86PostButtonEvent(local->dev, FALSE, 1, !hw->left, 0, 0);
-	    xf86PostButtonEvent(local->dev, FALSE, 1, hw->left, 0, 0);
+	    xf86PostButtonEvent(local->dev, FALSE, 1, TRUE, 0, 0);
+	    xf86PostButtonEvent(local->dev, FALSE, 1, FALSE, 0, 0);
 	}
     }
 
