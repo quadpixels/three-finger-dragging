@@ -2127,6 +2127,37 @@ adjust_state_from_scrollbuttons(const LocalDevicePtr local, struct SynapticsHwSt
 }
 
 static void
+update_hw_button_state(const LocalDevicePtr local, struct SynapticsHwState *hw, int *delay)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
+    SynapticsParameters *para = &priv->synpara;
+
+    /* Treat the first two multi buttons as up/down for now. */
+    hw->up |= hw->multi[0];
+    hw->down |= hw->multi[1];
+
+    if (!para->guestmouse_off) {
+	hw->left |= hw->guest_left;
+	hw->middle |= hw->guest_mid;
+	hw->right |= hw->guest_right;
+    }
+
+    /* 3rd button emulation */
+    hw->middle |= HandleMidButtonEmulation(priv, hw, delay);
+
+    /* Fingers emulate other buttons */
+    if(hw->left && hw->numFingers >= 1){
+        HandleClickWithFingers(para, hw);
+    }
+
+    /* Two finger emulation */
+    if (hw->numFingers == 1 && hw->z >= para->emulate_twofinger_z &&
+        hw->fingerWidth >= para->emulate_twofinger_w) {
+	hw->numFingers = 2;
+    }
+}
+
+static void
 post_button_click(const LocalDevicePtr local, const int button)
 {
     xf86PostButtonEvent(local->dev, FALSE, button, TRUE, 0, 0);
@@ -2177,29 +2208,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     if (para->touchpad_off == 1)
 	return delay;
 
-    /* Treat the first two multi buttons as up/down for now. */
-    hw->up |= hw->multi[0];
-    hw->down |= hw->multi[1];
-
-    if (!para->guestmouse_off) {
-	hw->left |= hw->guest_left;
-	hw->middle |= hw->guest_mid;
-	hw->right |= hw->guest_right;
-    }
-
-    /* 3rd button emulation */
-    hw->middle |= HandleMidButtonEmulation(priv, hw, &delay);
-
-    /* Fingers emulate other buttons */
-    if(hw->left && hw->numFingers >= 1){
-        HandleClickWithFingers(para, hw);
-    }
-
-    /* Two finger emulation */
-    if (hw->numFingers == 1 && hw->z >= para->emulate_twofinger_z &&
-        hw->fingerWidth >= para->emulate_twofinger_w) {
-	hw->numFingers = 2;
-    }
+    update_hw_button_state(local, hw, &delay);
 
     double_click = adjust_state_from_scrollbuttons(local, hw);
 
