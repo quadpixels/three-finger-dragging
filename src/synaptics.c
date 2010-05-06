@@ -2087,6 +2087,45 @@ update_shm(const LocalDevicePtr local, const struct SynapticsHwState *hw)
     shm->guest_dy = hw->guest_dy;
 }
 
+/* Adjust the hardware state according to the extra buttons (if the touchpad
+ * has any and not many touchpads do these days). These buttons are up/down
+ * tilt buttons and/or left/right buttons that then map into a specific
+ * function (or scrolling into).
+ */
+static Bool
+adjust_state_from_scrollbuttons(const LocalDevicePtr local, struct SynapticsHwState *hw)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
+    SynapticsParameters *para = &priv->synpara;
+    Bool double_click = FALSE;
+
+    if (!para->updown_button_scrolling) {
+	if (hw->down) {		/* map down button to middle button */
+	    hw->middle = TRUE;
+	}
+
+	if (hw->up) {		/* up button generates double click */
+	    if (!priv->prev_up)
+		double_click = TRUE;
+	}
+	priv->prev_up = hw->up;
+
+	/* reset up/down button events */
+	hw->up = hw->down = FALSE;
+    }
+
+    /* Left/right button scrolling, or middle clicks */
+    if (!para->leftright_button_scrolling) {
+	if (hw->multi[2] || hw->multi[3])
+	    hw->middle = TRUE;
+
+	/* reset left/right button events */
+	hw->multi[2] = hw->multi[3] = FALSE;
+    }
+
+    return double_click;
+}
+
 /*
  * React on changes in the hardware state. This function is called every time
  * the hardware state changes. The return value is used to specify how many
@@ -2138,31 +2177,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 	hw->numFingers = 2;
     }
 
-    /* Up/Down button scrolling or middle/double click */
-    double_click = FALSE;
-    if (!para->updown_button_scrolling) {
-	if (hw->down) {		/* map down button to middle button */
-	    hw->middle = TRUE;
-	}
-
-	if (hw->up) {		/* up button generates double click */
-	    if (!priv->prev_up)
-		double_click = TRUE;
-	}
-	priv->prev_up = hw->up;
-
-	/* reset up/down button events */
-	hw->up = hw->down = FALSE;
-    }
-
-    /* Left/right button scrolling, or middle clicks */
-    if (!para->leftright_button_scrolling) {
-	if (hw->multi[2] || hw->multi[3])
-	    hw->middle = TRUE;
-
-	/* reset left/right button events */
-	hw->multi[2] = hw->multi[3] = FALSE;
-    }
+    double_click = adjust_state_from_scrollbuttons(local, hw);
 
     edge = edge_detection(priv, hw->x, hw->y);
     inside_active_area = is_inside_active_area(priv, hw->x, hw->y);
