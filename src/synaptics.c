@@ -2025,7 +2025,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 }
 
 static void
-HandleClickWithFingers(SynapticsParameters *para, struct SynapticsHwState *hw)
+handle_clickfinger(SynapticsParameters *para, struct SynapticsHwState *hw)
 {
     int action = 0;
     switch(hw->numFingers){
@@ -2147,7 +2147,7 @@ update_hw_button_state(const LocalDevicePtr local, struct SynapticsHwState *hw, 
 
     /* Fingers emulate other buttons */
     if(hw->left && hw->numFingers >= 1){
-        HandleClickWithFingers(para, hw);
+        handle_clickfinger(para, hw);
     }
 
     /* Two finger emulation */
