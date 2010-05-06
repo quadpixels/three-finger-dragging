@@ -2264,13 +2264,11 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 
     if (priv->mid_emu_state == MBE_LEFT_CLICK)
     {
-	xf86PostButtonEvent(local->dev, FALSE, 1, 1, 0, 0);
-	xf86PostButtonEvent(local->dev, FALSE, 1, 0, 0, 0);
+	post_button_click(local, 1);
 	priv->mid_emu_state = MBE_OFF;
     } else if (priv->mid_emu_state == MBE_RIGHT_CLICK)
     {
-	xf86PostButtonEvent(local->dev, FALSE, 3, 1, 0, 0);
-	xf86PostButtonEvent(local->dev, FALSE, 3, 0, 0, 0);
+	post_button_click(local, 3);
 	priv->mid_emu_state = MBE_OFF;
     }
 
@@ -2288,11 +2286,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
 	post_scroll_events(local, scroll);
 
     if (double_click) {
-	int i;
-	for (i = 0; i < 2; i++) {
-	    xf86PostButtonEvent(local->dev, FALSE, 1, TRUE, 0, 0);
-	    xf86PostButtonEvent(local->dev, FALSE, 1, FALSE, 0, 0);
-	}
+	post_button_click(local, 1);
+	post_button_click(local, 1);
     }
 
     /* Handle auto repeat buttons */
