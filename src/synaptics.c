@@ -1582,7 +1582,7 @@ estimate_delta(double x0, double x1, double x2, double x3)
 }
 
 static int
-ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
+ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
 	      edge_type edge, int *dxP, int *dyP)
 {
     SynapticsParameters *para = &priv->synpara;
@@ -1717,9 +1717,6 @@ ComputeDeltas(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
     *dxP = dx;
     *dyP = dy;
-
-    /* generate a history of the absolute positions */
-    store_history(priv, hw->x, hw->y, hw->millis);
 
     return delay;
 }
@@ -2337,6 +2334,9 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     /* Save old values of some state variables */
     priv->finger_state = finger;
     priv->lastButtons = buttons;
+
+    /* generate a history of the absolute positions */
+    store_history(priv, hw->x, hw->y, hw->millis);
 
     return delay;
 }
