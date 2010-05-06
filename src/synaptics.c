@@ -1417,9 +1417,10 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
     touch = finger && !priv->finger_state;
     release = !finger && priv->finger_state;
-    move = ((priv->tap_max_fingers <= ((priv->horiz_scroll_twofinger_on || priv->vert_scroll_twofinger_on)? 2 : 1)) &&
+    move = (finger &&
+	     (priv->tap_max_fingers <= ((priv->horiz_scroll_twofinger_on || priv->vert_scroll_twofinger_on)? 2 : 1)) &&
 	     ((abs(hw->x - priv->touch_on.x) >= para->tap_move) ||
-	     (abs(hw->y - priv->touch_on.y) >= para->tap_move)) && finger);
+	     (abs(hw->y - priv->touch_on.y) >= para->tap_move)));
 
     if (touch) {
 	priv->touch_on.x = hw->x;
