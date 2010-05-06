@@ -83,6 +83,7 @@
 #endif
 
 typedef enum {
+    NO_EDGE = 0,
     BOTTOM_EDGE = 1,
     TOP_EDGE = 2,
     LEFT_EDGE = 4,
@@ -1022,7 +1023,7 @@ circular_edge_detection(SynapticsPrivate *priv, int x, int y)
 static edge_type
 edge_detection(SynapticsPrivate *priv, int x, int y)
 {
-    edge_type edge = 0;
+    edge_type edge = NO_EDGE;
 
     if (priv->synpara.circular_pad)
 	return circular_edge_detection(priv, x, y);
@@ -2194,7 +2195,7 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     SynapticsParameters *para = &priv->synpara;
     int finger;
     int dx, dy, buttons, rep_buttons, id;
-    edge_type edge;
+    edge_type edge = NO_EDGE;
     int change;
     struct ScrollData scroll;
     int double_click, repeat_delay;
