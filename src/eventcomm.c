@@ -251,6 +251,16 @@ event_query_axis_ranges(LocalDevicePtr local)
 	   strcat(buf, " double");
 	if ((priv->has_triple = (TEST_BIT(BTN_TOOL_TRIPLETAP, keybits) != 0)))
 	   strcat(buf, " triple");
+
+	if ((TEST_BIT(BTN_0, keybits) != 0) ||
+	    (TEST_BIT(BTN_1, keybits) != 0) ||
+	    (TEST_BIT(BTN_2, keybits) != 0) ||
+	    (TEST_BIT(BTN_3, keybits) != 0))
+	{
+	    priv->has_scrollbuttons = 1;
+	    strcat(buf, " scroll-buttons");
+	}
+
 	xf86Msg(X_PROBED, "%s: buttons:%s\n", local->name, buf);
     }
 }

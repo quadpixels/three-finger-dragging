@@ -232,6 +232,7 @@ typedef struct _SynapticsPrivateRec
     Bool has_double;			/* double click detected for this device */
     Bool has_triple;			/* triple click detected for this device */
     Bool has_pressure;			/* device reports pressure */
+    Bool has_scrollbuttons;		/* device has physical scrollbuttons */
 
     enum TouchpadModel model;          /* The detected model */
 } SynapticsPrivate;

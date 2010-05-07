@@ -223,29 +223,36 @@ Motion Factor"
 If on, the up/down buttons generate button 4/5 events.
 .
 If off, the up button generates a double click and the down button
-generates a button 2 event. Property: "Synaptics Button Scrolling"
+generates a button 2 event. This option is only available for touchpads with
+physical scroll buttons.
+Property: "Synaptics Button Scrolling"
 .TP
 .BI "Option \*qLeftRightScrolling\*q \*q" boolean \*q
 If on, the left/right buttons generate button 6/7 events.
 .
-If off, the left/right buttons both generate button 2 events. Property:
-"Synaptics Button Scrolling"
+If off, the left/right buttons both generate button 2 events.
+This option is only available for touchpads with physical scroll buttons.
+Property: "Synaptics Button Scrolling"
 .TP
 .BI "Option \*qUpDownScrollRepeat\*q \*q" boolean \*q
 If on, and the up/down buttons are used for scrolling
 (\fBUpDownScrolling\fR), these buttons will send auto-repeating 4/5 events,
 with the delay between repeats determined by \fBScrollButtonRepeat\fR.
+This option is only available for touchpads with physical scroll buttons.
 Property: "Synaptics Button Scrolling Repeat"
 .TP
 .BI "Option \*qLeftRightScrollRepeat\*q \*q" boolean \*q
 If on, and the left/right buttons are used for scrolling
 (\fBLeftRightScrolling\fR), these buttons will send auto-repeating 6/7 events,
 with the delay between repeats determined by \fBScrollButtonRepeat\fR.
+This option is only available for touchpads with physical scroll buttons.
 Property: "Synaptics Button Scrolling Repeat"
 .TP
 .BI "Option \*qScrollButtonRepeat\*q \*q" integer \*q
 The number of milliseconds between repeats of button events 4-7 from the
-up/down/left/right scroll buttons. Property: "Synaptics Button Scrolling Time"
+up/down/left/right scroll buttons.
+This option is only available for touchpads with physical scroll buttons.
+Property: "Synaptics Button Scrolling Time"
 .TP
 .BI "Option \*qEmulateMidButtonTime\*q \*q" integer \*q
 Maximum time (in milliseconds) for middle button emulation. Property:
