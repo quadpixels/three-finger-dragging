@@ -1585,7 +1585,7 @@ estimate_delta(double x0, double x1, double x2, double x3)
 
 static int
 ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
-	      edge_type edge, int *dxP, int *dyP)
+	      edge_type edge, int *dxP, int *dyP, Bool inside_area)
 {
     SynapticsParameters *para = &priv->synpara;
     enum MovingState moving_state;
@@ -1613,7 +1613,7 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
 	    break;
 	}
     }
-    if (moving_state && !priv->palm &&
+    if (inside_area && moving_state && !priv->palm &&
 	!priv->vert_scroll_edge_on && !priv->horiz_scroll_edge_on &&
 	!priv->vert_scroll_twofinger_on && !priv->horiz_scroll_twofinger_on &&
 	!priv->circ_scroll_on) {
@@ -2256,33 +2256,61 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     if (para->touchpad_off == 1)
 	return delay;
 
-    update_hw_button_state(local, hw, &delay);
+    inside_active_area = is_inside_active_area(priv, hw->x, hw->y);
 
+    /* now we know that these _coordinates_ aren't in the area.
+       invalid are: x, y, z, numFingers, fingerWidth
+       valid are: millis, left/right/middle/up/down/etc.
+    */
+    if (!inside_active_area)
+    {
+	hw->x = 0;
+	hw->y = 0;
+	hw->z = 0;
+	hw->numFingers = 0;
+	hw->fingerWidth = 0;
+
+	/* FIXME: if finger accidentally moves into the area and doesn't
+	 * really release, the finger should remain down. */
+	finger = FS_UNTOUCHED;
+	edge = NO_EDGE;
+
+	dx = dy = 0;
+    }
+
+    /* these two just update hw->left, right, etc. */
+    update_hw_button_state(local, hw, &delay);
     if (priv->has_scrollbuttons)
 	double_click = adjust_state_from_scrollbuttons(local, hw);
 
-    edge = edge_detection(priv, hw->x, hw->y);
-    inside_active_area = is_inside_active_area(priv, hw->x, hw->y);
+    /* no edge or finger detection outside of area */
+    if (inside_active_area) {
+	edge = edge_detection(priv, hw->x, hw->y);
+	finger = SynapticsDetectFinger(priv, hw);
+    }
 
-    finger = SynapticsDetectFinger(priv, hw);
-
-    /* tap and drag detection */
+    /* tap and drag detection. Needs to be performed even if the finger is in
+     * the dead area to reset the state. */
     timeleft = HandleTapProcessing(priv, hw, edge, finger, inside_active_area);
     if (timeleft > 0)
 	delay = MIN(delay, timeleft);
 
-    timeleft = HandleScrolling(priv, hw, edge, finger, &scroll);
-    if (timeleft > 0)
-	delay = MIN(delay, timeleft);
+    if (inside_active_area)
+    {
+	/* Don't bother about scrolling in the dead area of the touchpad. */
+	timeleft = HandleScrolling(priv, hw, edge, finger, &scroll);
+	if (timeleft > 0)
+	    delay = MIN(delay, timeleft);
 
-    /*
-     * Compensate for unequal x/y resolution. This needs to be done after
-     * calculations that require unadjusted coordinates, for example edge
-     * detection.
-     */
-    ScaleCoordinates(priv, hw);
+	/*
+	 * Compensate for unequal x/y resolution. This needs to be done after
+	 * calculations that require unadjusted coordinates, for example edge
+	 * detection.
+	 */
+	ScaleCoordinates(priv, hw);
+    }
 
-    timeleft = ComputeDeltas(priv, hw, edge, &dx, &dy);
+    timeleft = ComputeDeltas(priv, hw, edge, &dx, &dy, inside_active_area);
     delay = MIN(delay, timeleft);
 
 
@@ -2308,13 +2336,6 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     }
 
     /* Post events */
-
-    /* Process movements only if coordinates are
-     * in the Synaptics Area
-     */
-    if (!inside_active_area)
-	dx = dy = 0;
-
     if (dx || dy)
 	xf86PostMotionEvent(local->dev, 0, 0, 2, dx, dy);
 
@@ -2354,7 +2375,8 @@ HandleState(LocalDevicePtr local, struct SynapticsHwState *hw)
     priv->lastButtons = buttons;
 
     /* generate a history of the absolute positions */
-    store_history(priv, hw->x, hw->y, hw->millis);
+    if (inside_active_area)
+	store_history(priv, hw->x, hw->y, hw->millis);
 
     return delay;
 }
