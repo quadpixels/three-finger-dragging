@@ -44,6 +44,6 @@ endif
 
 if BUILD_PSMCOMM
 @DRIVER_NAME@_drv_la_SOURCES += \
-	psmcomm.c psmcomm.h
+	psmcomm.c
 endif
 

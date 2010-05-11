@@ -39,7 +39,9 @@
 #endif
 
 #include <xorg-server.h>
-#include "psmcomm.h"
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <sys/mouse.h>
 #include <errno.h>
 #include <string.h>
 #include "synproto.h"
