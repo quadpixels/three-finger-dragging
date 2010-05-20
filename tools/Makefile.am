@@ -27,9 +27,11 @@ AM_CFLAGS = -I$(top_srcdir)/include $(XTST_1_1_CFLAGS) $(RECORDPROTO_1_13_CFLAGS
 
 synclient_SOURCES = synclient.c
 synclient_LDFLAGS = -lm $(XI_LIBS)
+synclient_CFLAGS = $(AM_CFLAGS) $(XI_CFLAGS)
 
 syndaemon_SOURCES = syndaemon.c
 syndaemon_LDFLAGS = $(XTST_1_1_LIBS) $(RECORDPROTO_1_13_LIBS) $(XI_LIBS)
+syndaemon_CFLAGS = $(AM_CFLAGS) $(XI_CFLAGS)
 else
 all:
 	@echo "Not building syndaemon and synclient."
