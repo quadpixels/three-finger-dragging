@@ -265,7 +265,7 @@ alloc_param_data(LocalDevicePtr local)
 	    return FALSE;
 	}
     } else {
-	priv->synshm = xcalloc(1, sizeof(SynapticsSHM));
+	priv->synshm = calloc(1, sizeof(SynapticsSHM));
 	if (!priv->synshm)
 	    return FALSE;
     }
@@ -288,7 +288,7 @@ free_param_data(SynapticsPrivate *priv)
 	if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) != -1)
 	    shmctl(shmid, IPC_RMID, NULL);
     } else {
-	xfree(priv->synshm);
+	free(priv->synshm);
     }
 
     priv->synshm = NULL;
@@ -556,22 +556,22 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     SynapticsPrivate *priv;
 
     /* allocate memory for SynapticsPrivateRec */
-    priv = xcalloc(1, sizeof(SynapticsPrivate));
+    priv = calloc(1, sizeof(SynapticsPrivate));
     if (!priv)
 	return NULL;
 
     /* allocate now so we don't allocate in the signal handler */
     priv->timer = TimerSet(NULL, 0, 0, NULL, NULL);
     if (!priv->timer) {
-	xfree(priv);
+	free(priv);
 	return NULL;
     }
 
     /* Allocate a new InputInfoRec and add it to the head xf86InputDevs. */
     local = xf86AllocateInput(drv, 0);
     if (!local) {
-	xfree(priv->timer);
-	xfree(priv);
+	free(priv->timer);
+	free(priv);
 	return NULL;
     }
 
@@ -669,9 +669,9 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     if (priv->comm.buffer)
 	XisbFree(priv->comm.buffer);
     free_param_data(priv);
-    xfree(priv->proto_data);
-    xfree(priv->timer);
-    xfree(priv);
+    free(priv->proto_data);
+    free(priv->timer);
+    free(priv);
     local->private = NULL;
     return local;
 }
@@ -686,10 +686,10 @@ static void SynapticsUnInit(InputDriverPtr drv,
 {
     SynapticsPrivate *priv = ((SynapticsPrivate *)local->private);
     if (priv && priv->timer)
-        xfree(priv->timer);
+        free(priv->timer);
     if (priv && priv->proto_data)
-        xfree(priv->proto_data);
-    xfree(local->private);
+        free(priv->proto_data);
+    free(local->private);
     local->private = NULL;
     xf86DeleteInput(local, 0);
 }

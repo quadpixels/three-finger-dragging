@@ -62,7 +62,7 @@ EventDeviceOnHook(LocalDevicePtr local, SynapticsParameters *para)
     BOOL *need_grab;
 
     if (!priv->proto_data)
-        priv->proto_data = xcalloc(1, sizeof(BOOL));
+        priv->proto_data = calloc(1, sizeof(BOOL));
 
     need_grab = (BOOL*)priv->proto_data;
 
