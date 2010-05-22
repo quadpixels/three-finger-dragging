@@ -51,27 +51,19 @@ case "${host}" in
 *linux*)
 	AC_MSG_RESULT([eventcomm])
 	BUILD_EVENTCOMM="yes"
-	BUILD_PSMCOMM="no"
+	AC_DEFINE(BUILD_EVENTCOMM, 1, [Optional backend eventcomm enabled])
 	;;
 *freebsd* | *openbsd* | *netbsd* | *dragonfly*)
 	AC_MSG_RESULT([psmcomm])
-	BUILD_EVENTCOMM="no"
 	BUILD_PSMCOMM="yes"
+	AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])
 	;;
 *)
 	AC_MSG_RESULT([none])
-	BUILD_EVENTCOMM="no"
-	BUILD_PSMCOMM="no"
 	;;
 esac
 AM_CONDITIONAL([BUILD_EVENTCOMM], [test "x${BUILD_EVENTCOMM}" = "xyes"])
-if test "x${BUILD_EVENTCOMM}" = "xyes" ; then
-	AC_DEFINE(BUILD_EVENTCOMM, 1, [Optional backend eventcomm enabled])
-fi
 AM_CONDITIONAL([BUILD_PSMCOMM], [test "x${BUILD_PSMCOMM}" = "xyes"])
-if test "x${BUILD_PSMCOMM}" = "xyes" ; then
-	AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])
-fi
 
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],
                                     [Enable debugging (default: disabled)]),
