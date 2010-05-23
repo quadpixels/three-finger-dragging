@@ -30,7 +30,7 @@ AM_LDFLAGS = -lm $(XI_LIBS)
 synclient_SOURCES = synclient.c
 
 syndaemon_SOURCES = syndaemon.c
-syndaemon_CFLAGS = $(AM_CFLAGS) $(XTST_CFLAGS) $(RECORD_PROTO_CFLAGS)
+syndaemon_CFLAGS = $(AM_CFLAGS) $(XTST_CFLAGS)
 syndaemon_LDFLAGS = $(AM_LDFLAGS) $(XTST_LIBS)
 else
 all:
