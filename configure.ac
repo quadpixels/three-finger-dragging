@@ -28,8 +28,8 @@ AC_INIT([xf86-input-synaptics],
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)
+AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_CONFIG_HEADER([config.h])
 AM_MAINTAINER_MODE
 
 DRIVER_NAME=synaptics
