@@ -133,9 +133,6 @@ AC_ARG_WITH(xorg-conf-dir,
 AC_SUBST(XORG_CONF_DIR)
 AM_CONDITIONAL(HAS_XORG_CONF_DIR, [test "x$XORG_CONF_DIR" != "x" && test "x$XORG_CONF_DIR" != "xno"])
 
-# Checks for header files.
-AC_HEADER_STDC
-
 AC_OUTPUT([Makefile
            src/Makefile
            man/Makefile
