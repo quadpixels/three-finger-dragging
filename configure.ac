@@ -44,7 +44,6 @@ XORG_DEFAULT_OPTIONS
 # Checks for programs.
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
-AC_PROG_CC
 
 AC_MSG_CHECKING([which optional backends will be build])
 case "${host}" in
