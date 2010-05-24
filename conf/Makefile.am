@@ -20,9 +20,7 @@
 
 
 if HAS_XORG_CONF_DIR
-dist_config_DATA = 50-synaptics.conf
-else
-
-EXTRA_DIST = 11-x11-synaptics.fdi
-
+config_DATA = 50-synaptics.conf
 endif
+
+EXTRA_DIST = 50-synaptics.conf 11-x11-synaptics.fdi
