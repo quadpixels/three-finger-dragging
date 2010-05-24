@@ -71,14 +71,15 @@ AC_ARG_WITH(xorg-module-dir,
 inputdir=${moduledir}/input
 AC_SUBST(inputdir)
 
-# Define a configure option for an alternate configuration directory
+# Define a configure option for an alternate X Server configuration directory
+sysconfigdir=`$PKG_CONFIG --variable=sysconfigdir xorg-server`
 AC_ARG_WITH(xorg-conf-dir,
             AC_HELP_STRING([--with-xorg-conf-dir=DIR],
                            [Default xorg.conf.d directory [[default=from $PKG_CONFIG xorg-server]]]),
             [XORG_CONF_DIR="$withval"],
-            [XORG_CONF_DIR="`$PKG_CONFIG --variable=sysconfigdir xorg-server`"])
+            [XORG_CONF_DIR="$sysconfigdir"])
 AC_SUBST(XORG_CONF_DIR)
-AM_CONDITIONAL(HAS_XORG_CONF_DIR, [test "x$XORG_CONF_DIR" != "x" && test "x$XORG_CONF_DIR" != "xno"])
+AM_CONDITIONAL(HAS_XORG_CONF_DIR, [test "x$sysconfigdir" != "x"])
 
 # Define a configure option to enable code debugging
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug],
