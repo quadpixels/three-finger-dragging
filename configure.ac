@@ -90,12 +90,6 @@ if test "x$DEBUGGING" = xyes; then
 fi
 AM_CONDITIONAL(DEBUG, [test "x$DEBUGGING" = xyes])
 
-# Define a configure option to disable building synclient and syndaemon
-AC_ARG_ENABLE([tools],
-              AS_HELP_STRING([--enable-tools], [Build synclient and syndaemon [[default=auto]]]),
-              [build_tools="$enableval"],
-              [build_tools="auto"])
-
 # -----------------------------------------------------------------------------
 #		Determine which backend, if any, to build
 # -----------------------------------------------------------------------------
@@ -121,30 +115,20 @@ AM_CONDITIONAL([BUILD_PSMCOMM], [test "x${BUILD_PSMCOMM}" = "xyes"])
 # -----------------------------------------------------------------------------
 #			Dependencies for synclient and syndaemon
 # -----------------------------------------------------------------------------
-# If the tools dependencies are satisfied, look for XRecord impl and record.h headers
-PKG_CHECK_MODULES(XI, x11 inputproto [xi >= 1.2], have_depends="yes", have_depends="no")
-if test "x$have_depends" = "xyes"; then
-   if test "x$build_tools" != "xno"; then
-      # The syndaemon program uses an optional XRecord extension implementation
-      # If libxtst >= 1.0.99 is installed, Cflags contains the path to record.h
-      # If recordproto < 1.13.99.1 is installed, Cflags contains the path to record.h
-      PKG_CHECK_MODULES(XTST, xtst recordproto, have_libxtst="yes", have_libxtst="no")
-      if test "x$have_libxtst" = "xyes" ; then
-         # Header record.h may come from the xtst or recordproto package, or may be missing
-         SAVE_CPPFLAGS="$CPPFLAGS"
-         CPPFLAGS="$CPPFLAGS $XTST_CFLAGS"
-         AC_CHECK_HEADERS([X11/extensions/record.h],,,[#include <X11/Xlib.h>])
-         CPPFLAGS="$SAVE_CPPFLAGS"
-      fi
-   fi
-else
-   if test "x$build_tools" = "xyes"; then
-       AC_MSG_ERROR([Dependencies failed for synclient and syndaemon.])
-   else
-       AC_MSG_WARN([Not building synclient and syndaemon.])
-   fi
+# Obtain compiler/linker options for the Synaptics apps dependencies
+PKG_CHECK_MODULES(XI, x11 inputproto [xi >= 1.2])
+
+# The syndaemon program uses an optional XRecord extension implementation
+# If libxtst >= 1.0.99 is installed, Cflags contains the path to record.h
+# If recordproto < 1.13.99.1 is installed, Cflags contains the path to record.h
+PKG_CHECK_MODULES(XTST, xtst recordproto, have_libxtst="yes", have_libxtst="no")
+if test "x$have_libxtst" = "xyes" ; then
+   # Header record.h may come from the xtst or recordproto package, or may be missing
+   SAVE_CPPFLAGS="$CPPFLAGS"
+   CPPFLAGS="$CPPFLAGS $XTST_CFLAGS"
+   AC_CHECK_HEADERS([X11/extensions/record.h],,,[#include <X11/Xlib.h>])
+   CPPFLAGS="$SAVE_CPPFLAGS"
 fi
-AM_CONDITIONAL(BUILD_TOOLS, [test "x$have_depends" = xyes && test "x$build_tools" != xno])
 # -----------------------------------------------------------------------------
 
 AC_CONFIG_FILES([Makefile
