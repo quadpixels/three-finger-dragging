@@ -44,9 +44,6 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-# Checks for programs.
-AC_PROG_INSTALL
-
 # Obtain compiler/linker options for the Synaptics driver dependencies
 PKG_CHECK_MODULES(XORG, xorg-server xproto)
 
