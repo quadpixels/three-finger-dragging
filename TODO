@@ -1,7 +1,0 @@
-* autoload evdev kernel module if necessary?
-* Use ftok to get shared memory ID.
-* Add an option to disable "double-tap-and-drag" to make it possible
-  to get faster double clicks.
-* Better coasting speed estimation. The current algorithm uses a time
-  average but over a very short time period, so it's quite easy to
-  accidentally start coasting.
