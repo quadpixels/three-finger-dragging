@@ -40,13 +40,12 @@ AC_PROG_LIBTOOL
 
 # Initialize X.Org macros
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.4)
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 # Checks for programs.
 AC_PROG_INSTALL
-AC_PROG_SED
 
 # Obtain compiler/linker options for the Synaptics driver dependencies
 PKG_CHECK_MODULES(XORG, xorg-server xproto)
