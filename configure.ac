@@ -44,6 +44,9 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
+# Checks for libraries.
+AC_CHECK_LIB([m], [rint])
+
 # Obtain compiler/linker options for the Synaptics driver dependencies
 PKG_CHECK_MODULES(XORG, xorg-server xproto)
 
