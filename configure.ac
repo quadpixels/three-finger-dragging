@@ -47,8 +47,11 @@ XORG_DEFAULT_OPTIONS
 # Checks for libraries.
 AC_CHECK_LIB([m], [rint])
 
+# Store the list of server defined optional extensions in REQUIRED_MODULES
+XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
+
 # Obtain compiler/linker options for the Synaptics driver dependencies
-PKG_CHECK_MODULES(XORG, xorg-server xproto)
+PKG_CHECK_MODULES(XORG, xorg-server xproto inputproto $REQUIRED_MODULES)
 
 # X Server SDK location is required to install Synaptics header files
 # This location is also relayed in the xorg-synaptics.pc file
