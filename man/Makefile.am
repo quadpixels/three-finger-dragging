@@ -38,8 +38,6 @@ EXTRA_DIST = @DRIVER_NAME@.man synclient.man syndaemon.man
 
 CLEANFILES = $(driverman_DATA) $(synclientman_DATA) $(syndaemonman_DATA)
 
-SED = sed
-
 # Strings to replace in man pages
 XORGRELSTRING = @PACKAGE_STRING@
   XORGMANNAME = X Version 11
@@ -59,7 +57,7 @@ MAN_SUBSTS = \
 SUFFIXES = .$(DRIVER_MAN_SUFFIX) .man
 
 .man.$(DRIVER_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 .man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
