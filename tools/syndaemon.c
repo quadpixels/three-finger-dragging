@@ -31,10 +31,10 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/XInput.h>
-#ifdef HAVE_XRECORD
+#ifdef HAVE_X11_EXTENSIONS_RECORD_H
 #include <X11/Xproto.h>
 #include <X11/extensions/record.h>
-#endif /* HAVE_XRECORD */
+#endif /* HAVE_X11_EXTENSIONS_RECORD_H */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -263,7 +263,7 @@ setup_keyboard_mask(Display *display, int ignore_modifier_keys)
 }
 
 /* ---- the following code is for using the xrecord extension ----- */
-#ifdef HAVE_XRECORD
+#ifdef HAVE_X11_EXTENSIONS_RECORD_H
 
 #define MAX_MODIFIERS 16
 
@@ -440,7 +440,7 @@ void record_main_loop(Display* display, double idle_time) {
 
     XFreeModifiermap(cbres.modifiers);
 }
-#endif /* HAVE_XRECORD */
+#endif /* HAVE_X11_EXTENSIONS_RECORD_H */
 
 static XDevice *
 dp_get_device(Display *dpy)
@@ -590,7 +590,7 @@ main(int argc, char *argv[])
     pad_disabled = False;
     store_current_touchpad_state();
 
-#ifdef HAVE_XRECORD
+#ifdef HAVE_X11_EXTENSIONS_RECORD_H
     if (use_xrecord)
     {
 	if(check_xrecord(display))
@@ -601,7 +601,7 @@ main(int argc, char *argv[])
             exit(2);
         }
     } else
-#endif /* HAVE_XRECORD */
+#endif /* HAVE_X11_EXTENSIONS_RECORD_H */
       {
 	setup_keyboard_mask(display, ignore_modifier_keys);
 

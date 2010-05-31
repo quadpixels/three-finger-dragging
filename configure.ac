@@ -90,54 +90,48 @@ AC_ARG_WITH(xorg-module-dir,
 inputdir=${moduledir}/input
 AC_SUBST(inputdir)
 
-# Checks for extensions
-XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
 
-# Checks for pkg-config packages
-PKG_CHECK_MODULES(XORG, xorg-server xproto $REQUIRED_MODULES)
-sdkdir=`$PKG_CONFIG --variable=sdkdir xorg-server`
-AC_SUBST([sdkdir])
+# Obtain compiler/linker options for the Synaptics driver dependencies
+PKG_CHECK_MODULES(XORG, xorg-server xproto)
 
-PKG_CHECK_MODULES(XORG16, [xorg-server >= 1.6],
-                  HAVE_PROPERTIES="yes"; AC_DEFINE(HAVE_PROPERTIES, 1,
-                                                   "Input Device Property support"),
-                  HAVE_PROPERTIES="no");
-AM_CONDITIONAL(HAVE_PROPERTIES, [ test "$HAVE_PROPERTIES" = "yes" ])
-AC_SUBST(HAVE_PROPERTIES)
-
-# Checks for libraries.
-AC_ARG_ENABLE(tools,
-              AC_HELP_STRING([--enable-tools], [Build synclient and syndaemon [[default=auto]]]),
+# ----------------------------------------------------------------------------------
+#			Dependencies for synclient and syndaemon
+# ----------------------------------------------------------------------------------
+AC_ARG_ENABLE([tools],
+              AS_HELP_STRING([--enable-tools], [Build synclient and syndaemon [[default=auto]]]),
               [build_tools="$enableval"],
               [build_tools="auto"])
 
-if test "x$build_tools" != "xno"; then
-    # Record.h is either in recordproto up to 1.13.2 or in libXtst 1.1.
-    PKG_CHECK_MODULES(XTST_1_1, [xtst >= 1.0.99.1], HAVE_LIBXTST="yes", HAVE_LIBXTST="no")
-    PKG_CHECK_MODULES(RECORDPROTO_1_13, xtst [recordproto < 1.13.99.1], HAVE_RECORDPROTO="yes", HAVE_RECORDPROTO="no")
-
-    if test "x$HAVE_LIBXTST" = "xyes" || test "x$HAVE_RECORDPROTO" = "xyes" ; then
-        AC_DEFINE([HAVE_XRECORD],[],[Use XRecord])
-    fi
-
-    if test "x$HAVE_PROPERTIES" = "xyes"; then
-        PKG_CHECK_MODULES(XI, x11 [xi >= 1.2],
-                          BUILD_TOOLS="yes"; AC_DEFINE(BUILD_TOOLS, 1, "Build synclient and syndaemon"),
-                          BUILD_TOOLS="no")
-    else
-        BUILD_TOOLS="no"
-    fi
-
-    if test "x$BUILD_TOOLS" = "xno"; then
-        if test "x$build_tools" = "xyes"; then
-            AC_MSG_ERROR([Dependencies failed for synclient and syndaemon.])
-        else
-            AC_MSG_WARN([Not building synclient and syndaemon.])
-        fi
-    fi
+# Obtain compiler/linker options common for both synclient and syndaemon dependencies
+PKG_CHECK_MODULES(XI, x11 inputproto [xi >= 1.2], have_depends="yes", have_depends="no")
+if test "x$have_depends" = "xyes"; then
+   if test "x$build_tools" != "xno"; then
+      # The syndaemon program uses an optional XRecord extension implementation
+      # If libxtst >= 1.0.99 is installed, Cflags contains the path to record.h
+      PKG_CHECK_MODULES(XTST, xtst, have_libxtst="yes", have_libxtst="no")
+      if test "x$have_libxtst" = "xyes" ; then
+         # If recordproto < 1.13.99.1 is installed, Cflags contains the path to record.h
+         PKG_CHECK_MODULES(RECORD_PROTO, recordproto, have_recordproto="yes", have_recordproto="no")
+         # Header record.h may come from the xtst or recordproto package, or may be missing
+         SAVE_CPPFLAGS="$CPPFLAGS"
+         CPPFLAGS="$CPPFLAGS $XTST_CFLAGS $RECORD_PROTO_CFLAGS"
+         AC_CHECK_HEADERS([X11/extensions/record.h],,,[#include <X11/Xlib.h>])
+         CPPFLAGS="$SAVE_CPPFLAGS"
+      fi
+   fi
+else
+   if test "x$build_tools" = "xyes"; then
+       AC_MSG_ERROR([Dependencies failed for synclient and syndaemon.])
+   else
+       AC_MSG_WARN([Not building synclient and syndaemon.])
+   fi
 fi
-AM_CONDITIONAL(BUILD_TOOLS, [ test "$BUILD_TOOLS" = "yes" ])
-AC_SUBST(BUILD_TOOLS)
+AM_CONDITIONAL(BUILD_TOOLS, [test x$have_depends = xyes && test x$build_tools != xno])
+
+# ----------------------------------------------------------------------------------
+
+sdkdir=`$PKG_CONFIG --variable=sdkdir xorg-server`
+AC_SUBST([sdkdir])
 
 AC_ARG_WITH(xorg-conf-dir,
             AC_HELP_STRING([--with-xorg-conf-dir=DIR],

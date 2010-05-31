@@ -23,15 +23,15 @@ bin_PROGRAMS = \
 	synclient \
 	syndaemon
 
-AM_CFLAGS = -I$(top_srcdir)/include $(XTST_1_1_CFLAGS) $(RECORDPROTO_1_13_CFLAGS) -I$(sdkdir)
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(sdkdir)
+AM_CFLAGS = $(XI_CFLAGS)
+AM_LDFLAGS = -lm $(XI_LIBS)
 
 synclient_SOURCES = synclient.c
-synclient_LDFLAGS = -lm $(XI_LIBS)
-synclient_CFLAGS = $(AM_CFLAGS) $(XI_CFLAGS)
 
 syndaemon_SOURCES = syndaemon.c
-syndaemon_LDFLAGS = $(XTST_1_1_LIBS) $(RECORDPROTO_1_13_LIBS) $(XI_LIBS)
-syndaemon_CFLAGS = $(AM_CFLAGS) $(XI_CFLAGS)
+syndaemon_CFLAGS = $(AM_CFLAGS) $(XTST_CFLAGS) $(RECORD_PROTO_CFLAGS)
+syndaemon_LDFLAGS = $(AM_LDFLAGS) $(XTST_LIBS)
 else
 all:
 	@echo "Not building syndaemon and synclient."
