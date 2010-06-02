@@ -20,7 +20,8 @@
 
 
 if HAS_XORG_CONF_DIR
-config_DATA = 50-synaptics.conf
+dist_config_DATA = 50-synaptics.conf
+else
+fdidir = $(datadir)/hal/fdi/policy/20thirdparty
+dist_fdi_DATA = 11-x11-synaptics.fdi
 endif
-
-EXTRA_DIST = 50-synaptics.conf 11-x11-synaptics.fdi
