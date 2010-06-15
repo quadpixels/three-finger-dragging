@@ -458,28 +458,36 @@ Property: "Synaptics Pad Resolution"
 Ignore movements, scrolling and tapping which take place left of this edge.
 .
 The option is disabled by default and can be enabled by setting the
-AreaLeftEdge option to any integer value other than zero. Property: "Synaptics Area"
+AreaLeftEdge option to any integer value other than zero. If supported by the
+server (version 1.9 and later), the edge may be specified in percent of
+the total width of the touchpad. Property: "Synaptics Area"
 .
 .TP
 .BI "Option \*qAreaRightEdge\*q \*q" integer \*q
 Ignore movements, scrolling and tapping which take place right of this edge.
 .
 The option is disabled by default and can be enabled by setting the
-AreaRightEdge option to any integer value other than zero. Property: "Synaptics Area"
+AreaRightEdge option to any integer value other than zero. If supported by the
+server (version 1.9 and later), the edge may be specified in percent of
+the total width of the touchpad. Property: "Synaptics Area"
 .
 .TP
 .BI "Option \*qAreaTopEdge\*q \*q" integer \*q
 Ignore movements, scrolling and tapping which take place above this edge.
 .
 The option is disabled by default and can be enabled by setting the
-AreaTopEdge option to any integer value other than zero. Property: "Synaptics Area"
+AreaTopEdge option to any integer value other than zero. If supported by the
+server (version 1.9 and later), the edge may be specified in percent of
+the total height of the touchpad. Property: "Synaptics Area"
 .
 .TP
 .BI "Option \*qAreaBottomEdge\*q \*q" integer \*q
 Ignore movements, scrolling and tapping which take place below this edge.
 .
 The option is disabled by default and can be enabled by setting the
-AreaBottomEdge option to any integer value other than zero. Property: "Synaptics Area"
+AreaBottomEdge option to any integer value other than zero. If supported by the
+server (version 1.9 and later), the edge may be specified in percent of
+the total height of the touchpad. Property: "Synaptics Area"
 .
 
 .SH CONFIGURATION DETAILS

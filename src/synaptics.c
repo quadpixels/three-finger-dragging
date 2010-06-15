@@ -329,6 +329,28 @@ calculate_edge_widths(SynapticsPrivate *priv, int *l, int *r, int *t, int *b)
     *b = priv->maxy - eheight;
 }
 
+/* Area options support both percent values and absolute values. This is
+ * awkward. The xf86Set* calls will print to the log, but they'll
+ * also print an error if we request a percent value but only have an
+ * int. So - check first for percent, then call xf86Set* again to get
+ * the log message.
+ */
+static int set_percent_option(pointer options, const char* optname,
+                              const int range, const int offset)
+{
+    int result;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 11
+    int percent = xf86CheckPercentOption(options, optname, -1);
+
+    if (percent != -1) {
+        percent = xf86SetPercentOption(options, optname, -1);
+        result = percent/100.0 * range + offset;
+    } else
+#endif
+        result = xf86SetIntOption(options, optname, 0);
+
+    return result;
+}
 
 static void set_default_parameters(LocalDevicePtr local)
 {
@@ -466,10 +488,15 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->top_edge = xf86SetIntOption(opts, "TopEdge", t);
     pars->bottom_edge = xf86SetIntOption(opts, "BottomEdge", b);
 
-    pars->area_top_edge = xf86SetIntOption(opts, "AreaTopEdge", 0);
-    pars->area_bottom_edge = xf86SetIntOption(opts, "AreaBottomEdge", 0);
-    pars->area_left_edge = xf86SetIntOption(opts, "AreaLeftEdge", 0);
-    pars->area_right_edge = xf86SetIntOption(opts, "AreaRightEdge", 0);
+    pars->area_top_edge = set_percent_option(opts, "AreaTopEdge",
+                          priv->maxy - priv->miny, priv->miny);
+    pars->area_bottom_edge = set_percent_option(opts, "AreaBottomEdge",
+                          priv->maxy - priv->miny, priv->miny);
+
+    pars->area_left_edge = set_percent_option(opts, "AreaLeftEdge",
+                          priv->maxx - priv->minx, priv->minx);
+    pars->area_right_edge = set_percent_option(opts, "AreaRightEdge",
+                          priv->maxx - priv->minx, priv->minx);
 
     pars->finger_low = xf86SetIntOption(opts, "FingerLow", fingerLow);
     pars->finger_high = xf86SetIntOption(opts, "FingerHigh", fingerHigh);
