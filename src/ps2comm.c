@@ -44,6 +44,17 @@
 #include <xf86.h>
 
 #define MAX_UNSYNC_PACKETS 10				/* i.e. 10 to 60 bytes */
+/*
+ * The x/y limits are taken from the Synaptics TouchPad interfacing Guide,
+ * section 2.3.2, which says that they should be valid regardless of the
+ * actual size of the sensor.
+ */
+#define XMIN_NOMINAL 1472
+#define XMAX_NOMINAL 5472
+#define YMIN_NOMINAL 1408
+#define YMAX_NOMINAL 4448
+
+#define XMAX_VALID 6143
 
 /* synaptics queries */
 #define SYN_QUE_IDENTIFY		0x00
