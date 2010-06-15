@@ -487,15 +487,10 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->top_edge = xf86SetIntOption(opts, "TopEdge", t);
     pars->bottom_edge = xf86SetIntOption(opts, "BottomEdge", b);
 
-    pars->area_top_edge = set_percent_option(opts, "AreaTopEdge",
-                          priv->maxy - priv->miny, priv->miny);
-    pars->area_bottom_edge = set_percent_option(opts, "AreaBottomEdge",
-                          priv->maxy - priv->miny, priv->miny);
-
-    pars->area_left_edge = set_percent_option(opts, "AreaLeftEdge",
-                          priv->maxx - priv->minx, priv->minx);
-    pars->area_right_edge = set_percent_option(opts, "AreaRightEdge",
-                          priv->maxx - priv->minx, priv->minx);
+    pars->area_top_edge = set_percent_option(opts, "AreaTopEdge", height, priv->miny);
+    pars->area_bottom_edge = set_percent_option(opts, "AreaBottomEdge", height, priv->miny);
+    pars->area_left_edge = set_percent_option(opts, "AreaLeftEdge", width, priv->minx);
+    pars->area_right_edge = set_percent_option(opts, "AreaRightEdge", width, priv->minx);
 
     pars->finger_low = xf86SetIntOption(opts, "FingerLow", fingerLow);
     pars->finger_high = xf86SetIntOption(opts, "FingerHigh", fingerHigh);
