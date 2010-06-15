@@ -64,7 +64,7 @@ that some functions are not available on all touchpad models, because
 they need support from the touchpad hardware/firmware. (Multifinger
 taps for example.)
 .PP
-.SH CONFIGURATION DETAILS
+.SH CONFIGURATION OPTIONS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details and for options that can be used with all input drivers.  This
 section only covers configuration details specific to this driver.
@@ -515,7 +515,9 @@ Ignore movements, scrolling and tapping which take place below this edge.
 The option is disabled by default and can be enabled by setting the
 AreaBottomEdge option to any integer value other than zero. Property: "Synaptics Area"
 .
-.LP
+
+.SH CONFIGURATION DETAILS
+.SS Tapping
 A tap event happens when the finger is touched and released in a time
 interval shorter than MaxTapTime, and the touch and release
 coordinates are less than MaxTapMove units apart.
@@ -542,8 +544,7 @@ too small value means that visual feedback from the gui application
 you are interacting with is harder to see.
 .
 For this parameter to have any effect, "FastTaps" has to be disabled.
-.
-.LP
+.SS Acceleration
 The MinSpeed, MaxSpeed and AccelFactor parameters control the pointer
 motion speed.
 .
@@ -612,8 +613,7 @@ EdgeMotionMinZ and EdgeMotionMaxZ.
 .
 For a pressure value between PressureMotionMinZ and
 PressureMotionMaxZ, the factor is increased linearly.
-.
-.LP
+.SS Middle button emulation
 Since most synaptics touchpad models don't have a button that
 corresponds to the middle button on a mouse, the driver can emulate
 middle mouse button events.
@@ -622,7 +622,7 @@ If you press both the left and right mouse buttons at almost the same
 time (no more than EmulateMidButtonTime milliseconds apart) the driver
 generates a middle mouse button event.
 .
-.LP
+.SS Circular scrolling
 Circular scrolling acts like a scrolling wheel on the touchpad.
 .
 Scrolling is engaged when a drag starts in the given CircScrollTrigger
@@ -641,8 +641,8 @@ large circles for better control.
 When used together with vertical scrolling, hitting the upper or lower
 right corner will seamlessly switch over from vertical to circular
 scrolling.
-.
-.LP
+
+.SS Coasting
 Coasting is enabled by setting the CoastingSpeed parameter to a
 non-zero value.
 .
@@ -678,8 +678,8 @@ CornerCoasting takes precedence over the seamless switch from edge
 scrolling to circular scrolling.  That is, if CornerCoasting is
 active, scrolling will stop, and circular scrolling will not start,
 when the finger leaves the corner.
-.
-.LP
+
+.SS Trackstick mode
 Trackstick emulation mode is entered when pressing the finger hard on
 the touchpad.
 .
