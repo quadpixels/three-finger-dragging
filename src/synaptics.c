@@ -70,10 +70,6 @@
 #include <xf86Xinput.h>
 #include <exevents.h>
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-#include "mipointer.h"
-#endif
-
 #include "synaptics.h"
 #include "synapticsstr.h"
 #include "synaptics-properties.h"
@@ -133,11 +129,9 @@ static void ReadDevDimensions(LocalDevicePtr);
 static void ScaleCoordinates(SynapticsPrivate *priv, struct SynapticsHwState *hw);
 static void CalculateScalingCoeffs(SynapticsPrivate *priv);
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
 void InitDeviceProperties(LocalDevicePtr local);
 int SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
                 BOOL checkonly);
-#endif
 
 InputDriverRec SYNAPTICS = {
     1,
@@ -657,10 +651,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     local->private_flags           = 0;
     local->flags                   = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
     local->conf_idev               = dev;
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-    local->motion_history_proc     = xf86GetMotionEvents;
-    local->history_size            = 0;
-#endif
     local->always_core_feedback    = 0;
 
     xf86Msg(X_INFO, "Synaptics touchpad driver version %s\n", PACKAGE_VERSION);
@@ -708,10 +698,6 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	xf86Msg(X_ERROR, "%s Unable to query/initialize Synaptics hardware.\n", local->name);
 	goto SetupProc_fail;
     }
-
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-    local->history_size = xf86SetIntOption(local->options, "HistorySize", 0);
-#endif
 
     xf86ProcessCommonOptions(local, local->options);
     local->flags |= XI86_CONFIGURED;
@@ -948,17 +934,8 @@ DeviceInit(DeviceIntPtr dev)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                             btn_labels,
 #endif
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-			    miPointerGetMotionEvents,
-#elif GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
-			    GetMotionHistory,
-#endif
 			    SynapticsCtrl,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-			    miPointerGetMotionBufferSize()
-#else
 			    GetMotionHistorySize(), 2
-#endif
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                             , axes_labels
 #endif
@@ -1043,17 +1020,11 @@ DeviceInit(DeviceIntPtr dev)
             min, max, priv->resy * 1000, 0, priv->resy * 1000);
     xf86InitValuatorDefaults(dev, 1);
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-    xf86MotionHistoryAllocate(local);
-#endif
-
     if (!alloc_param_data(local))
 	return !Success;
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
     InitDeviceProperties(local);
     XIRegisterPropertyHandler(local->dev, SetProperty, NULL, NULL);
-#endif
 
     return Success;
 }

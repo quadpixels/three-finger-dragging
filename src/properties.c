@@ -29,7 +29,6 @@
 
 #include <xorg-server.h>
 #include "xf86Module.h"
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
 
 #include <X11/Xatom.h>
 #include <xf86.h>
@@ -659,6 +658,4 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
 
     return Success;
 }
-
-#endif
 
