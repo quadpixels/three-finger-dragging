@@ -90,10 +90,9 @@ psm	FreeBSD psm driver
 .TE
 .TP 7
 .BI "Option \*qSHMConfig\*q \*q" boolean \*q
-Switch on/off shared memory for run-time configuration. Note that this is
-considered a security risk since any user can access the configuration. This
-option is not needed with synaptics 1.0 or later. See section
-.B Device Properties.
+Switch on/off shared memory for run-time debugging. This option does not
+have an effect on run-time configuration anymore and is only useful for
+hardware event debugging.
 .TP 7
 .BI "Option \*qLeftEdge\*q \*q" integer \*q
 X coordinate for left edge. Property: "Synaptics Edges"
