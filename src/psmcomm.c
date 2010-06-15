@@ -188,5 +188,5 @@ struct SynapticsProtocolOperations psm_proto_operations = {
     PSMQueryHardware,
     PSMReadHwState,
     PSMAutoDevProbe,
-    NULL /* ReadDevDimensions */
+    SynapticsDefaultDimensions
 };

@@ -179,6 +179,35 @@ _X_EXPORT XF86ModuleData synapticsModuleData = {
 /*****************************************************************************
  *	Function Definitions
  ****************************************************************************/
+/**
+ * Fill in default dimensions for backends that cannot query the hardware.
+ * Eventually, we want the edges to be 1900/5400 for x, 1900/4000 for y.
+ * These values are based so that calculate_edge_widths() will give us the
+ * right values.
+ *
+ * The default values 1900, etc. come from the dawn of time, when men where
+ * men, or possibly apes.
+ */
+void
+SynapticsDefaultDimensions(LocalDevicePtr local)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
+
+    priv->minx = 1615;
+    priv->maxx = 5685;
+    priv->resx = 0;
+
+    priv->miny = 1729;
+    priv->maxy = 4171;
+    priv->resx = 0;
+
+    priv->minp = 0;
+    priv->maxp = 256;
+
+    priv->minw = 0;
+    priv->maxw = 16;
+
+}
 
 static void
 SetDeviceAndProtocol(LocalDevicePtr local)
@@ -375,6 +404,7 @@ static void set_default_parameters(LocalDevicePtr local)
     Bool vertTwoFingerScroll, horizTwoFingerScroll;
     int horizResolution = 1;
     int vertResolution = 1;
+    int width, height, diag, range;
 
     /* read the parameters */
     if (priv->synshm)
@@ -390,72 +420,41 @@ static void set_default_parameters(LocalDevicePtr local)
      * If the range was autodetected, apply these edge widths to all four
      * sides.
      */
-    if (priv->minx < priv->maxx && priv->miny < priv->maxy)
-    {
-        int width, height, diag;
+    if (priv->minx > priv->maxx || priv->miny < priv->maxy)
+        SynapticsDefaultDimensions(local);
 
-        width = abs(priv->maxx - priv->minx);
-        height = abs(priv->maxy - priv->miny);
-        diag = sqrt(width * width + height * height);
+    width = abs(priv->maxx - priv->minx);
+    height = abs(priv->maxy - priv->miny);
+    diag = sqrt(width * width + height * height);
 
-        calculate_edge_widths(priv, &l, &r, &t, &b);
+    calculate_edge_widths(priv, &l, &r, &t, &b);
 
-        /* Again, based on typical x/y range and defaults */
-        horizScrollDelta = diag * .020;
-        vertScrollDelta = diag * .020;
-        tapMove = diag * .044;
-        edgeMotionMinSpeed = 1;
-        edgeMotionMaxSpeed = diag * .080;
-        accelFactor = 50.0 / diag;
-    } else {
-        l = 1900;
-        r = 5400;
-        t = 1900;
-        b = 4000;
+    /* Again, based on typical x/y range and defaults */
+    horizScrollDelta = diag * .020;
+    vertScrollDelta = diag * .020;
+    tapMove = diag * .044;
+    edgeMotionMinSpeed = 1;
+    edgeMotionMaxSpeed = diag * .080;
+    accelFactor = 50.0 / diag;
 
-        horizScrollDelta = 100;
-        vertScrollDelta = 100;
-        tapMove = 220;
-        edgeMotionMinSpeed = 1;
-        edgeMotionMaxSpeed = 400;
-        accelFactor = 0.010;
-    }
+    range = priv->maxp - priv->minp;
 
-    if (priv->minp < priv->maxp) {
-	int range = priv->maxp - priv->minp;
+    /* scaling based on defaults and a pressure of 256 */
+    fingerLow = priv->minp + range * (25.0/256);
+    fingerHigh = priv->minp + range * (30.0/256);
+    fingerPress = priv->minp + range * 1.000;
+    emulateTwoFingerMinZ = priv->minp + range * (282.0/256);
+    edgeMotionMinZ = priv->minp + range * (30.0/256);
+    edgeMotionMaxZ = priv->minp + range * (160.0/256);
+    pressureMotionMinZ = priv->minp + range * (30.0/256);
+    pressureMotionMaxZ = priv->minp + range * (160.0/256);
+    palmMinZ = priv->minp + range * (200.0/256);
 
-	/* scaling based on defaults below and a pressure of 256 */
-	fingerLow = priv->minp + range * (25.0/256);
-	fingerHigh = priv->minp + range * (30.0/256);
-	fingerPress = priv->minp + range * 1.000;
-	emulateTwoFingerMinZ = priv->minp + range * (282.0/256);
-	edgeMotionMinZ = priv->minp + range * (30.0/256);
-	edgeMotionMaxZ = priv->minp + range * (160.0/256);
-	pressureMotionMinZ = priv->minp + range * (30.0/256);
-	pressureMotionMaxZ = priv->minp + range * (160.0/256);
-	palmMinZ = priv->minp + range * (200.0/256);
-    } else {
-	fingerLow = 25;
-	fingerHigh = 30;
-	fingerPress = 256;
-	emulateTwoFingerMinZ = 257;
-	edgeMotionMinZ = 30;
-	edgeMotionMaxZ = 160;
-	pressureMotionMinZ = 30;
-	pressureMotionMaxZ = 160;
-	palmMinZ = 200;
-    }
+    range = priv->maxw - priv->minw;
 
-    if (priv->minw < priv->maxw) {
-	int range = priv->maxw - priv->minw;
-
-	/* scaling based on defaults below and a tool width of 16 */
-	palmMinWidth = priv->minw + range * (10.0/16);
-	emulateTwoFingerMinW = priv->minw + range * (7.0/16);
-    } else {
-	palmMinWidth = 10;
-	emulateTwoFingerMinW = 7;
-    }
+    /* scaling based on defaults below and a tool width of 16 */
+    palmMinWidth = priv->minw + range * (10.0/16);
+    emulateTwoFingerMinW = priv->minw + range * (7.0/16);
 
     /* Enable tap if we don't have a phys left button */
     tapButton1 = priv->has_left ? 0 : 1;
