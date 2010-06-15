@@ -448,7 +448,38 @@ horizontal sensitivity. Setting VertResolution and HorizResolution
 equal values means no compensation. Default value is read from
 the touchpad or set to 1 if value could not be read.
 Property: "Synaptics Pad Resolution"
-.LP
+.
+.TP
+.BI "Option \*qAreaLeftEdge\*q \*q" integer \*q
+Ignore movements, scrolling and tapping which take place left of this edge.
+.
+The option is disabled by default and can be enabled by setting the
+AreaLeftEdge option to any integer value other than zero. Property: "Synaptics Area"
+.
+.TP
+.BI "Option \*qAreaRightEdge\*q \*q" integer \*q
+Ignore movements, scrolling and tapping which take place right of this edge.
+.
+The option is disabled by default and can be enabled by setting the
+AreaRightEdge option to any integer value other than zero. Property: "Synaptics Area"
+.
+.TP
+.BI "Option \*qAreaTopEdge\*q \*q" integer \*q
+Ignore movements, scrolling and tapping which take place above this edge.
+.
+The option is disabled by default and can be enabled by setting the
+AreaTopEdge option to any integer value other than zero. Property: "Synaptics Area"
+.
+.TP
+.BI "Option \*qAreaBottomEdge\*q \*q" integer \*q
+Ignore movements, scrolling and tapping which take place below this edge.
+.
+The option is disabled by default and can be enabled by setting the
+AreaBottomEdge option to any integer value other than zero. Property: "Synaptics Area"
+.
+
+.SH CONFIGURATION DETAILS
+.SS Area handling
 The LeftEdge, RightEdge, TopEdge and BottomEdge parameters are used to
 define the edge and corner areas of the touchpad.
 .
@@ -486,37 +517,6 @@ Coordinates to the left of LeftEdge are part of the left edge (areas
 A good way to find appropriate edge parameters is to enable the
 SHMConfig option and run "synclient \-m 1" to see the x/y coordinates
 corresponding to different positions on the touchpad.
-.
-.TP
-.BI "Option \*qAreaLeftEdge\*q \*q" integer \*q
-Ignore movements, scrolling and tapping which take place left of this edge.
-.
-The option is disabled by default and can be enabled by setting the
-AreaLeftEdge option to any integer value other than zero. Property: "Synaptics Area"
-.
-.TP
-.BI "Option \*qAreaRightEdge\*q \*q" integer \*q
-Ignore movements, scrolling and tapping which take place right of this edge.
-.
-The option is disabled by default and can be enabled by setting the
-AreaRightEdge option to any integer value other than zero. Property: "Synaptics Area"
-.
-.TP
-.BI "Option \*qAreaTopEdge\*q \*q" integer \*q
-Ignore movements, scrolling and tapping which take place above this edge.
-.
-The option is disabled by default and can be enabled by setting the
-AreaTopEdge option to any integer value other than zero. Property: "Synaptics Area"
-.
-.TP
-.BI "Option \*qAreaBottomEdge\*q \*q" integer \*q
-Ignore movements, scrolling and tapping which take place below this edge.
-.
-The option is disabled by default and can be enabled by setting the
-AreaBottomEdge option to any integer value other than zero. Property: "Synaptics Area"
-.
-
-.SH CONFIGURATION DETAILS
 .SS Tapping
 A tap event happens when the finger is touched and released in a time
 interval shorter than MaxTapTime, and the touch and release
