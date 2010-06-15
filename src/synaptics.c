@@ -2462,7 +2462,7 @@ static int
 SwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
 {
     DBG(3, "SwitchMode called\n");
-    return Success;
+    return (mode == Relative) ? Success : XI_BadMode;
 }
 
 static Bool
