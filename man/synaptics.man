@@ -513,10 +513,16 @@ Physical left edge		Physical right edge
 Coordinates to the left of LeftEdge are part of the left edge (areas
 1, 4 and 7), coordinates to the left of LeftEdge and above TopEdge
 (area 1) are part of the upper left corner, etc.
-.
+.PP
 A good way to find appropriate edge parameters is to enable the
 SHMConfig option and run "synclient \-m 1" to see the x/y coordinates
 corresponding to different positions on the touchpad.
+.PP
+The perceived physical edges may be adjusted with the AreaLeftEdge,
+AreaRightEdge, AreaTopEdge, and AreaBottomEdge options. If these values are
+set to something other than the physical edges, input in the space between
+the area edge and the respective physical edge is ignored. Note that this
+reduces the available space on the touchpad.
 .SS Tapping
 A tap event happens when the finger is touched and released in a time
 interval shorter than MaxTapTime, and the touch and release
