@@ -2,7 +2,7 @@
 .ds q \N'34'
 .TH SYNAPTICS __drivermansuffix__ __vendorversion__
 .SH NAME
-synaptics \- Synaptics touchpad input driver
+synaptics \- touchpad input driver
 .SH SYNOPSIS
 .nf
 .B "Section \*qInputDevice\*q"
@@ -15,10 +15,9 @@ synaptics \- Synaptics touchpad input driver
 .fi
 .SH DESCRIPTION
 .B synaptics
-is an __xservername__ input driver for the touchpads from Synaptics
-Incorporated. Even though these touchpads (by default, operating in a
-compatibility mode emulating a standard mouse) can be handled by the normal
-evdev or mouse drivers, this driver allows more advanced features of the
+is an __xservername__ input driver for touchpads.
+Even though touchpads can be handled by the normal evdev or mouse drivers,
+this driver allows more advanced features of the
 touchpad to become available. Some benefits would be:
 .IP \(bu 4
 Movement with adjustable, non-linear acceleration and speed.
@@ -64,6 +63,11 @@ that some functions are not available on all touchpad models, because
 they need support from the touchpad hardware/firmware. (Multifinger
 taps for example.)
 .PP
+The name "synaptics" is historical and the driver still provides the
+synaptics protocol parsing code. Under Linux however, the hardware-specifics
+are handled by the kernel and this driver will work for any touchpad that
+has a working kernel driver.
+
 .SH CONFIGURATION OPTIONS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details and for options that can be used with all input drivers.  This
