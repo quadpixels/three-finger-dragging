@@ -57,7 +57,6 @@ struct SynapticsHwInfo {
     unsigned int capabilities;		    /* Capabilities */
     unsigned int ext_cap;		    /* Extended Capabilities */
     unsigned int identity;		    /* Identification */
-    Bool hasGuest;			    /* Has a guest mouse */
 };
 
 /*
@@ -157,12 +156,6 @@ PSMQueryHardware(LocalDevicePtr local)
 	return FALSE;
 
     convert_hw_info(&psm_ident, synhw);
-
-    /* Check to see if the host mouse supports a guest */
-    synhw->hasGuest = FALSE;
-    if (psm_ident.capPassthrough) {
-        synhw->hasGuest = TRUE;
-    }
 
     ps2_print_ident(synhw);
 

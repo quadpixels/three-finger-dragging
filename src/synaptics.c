@@ -517,7 +517,6 @@ static void set_default_parameters(LocalDevicePtr local)
     }
     pars->scroll_button_repeat = xf86SetIntOption(opts,"ScrollButtonRepeat", 100);
     pars->touchpad_off = xf86SetIntOption(opts, "TouchpadOff", 0);
-    pars->guestmouse_off = xf86SetBoolOption(opts, "GuestMouseOff", FALSE);
     pars->locked_drags = xf86SetBoolOption(opts, "LockedDrags", FALSE);
     pars->locked_drag_time = xf86SetIntOption(opts, "LockedDragTimeout", 5000);
     pars->tap_action[RT_TAP] = xf86SetIntOption(opts, "RTCornerButton", 0);
@@ -1159,7 +1158,6 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
     sigstate = xf86BlockSIGIO();
 
     hw = priv->hwState;
-    hw.guest_dx = hw.guest_dy = 0;
     hw.millis = now;
     delay = HandleState(local, &hw);
 
@@ -1766,12 +1764,6 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
 	priv->count_packet_finger = 0;
     }
 
-    /* Add guest device movements */
-    if (!para->guestmouse_off) {
-	dx += hw->guest_dx;
-	dy += hw->guest_dy;
-    }
-
     *dxP = dx;
     *dyP = dy;
 
@@ -2135,11 +2127,6 @@ update_shm(const LocalDevicePtr local, const struct SynapticsHwState *hw)
     for (i = 0; i < 8; i++)
 	    shm->multi[i] = hw->multi[i];
     shm->middle = hw->middle;
-    shm->guest_left = hw->guest_left;
-    shm->guest_mid = hw->guest_mid;
-    shm->guest_right = hw->guest_right;
-    shm->guest_dx = hw->guest_dx;
-    shm->guest_dy = hw->guest_dy;
 }
 
 /* Adjust the hardware state according to the extra buttons (if the touchpad
@@ -2190,12 +2177,6 @@ update_hw_button_state(const LocalDevicePtr local, struct SynapticsHwState *hw, 
     /* Treat the first two multi buttons as up/down for now. */
     hw->up |= hw->multi[0];
     hw->down |= hw->multi[1];
-
-    if (!para->guestmouse_off) {
-	hw->left |= hw->guest_left;
-	hw->middle |= hw->guest_mid;
-	hw->right |= hw->guest_right;
-    }
 
     /* 3rd button emulation */
     hw->middle |= HandleMidButtonEmulation(priv, hw, delay);

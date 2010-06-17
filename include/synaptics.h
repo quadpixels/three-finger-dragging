@@ -61,8 +61,6 @@ typedef struct _SynapticsSHM
     int left, right, up, down;		    /* left/right/up/down buttons */
     Bool multi[8];
     Bool middle;
-    int guest_left, guest_mid, guest_right; /* guest device buttons */
-    int guest_dx, guest_dy; 		    /* guest device movement */
 } SynapticsSHM;
 
 /*

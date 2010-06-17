@@ -50,12 +50,6 @@ struct SynapticsHwState {
 
     Bool multi[8];
     Bool middle;		/* Some ALPS touchpads have a middle button */
-
-    Bool guest_left;		/* guest device */
-    Bool guest_mid;
-    Bool guest_right;
-    int  guest_dx;
-    int  guest_dy;
 };
 
 struct CommData {

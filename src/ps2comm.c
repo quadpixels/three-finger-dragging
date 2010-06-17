@@ -87,7 +87,6 @@ struct SynapticsHwInfo {
     unsigned int capabilities;		    /* Capabilities */
     unsigned int ext_cap;		    /* Extended Capabilities */
     unsigned int identity;		    /* Identification */
-    Bool hasGuest;			    /* Has a guest mouse */
 };
 
 /*****************************************************************************
@@ -174,61 +173,6 @@ ps2_send_cmd(int fd, byte c)
 }
 
 /*****************************************************************************
- *	Synaptics passthrough functions
- ****************************************************************************/
-
-static Bool
-ps2_getbyte_passthrough(int fd, byte *response)
-{
-    byte ack;
-    int timeout_count;
-#define MAX_RETRY_COUNT 30
-
-    /* Getting a response back through the passthrough could take some time.
-     * Spin a little for the first byte */
-    for (timeout_count = 0;
-	 !ps2_getbyte(fd, &ack) && (timeout_count <= MAX_RETRY_COUNT);
-	 timeout_count++)
-	;
-    /* Do some sanity checking */
-    if ((ack & 0xfc) != 0x84) {
-	PS2DBG(ErrorF("ps2_getbyte_passthrough: expected 0x84 and got: %02x\n",
-		      ack & 0xfc));
-	return FALSE;
-    }
-
-    ps2_getbyte(fd, response);
-    ps2_getbyte(fd, &ack);
-    ps2_getbyte(fd, &ack);
-    if ((ack & 0xcc) != 0xc4) {
-	PS2DBG(ErrorF("ps2_getbyte_passthrough: expected 0xc4 and got: %02x\n",
-		      ack & 0xcc));
-	return FALSE;
-    }
-    ps2_getbyte(fd, &ack);
-    ps2_getbyte(fd, &ack);
-
-    return TRUE;
-}
-
-static Bool
-ps2_putbyte_passthrough(int fd, byte c)
-{
-    byte ack;
-
-    ps2_special_cmd(fd, c);
-    ps2_putbyte(fd, 0xF3);
-    ps2_putbyte(fd, 0x28);
-
-    ps2_getbyte_passthrough(fd, &ack);
-    if (ack != PS2_ACK) {
-	PS2DBG(ErrorF("ps2_putbyte_passthrough: wrong acknowledge 0x%02x\n", ack));
-	return FALSE;
-    }
-    return TRUE;
-}
-
-/*****************************************************************************
  *	Synaptics communications functions
  ****************************************************************************/
 
@@ -270,30 +214,6 @@ ps2_synaptics_reset(int fd)
     }
     PS2DBG(ErrorF("...failed\n"));
     return FALSE;
-}
-
-static Bool
-ps2_synaptics_reset_passthrough(int fd)
-{
-    byte ack;
-
-    /* send reset */
-    ps2_putbyte_passthrough(fd, 0xff);
-    ps2_getbyte_passthrough(fd, &ack);
-    if (ack != 0xaa) {
-	PS2DBG(ErrorF("ps2_synaptics_reset_passthrough: ack was %02x not 0xaa\n", ack));
-	return FALSE;
-    }
-    ps2_getbyte_passthrough(fd, &ack);
-    if (ack != 0x00) {
-	PS2DBG(ErrorF("ps2_synaptics_reset_passthrough: ack was %02x not 0x00\n", ack));
-	return FALSE;
-    }
-
-    /* set defaults, turn on streaming, and enable the mouse */
-    return (ps2_putbyte_passthrough(fd, 0xf6) &&
-	    ps2_putbyte_passthrough(fd, 0xea) &&
-	    ps2_putbyte_passthrough(fd, 0xf4));
 }
 
 /*
@@ -500,22 +420,6 @@ PS2QueryHardware(LocalDevicePtr local)
     if (!ps2_synaptics_set_mode(local->fd, mode))
 	return FALSE;
 
-    /* Check to see if the host mouse supports a guest */
-    synhw->hasGuest = FALSE;
-    if (SYN_CAP_PASSTHROUGH(synhw)) {
-        synhw->hasGuest = TRUE;
-
-	/* Enable the guest mouse.  Set it to relative mode, three byte
-	 * packets */
-
-	/* Disable the host to talk to the guest */
-	ps2_synaptics_disable_device(local->fd);
-	/* Reset it, set defaults, streaming and enable it */
-	if (!ps2_synaptics_reset_passthrough(local->fd)) {
-	    synhw->hasGuest = FALSE;
-	}
-    }
-
     ps2_synaptics_enable_device(local->fd);
 
     ps2_print_ident(synhw);
@@ -642,25 +546,6 @@ PS2ReadHwState(LocalDevicePtr local,
 
     if (!ps2_synaptics_get_packet(local, synhw, proto_ops, comm))
 	return FALSE;
-
-    /* Handle guest packets */
-    hw->guest_dx = hw->guest_dy = 0;
-    if (newabs && synhw->hasGuest) {
-	w = (((buf[0] & 0x30) >> 2) |
-	     ((buf[0] & 0x04) >> 1) |
-	     ((buf[3] & 0x04) >> 2));
-	if (w == 3) {	       /* If w is 3, this is a guest packet */
-	    if (buf[4] != 0)
-		hw->guest_dx =   buf[4] - ((buf[1] & 0x10) ? 256 : 0);
-	    if (buf[5] != 0)
-		hw->guest_dy = -(buf[5] - ((buf[1] & 0x20) ? 256 : 0));
-	    hw->guest_left  = (buf[1] & 0x01) ? TRUE : FALSE;
-	    hw->guest_mid   = (buf[1] & 0x04) ? TRUE : FALSE;
-	    hw->guest_right = (buf[1] & 0x02) ? TRUE : FALSE;
-	    *hwRet = *hw;
-	    return TRUE;
-	}
-    }
 
     /* Handle normal packets */
     hw->x = hw->y = hw->z = hw->numFingers = hw->fingerWidth = 0;

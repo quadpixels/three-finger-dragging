@@ -283,10 +283,6 @@ l l.
 .TE
 Property: "Synaptics Off"
 .TP
-.BI "Option \*qGuestMouseOff\*q \*q" boolean \*q
-Switch on/off guest mouse (often a stick). Property: "Synaptics Guestmouse
-Off"
-.TP
 .BI "Option \*qLockedDrags\*q \*q" boolean \*q
 If off, a tap-and-drag gesture ends when you release the finger.
 .
@@ -806,10 +802,6 @@ FLOAT, 4 values, min, max, accel, trackstick.
 8 bit, valid values (0, 1, 2).
 
 .TP 7
-.BI "Synaptics Guestmouse Off"
-8 bit (BOOL).
-
-.TP 7
 .BI "Synaptics Locked Drags"
 8 bit (BOOL).
 
@@ -932,6 +924,8 @@ The following options are no longer part of the driver configuration:
 .BI "Option \*qHistorySize\*q \*q" integer \*q
 .TP
 .BI "Option \*qSpecialScrollAreaRight\*q \*q" boolean \*q
+.TP
+.BI "Option \*qGuestMouseOff\*q \*q" boolean \*q
 
 .SH "AUTHORS"
 .LP

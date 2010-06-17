@@ -155,33 +155,11 @@ ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
     int left = 0, right = 0, middle = 0;
     int i;
 
-    /* Handle guest packets */
-    hw->guest_dx = hw->guest_dy = 0;
-    if ((packet[0] & 0xc8) == 0x08) {	    /* 3-byte PS/2 packet */
-	x = packet[1];
-	if (packet[0] & 0x10)
-	    x = x - 256;
-	y = packet[2];
-	if (packet[0] & 0x20)
-	    y = y - 256;
-	hw->guest_dx = x;
-	hw->guest_dy = -y;
-	hw->guest_left  = (packet[0] & 0x01) ? TRUE : FALSE;
-	hw->guest_right = (packet[0] & 0x02) ? TRUE : FALSE;
-	return;
-    }
-
     x = (packet[1] & 0x7f) | ((packet[2] & 0x78) << (7-3));
     y = (packet[4] & 0x7f) | ((packet[3] & 0x70) << (7-4));
     z = packet[5];
 
     if (z == 127) {    /* DualPoint stick is relative, not absolute */
-	if (x > 383)
-	    x = x - 768;
-	if (y > 255)
-	    y = y - 512;
-	hw->guest_dx = x;
-	hw->guest_dy = -y;
 	hw->left  = packet[3] & 1;
 	hw->right = (packet[3] >> 1) & 1;
 	return;

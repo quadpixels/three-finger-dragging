@@ -138,7 +138,6 @@ typedef struct _SynapticsParameters
 					     * 1 : Off
 					     * 2 : Only tapping and scrolling off
 					     */
-    Bool guestmouse_off;		    /* Switches the guest mouse off */
     Bool locked_drags;			    /* Enable locked drags */
     int locked_drag_time;		    /* timeout for locked drags */
     int tap_action[MAX_TAP];		    /* Button to report on tap events */

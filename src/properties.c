@@ -64,7 +64,6 @@ Atom prop_buttonscroll          = 0;
 Atom prop_buttonscroll_repeat   = 0;
 Atom prop_buttonscroll_time     = 0;
 Atom prop_off                   = 0;
-Atom prop_guestmouse            = 0;
 Atom prop_lockdrags             = 0;
 Atom prop_lockdrags_time        = 0;
 Atom prop_tapaction             = 0;
@@ -220,7 +219,6 @@ InitDeviceProperties(LocalDevicePtr local)
     }
 
     prop_off = InitAtom(local->dev, SYNAPTICS_PROP_OFF, 8, 1, &para->touchpad_off);
-    prop_guestmouse = InitAtom(local->dev, SYNAPTICS_PROP_GUESTMOUSE, 8, 1, &para->guestmouse_off);
     prop_lockdrags = InitAtom(local->dev, SYNAPTICS_PROP_LOCKED_DRAGS, 8, 1, &para->locked_drags);
     prop_lockdrags_time = InitAtom(local->dev, SYNAPTICS_PROP_LOCKED_DRAGS_TIMEOUT, 32, 1, &para->locked_drag_time);
 
@@ -502,12 +500,6 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
             return BadValue;
 
         para->touchpad_off = off;
-    } else if (property == prop_guestmouse)
-    {
-        if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
-            return BadMatch;
-
-        para->guestmouse_off = *(BOOL*)prop->data;
     } else if (property == prop_gestures)
     {
         BOOL *gestures;

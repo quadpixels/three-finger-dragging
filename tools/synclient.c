@@ -112,7 +112,6 @@ static struct Parameter params[] = {
     {"LeftRightScrollRepeat", PT_BOOL,   0, 1,     SYNAPTICS_PROP_BUTTONSCROLLING_REPEAT,   8,	1},
     {"ScrollButtonRepeat",    PT_INT,    SBR_MIN , SBR_MAX, SYNAPTICS_PROP_BUTTONSCROLLING_TIME, 32,	0},
     {"TouchpadOff",           PT_INT,    0, 2,     SYNAPTICS_PROP_OFF,		8,	0},
-    {"GuestMouseOff",         PT_BOOL,   0, 1,     SYNAPTICS_PROP_GUESTMOUSE,	8,	0},
     {"LockedDrags",           PT_BOOL,   0, 1,     SYNAPTICS_PROP_LOCKED_DRAGS,	8,	0},
     {"LockedDragTimeout",     PT_INT,    0, 30000, SYNAPTICS_PROP_LOCKED_DRAGS_TIMEOUT,	32,	0},
     {"RTCornerButton",        PT_INT,    0, SYN_MAX_BUTTONS, SYNAPTICS_PROP_TAP_ACTION,	8,	0},
@@ -196,12 +195,7 @@ is_equal(SynapticsSHM *s1, SynapticsSHM *s2)
 	(s1->right       != s2->right) ||
 	(s1->up          != s2->up) ||
 	(s1->down        != s2->down) ||
-	(s1->middle      != s2->middle) ||
-	(s1->guest_left  != s2->guest_left) ||
-	(s1->guest_mid   != s2->guest_mid) ||
-	(s1->guest_right != s2->guest_right) ||
-	(s1->guest_dx    != s2->guest_dx) ||
-	(s1->guest_dy    != s2->guest_dy))
+	(s1->middle      != s2->middle))
 	return 0;
 
     for (i = 0; i < 8; i++)
@@ -240,15 +234,12 @@ shm_monitor(SynapticsSHM *synshm, int delay)
 		header = 20;
 	    }
 	    header--;
-	    printf("%8.3f  %4d %4d %3d %d %2d %2d %d %d %d %d  %d%d%d%d%d%d%d%d  "
-		   "%2d %2d %2d %3d %3d\n",
+	    printf("%8.3f  %4d %4d %3d %d %2d %2d %d %d %d %d  %d%d%d%d%d%d%d%d\n",
 		   get_time() - t0,
 		   cur.x, cur.y, cur.z, cur.numFingers, cur.fingerWidth,
 		   cur.left, cur.right, cur.up, cur.down, cur.middle,
 		   cur.multi[0], cur.multi[1], cur.multi[2], cur.multi[3],
-		   cur.multi[4], cur.multi[5], cur.multi[6], cur.multi[7],
-		   cur.guest_left, cur.guest_mid, cur.guest_right,
-		   cur.guest_dx, cur.guest_dy);
+		   cur.multi[4], cur.multi[5], cur.multi[6], cur.multi[7]);
 	    fflush(stdout);
 	    old = cur;
 	}

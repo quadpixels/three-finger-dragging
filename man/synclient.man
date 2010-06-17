@@ -77,22 +77,6 @@ Zero means not pressed, one means pressed.
 Not all touchpads have all these buttons.
 .
 If a button doesn't exist, the value is always reported as 0.
-.TP
-\fBgl,gm,gr\fR
-Some touchpads have a "guest device".
-.
-This is typically a pointing stick located in the middle of the
-keyboard.
-.
-Some guest devices have physical buttons, or can detect button presses
-when tapping on the pointing stick.
-.
-Such button events are reported as "guest left", "guest middle" or
-"guest right".
-.TP
-\fBgdx,gdy\fR
-Pointer movements from the guest device are reported as relative x/y
-positions, called gdx and gdy.
 .RE
 .TP
 \fB\-l\fR
