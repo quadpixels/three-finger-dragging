@@ -143,7 +143,7 @@ PSMQueryHardware(LocalDevicePtr local)
     priv = (SynapticsPrivate *)local->private;
 
     if(!priv->proto_data)
-        priv->proto_data = xcalloc(1, sizeof(struct SynapticsHwInfo));
+        priv->proto_data = calloc(1, sizeof(struct SynapticsHwInfo));
     synhw = (struct SynapticsHwInfo*)priv->proto_data;
 
     /* is the synaptics touchpad active? */
