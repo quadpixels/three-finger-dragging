@@ -879,8 +879,8 @@ This read-only property expresses the physical capability of the touchpad,
 most notably whether the touchpad hardware supports multi-finger tapping and
 scrolling.
 
-8 bit (BOOL), 5 values (read-only), has left button, has middle button, has
-right button, two-finger detection, three-finger detection.
+8 bit (BOOL), 7 values (read-only), has left button, has middle button, has
+right button, two-finger detection, three-finger detection, pressure detection, and finger/palm width detection.
 
 .TP 7
 .BI "Synaptics Pad Resolution"
