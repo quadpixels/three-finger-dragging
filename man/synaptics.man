@@ -262,14 +262,21 @@ Maximum time (in milliseconds) for middle button emulation. Property:
 "Synaptics Middle Button Timeout"
 .TP
 .BI "Option \*qEmulateTwoFingerMinZ\*q \*q" integer \*q
-For touchpads not capable of detecting multiple fingers (Alps), this sets the
-Z pressure threshold to emulate a two finger press. Property: "Synaptics
-Two-Finger Pressure"
+For touchpads not capable of detecting multiple fingers but are capable
+of detecting finger pressure and width, this sets the
+Z pressure threshold.  When both Z pressure and W width thresholds
+are crossed, a two finger press will be emulated. This defaults
+to a value that disables emulation on touchpads with real two-finger detection
+and defaults to a value that enables emulation on remaining touchpads that
+support pressure and width support.
+Property: "Synaptics Two-Finger Pressure"
 .TP
 .BI "Option \*qEmulateTwoFingerMinW\*q \*q" integer \*q
-Some touchpads report a two-finger touch as wide finger. This sets the finger
-width threshold to emulate a two finger press. This feature works best with
-(\fBPalmDetect\fR) off. Property: "Synaptics Two-Finger Width"
+For touchpads not capable of detecting multiple fingers but are
+capable of detecting finger width and pressure, this sets the
+W width threshold.  When both W width and Z pressure thresholds
+are crossed, a two finger press will be emulated. This feature works best
+with (\fBPalmDetect\fR) off. Property: "Synaptics Two-Finger Width"
 .TP
 .BI "Option \*qTouchpadOff\*q \*q" integer \*q
 Switch off the touchpad.
