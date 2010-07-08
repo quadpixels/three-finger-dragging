@@ -208,7 +208,7 @@ event_query_axis_ranges(LocalDevicePtr local)
     priv->has_pressure = FALSE;
     SYSCALL(rc = ioctl(local->fd, EVIOCGBIT(EV_ABS, sizeof(absbits)), absbits));
     if (rc >= 0)
-	priv->has_pressure = TEST_BIT(ABS_PRESSURE, absbits);
+	priv->has_pressure = (TEST_BIT(ABS_PRESSURE, absbits) != 0);
     else
 	xf86Msg(X_ERROR, "%s: failed to query ABS bits (%s)\n", local->name,
 		strerror(errno));
