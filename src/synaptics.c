@@ -187,20 +187,47 @@ SynapticsDefaultDimensions(LocalDevicePtr local)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
 
-    priv->minx = 1615;
-    priv->maxx = 5685;
-    priv->resx = 0;
+    if (priv->minx >= priv->maxx)
+    {
+	priv->minx = 1615;
+	priv->maxx = 5685;
+	priv->resx = 0;
 
-    priv->miny = 1729;
-    priv->maxy = 4171;
-    priv->resx = 0;
+	xf86Msg(X_PROBED,
+		"%s: invalid x-axis range.  defaulting to %d - %d\n",
+		local->name, priv->minx, priv->maxx);
+    }
 
-    priv->minp = 0;
-    priv->maxp = 256;
+    if (priv->miny >= priv->maxy)
+    {
+	priv->miny = 1729;
+	priv->maxy = 4171;
+	priv->resx = 0;
 
-    priv->minw = 0;
-    priv->maxw = 16;
+	xf86Msg(X_PROBED,
+		"%s: invalid y-axis range.  defaulting to %d - %d\n",
+		local->name, priv->miny, priv->maxy);
+    }
 
+    if (priv->minp >= priv->maxp)
+    {
+	priv->minp = 0;
+	priv->maxp = 256;
+
+	xf86Msg(X_PROBED,
+		"%s: invalid pressure range.  defaulting to %d - %d\n",
+		local->name, priv->minp, priv->maxp);
+    }
+
+    if (priv->minw >= priv->maxw)
+    {
+	priv->minw = 0;
+	priv->maxw = 16;
+
+	xf86Msg(X_PROBED,
+		"%s: invalid finger width range.  defaulting to %d - %d\n",
+		local->name, priv->minw, priv->maxw);
+    }
 }
 
 static void
@@ -414,8 +441,7 @@ static void set_default_parameters(LocalDevicePtr local)
      * If the range was autodetected, apply these edge widths to all four
      * sides.
      */
-    if (priv->minx > priv->maxx || priv->miny < priv->maxy)
-        SynapticsDefaultDimensions(local);
+    SynapticsDefaultDimensions(local);
 
     width = abs(priv->maxx - priv->minx);
     height = abs(priv->maxy - priv->miny);
