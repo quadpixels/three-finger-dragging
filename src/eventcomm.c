@@ -206,9 +206,13 @@ event_query_axis_ranges(LocalDevicePtr local)
 		strerror(errno));
 
     priv->has_pressure = FALSE;
+    priv->has_width = FALSE;
     SYSCALL(rc = ioctl(local->fd, EVIOCGBIT(EV_ABS, sizeof(absbits)), absbits));
     if (rc >= 0)
+    {
 	priv->has_pressure = (TEST_BIT(ABS_PRESSURE, absbits) != 0);
+	priv->has_width = (TEST_BIT(ABS_TOOL_WIDTH, absbits) != 0);
+    }
     else
 	xf86Msg(X_ERROR, "%s: failed to query ABS bits (%s)\n", local->name,
 		strerror(errno));
@@ -228,13 +232,16 @@ event_query_axis_ranges(LocalDevicePtr local)
 		"%s: device does not report pressure, will use touch data.\n",
 		local->name);
 
-    SYSCALL(rc = ioctl(local->fd, EVIOCGABS(ABS_TOOL_WIDTH), &abs));
-    if (rc >= 0)
+    if (priv->has_width)
     {
-	xf86Msg(X_PROBED, "%s: finger width range %d - %d\n", local->name,
-		abs.minimum, abs.maximum);
-	priv->minw = abs.minimum;
-	priv->maxw = abs.maximum;
+	SYSCALL(rc = ioctl(local->fd, EVIOCGABS(ABS_TOOL_WIDTH), &abs));
+	if (rc >= 0)
+	{
+	    xf86Msg(X_PROBED, "%s: finger width range %d - %d\n", local->name,
+		    abs.minimum, abs.maximum);
+	    priv->minw = abs.minimum;
+	    priv->maxw = abs.maximum;
+	}
     }
 
     SYSCALL(rc = ioctl(local->fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits));

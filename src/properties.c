@@ -265,7 +265,8 @@ InitDeviceProperties(LocalDevicePtr local)
     values[3] = priv->has_double;
     values[4] = priv->has_triple;
     values[5] = priv->has_pressure;
-    prop_capabilities = InitAtom(local->dev, SYNAPTICS_PROP_CAPABILITIES, 8, 6, values);
+    values[6] = priv->has_width;
+    prop_capabilities = InitAtom(local->dev, SYNAPTICS_PROP_CAPABILITIES, 8, 7, values);
 
     values[0] = para->resolution_vert;
     values[1] = para->resolution_horiz;
