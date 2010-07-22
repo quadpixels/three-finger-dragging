@@ -679,7 +679,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     local->dev                     = NULL;
     local->private                 = priv;
     local->private_flags           = 0;
-    local->flags                   = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
+    local->flags                   = XI86_SEND_DRAG_EVENTS;
     local->conf_idev               = dev;
     local->always_core_feedback    = 0;
 
