@@ -650,25 +650,10 @@ static InputInfoPtr
 SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 {
     LocalDevicePtr local;
-    SynapticsPrivate *priv;
-
-    /* allocate memory for SynapticsPrivateRec */
-    priv = calloc(1, sizeof(SynapticsPrivate));
-    if (!priv)
-	return NULL;
-
-    /* allocate now so we don't allocate in the signal handler */
-    priv->timer = TimerSet(NULL, 0, 0, NULL, NULL);
-    if (!priv->timer) {
-	free(priv);
-	return NULL;
-    }
 
     /* Allocate a new InputInfoRec and add it to the head xf86InputDevs. */
     local = xf86AllocateInput(drv, 0);
     if (!local) {
-	free(priv->timer);
-	free(priv);
 	return NULL;
     }
 
@@ -694,6 +679,18 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     xf86CollectInputOptions(local, NULL, NULL);
 
     xf86OptionListReport(local->options);
+
+    /* allocate memory for SynapticsPrivateRec */
+    priv = calloc(1, sizeof(SynapticsPrivate));
+    if (!priv)
+	return NULL;
+
+    /* allocate now so we don't allocate in the signal handler */
+    priv->timer = TimerSet(NULL, 0, 0, NULL, NULL);
+    if (!priv->timer) {
+	free(priv);
+	return NULL;
+    }
 
     /* may change local->options */
     SetDeviceAndProtocol(local);
