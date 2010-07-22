@@ -80,6 +80,12 @@
 #include <ptrveloc.h>
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+/* removed from server, purge when dropping support for server 1.10 */
+#define XI86_CONFIGURED         0x02
+#define XI86_SEND_DRAG_EVENTS   0x08
+#endif
+
 typedef enum {
     NO_EDGE = 0,
     BOTTOM_EDGE = 1,
