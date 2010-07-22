@@ -117,7 +117,11 @@ typedef enum {
 /*****************************************************************************
  * Forward declaration
  ****************************************************************************/
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+static int SynapticsPreInit(InputDriverPtr drv, InputInfoPtr local, int flags);
+#else
 static InputInfoPtr SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags);
+#endif
 static void SynapticsUnInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags);
 static Bool DeviceControl(DeviceIntPtr, int);
 static void ReadInput(LocalDevicePtr);
@@ -643,6 +647,9 @@ static float SynapticsAccelerationProfile(DeviceIntPtr dev,
     return accelfct;
 }
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+static int
+NewSynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags);
 /*
  *  called by the module loader for initialization
  */
@@ -659,6 +666,35 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
     /* initialize the InputInfoRec */
     local->name                    = dev->identifier;
+    local->reverse_conversion_proc = NULL;
+    local->dev                     = NULL;
+    local->private_flags           = 0;
+    local->flags                   = XI86_SEND_DRAG_EVENTS;
+    local->conf_idev               = dev;
+    local->always_core_feedback    = 0;
+
+    if (NewSynapticsPreInit(drv, local, flags) != Success)
+        return NULL;
+
+    return local;
+}
+
+static int
+NewSynapticsPreInit(InputDriverPtr drv, InputInfoPtr local, int flags)
+#else
+static int
+SynapticsPreInit(InputDriverPtr drv, InputInfoPtr local, int flags)
+#endif
+{
+    SynapticsPrivate *priv;
+
+    xf86Msg(X_INFO, "Synaptics touchpad driver version %s\n", PACKAGE_VERSION);
+
+    /* allocate memory for SynapticsPrivateRec */
+    priv = calloc(1, sizeof(SynapticsPrivate));
+    if (!priv)
+	return BadAlloc;
+
     local->type_name               = XI_TOUCHPAD;
     local->device_control          = DeviceControl;
     local->read_input              = ReadInput;
@@ -666,30 +702,15 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     local->close_proc              = CloseProc;
     local->switch_mode             = SwitchMode;
     local->conversion_proc         = ConvertProc;
-    local->reverse_conversion_proc = NULL;
-    local->dev                     = NULL;
     local->private                 = priv;
-    local->private_flags           = 0;
-    local->flags                   = XI86_SEND_DRAG_EVENTS;
-    local->conf_idev               = dev;
-    local->always_core_feedback    = 0;
-
-    xf86Msg(X_INFO, "Synaptics touchpad driver version %s\n", PACKAGE_VERSION);
-
-    xf86CollectInputOptions(local, NULL, NULL);
 
     xf86OptionListReport(local->options);
-
-    /* allocate memory for SynapticsPrivateRec */
-    priv = calloc(1, sizeof(SynapticsPrivate));
-    if (!priv)
-	return NULL;
 
     /* allocate now so we don't allocate in the signal handler */
     priv->timer = TimerSet(NULL, 0, 0, NULL, NULL);
     if (!priv->timer) {
 	free(priv);
-	return NULL;
+	return BadAlloc;
     }
 
     /* may change local->options */
@@ -744,7 +765,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     }
     local->fd = -1;
 
-    return local;
+    return Success;
 
  SetupProc_fail:
     if (local->fd >= 0) {
@@ -759,7 +780,7 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     free(priv->timer);
     free(priv);
     local->private = NULL;
-    return local;
+    return BadAlloc;
 }
 
 
