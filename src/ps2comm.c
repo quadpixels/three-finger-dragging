@@ -377,17 +377,17 @@ ps2_print_ident(const struct SynapticsHwInfo *synhw)
 }
 
 static void
-PS2DeviceOffHook(LocalDevicePtr local)
+PS2DeviceOffHook(InputInfoPtr pInfo)
 {
-    ps2_synaptics_reset(local->fd);
-    ps2_synaptics_enable_device(local->fd);
+    ps2_synaptics_reset(pInfo->fd);
+    ps2_synaptics_enable_device(pInfo->fd);
 }
 
 static Bool
-PS2QueryHardware(LocalDevicePtr local)
+PS2QueryHardware(InputInfoPtr pInfo)
 {
     int mode;
-    SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
+    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     struct SynapticsHwInfo *synhw;
 
     if (!priv->proto_data)
@@ -395,21 +395,21 @@ PS2QueryHardware(LocalDevicePtr local)
     synhw = (struct SynapticsHwInfo*)priv->proto_data;
 
     /* is the synaptics touchpad active? */
-    if (!ps2_query_is_synaptics(local->fd, synhw))
+    if (!ps2_query_is_synaptics(pInfo->fd, synhw))
 	return FALSE;
 
-    xf86Msg(X_PROBED, "%s synaptics touchpad found\n", local->name);
+    xf86Msg(X_PROBED, "%s synaptics touchpad found\n", pInfo->name);
 
-    if (!ps2_synaptics_reset(local->fd))
-	xf86Msg(X_ERROR, "%s reset failed\n", local->name);
+    if (!ps2_synaptics_reset(pInfo->fd))
+	xf86Msg(X_ERROR, "%s reset failed\n", pInfo->name);
 
-    if (!ps2_synaptics_identify(local->fd, synhw))
+    if (!ps2_synaptics_identify(pInfo->fd, synhw))
 	return FALSE;
 
-    if (!ps2_synaptics_model_id(local->fd, synhw))
+    if (!ps2_synaptics_model_id(pInfo->fd, synhw))
 	return FALSE;
 
-    if (!ps2_synaptics_capability(local->fd, synhw))
+    if (!ps2_synaptics_capability(pInfo->fd, synhw))
 	return FALSE;
 
     mode = SYN_BIT_ABSOLUTE_MODE | SYN_BIT_HIGH_RATE;
@@ -417,10 +417,10 @@ PS2QueryHardware(LocalDevicePtr local)
 	mode |= SYN_BIT_DISABLE_GESTURE;
     if (SYN_CAP_EXTENDED(synhw))
 	mode |= SYN_BIT_W_MODE;
-    if (!ps2_synaptics_set_mode(local->fd, mode))
+    if (!ps2_synaptics_set_mode(pInfo->fd, mode))
 	return FALSE;
 
-    ps2_synaptics_enable_device(local->fd);
+    ps2_synaptics_enable_device(pInfo->fd);
 
     ps2_print_ident(synhw);
 
@@ -460,7 +460,7 @@ ps2_packet_ok(struct SynapticsHwInfo *synhw, struct CommData *comm)
 }
 
 static Bool
-ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
+ps2_synaptics_get_packet(InputInfoPtr pInfo, struct SynapticsHwInfo *synhw,
 			 struct SynapticsProtocolOperations *proto_ops,
 			 struct CommData *comm)
 {
@@ -473,9 +473,9 @@ ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 
 	/* test if there is a reset sequence received */
 	if ((c == 0x00) && (comm->lastByte == 0xAA)) {
-	    if (xf86WaitForInput(local->fd, 50000) == 0) {
+	    if (xf86WaitForInput(pInfo->fd, 50000) == 0) {
 		DBG(7, "Reset received\n");
-		proto_ops->QueryHardware(local);
+		proto_ops->QueryHardware(pInfo);
 	    } else
 		DBG(3, "faked reset received\n");
 	}
@@ -501,7 +501,7 @@ ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 		if (comm->outOfSync > MAX_UNSYNC_PACKETS) {
 		    comm->outOfSync = 0;
 		    DBG(3, "Synaptics synchronization lost too long -> reset touchpad.\n");
-		    proto_ops->QueryHardware(local); /* including a reset */
+		    proto_ops->QueryHardware(pInfo); /* including a reset */
 		    continue;
 		}
 	    }
@@ -521,13 +521,13 @@ ps2_synaptics_get_packet(LocalDevicePtr local, struct SynapticsHwInfo *synhw,
 }
 
 static Bool
-PS2ReadHwState(LocalDevicePtr local,
+PS2ReadHwState(InputInfoPtr pInfo,
 	       struct SynapticsProtocolOperations *proto_ops,
 	       struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     unsigned char *buf = comm->protoBuf;
     struct SynapticsHwState *hw = &(comm->hwState);
-    SynapticsPrivate *priv = (SynapticsPrivate *)local->private;
+    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     SynapticsParameters *para = &priv->synpara;
     struct SynapticsHwInfo *synhw;
     int newabs;
@@ -538,13 +538,13 @@ PS2ReadHwState(LocalDevicePtr local,
     {
         xf86Msg(X_ERROR,
                 "%s: PS2ReadHwState, synhw is NULL. This is a bug.\n",
-                local->name);
+                pInfo->name);
         return FALSE;
     }
 
     newabs = SYN_MODEL_NEWABS(synhw);
 
-    if (!ps2_synaptics_get_packet(local, synhw, proto_ops, comm))
+    if (!ps2_synaptics_get_packet(pInfo, synhw, proto_ops, comm))
 	return FALSE;
 
     /* Handle normal packets */
@@ -661,7 +661,7 @@ PS2ReadHwState(LocalDevicePtr local,
 }
 
 static Bool
-PS2AutoDevProbe(LocalDevicePtr local)
+PS2AutoDevProbe(InputInfoPtr pInfo)
 {
     return FALSE;
 }

@@ -79,7 +79,7 @@ psm_synaptics_identify(int fd, synapticshw_t *ident)
 #define PSM_LEVEL_NATIVE	2
 
 static Bool
-PSMQueryIsSynaptics(LocalDevicePtr local)
+PSMQueryIsSynaptics(InputInfoPtr pInfo)
 {
     int ret;
     int level = PSM_LEVEL_NATIVE;
@@ -89,14 +89,14 @@ PSMQueryIsSynaptics(LocalDevicePtr local)
      * Otherwise HWINFO will not return the right id
      * And we will need native mode anyway ...
      */
-    SYSCALL(ret = ioctl(local->fd, MOUSE_SETLEVEL, &level));
+    SYSCALL(ret = ioctl(pInfo->fd, MOUSE_SETLEVEL, &level));
     if (ret != 0) {
-	xf86Msg(X_ERROR, "%s Can't set native mode\n", local->name);
+	xf86Msg(X_ERROR, "%s Can't set native mode\n", pInfo->name);
 	return FALSE;
     }
-    SYSCALL(ret = ioctl(local->fd, MOUSE_GETHWINFO, &mhw));
+    SYSCALL(ret = ioctl(pInfo->fd, MOUSE_GETHWINFO, &mhw));
     if (ret != 0) {
-	xf86Msg(X_ERROR, "%s Can't get hardware info\n", local->name);
+	xf86Msg(X_ERROR, "%s Can't get hardware info\n", pInfo->name);
 	return FALSE;
     }
 
@@ -104,7 +104,7 @@ PSMQueryIsSynaptics(LocalDevicePtr local)
 	return TRUE;
     } else {
 	xf86Msg(X_ERROR, "%s Found no Synaptics, found Mouse model %d instead\n",
-		local->name, mhw.model);
+		pInfo->name, mhw.model);
 	return FALSE;
     }
 }
@@ -134,13 +134,13 @@ convert_hw_info(const synapticshw_t *psm_ident, struct SynapticsHwInfo *synhw)
 }
 
 static Bool
-PSMQueryHardware(LocalDevicePtr local)
+PSMQueryHardware(InputInfoPtr pInfo)
 {
     synapticshw_t psm_ident;
     struct SynapticsHwInfo *synhw;
     SynapticsPrivate *priv;
 
-    priv = (SynapticsPrivate *)local->private;
+    priv = (SynapticsPrivate *)pInfo->private;
 
     if(!priv->proto_data)
         priv->proto_data = calloc(1, sizeof(struct SynapticsHwInfo));
@@ -150,9 +150,9 @@ PSMQueryHardware(LocalDevicePtr local)
     if (!PSMQueryIsSynaptics(local))
 	return FALSE;
 
-    xf86Msg(X_PROBED, "%s synaptics touchpad found\n", local->name);
+    xf86Msg(X_PROBED, "%s synaptics touchpad found\n", pInfo->name);
 
-    if (!psm_synaptics_identify(local->fd, &psm_ident))
+    if (!psm_synaptics_identify(pInfo->fd, &psm_ident))
 	return FALSE;
 
     convert_hw_info(&psm_ident, synhw);
@@ -163,14 +163,14 @@ PSMQueryHardware(LocalDevicePtr local)
 }
 
 static Bool
-PSMReadHwState(LocalDevicePtr local,
+PSMReadHwState(InputInfoPtr pInfo,
 	       struct SynapticsProtocolOperations *proto_ops,
 	       struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     return psaux_proto_operations.ReadHwState(local, proto_ops, comm, hwRet);
 }
 
-static Bool PSMAutoDevProbe(LocalDevicePtr local)
+static Bool PSMAutoDevProbe(InputInfoPtr pInfo)
 {
     return FALSE;
 }

@@ -238,6 +238,6 @@ typedef struct _SynapticsPrivateRec
 } SynapticsPrivate;
 
 
-extern void SynapticsDefaultDimensions(LocalDevicePtr local);
+extern void SynapticsDefaultDimensions(InputInfoPtr pInfo);
 
 #endif /* _SYNAPTICSSTR_H_ */
