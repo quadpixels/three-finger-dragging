@@ -150,6 +150,7 @@ typedef struct _SynapticsParameters
     int palm_min_width;			    /* Palm detection width */
     int palm_min_z;			    /* Palm detection depth */
     double coasting_speed;		    /* Coasting threshold scrolling speed */
+    double coasting_friction;		    /* Number of scrolls per second per second to change coasting speed */
     int press_motion_min_z;		    /* finger pressure at which minimum pressure motion factor is applied */
     int press_motion_max_z;		    /* finger pressure at which maximum pressure motion factor is applied */
     double press_motion_min_factor;	    /* factor applied on speed when finger pressure is at minimum */

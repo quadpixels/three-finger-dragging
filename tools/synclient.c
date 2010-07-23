@@ -132,6 +132,7 @@ static struct Parameter params[] = {
     {"PalmMinWidth",          PT_INT,    0, 15,    SYNAPTICS_PROP_PALM_DIMENSIONS,	32,	0},
     {"PalmMinZ",              PT_INT,    0, 255,   SYNAPTICS_PROP_PALM_DIMENSIONS,	32,	1},
     {"CoastingSpeed",         PT_DOUBLE, 0, 20,    SYNAPTICS_PROP_COASTING_SPEED,	0 /* float*/,	0},
+    {"CoastingFriction",      PT_DOUBLE, 0, 255,   SYNAPTICS_PROP_COASTING_SPEED,	0 /* float*/,	1},
     {"PressureMotionMinZ",    PT_INT,    1, 255,   SYNAPTICS_PROP_PRESSURE_MOTION,	32,	0},
     {"PressureMotionMaxZ",    PT_INT,    1, 255,   SYNAPTICS_PROP_PRESSURE_MOTION,	32,	1},
     {"PressureMotionMinFactor", PT_DOUBLE, 0, 10.0,SYNAPTICS_PROP_PRESSURE_MOTION_FACTOR,	0 /*float*/,	0},

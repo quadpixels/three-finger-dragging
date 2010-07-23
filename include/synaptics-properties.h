@@ -130,7 +130,7 @@
 /* 32 bit, 2 values, width, z */
 #define SYNAPTICS_PROP_PALM_DIMENSIONS "Synaptics Palm Dimensions"
 
-/* FLOAT */
+/* FLOAT, 2 values, speed, friction */
 #define SYNAPTICS_PROP_COASTING_SPEED "Synaptics Coasting Speed"
 
 /* 32 bit, 2 values, min, max */

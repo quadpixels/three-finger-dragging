@@ -243,7 +243,8 @@ InitDeviceProperties(LocalDevicePtr local)
     prop_palm_dim = InitAtom(local->dev, SYNAPTICS_PROP_PALM_DIMENSIONS, 32, 2, values);
 
     fvalues[0] = para->coasting_speed;
-    prop_coastspeed = InitFloatAtom(local->dev, SYNAPTICS_PROP_COASTING_SPEED, 1, fvalues);
+    fvalues[1] = para->coasting_friction;
+    prop_coastspeed = InitFloatAtom(local->dev, SYNAPTICS_PROP_COASTING_SPEED, 2, fvalues);
 
     values[0] = para->press_motion_min_z;
     values[1] = para->press_motion_max_z;
@@ -600,14 +601,14 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->palm_min_z     = dim[1];
     } else if (property == prop_coastspeed)
     {
-        float speed;
+        float *coast_speeds;
 
-        if (prop->size != 1 || prop->format != 32 || prop->type != float_type)
+        if (prop->size != 2 || prop->format != 32 || prop->type != float_type)
             return BadMatch;
 
-        speed = *(float*)prop->data;
-        para->coasting_speed = speed;
-
+        coast_speeds = (float*)prop->data;
+        para->coasting_speed = coast_speeds[0];
+        para->coasting_friction = coast_speeds[1];
     } else if (property == prop_pressuremotion)
     {
         float *press;

@@ -576,6 +576,7 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->trackstick_speed = xf86SetRealOption(opts, "TrackstickSpeed", 40);
     pars->scroll_dist_circ = xf86SetRealOption(opts, "CircScrollDelta", 0.1);
     pars->coasting_speed = xf86SetRealOption(opts, "CoastingSpeed", 0.0);
+    pars->coasting_friction = xf86SetRealOption(opts, "CoastingFriction", 50);
     pars->press_motion_min_factor = xf86SetRealOption(opts, "PressureMotionMinFactor", 1.0);
     pars->press_motion_max_factor = xf86SetRealOption(opts, "PressureMotionMaxFactor", 1.0);
     pars->grab_event_device = xf86SetBoolOption(opts, "GrabEventDevice", TRUE);
@@ -1817,20 +1818,21 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw, edge_type ed
 
     if ((priv->scroll_packet_count > 3) && (para->coasting_speed > 0.0)) {
 	double pkt_time = (HIST(0).millis - HIST(3).millis) / 1000.0;
-	if (vertical) {
+	if (para->scroll_twofinger_vert || vertical) {
 	    double dy = estimate_delta(HIST(0).y, HIST(1).y, HIST(2).y, HIST(3).y);
 	    int sdelta = para->scroll_dist_vert;
-	    if ((edge & RIGHT_EDGE) && pkt_time > 0 && sdelta > 0) {
+	    if ((para->scroll_twofinger_vert || (edge & RIGHT_EDGE)) && pkt_time > 0 && sdelta > 0) {
 		double scrolls_per_sec = dy / pkt_time / sdelta;
 		if (fabs(scrolls_per_sec) >= para->coasting_speed) {
 		    priv->autoscroll_yspd = scrolls_per_sec;
 		    priv->autoscroll_y = (hw->y - priv->scroll_y) / (double)sdelta;
 		}
 	    }
-	} else {
+	}
+	if (para->scroll_twofinger_horiz || !vertical){
 	    double dx = estimate_delta(HIST(0).x, HIST(1).x, HIST(2).x, HIST(3).x);
 	    int sdelta = para->scroll_dist_horiz;
-	    if ((edge & BOTTOM_EDGE) && pkt_time > 0 && sdelta > 0) {
+	    if ((para->scroll_twofinger_horiz || (edge & BOTTOM_EDGE)) && pkt_time > 0 && sdelta > 0) {
 		double scrolls_per_sec = dx / pkt_time / sdelta;
 		if (fabs(scrolls_per_sec) >= para->coasting_speed) {
 		    priv->autoscroll_xspd = scrolls_per_sec;
@@ -1926,8 +1928,10 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	}
     }
     {
-	Bool oldv = priv->vert_scroll_edge_on || (priv->circ_scroll_on && priv->circ_scroll_vert);
-	Bool oldh = priv->horiz_scroll_edge_on || (priv->circ_scroll_on && !priv->circ_scroll_vert);
+	Bool oldv = priv->vert_scroll_twofinger_on || priv->vert_scroll_edge_on ||
+	              (priv->circ_scroll_on && priv->circ_scroll_vert);
+	Bool oldh = priv->horiz_scroll_twofinger_on || priv->horiz_scroll_edge_on ||
+	              (priv->circ_scroll_on && !priv->circ_scroll_vert);
 	if (priv->circ_scroll_on && !finger) {
 	    /* circular scroll locks in until finger is raised */
 	    DBG(7, "cicular scroll off\n");
@@ -1968,7 +1972,8 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	 * and are no longer scrolling, then start coasting */
 	if ((oldv || oldh) && !para->scroll_edge_corner &&
 	    !(priv->circ_scroll_on || priv->vert_scroll_edge_on ||
-	      priv->horiz_scroll_edge_on)) {
+	      priv->horiz_scroll_edge_on || priv->horiz_scroll_twofinger_on ||
+	      priv->vert_scroll_twofinger_on)) {
 	    start_coasting(priv, hw, edge, oldv);
 	}
     }
@@ -2075,6 +2080,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
     if (priv->autoscroll_yspd) {
 	double dtime = (hw->millis - HIST(0).millis) / 1000.0;
+	double ddy = para->coasting_friction * dtime;
 	priv->autoscroll_y += priv->autoscroll_yspd * dtime;
 	delay = MIN(delay, 20);
 	while (priv->autoscroll_y > 1.0) {
@@ -2085,9 +2091,17 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    sd->up++;
 	    priv->autoscroll_y += 1.0;
 	}
+	if (abs(priv->autoscroll_yspd) < ddy) {
+	    priv->autoscroll_yspd = 0;
+	    priv->scroll_packet_count = 0;
+	} else {
+	    priv->autoscroll_yspd += (priv->autoscroll_yspd < 0 ? ddy : -1*ddy);
+	}
     }
+
     if (priv->autoscroll_xspd) {
 	double dtime = (hw->millis - HIST(0).millis) / 1000.0;
+	double ddx = para->coasting_friction * dtime;
 	priv->autoscroll_x += priv->autoscroll_xspd * dtime;
 	delay = MIN(delay, 20);
 	while (priv->autoscroll_x > 1.0) {
@@ -2097,6 +2111,12 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	while (priv->autoscroll_x < -1.0) {
 	    sd->left++;
 	    priv->autoscroll_x += 1.0;
+	}
+	if (abs(priv->autoscroll_xspd) < ddx) {
+	    priv->autoscroll_xspd = 0;
+	    priv->scroll_packet_count = 0;
+	} else {
+	    priv->autoscroll_xspd += (priv->autoscroll_xspd < 0 ? ddx : -1*ddx);
 	}
     }
 

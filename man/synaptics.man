@@ -397,9 +397,16 @@ Minimum finger pressure at which touch is considered a palm. Property:
 "Synaptics Palm Dimensions"
 .TP
 .BI "Option \*qCoastingSpeed\*q \*q" float \*q
-Coasting threshold scrolling speed.
+Your finger needs to produce this many scrolls per second in order to start
+coasting.  The default is 20 which should prevent you from starting coasting
+unintentionally.
 .
 0 disables coasting. Property: "Synaptics Coasting Speed"
+.TP
+.BI "Option \*qCoastingFriction\*q \*q" float \*q
+Number of scrolls per second per second to decrease the coasting speed.  Default
+is 50.
+Property: "Synaptics Coasting Speed"
 .TP
 .BI "Option \*qSingleTapTimeout\*q \*q" integer \*q
 Timeout after a tap to recognize it as a single tap. Property: "Synaptics Tap
@@ -853,7 +860,7 @@ right, right + bottom, bottom, bottom + left, left, left  + top.
 
 .TP 7
 .BI "Synaptics Coasting Speed"
-FLOAT.
+FLOAT, 2 values, speed, friction.
 
 .TP 7
 .BI "Synaptics Pressure Motion"
