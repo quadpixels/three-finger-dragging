@@ -496,11 +496,8 @@ dp_show_settings(Display *dpy, XDevice *dev)
     for (j = 0; params[j].name; j++) {
 	struct Parameter *par = &params[j];
 	a = XInternAtom(dpy, par->prop_name, True);
-	if (!a) {
-	    fprintf(stderr, "    %-23s = missing\n",
-		    par->name);
+	if (!a)
 	    continue;
-	}
 
 	len = 1 + ((par->prop_offset * (par->prop_format ? par->prop_format : 32)/8))/4;
 
