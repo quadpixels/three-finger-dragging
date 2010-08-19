@@ -455,7 +455,7 @@ static void set_default_parameters(LocalDevicePtr local)
     tapMove = diag * .044;
     edgeMotionMinSpeed = 1;
     edgeMotionMaxSpeed = diag * .080;
-    accelFactor = 50.0 / diag;
+    accelFactor = 200.0 / diag; /* trial-and-error */
 
     range = priv->maxp - priv->minp;
 
