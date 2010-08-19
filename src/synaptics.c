@@ -1724,7 +1724,7 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     if (inside_area && moving_state && !priv->palm &&
 	!priv->vert_scroll_edge_on && !priv->horiz_scroll_edge_on &&
 	!priv->vert_scroll_twofinger_on && !priv->horiz_scroll_twofinger_on &&
-	!priv->circ_scroll_on) {
+	!priv->circ_scroll_on && priv->prevFingers == hw->numFingers) {
 	/* FIXME: Wtf?? what's with 13? */
 	delay = MIN(delay, 13);
 	if (priv->count_packet_finger > 3) { /* min. 3 packets */
@@ -1794,6 +1794,7 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     } else {				    /* reset packet counter */
 	priv->count_packet_finger = 0;
     }
+    priv->prevFingers = hw->numFingers;
 
     *dxP = dx;
     *dyP = dy;

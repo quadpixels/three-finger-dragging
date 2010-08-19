@@ -218,6 +218,7 @@ typedef struct _SynapticsPrivateRec
     int palm;				/* Set to true when palm detected, reset to false when
 					   palm/finger contact disappears */
     int prev_z;				/* previous z value, for palm detection */
+    int prevFingers;			/* previous numFingers, for transition detection */
     int avg_width;			/* weighted average of previous fingerWidth values */
     double horiz_coeff;                 /* normalization factor for x coordintes */
     double vert_coeff;                  /* normalization factor for y coordintes */
