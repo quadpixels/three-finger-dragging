@@ -575,7 +575,7 @@ static void set_default_parameters(LocalDevicePtr local)
     pars->accl = xf86SetRealOption(opts, "AccelFactor", accelFactor);
     pars->trackstick_speed = xf86SetRealOption(opts, "TrackstickSpeed", 40);
     pars->scroll_dist_circ = xf86SetRealOption(opts, "CircScrollDelta", 0.1);
-    pars->coasting_speed = xf86SetRealOption(opts, "CoastingSpeed", 0.0);
+    pars->coasting_speed = xf86SetRealOption(opts, "CoastingSpeed", 20.0);
     pars->coasting_friction = xf86SetRealOption(opts, "CoastingFriction", 50);
     pars->press_motion_min_factor = xf86SetRealOption(opts, "PressureMotionMinFactor", 1.0);
     pars->press_motion_max_factor = xf86SetRealOption(opts, "PressureMotionMaxFactor", 1.0);
