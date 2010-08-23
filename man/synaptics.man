@@ -404,7 +404,7 @@ unintentionally.
 0 disables coasting. Property: "Synaptics Coasting Speed"
 .TP
 .BI "Option \*qCoastingFriction\*q \*q" float \*q
-Number of scrolls per second per second to decrease the coasting speed.  Default
+Number of scrolls/second² to decrease the coasting speed.  Default
 is 50.
 Property: "Synaptics Coasting Speed"
 .TP
