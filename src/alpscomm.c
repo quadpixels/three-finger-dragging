@@ -87,9 +87,9 @@ ALPS_initialize(int fd)
 }
 
 static Bool
-ALPSQueryHardware(LocalDevicePtr local)
+ALPSQueryHardware(InputInfoPtr pInfo)
 {
-    ALPS_initialize(local->fd);
+    ALPS_initialize(pInfo->fd);
     return TRUE;
 }
 
@@ -103,7 +103,7 @@ ALPS_packet_ok(struct CommData *comm)
 }
 
 static Bool
-ALPS_get_packet(struct CommData *comm, LocalDevicePtr local)
+ALPS_get_packet(struct CommData *comm, InputInfoPtr pInfo)
 {
     int c;
 
@@ -205,14 +205,14 @@ ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
 }
 
 static Bool
-ALPSReadHwState(LocalDevicePtr local,
+ALPSReadHwState(InputInfoPtr pInfo,
 		struct SynapticsProtocolOperations *proto_ops,
 		struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     unsigned char *buf = comm->protoBuf;
     struct SynapticsHwState *hw = &(comm->hwState);
 
-    if (!ALPS_get_packet(comm, local))
+    if (!ALPS_get_packet(comm, pInfo))
 	return FALSE;
 
     ALPS_process_packet(buf, hw);
@@ -222,7 +222,7 @@ ALPSReadHwState(LocalDevicePtr local,
 }
 
 static Bool
-ALPSAutoDevProbe(LocalDevicePtr local)
+ALPSAutoDevProbe(InputInfoPtr pInfo)
 {
     return FALSE;
 }

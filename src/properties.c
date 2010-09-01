@@ -132,9 +132,9 @@ InitFloatAtom(DeviceIntPtr dev, char *name, int nvalues, float *values)
 }
 
 void
-InitDeviceProperties(LocalDevicePtr local)
+InitDeviceProperties(InputInfoPtr pInfo)
 {
-    SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
+    SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     SynapticsParameters *para = &priv->synpara;
     int values[9]; /* we never have more than 9 values in an atom */
     float fvalues[4]; /* never have more than 4 float values */
@@ -146,7 +146,7 @@ InitDeviceProperties(LocalDevicePtr local)
         if (!float_type)
         {
             xf86Msg(X_ERROR, "%s: Failed to init float atom. "
-                             "Disabling property support.\n", local->name);
+                             "Disabling property support.\n", pInfo->name);
             return;
         }
     }
@@ -156,109 +156,109 @@ InitDeviceProperties(LocalDevicePtr local)
     values[2] = para->top_edge;
     values[3] = para->bottom_edge;
 
-    prop_edges = InitAtom(local->dev, SYNAPTICS_PROP_EDGES, 32, 4, values);
+    prop_edges = InitAtom(pInfo->dev, SYNAPTICS_PROP_EDGES, 32, 4, values);
 
     values[0] = para->finger_low;
     values[1] = para->finger_high;
     values[2] = para->finger_press;
 
-    prop_finger = InitAtom(local->dev, SYNAPTICS_PROP_FINGER, 32, 3, values);
-    prop_tap_time = InitAtom(local->dev, SYNAPTICS_PROP_TAP_TIME, 32, 1, &para->tap_time);
-    prop_tap_move = InitAtom(local->dev, SYNAPTICS_PROP_TAP_MOVE, 32, 1, &para->tap_move);
+    prop_finger = InitAtom(pInfo->dev, SYNAPTICS_PROP_FINGER, 32, 3, values);
+    prop_tap_time = InitAtom(pInfo->dev, SYNAPTICS_PROP_TAP_TIME, 32, 1, &para->tap_time);
+    prop_tap_move = InitAtom(pInfo->dev, SYNAPTICS_PROP_TAP_MOVE, 32, 1, &para->tap_move);
 
     values[0] = para->single_tap_timeout;
     values[1] = para->tap_time_2;
     values[2] = para->click_time;
 
-    prop_tap_durations = InitAtom(local->dev, SYNAPTICS_PROP_TAP_DURATIONS, 32, 3, values);
-    prop_tap_fast = InitAtom(local->dev, SYNAPTICS_PROP_TAP_FAST, 8, 1, &para->fast_taps);
-    prop_middle_timeout = InitAtom(local->dev, SYNAPTICS_PROP_MIDDLE_TIMEOUT,
+    prop_tap_durations = InitAtom(pInfo->dev, SYNAPTICS_PROP_TAP_DURATIONS, 32, 3, values);
+    prop_tap_fast = InitAtom(pInfo->dev, SYNAPTICS_PROP_TAP_FAST, 8, 1, &para->fast_taps);
+    prop_middle_timeout = InitAtom(pInfo->dev, SYNAPTICS_PROP_MIDDLE_TIMEOUT,
                                    32, 1, &para->emulate_mid_button_time);
-    prop_twofinger_pressure = InitAtom(local->dev, SYNAPTICS_PROP_TWOFINGER_PRESSURE,
+    prop_twofinger_pressure = InitAtom(pInfo->dev, SYNAPTICS_PROP_TWOFINGER_PRESSURE,
                                        32, 1, &para->emulate_twofinger_z);
-    prop_twofinger_width = InitAtom(local->dev, SYNAPTICS_PROP_TWOFINGER_WIDTH,
+    prop_twofinger_width = InitAtom(pInfo->dev, SYNAPTICS_PROP_TWOFINGER_WIDTH,
                                        32, 1, &para->emulate_twofinger_w);
 
     values[0] = para->scroll_dist_vert;
     values[1] = para->scroll_dist_horiz;
-    prop_scrolldist = InitAtom(local->dev, SYNAPTICS_PROP_SCROLL_DISTANCE, 32, 2, values);
+    prop_scrolldist = InitAtom(pInfo->dev, SYNAPTICS_PROP_SCROLL_DISTANCE, 32, 2, values);
 
     values[0] = para->scroll_edge_vert;
     values[1] = para->scroll_edge_horiz;
     values[2] = para->scroll_edge_corner;
-    prop_scrolledge = InitAtom(local->dev, SYNAPTICS_PROP_SCROLL_EDGE,8, 3, values);
+    prop_scrolledge = InitAtom(pInfo->dev, SYNAPTICS_PROP_SCROLL_EDGE,8, 3, values);
     values[0] = para->scroll_twofinger_vert;
     values[1] = para->scroll_twofinger_horiz;
-    prop_scrolltwofinger = InitAtom(local->dev, SYNAPTICS_PROP_SCROLL_TWOFINGER,8, 2, values);
+    prop_scrolltwofinger = InitAtom(pInfo->dev, SYNAPTICS_PROP_SCROLL_TWOFINGER,8, 2, values);
 
     fvalues[0] = para->min_speed;
     fvalues[1] = para->max_speed;
     fvalues[2] = para->accl;
     fvalues[3] = para->trackstick_speed;
-    prop_speed = InitFloatAtom(local->dev, SYNAPTICS_PROP_SPEED, 4, fvalues);
+    prop_speed = InitFloatAtom(pInfo->dev, SYNAPTICS_PROP_SPEED, 4, fvalues);
 
     values[0] = para->edge_motion_min_z;
     values[1] = para->edge_motion_max_z;
-    prop_edgemotion_pressure = InitAtom(local->dev, SYNAPTICS_PROP_EDGEMOTION_PRESSURE, 32, 2, values);
+    prop_edgemotion_pressure = InitAtom(pInfo->dev, SYNAPTICS_PROP_EDGEMOTION_PRESSURE, 32, 2, values);
 
     values[0] = para->edge_motion_min_speed;
     values[1] = para->edge_motion_max_speed;
-    prop_edgemotion_speed = InitAtom(local->dev, SYNAPTICS_PROP_EDGEMOTION_SPEED, 32, 2, values);
-    prop_edgemotion_always = InitAtom(local->dev, SYNAPTICS_PROP_EDGEMOTION, 8, 1, &para->edge_motion_use_always);
+    prop_edgemotion_speed = InitAtom(pInfo->dev, SYNAPTICS_PROP_EDGEMOTION_SPEED, 32, 2, values);
+    prop_edgemotion_always = InitAtom(pInfo->dev, SYNAPTICS_PROP_EDGEMOTION, 8, 1, &para->edge_motion_use_always);
 
     if (priv->has_scrollbuttons)
     {
         values[0] = para->updown_button_scrolling;
         values[1] = para->leftright_button_scrolling;
-        prop_buttonscroll = InitAtom(local->dev, SYNAPTICS_PROP_BUTTONSCROLLING, 8, 2, values);
+        prop_buttonscroll = InitAtom(pInfo->dev, SYNAPTICS_PROP_BUTTONSCROLLING, 8, 2, values);
 
         values[0] = para->updown_button_repeat;
         values[1] = para->leftright_button_repeat;
-        prop_buttonscroll_repeat = InitAtom(local->dev, SYNAPTICS_PROP_BUTTONSCROLLING_REPEAT, 8, 2, values);
-        prop_buttonscroll_time = InitAtom(local->dev, SYNAPTICS_PROP_BUTTONSCROLLING_TIME, 32, 1, &para->scroll_button_repeat);
+        prop_buttonscroll_repeat = InitAtom(pInfo->dev, SYNAPTICS_PROP_BUTTONSCROLLING_REPEAT, 8, 2, values);
+        prop_buttonscroll_time = InitAtom(pInfo->dev, SYNAPTICS_PROP_BUTTONSCROLLING_TIME, 32, 1, &para->scroll_button_repeat);
     }
 
-    prop_off = InitAtom(local->dev, SYNAPTICS_PROP_OFF, 8, 1, &para->touchpad_off);
-    prop_lockdrags = InitAtom(local->dev, SYNAPTICS_PROP_LOCKED_DRAGS, 8, 1, &para->locked_drags);
-    prop_lockdrags_time = InitAtom(local->dev, SYNAPTICS_PROP_LOCKED_DRAGS_TIMEOUT, 32, 1, &para->locked_drag_time);
+    prop_off = InitAtom(pInfo->dev, SYNAPTICS_PROP_OFF, 8, 1, &para->touchpad_off);
+    prop_lockdrags = InitAtom(pInfo->dev, SYNAPTICS_PROP_LOCKED_DRAGS, 8, 1, &para->locked_drags);
+    prop_lockdrags_time = InitAtom(pInfo->dev, SYNAPTICS_PROP_LOCKED_DRAGS_TIMEOUT, 32, 1, &para->locked_drag_time);
 
     memcpy(values, para->tap_action, MAX_TAP * sizeof(int));
-    prop_tapaction = InitAtom(local->dev, SYNAPTICS_PROP_TAP_ACTION, 8, MAX_TAP, values);
+    prop_tapaction = InitAtom(pInfo->dev, SYNAPTICS_PROP_TAP_ACTION, 8, MAX_TAP, values);
 
     memcpy(values, para->click_action, MAX_CLICK * sizeof(int));
-    prop_clickaction = InitAtom(local->dev, SYNAPTICS_PROP_CLICK_ACTION, 8, MAX_CLICK, values);
+    prop_clickaction = InitAtom(pInfo->dev, SYNAPTICS_PROP_CLICK_ACTION, 8, MAX_CLICK, values);
 
-    prop_circscroll = InitAtom(local->dev, SYNAPTICS_PROP_CIRCULAR_SCROLLING, 8, 1, &para->circular_scrolling);
+    prop_circscroll = InitAtom(pInfo->dev, SYNAPTICS_PROP_CIRCULAR_SCROLLING, 8, 1, &para->circular_scrolling);
 
     fvalues[0] = para->scroll_dist_circ;
-    prop_circscroll_dist = InitFloatAtom(local->dev, SYNAPTICS_PROP_CIRCULAR_SCROLLING_DIST, 1, fvalues);
+    prop_circscroll_dist = InitFloatAtom(pInfo->dev, SYNAPTICS_PROP_CIRCULAR_SCROLLING_DIST, 1, fvalues);
 
-    prop_circscroll_trigger = InitAtom(local->dev, SYNAPTICS_PROP_CIRCULAR_SCROLLING_TRIGGER, 8, 1, &para->circular_trigger);
-    prop_circpad = InitAtom(local->dev, SYNAPTICS_PROP_CIRCULAR_PAD, 8, 1, &para->circular_pad);
-    prop_palm = InitAtom(local->dev, SYNAPTICS_PROP_PALM_DETECT, 8, 1, &para->palm_detect);
+    prop_circscroll_trigger = InitAtom(pInfo->dev, SYNAPTICS_PROP_CIRCULAR_SCROLLING_TRIGGER, 8, 1, &para->circular_trigger);
+    prop_circpad = InitAtom(pInfo->dev, SYNAPTICS_PROP_CIRCULAR_PAD, 8, 1, &para->circular_pad);
+    prop_palm = InitAtom(pInfo->dev, SYNAPTICS_PROP_PALM_DETECT, 8, 1, &para->palm_detect);
 
     values[0] = para->palm_min_width;
     values[1] = para->palm_min_z;
 
-    prop_palm_dim = InitAtom(local->dev, SYNAPTICS_PROP_PALM_DIMENSIONS, 32, 2, values);
+    prop_palm_dim = InitAtom(pInfo->dev, SYNAPTICS_PROP_PALM_DIMENSIONS, 32, 2, values);
 
     fvalues[0] = para->coasting_speed;
     fvalues[1] = para->coasting_friction;
-    prop_coastspeed = InitFloatAtom(local->dev, SYNAPTICS_PROP_COASTING_SPEED, 2, fvalues);
+    prop_coastspeed = InitFloatAtom(pInfo->dev, SYNAPTICS_PROP_COASTING_SPEED, 2, fvalues);
 
     values[0] = para->press_motion_min_z;
     values[1] = para->press_motion_max_z;
-    prop_pressuremotion = InitAtom(local->dev, SYNAPTICS_PROP_PRESSURE_MOTION, 32, 2, values);
+    prop_pressuremotion = InitAtom(pInfo->dev, SYNAPTICS_PROP_PRESSURE_MOTION, 32, 2, values);
 
     fvalues[0] = para->press_motion_min_factor;
     fvalues[1] = para->press_motion_max_factor;
 
-    prop_pressuremotion_factor = InitFloatAtom(local->dev, SYNAPTICS_PROP_PRESSURE_MOTION_FACTOR, 2, fvalues);
+    prop_pressuremotion_factor = InitFloatAtom(pInfo->dev, SYNAPTICS_PROP_PRESSURE_MOTION_FACTOR, 2, fvalues);
 
-    prop_grab = InitAtom(local->dev, SYNAPTICS_PROP_GRAB, 8, 1, &para->grab_event_device);
+    prop_grab = InitAtom(pInfo->dev, SYNAPTICS_PROP_GRAB, 8, 1, &para->grab_event_device);
 
     values[0] = para->tap_and_drag_gesture;
-    prop_gestures = InitAtom(local->dev, SYNAPTICS_PROP_GESTURES, 8, 1, values);
+    prop_gestures = InitAtom(pInfo->dev, SYNAPTICS_PROP_GESTURES, 8, 1, values);
 
     values[0] = priv->has_left;
     values[1] = priv->has_middle;
@@ -267,25 +267,25 @@ InitDeviceProperties(LocalDevicePtr local)
     values[4] = priv->has_triple;
     values[5] = priv->has_pressure;
     values[6] = priv->has_width;
-    prop_capabilities = InitAtom(local->dev, SYNAPTICS_PROP_CAPABILITIES, 8, 7, values);
+    prop_capabilities = InitAtom(pInfo->dev, SYNAPTICS_PROP_CAPABILITIES, 8, 7, values);
 
     values[0] = para->resolution_vert;
     values[1] = para->resolution_horiz;
-    prop_resolution = InitAtom(local->dev, SYNAPTICS_PROP_RESOLUTION, 32, 2, values);
+    prop_resolution = InitAtom(pInfo->dev, SYNAPTICS_PROP_RESOLUTION, 32, 2, values);
 
     values[0] = para->area_left_edge;
     values[1] = para->area_right_edge;
     values[2] = para->area_top_edge;
     values[3] = para->area_bottom_edge;
-    prop_area = InitAtom(local->dev, SYNAPTICS_PROP_AREA, 32, 4, values);
+    prop_area = InitAtom(pInfo->dev, SYNAPTICS_PROP_AREA, 32, 4, values);
 }
 
 int
 SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
             BOOL checkonly)
 {
-    LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
-    SynapticsPrivate *priv = (SynapticsPrivate *) local->private;
+    InputInfoPtr pInfo = dev->public.devicePrivate;
+    SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     SynapticsParameters *para = &priv->synpara;
     SynapticsParameters tmp;
 
