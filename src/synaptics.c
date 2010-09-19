@@ -275,7 +275,7 @@ SetDeviceAndProtocol(InputInfoPtr pInfo)
 	    proto = SYN_PROTO_ALPS;
 	} else { /* default to auto-dev */
 #ifdef BUILD_EVENTCOMM
-	    if (event_proto_operations.AutoDevProbe(pInfo))
+	    if (!device && event_proto_operations.AutoDevProbe(pInfo))
 		proto = SYN_PROTO_EVENT;
 #endif
 	}
