@@ -674,6 +674,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     pInfo->conf_idev               = dev;
     pInfo->always_core_feedback    = 0;
 
+    xf86CollectInputOptions(pInfo, NULL, NULL);
+
     if (NewSynapticsPreInit(drv, pInfo, flags) != Success)
         return NULL;
 
