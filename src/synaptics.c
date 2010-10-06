@@ -150,7 +150,6 @@ InputDriverRec SYNAPTICS = {
     SynapticsPreInit,
     SynapticsUnInit,
     NULL,
-    0
 };
 
 static XF86ModuleVersionInfo VersionRec = {
