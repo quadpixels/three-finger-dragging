@@ -180,6 +180,7 @@ typedef struct _SynapticsPrivateRec
 
     struct CommData comm;
 
+    Bool absolute_events;               /* post absolute motion events instead of relative */
     SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY]; /* movement history */
     int hist_index;			/* Last added entry in move_hist[] */
     int scroll_y;			/* last y-scroll position */
