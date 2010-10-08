@@ -2423,8 +2423,12 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
 	ScaleCoordinates(priv, hw);
     }
 
-    timeleft = ComputeDeltas(priv, hw, edge, &dx, &dy, inside_active_area);
-    delay = MIN(delay, timeleft);
+    dx = dy = 0;
+
+    if (!priv->absolute_events) {
+      timeleft = ComputeDeltas(priv, hw, edge, &dx, &dy, inside_active_area);
+      delay = MIN(delay, timeleft);
+    }
 
 
     buttons = ((hw->left     ? 0x01 : 0) |
@@ -2449,8 +2453,11 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
     }
 
     /* Post events */
-    if (dx || dy)
-	xf86PostMotionEvent(pInfo->dev, 0, 0, 2, dx, dy);
+    if (priv->absolute_events && inside_active_area) {
+        xf86PostMotionEvent(pInfo->dev, 1, 0, 2, hw->x, hw->y);
+    } else if (dx || dy) {
+        xf86PostMotionEvent(pInfo->dev, 0, 0, 2, dx, dy);
+    }
 
     if (priv->mid_emu_state == MBE_LEFT_CLICK)
     {
