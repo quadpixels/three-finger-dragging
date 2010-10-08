@@ -49,7 +49,7 @@
 #define NBITS(x) (((x) + LONG_BITS - 1) / LONG_BITS)
 #define OFF(x)   ((x) % LONG_BITS)
 #define LONG(x)  ((x) / LONG_BITS)
-#define TEST_BIT(bit, array) (array[LONG(bit)] & (1 << OFF(bit)))
+#define TEST_BIT(bit, array) ((array[LONG(bit)] >> OFF(bit)) & 1)
 
 /*****************************************************************************
  *	Function Definitions
