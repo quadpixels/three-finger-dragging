@@ -2520,8 +2520,8 @@ CloseProc(InputInfoPtr pInfo)
 static int
 SwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
 {
-    LocalDevicePtr local = (LocalDevicePtr) dev->public.devicePrivate;
-    SynapticsPrivate *priv = (SynapticsPrivate *) (local->private);
+    InputInfoPtr pInfo = (InputInfoPtr) dev->public.devicePrivate;
+    SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
 
     DBG(3, "SwitchMode called\n");
 
