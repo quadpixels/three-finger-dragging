@@ -127,9 +127,7 @@ static Bool DeviceControl(DeviceIntPtr, int);
 static void ReadInput(InputInfoPtr);
 static int HandleState(InputInfoPtr, struct SynapticsHwState*);
 static int ControlProc(InputInfoPtr, xDeviceCtl*);
-static void CloseProc(InputInfoPtr);
 static int SwitchMode(ClientPtr, DeviceIntPtr, int);
-static Bool ConvertProc(InputInfoPtr, int, int, int, int, int, int, int, int, int*, int*);
 static Bool DeviceInit(DeviceIntPtr);
 static Bool DeviceOn(DeviceIntPtr);
 static Bool DeviceOff(DeviceIntPtr);
@@ -701,9 +699,7 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     pInfo->device_control          = DeviceControl;
     pInfo->read_input              = ReadInput;
     pInfo->control_proc            = ControlProc;
-    pInfo->close_proc              = CloseProc;
     pInfo->switch_mode             = SwitchMode;
-    pInfo->conversion_proc         = ConvertProc;
     pInfo->private                 = priv;
 
     xf86OptionListReport(pInfo->options);
@@ -2511,12 +2507,6 @@ ControlProc(InputInfoPtr pInfo, xDeviceCtl * control)
 }
 
 
-static void
-CloseProc(InputInfoPtr pInfo)
-{
-    DBG(3, "Close Proc called\n");
-}
-
 static int
 SwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
 {
@@ -2540,29 +2530,6 @@ SwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
 
     return Success;
 }
-
-static Bool
-ConvertProc(InputInfoPtr pInfo,
-	    int first,
-	    int num,
-	    int v0,
-	    int v1,
-	    int v2,
-	    int v3,
-	    int v4,
-	    int v5,
-	    int *x,
-	    int *y)
-{
-    if (first != 0 || num != 2)
-	return FALSE;
-
-    *x = v0;
-    *y = v1;
-
-    return TRUE;
-}
-
 
 static void
 ReadDevDimensions(InputInfoPtr pInfo)
