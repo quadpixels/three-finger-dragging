@@ -1051,7 +1051,11 @@ DeviceInit(DeviceIntPtr dev)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
             axes_labels[0],
 #endif
-            min, max, priv->resx * 1000, 0, priv->resx * 1000);
+            min, max, priv->resx * 1000, 0, priv->resx * 1000
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+            , Relative
+#endif
+            );
     xf86InitValuatorDefaults(dev, 0);
 
     /* Y valuator */
@@ -1069,7 +1073,11 @@ DeviceInit(DeviceIntPtr dev)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
             axes_labels[1],
 #endif
-            min, max, priv->resy * 1000, 0, priv->resy * 1000);
+            min, max, priv->resy * 1000, 0, priv->resy * 1000
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+            , Relative
+#endif
+            );
     xf86InitValuatorDefaults(dev, 1);
 
     if (!alloc_param_data(pInfo))
