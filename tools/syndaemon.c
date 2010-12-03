@@ -64,6 +64,7 @@ static XDevice *dev;
 static Atom touchpad_off_prop;
 static TouchpadState previous_state;
 static TouchpadState disable_state = TouchpadOff;
+static int verbose;
 
 #define KEYMAP_SIZE 32
 static unsigned char keyboard_mask[KEYMAP_SIZE];
@@ -82,6 +83,7 @@ usage(void)
     fprintf(stderr, "  -k Ignore modifier keys when monitoring keyboard activity.\n");
     fprintf(stderr, "  -K Like -k but also ignore Modifier+Key combos.\n");
     fprintf(stderr, "  -R Use the XRecord extension.\n");
+    fprintf(stderr, "  -v Print diagnostic messages.\n");
     exit(1);
 }
 
@@ -110,7 +112,7 @@ toggle_touchpad(Bool enable)
     if (pad_disabled && enable) {
         data = previous_state;
         pad_disabled = False;
-        if (!background)
+        if (verbose)
             printf("Enable\n");
     } else if (!pad_disabled && !enable &&
                previous_state != disable_state &&
@@ -118,7 +120,7 @@ toggle_touchpad(Bool enable)
         store_current_touchpad_state();
         pad_disabled = True;
         data = disable_state;
-        if (!background)
+        if (verbose)
             printf("Disable\n");
     } else
         return;
@@ -290,7 +292,7 @@ Bool check_xrecord(Display *display) {
 			    &first_error);
 
     status = XRecordQueryVersion(display, version, version+1);
-    if (!background && status) {
+    if (verbose && status) {
 	printf("X RECORD extension version %d.%d\n", version[0], version[1]);
     }
     return found;
@@ -433,7 +435,7 @@ void record_main_loop(Display* display, double idle_time) {
 
 	if (ret == 0 && pad_disabled) { /* timeout => enable event */
 	    toggle_touchpad(True);
-	    if (!background) printf("enable touchpad\n");
+	    if (verbose) printf("enable touchpad\n");
 	}
 
     } /* end while(1) */
@@ -516,7 +518,7 @@ main(int argc, char *argv[])
     int use_xrecord = 0;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "i:m:dtp:kKR?")) != EOF) {
+    while ((c = getopt(argc, argv, "i:m:dtp:kKR?v")) != EOF) {
 	switch(c) {
 	case 'i':
 	    idle_time = atof(optarg);
@@ -542,6 +544,9 @@ main(int argc, char *argv[])
 	    break;
 	case 'R':
 	    use_xrecord = 1;
+	    break;
+	case 'v':
+	    verbose = 1;
 	    break;
 	default:
 	    usage();
