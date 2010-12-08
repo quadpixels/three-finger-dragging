@@ -684,8 +684,6 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
     SynapticsPrivate *priv;
 
-    xf86Msg(X_INFO, "Synaptics touchpad driver version %s\n", PACKAGE_VERSION);
-
     /* allocate memory for SynapticsPrivateRec */
     priv = calloc(1, sizeof(SynapticsPrivate));
     if (!priv)
