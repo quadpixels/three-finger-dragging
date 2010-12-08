@@ -80,12 +80,6 @@
 #include <ptrveloc.h>
 #endif
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
-/* removed from server, purge when dropping support for server 1.10 */
-#define XI86_CONFIGURED         0x02
-#define XI86_SEND_DRAG_EVENTS   0x08
-#endif
-
 typedef enum {
     NO_EDGE = 0,
     BOTTOM_EDGE = 1,
@@ -676,6 +670,8 @@ SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     if (NewSynapticsPreInit(drv, pInfo, flags) != Success)
         return NULL;
 
+    pInfo->flags |= XI86_CONFIGURED;
+
     return pInfo;
 }
 
@@ -752,7 +748,6 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     }
 
     xf86ProcessCommonOptions(pInfo, pInfo->options);
-    pInfo->flags |= XI86_CONFIGURED;
 
     if (pInfo->fd != -1) {
 	if (priv->comm.buffer) {
