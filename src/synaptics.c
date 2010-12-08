@@ -297,7 +297,7 @@ SetDeviceAndProtocol(InputInfoPtr pInfo)
  * The function will allocate shared memory if priv->shm_config is TRUE.
  */
 static Bool
-alloc_param_data(InputInfoPtr pInfo)
+alloc_shm_data(InputInfoPtr pInfo)
 {
     int shmid;
     SynapticsPrivate *priv = pInfo->private;
@@ -327,10 +327,10 @@ alloc_param_data(InputInfoPtr pInfo)
 }
 
 /*
- * Free SynapticsParameters data previously allocated by alloc_param_data().
+ * Free SynapticsParameters data previously allocated by alloc_shm_data().
  */
 static void
-free_param_data(SynapticsPrivate *priv)
+free_shm_data(SynapticsPrivate *priv)
 {
     int shmid;
 
@@ -733,7 +733,7 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
     CalculateScalingCoeffs(priv);
 
-    if (!alloc_param_data(pInfo))
+    if (!alloc_shm_data(pInfo))
 	goto SetupProc_fail;
 
     priv->comm.buffer = XisbNew(pInfo->fd, INPUT_BUFFER_SIZE);
@@ -764,7 +764,7 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
     if (priv->comm.buffer)
 	XisbFree(priv->comm.buffer);
-    free_param_data(priv);
+    free_shm_data(priv);
     free(priv->proto_data);
     free(priv->timer);
     free(priv);
@@ -902,7 +902,7 @@ DeviceClose(DeviceIntPtr dev)
     RetValue = DeviceOff(dev);
     TimerFree(priv->timer);
     priv->timer = NULL;
-    free_param_data(priv);
+    free_shm_data(priv);
     return RetValue;
 }
 
@@ -1071,7 +1071,7 @@ DeviceInit(DeviceIntPtr dev)
             );
     xf86InitValuatorDefaults(dev, 1);
 
-    if (!alloc_param_data(pInfo))
+    if (!alloc_shm_data(pInfo))
 	return !Success;
 
     InitDeviceProperties(pInfo);
