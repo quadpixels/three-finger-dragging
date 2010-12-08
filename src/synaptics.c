@@ -696,8 +696,6 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     pInfo->switch_mode             = SwitchMode;
     pInfo->private                 = priv;
 
-    xf86OptionListReport(pInfo->options);
-
     /* allocate now so we don't allocate in the signal handler */
     priv->timer = TimerSet(NULL, 0, 0, NULL, NULL);
     if (!priv->timer) {
