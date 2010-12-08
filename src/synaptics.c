@@ -238,9 +238,9 @@ SetDeviceAndProtocol(InputInfoPtr pInfo)
     SynapticsPrivate *priv = pInfo->private;
     enum SynapticsProtocol proto = SYN_PROTO_PSAUX;
 
-    device = xf86FindOptionValue(pInfo->options, "Device");
+    device = xf86SetStrOption(pInfo->options, "Device", NULL);
     if (!device) {
-	device = xf86FindOptionValue(pInfo->options, "Path");
+	device = xf86SetStrOption(pInfo->options, "Path", NULL);
 	if (device) {
 	    pInfo->options =
 	    	xf86ReplaceStrOption(pInfo->options, "Device", device);
