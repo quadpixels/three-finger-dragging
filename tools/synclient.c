@@ -149,7 +149,7 @@ static struct Parameter params[] = {
 static double
 parse_cmd(char* cmd, struct Parameter** par)
 {
-    char *eqp = index(cmd, '=');
+    char *eqp = strchr(cmd, '=');
     *par = NULL;
 
     if (eqp) {
