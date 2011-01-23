@@ -1538,11 +1538,12 @@ GetTimeOut(SynapticsPrivate *priv)
 
 static int
 HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
-		    edge_type edge, enum FingerState finger, Bool inside_active_area)
+		    enum FingerState finger, Bool inside_active_area)
 {
     SynapticsParameters *para = &priv->synpara;
     Bool touch, release, is_timeout, move;
     int timeleft, timeout;
+    edge_type edge;
     int delay = 1000000000;
 
     if (priv->palm)
@@ -1589,6 +1590,7 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    SetTapState(priv, TS_MOVE, hw->millis);
 	    goto restart;
 	} else if (release) {
+	    edge = edge_detection(priv, priv->touch_on.x, priv->touch_on.y);
 	    SelectTapButton(priv, edge);
 	    /* Disable taps outside of the active area */
 	    if (!inside_active_area) {
@@ -2399,7 +2401,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
 
     /* tap and drag detection. Needs to be performed even if the finger is in
      * the dead area to reset the state. */
-    timeleft = HandleTapProcessing(priv, hw, edge, finger, inside_active_area);
+    timeleft = HandleTapProcessing(priv, hw, finger, inside_active_area);
     if (timeleft > 0)
 	delay = MIN(delay, timeleft);
 
