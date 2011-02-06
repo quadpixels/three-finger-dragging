@@ -82,6 +82,7 @@ Atom prop_gestures              = 0;
 Atom prop_capabilities          = 0;
 Atom prop_resolution            = 0;
 Atom prop_area                  = 0;
+Atom prop_noise_cancellation    = 0;
 
 static Atom
 InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
@@ -278,6 +279,12 @@ InitDeviceProperties(InputInfoPtr pInfo)
     values[2] = para->area_top_edge;
     values[3] = para->area_bottom_edge;
     prop_area = InitAtom(pInfo->dev, SYNAPTICS_PROP_AREA, 32, 4, values);
+
+    values[0] = para->hyst_x;
+    values[1] = para->hyst_y;
+    prop_noise_cancellation = InitAtom(pInfo->dev,
+            SYNAPTICS_PROP_NOISE_CANCELLATION, 32, 2, values);
+
 }
 
 int
@@ -649,6 +656,16 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->area_right_edge  = area[1];
         para->area_top_edge    = area[2];
         para->area_bottom_edge = area[3];
+    } else if (property == prop_noise_cancellation) {
+        INT32 *hyst;
+        if (prop->size != 2 || prop->format != 32 || prop->type != XA_INTEGER)
+            return BadMatch;
+
+        hyst = (INT32*)prop->data;
+        if (hyst[0] < 0 || hyst[1] < 0)
+            return BadValue;
+        para->hyst_x = hyst[0];
+        para->hyst_y = hyst[1];
     }
 
     return Success;

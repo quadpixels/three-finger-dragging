@@ -160,6 +160,7 @@ typedef struct _SynapticsParameters
     unsigned int resolution_horiz;          /* horizontal resolution of touchpad in units/mm */
     unsigned int resolution_vert;           /* vertical resolution of touchpad in units/mm */
     int area_left_edge, area_right_edge, area_top_edge, area_bottom_edge; /* area coordinates absolute */
+    int hyst_x, hyst_y;                     /* x and y width of hysteresis box */
 } SynapticsParameters;
 
 
@@ -183,6 +184,8 @@ typedef struct _SynapticsPrivateRec
     Bool absolute_events;               /* post absolute motion events instead of relative */
     SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY]; /* movement history */
     int hist_index;			/* Last added entry in move_hist[] */
+    int hyst_center_x;			/* center x of hysteresis*/
+    int hyst_center_y;			/* center y of hysteresis*/
     int scroll_y;			/* last y-scroll position */
     int scroll_x;			/* last x-scroll position */
     double scroll_a;			/* last angle-scroll position */

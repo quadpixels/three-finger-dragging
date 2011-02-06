@@ -387,18 +387,19 @@ calculate_edge_widths(SynapticsPrivate *priv, int *l, int *r, int *t, int *b)
  * the log message.
  */
 static int set_percent_option(pointer options, const char* optname,
-                              const int range, const int offset)
+                              const int range, const int offset,
+                              const int default_value)
 {
     int result;
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 11
-    int percent = xf86CheckPercentOption(options, optname, -1);
+    double percent = xf86CheckPercentOption(options, optname, -1);
 
-    if (percent != -1) {
+    if (percent >= 0.0) {
         percent = xf86SetPercentOption(options, optname, -1);
         result = percent/100.0 * range + offset;
     } else
 #endif
-        result = xf86SetIntOption(options, optname, 0);
+        result = xf86SetIntOption(options, optname, default_value);
 
     return result;
 }
@@ -427,6 +428,7 @@ static void set_default_parameters(InputInfoPtr pInfo)
     int horizResolution = 1;
     int vertResolution = 1;
     int width, height, diag, range;
+    int horizHyst, vertHyst;
 
     /* read the parameters */
     if (priv->synshm)
@@ -457,6 +459,10 @@ static void set_default_parameters(InputInfoPtr pInfo)
     edgeMotionMinSpeed = 1;
     edgeMotionMaxSpeed = diag * .080;
     accelFactor = 200.0 / diag; /* trial-and-error */
+
+    /* hysteresis, assume >= 0 is a detected value (e.g. evdev fuzz) */
+    horizHyst = pars->hyst_x >= 0 ? pars->hyst_x : diag * 0.005;
+    vertHyst = pars->hyst_y >= 0 ? pars->hyst_y : diag * 0.005;
 
     range = priv->maxp - priv->minp;
 
@@ -513,10 +519,13 @@ static void set_default_parameters(InputInfoPtr pInfo)
     pars->top_edge = xf86SetIntOption(opts, "TopEdge", t);
     pars->bottom_edge = xf86SetIntOption(opts, "BottomEdge", b);
 
-    pars->area_top_edge = set_percent_option(opts, "AreaTopEdge", height, priv->miny);
-    pars->area_bottom_edge = set_percent_option(opts, "AreaBottomEdge", height, priv->miny);
-    pars->area_left_edge = set_percent_option(opts, "AreaLeftEdge", width, priv->minx);
-    pars->area_right_edge = set_percent_option(opts, "AreaRightEdge", width, priv->minx);
+    pars->area_top_edge = set_percent_option(opts, "AreaTopEdge", height, priv->miny, 0);
+    pars->area_bottom_edge = set_percent_option(opts, "AreaBottomEdge", height, priv->miny, 0);
+    pars->area_left_edge = set_percent_option(opts, "AreaLeftEdge", width, priv->minx, 0);
+    pars->area_right_edge = set_percent_option(opts, "AreaRightEdge", width, priv->minx, 0);
+
+    pars->hyst_x = set_percent_option(opts, "HorizHysteresis", width, 0, horizHyst);
+    pars->hyst_y = set_percent_option(opts, "VertHysteresis", height, 0, vertHyst);
 
     pars->finger_low = xf86SetIntOption(opts, "FingerLow", fingerLow);
     pars->finger_high = xf86SetIntOption(opts, "FingerHigh", fingerHigh);
@@ -722,6 +731,8 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     priv->tap_button = 0;
     priv->tap_button_state = TBS_BUTTON_UP;
     priv->touch_on.millis = 0;
+    priv->synpara.hyst_x = -1;
+    priv->synpara.hyst_y = -1;
 
     /* read hardware dimensions */
     ReadDevDimensions(pInfo);
@@ -1713,6 +1724,26 @@ estimate_delta(double x0, double x1, double x2, double x3)
     return x0 * 0.3 + x1 * 0.1 - x2 * 0.1 - x3 * 0.3;
 }
 
+/**
+ * Applies hysteresis. center is shifted such that it is in range with
+ * in by the margin again. The new center is returned.
+ * @param in the current value
+ * @param center the current center
+ * @param margin the margin to center in which no change is applied
+ * @return the new center (which might coincide with the previous)
+ */
+static int hysteresis(int in, int center, int margin) {
+    int diff = in - center;
+    if (abs(diff) <= margin) {
+	diff = 0;
+    } else if (diff > margin) {
+	diff -= margin;
+    } else if (diff < -margin) {
+	diff += margin;
+    }
+    return center + diff;
+}
+
 static int
 ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
 	      edge_type edge, int *dxP, int *dyP, Bool inside_area)
@@ -2363,6 +2394,14 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
     /* If touchpad is switched off, we skip the whole thing and return delay */
     if (para->touchpad_off == 1)
 	return delay;
+
+    /* apply hysteresis before doing anything serious. This cancels
+     * out a lot of noise which might surface in strange phenomena
+     * like flicker in scrolling or noise motion. */
+    priv->hyst_center_x = hysteresis(hw->x, priv->hyst_center_x, para->hyst_x);
+    priv->hyst_center_y = hysteresis(hw->y, priv->hyst_center_y, para->hyst_y);
+    hw->x = priv->hyst_center_x;
+    hw->y = priv->hyst_center_y;
 
     inside_active_area = is_inside_active_area(priv, hw->x, hw->y);
 

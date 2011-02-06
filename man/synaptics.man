@@ -222,6 +222,17 @@ Motion Factor"
 Greatest setting for pressure motion factor. Property: "Synaptics Pressure
 Motion Factor"
 .TP
+.BI "Option \*qHorizHysteresis\*q \*q" integer \*q
+The minimum horizontal HW distance required to generate motion events. Can be
+specified as a percentage. Increase if noise motion is a problem for you. Zero
+is disabled.
+Default: 0.5 percent of the diagonal or (in case of evdev) the appropriate
+"fuzz" as advertised by the device.
+.TP
+.BI "Option \*qVertHysteresis\*q \*q" integer \*q
+The minimum vertical HW distance required to generate motion events. See
+\fBHorizHysteresis\fR.
+.TP
 .BI "Option \*qUpDownScrolling\*q \*q" boolean \*q
 If on, the up/down buttons generate button 4/5 events.
 .
@@ -706,6 +717,13 @@ CornerCoasting takes precedence over the seamless switch from edge
 scrolling to circular scrolling.  That is, if CornerCoasting is
 active, scrolling will stop, and circular scrolling will not start,
 when the finger leaves the corner.
+
+.SS Noise cancellation
+The synaptics has a built-in nose canellation based on hysteresis. This means
+that incoming coordinates actually shift a box of predefined dimensions such
+that it covers the incoming coordinate, and only the boxes own center is used
+as input. Obviously, the smaller the box the better, but the likelyhood of
+noise motion coming through also increases.
 
 .SS Trackstick mode
 Trackstick emulation mode is entered when pressing the finger hard on
