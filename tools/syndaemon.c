@@ -227,6 +227,11 @@ main_loop(Display *display, double idle_time, int poll_delay)
 	if (keyboard_activity(display))
 	    last_activity = current_time;
 
+	/* If system times goes backwards, touchpad can get locked. Make
+	 * sure our last activity wasn't in the future and reset if it was. */
+	if (last_activity > current_time)
+	    last_activity = current_time - idle_time - 1;
+
 	if (current_time > last_activity + idle_time) {	/* Enable touchpad */
 	    toggle_touchpad(True);
 	} else {			    /* Disable touchpad */
