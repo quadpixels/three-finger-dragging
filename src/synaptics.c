@@ -1728,6 +1728,47 @@ get_delta_for_trackstick(SynapticsPrivate *priv, const struct SynapticsHwState *
 }
 
 static void
+get_edge_speed(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
+               edge_type edge, int *x_edge_speed, int *y_edge_speed)
+{
+    SynapticsParameters *para = &priv->synpara;
+
+    int minZ = para->edge_motion_min_z;
+    int maxZ = para->edge_motion_max_z;
+    int minSpd = para->edge_motion_min_speed;
+    int maxSpd = para->edge_motion_max_speed;
+    int edge_speed;
+
+    if (hw->z <= minZ) {
+        edge_speed = minSpd;
+    } else if (hw->z >= maxZ) {
+        edge_speed = maxSpd;
+    } else {
+        edge_speed = minSpd + (hw->z - minZ) * (maxSpd - minSpd) / (maxZ - minZ);
+    }
+    if (!priv->synpara.circular_pad) {
+        /* on rectangular pad */
+        if (edge & RIGHT_EDGE) {
+            *x_edge_speed = edge_speed;
+        } else if (edge & LEFT_EDGE) {
+            *x_edge_speed = -edge_speed;
+        }
+        if (edge & TOP_EDGE) {
+            *y_edge_speed = -edge_speed;
+        } else if (edge & BOTTOM_EDGE) {
+            *y_edge_speed = edge_speed;
+        }
+    } else if (edge) {
+        /* at edge of circular pad */
+        double relX, relY;
+
+        relative_coords(priv, hw->x, hw->y, &relX, &relY);
+        *x_edge_speed = (int)(edge_speed * relX);
+        *y_edge_speed = (int)(edge_speed * relY);
+    }
+}
+
+static void
 get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
           edge_type edge, double *dx, double *dy)
 {
@@ -1741,41 +1782,8 @@ get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     *dx = estimate_delta(hw->x, HIST(0).x, HIST(1).x, HIST(2).x);
     *dy = estimate_delta(hw->y, HIST(0).y, HIST(1).y, HIST(2).y);
 
-    if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always) {
-        int minZ = para->edge_motion_min_z;
-        int maxZ = para->edge_motion_max_z;
-        int minSpd = para->edge_motion_min_speed;
-        int maxSpd = para->edge_motion_max_speed;
-        int edge_speed;
-
-        if (hw->z <= minZ) {
-            edge_speed = minSpd;
-        } else if (hw->z >= maxZ) {
-            edge_speed = maxSpd;
-        } else {
-            edge_speed = minSpd + (hw->z - minZ) * (maxSpd - minSpd) / (maxZ - minZ);
-        }
-        if (!priv->synpara.circular_pad) {
-            /* on rectangular pad */
-            if (edge & RIGHT_EDGE) {
-                x_edge_speed = edge_speed;
-            } else if (edge & LEFT_EDGE) {
-                x_edge_speed = -edge_speed;
-            }
-            if (edge & TOP_EDGE) {
-                y_edge_speed = -edge_speed;
-            } else if (edge & BOTTOM_EDGE) {
-                y_edge_speed = edge_speed;
-            }
-        } else if (edge) {
-            /* at edge of circular pad */
-            double relX, relY;
-
-            relative_coords(priv, hw->x, hw->y, &relX, &relY);
-            x_edge_speed = (int)(edge_speed * relX);
-            y_edge_speed = (int)(edge_speed * relY);
-        }
-    }
+    if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always)
+        get_edge_speed(priv, hw, edge, &x_edge_speed, &y_edge_speed);
 
     /* report edge speed as synthetic motion. Of course, it would be
      * cooler to report floats than to buffer, but anyway. */
