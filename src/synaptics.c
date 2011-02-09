@@ -1713,6 +1713,20 @@ estimate_delta(double x0, double x1, double x2, double x3)
     return x0 * 0.3 + x1 * 0.1 - x2 * 0.1 - x3 * 0.3;
 }
 
+static void
+get_delta_for_trackstick(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
+                         double *dx, double *dy)
+{
+    SynapticsParameters *para = &priv->synpara;
+    double dtime = (hw->millis - HIST(0).millis) / 1000.0;
+
+    *dx = (hw->x - priv->trackstick_neutral_x);
+    *dy = (hw->y - priv->trackstick_neutral_y);
+
+    *dx = *dx * dtime * para->trackstick_speed;
+    *dy = *dy * dtime * para->trackstick_speed;
+}
+
 static int
 ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
 	      edge_type edge, int *dxP, int *dyP, Bool inside_area)
@@ -1763,14 +1777,9 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     if (priv->count_packet_finger <= 3) /* min. 3 packets */
         goto skip; /* skip the lot */
 
-
-    if (priv->moving_state == MS_TRACKSTICK) {
-        dx = (hw->x - priv->trackstick_neutral_x);
-        dy = (hw->y - priv->trackstick_neutral_y);
-
-        dx = dx * dtime * para->trackstick_speed;
-        dy = dy * dtime * para->trackstick_speed;
-    } else if (moving_state == MS_TOUCHPAD_RELATIVE) {
+    if (priv->moving_state == MS_TRACKSTICK)
+        get_delta_for_trackstick(priv, hw, &dx, &dy);
+    else if (moving_state == MS_TOUCHPAD_RELATIVE) {
         dx = estimate_delta(hw->x, HIST(0).x, HIST(1).x, HIST(2).x);
         dy = estimate_delta(hw->y, HIST(0).y, HIST(1).y, HIST(2).y);
 
