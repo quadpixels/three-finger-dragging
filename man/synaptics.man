@@ -608,8 +608,31 @@ HorizScrollDelta parameters.
 .
 To disable vertical or horizontal scrolling, set VertScrollDelta or
 HorizScrollDelta to zero.
+
+.SS Pressure motion
+When pressure motion is activated, the cursor motion speed depends
+on the pressure exerted on the touchpad (the more pressure exerted on
+the touchpad, the faster the pointer).
+.
+More precisely the speed is first calculated according to MinSpeed,
+MaxSpeed and AccelFactor, and then is multiplied by a sensitivity
+factor.
 .
 .LP
+The sensitivity factor can be adjusted using the PressureMotion
+parameters.
+.
+If the pressure is below PressureMotionMinZ, PressureMotionMinFactor
+is used, and if the pressure is greater than PressureMotionMaxZ,
+PressureMotionMaxFactor is used.
+.
+By default, PressureMotionMinZ and PressureMotionMaxZ are equal to
+EdgeMotionMinZ and EdgeMotionMaxZ.
+.
+For a pressure value between PressureMotionMinZ and
+PressureMotionMaxZ, the factor is increased linearly.
+.
+.SS Edge motion
 When hitting an egde, movement can be automatically continued.
 .
 If EdgeMotionUseAlways is false, edge motion is only used when
@@ -631,27 +654,6 @@ is used.
 For a pressure value between EdgeMotionMinZ and EdgeMotionMaxZ, the
 speed is increased linearly.
 .
-.LP
-When pressure motion is activated, the cursor motion speed depends
-on the pressure exerted on the touchpad (the more pressure exerted on
-the touchpad, the faster the pointer).
-.
-More precisely the speed is first calculated according to MinSpeed,
-MaxSpeed and AccelFactor, and then is multiplied by a sensitivity
-factor.
-.
-The sensitivity factor can be adjusted using the PressureMotion
-parameters.
-.
-If the pressure is below PressureMotionMinZ, PressureMotionMinFactor
-is used, and if the pressure is greater than PressureMotionMaxZ,
-PressureMotionMaxFactor is used.
-.
-By default, PressureMotionMinZ and PressureMotionMaxZ are equal to
-EdgeMotionMinZ and EdgeMotionMaxZ.
-.
-For a pressure value between PressureMotionMinZ and
-PressureMotionMaxZ, the factor is increased linearly.
 .SS Middle button emulation
 Since most synaptics touchpad models don't have a button that
 corresponds to the middle button on a mouse, the driver can emulate
