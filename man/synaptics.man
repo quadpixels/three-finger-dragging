@@ -608,6 +608,13 @@ HorizScrollDelta parameters.
 .
 To disable vertical or horizontal scrolling, set VertScrollDelta or
 HorizScrollDelta to zero.
+.
+.LP
+Acceleration is mostly handled outside the driver, thus the driver will
+translate MinSpeed into constant deceleration and adapt MaxSpeed at
+startup time. This ensures you can user the other acceleration profiles, albeit
+without pressure motion. However the numbers at runtime will likely be different
+from any options you may have set.
 
 .SS Pressure motion
 When pressure motion is activated, the cursor motion speed depends
