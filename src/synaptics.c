@@ -1744,14 +1744,94 @@ static int hysteresis(int in, int center, int margin) {
     return center + diff;
 }
 
+static void
+get_delta_for_trackstick(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
+                         double *dx, double *dy)
+{
+    SynapticsParameters *para = &priv->synpara;
+    double dtime = (hw->millis - HIST(0).millis) / 1000.0;
+
+    *dx = (hw->x - priv->trackstick_neutral_x);
+    *dy = (hw->y - priv->trackstick_neutral_y);
+
+    *dx = *dx * dtime * para->trackstick_speed;
+    *dy = *dy * dtime * para->trackstick_speed;
+}
+
+static void
+get_edge_speed(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
+               edge_type edge, int *x_edge_speed, int *y_edge_speed)
+{
+    SynapticsParameters *para = &priv->synpara;
+
+    int minZ = para->edge_motion_min_z;
+    int maxZ = para->edge_motion_max_z;
+    int minSpd = para->edge_motion_min_speed;
+    int maxSpd = para->edge_motion_max_speed;
+    int edge_speed;
+
+    if (hw->z <= minZ) {
+        edge_speed = minSpd;
+    } else if (hw->z >= maxZ) {
+        edge_speed = maxSpd;
+    } else {
+        edge_speed = minSpd + (hw->z - minZ) * (maxSpd - minSpd) / (maxZ - minZ);
+    }
+    if (!priv->synpara.circular_pad) {
+        /* on rectangular pad */
+        if (edge & RIGHT_EDGE) {
+            *x_edge_speed = edge_speed;
+        } else if (edge & LEFT_EDGE) {
+            *x_edge_speed = -edge_speed;
+        }
+        if (edge & TOP_EDGE) {
+            *y_edge_speed = -edge_speed;
+        } else if (edge & BOTTOM_EDGE) {
+            *y_edge_speed = edge_speed;
+        }
+    } else if (edge) {
+        /* at edge of circular pad */
+        double relX, relY;
+
+        relative_coords(priv, hw->x, hw->y, &relX, &relY);
+        *x_edge_speed = (int)(edge_speed * relX);
+        *y_edge_speed = (int)(edge_speed * relY);
+    }
+}
+
+static void
+get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
+          edge_type edge, double *dx, double *dy)
+{
+    SynapticsParameters *para = &priv->synpara;
+    double dtime = (hw->millis - HIST(0).millis) / 1000.0;
+    double integral;
+    double tmpf;
+    int x_edge_speed = 0;
+    int y_edge_speed = 0;
+
+    *dx = estimate_delta(hw->x, HIST(0).x, HIST(1).x, HIST(2).x);
+    *dy = estimate_delta(hw->y, HIST(0).y, HIST(1).y, HIST(2).y);
+
+    if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always)
+        get_edge_speed(priv, hw, edge, &x_edge_speed, &y_edge_speed);
+
+    /* report edge speed as synthetic motion. Of course, it would be
+     * cooler to report floats than to buffer, but anyway. */
+    tmpf = *dx + x_edge_speed * dtime + priv->frac_x;
+    priv->frac_x = modf(tmpf, &integral);
+    *dx = integral;
+    tmpf = *dy + y_edge_speed * dtime + priv->frac_y;
+    priv->frac_y = modf(tmpf, &integral);
+    *dy = integral;
+}
+
 static int
 ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
 	      edge_type edge, int *dxP, int *dyP, Bool inside_area)
 {
-    SynapticsParameters *para = &priv->synpara;
     enum MovingState moving_state;
     double dx, dy;
-    double integral;
     int delay = 1000000000;
 
     dx = dy = 0;
@@ -1773,79 +1853,31 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
 	    break;
 	}
     }
-    if (inside_area && moving_state && !priv->palm &&
-	!priv->vert_scroll_edge_on && !priv->horiz_scroll_edge_on &&
-	!priv->vert_scroll_twofinger_on && !priv->horiz_scroll_twofinger_on &&
-	!priv->circ_scroll_on && priv->prevFingers == hw->numFingers) {
-	/* FIXME: Wtf?? what's with 13? */
-	delay = MIN(delay, 13);
-	if (priv->count_packet_finger > 3) { /* min. 3 packets */
-	    double tmpf;
-	    int x_edge_speed = 0;
-	    int y_edge_speed = 0;
-	    double dtime = (hw->millis - HIST(0).millis) / 1000.0;
 
-	    if (priv->moving_state == MS_TRACKSTICK) {
-		dx = (hw->x - priv->trackstick_neutral_x);
-		dy = (hw->y - priv->trackstick_neutral_y);
-
-		dx = dx * dtime * para->trackstick_speed;
-		dy = dy * dtime * para->trackstick_speed;
-	    } else if (moving_state == MS_TOUCHPAD_RELATIVE) {
-		dx = estimate_delta(hw->x, HIST(0).x, HIST(1).x, HIST(2).x);
-		dy = estimate_delta(hw->y, HIST(0).y, HIST(1).y, HIST(2).y);
-
-		if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always) {
-		    int minZ = para->edge_motion_min_z;
-		    int maxZ = para->edge_motion_max_z;
-		    int minSpd = para->edge_motion_min_speed;
-		    int maxSpd = para->edge_motion_max_speed;
-		    int edge_speed;
-
-		    if (hw->z <= minZ) {
-			edge_speed = minSpd;
-		    } else if (hw->z >= maxZ) {
-			edge_speed = maxSpd;
-		    } else {
-			edge_speed = minSpd + (hw->z - minZ) * (maxSpd - minSpd) / (maxZ - minZ);
-		    }
-		    if (!priv->synpara.circular_pad) {
-			/* on rectangular pad */
-			if (edge & RIGHT_EDGE) {
-			    x_edge_speed = edge_speed;
-			} else if (edge & LEFT_EDGE) {
-			    x_edge_speed = -edge_speed;
-			}
-			if (edge & TOP_EDGE) {
-			    y_edge_speed = -edge_speed;
-			} else if (edge & BOTTOM_EDGE) {
-			    y_edge_speed = edge_speed;
-			}
-		    } else if (edge) {
-			/* at edge of circular pad */
-			double relX, relY;
-
-			relative_coords(priv, hw->x, hw->y, &relX, &relY);
-			x_edge_speed = (int)(edge_speed * relX);
-			y_edge_speed = (int)(edge_speed * relY);
-		    }
-		}
-	    }
-
-	    /* report edge speed as synthetic motion. Of course, it would be
-	     * cooler to report floats than to buffer, but anyway. */
-	    tmpf = dx + x_edge_speed * dtime + priv->frac_x;
-	    priv->frac_x = modf(tmpf, &integral);
-	    dx = integral;
-	    tmpf = dy + y_edge_speed * dtime + priv->frac_y;
-	    priv->frac_y = modf(tmpf, &integral);
-	    dy = integral;
-	}
-
-	priv->count_packet_finger++;
-    } else {				    /* reset packet counter */
-	priv->count_packet_finger = 0;
+    if (!inside_area || !moving_state || priv->palm ||
+	priv->vert_scroll_edge_on || priv->horiz_scroll_edge_on ||
+	priv->vert_scroll_twofinger_on || priv->horiz_scroll_twofinger_on ||
+	priv->circ_scroll_on || priv->prevFingers != hw->numFingers)
+    {
+        /* reset packet counter. */
+        priv->count_packet_finger = 0;
+        goto out;
     }
+
+    /* FIXME: Wtf?? what's with 13? */
+    delay = MIN(delay, 13);
+
+    if (priv->count_packet_finger <= 3) /* min. 3 packets */
+        goto skip; /* skip the lot */
+
+    if (priv->moving_state == MS_TRACKSTICK)
+        get_delta_for_trackstick(priv, hw, &dx, &dy);
+    else if (moving_state == MS_TOUCHPAD_RELATIVE)
+        get_delta(priv, hw, edge, &dx, &dy);
+
+skip:
+    priv->count_packet_finger++;
+out:
     priv->prevFingers = hw->numFingers;
 
     *dxP = dx;
