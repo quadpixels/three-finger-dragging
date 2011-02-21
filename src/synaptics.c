@@ -1810,6 +1810,7 @@ get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     int x_edge_speed = 0;
     int y_edge_speed = 0;
 
+    /* HIST is full enough: priv->count_packet_finger > 3 */
     *dx = estimate_delta(hw->x, HIST(0).x, HIST(1).x, HIST(2).x);
     *dy = estimate_delta(hw->y, HIST(0).y, HIST(1).y, HIST(2).y);
 
@@ -1826,6 +1827,9 @@ get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     *dy = integral;
 }
 
+/**
+ * Compute relative motion ('deltas') including edge motion xor trackstick.
+ */
 static int
 ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
 	      edge_type edge, int *dxP, int *dyP, Bool inside_area)
@@ -1864,10 +1868,11 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
         goto out;
     }
 
-    /* FIXME: Wtf?? what's with 13? */
+    /* to create fluid edge motion, call back 'soon'
+     * even in the absence of new hardware events */
     delay = MIN(delay, 13);
 
-    if (priv->count_packet_finger <= 3) /* min. 3 packets */
+    if (priv->count_packet_finger <= 3) /* min. 3 packets, see get_delta() */
         goto skip; /* skip the lot */
 
     if (priv->moving_state == MS_TRACKSTICK)
