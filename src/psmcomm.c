@@ -147,7 +147,7 @@ PSMQueryHardware(InputInfoPtr pInfo)
     synhw = (struct SynapticsHwInfo*)priv->proto_data;
 
     /* is the synaptics touchpad active? */
-    if (!PSMQueryIsSynaptics(local))
+    if (!PSMQueryIsSynaptics(pInfo))
 	return FALSE;
 
     xf86Msg(X_PROBED, "%s synaptics touchpad found\n", pInfo->name);
@@ -167,7 +167,7 @@ PSMReadHwState(InputInfoPtr pInfo,
 	       struct SynapticsProtocolOperations *proto_ops,
 	       struct CommData *comm, struct SynapticsHwState *hwRet)
 {
-    return psaux_proto_operations.ReadHwState(local, proto_ops, comm, hwRet);
+    return psaux_proto_operations.ReadHwState(pInfo, proto_ops, comm, hwRet);
 }
 
 static Bool PSMAutoDevProbe(InputInfoPtr pInfo)
