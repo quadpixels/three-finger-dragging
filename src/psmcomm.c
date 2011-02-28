@@ -52,13 +52,6 @@
 
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
-struct SynapticsHwInfo {
-    unsigned int model_id;		    /* Model-ID */
-    unsigned int capabilities;		    /* Capabilities */
-    unsigned int ext_cap;		    /* Extended Capabilities */
-    unsigned int identity;		    /* Identification */
-};
-
 /*
  * Identify Touchpad
  * See also the SYN_ID_* macros

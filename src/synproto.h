@@ -79,7 +79,6 @@ enum SynapticsProtocol {
 };
 
 struct _SynapticsParameters;
-struct SynapticsHwInfo;
 struct CommData;
 
 struct SynapticsProtocolOperations {

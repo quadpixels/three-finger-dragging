@@ -82,13 +82,6 @@
 #define PS2DBG(x)
 #endif
 
-struct SynapticsHwInfo {
-    unsigned int model_id;		    /* Model-ID */
-    unsigned int capabilities;		    /* Capabilities */
-    unsigned int ext_cap;		    /* Extended Capabilities */
-    unsigned int identity;		    /* Identification */
-};
-
 /*****************************************************************************
  *	PS/2 Utility functions.
  *     Many parts adapted from tpconfig.c by C. Scott Ananian
