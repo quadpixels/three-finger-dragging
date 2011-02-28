@@ -203,7 +203,7 @@ SynapticsDefaultDimensions(InputInfoPtr pInfo)
     {
 	priv->miny = 1729;
 	priv->maxy = 4171;
-	priv->resx = 0;
+	priv->resy = 0;
 
 	xf86Msg(X_PROBED,
 		"%s: invalid y-axis range.  defaulting to %d - %d\n",
