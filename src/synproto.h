@@ -79,7 +79,6 @@ enum SynapticsProtocol {
 };
 
 struct _SynapticsParameters;
-struct CommData;
 
 struct SynapticsProtocolOperations {
     void (*DeviceOnHook)(InputInfoPtr pInfo, struct _SynapticsParameters *para);
