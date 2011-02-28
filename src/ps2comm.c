@@ -214,7 +214,7 @@ ps2_synaptics_reset(int fd)
  * see also SYN_MODEL_* macros
  */
 static Bool
-ps2_synaptics_model_id(int fd, struct SynapticsHwInfo *synhw)
+ps2_synaptics_model_id(int fd, struct PS2SynapticsHwInfo *synhw)
 {
     byte mi[3];
 
@@ -239,7 +239,7 @@ ps2_synaptics_model_id(int fd, struct SynapticsHwInfo *synhw)
  * see also the SYN_CAP_* macros
  */
 static Bool
-ps2_synaptics_capability(int fd, struct SynapticsHwInfo *synhw)
+ps2_synaptics_capability(int fd, struct PS2SynapticsHwInfo *synhw)
 {
     byte cap[3];
 
@@ -279,7 +279,7 @@ ps2_synaptics_capability(int fd, struct SynapticsHwInfo *synhw)
  * See also the SYN_ID_* macros
  */
 static Bool
-ps2_synaptics_identify(int fd, struct SynapticsHwInfo *synhw)
+ps2_synaptics_identify(int fd, struct PS2SynapticsHwInfo *synhw)
 {
     byte id[3];
 
@@ -315,7 +315,7 @@ ps2_synaptics_disable_device(int fd)
 }
 
 static Bool
-ps2_query_is_synaptics(int fd, struct SynapticsHwInfo* synhw)
+ps2_query_is_synaptics(int fd, struct PS2SynapticsHwInfo* synhw)
 {
     int i;
 
@@ -335,7 +335,7 @@ ps2_query_is_synaptics(int fd, struct SynapticsHwInfo* synhw)
 }
 
 void
-ps2_print_ident(const struct SynapticsHwInfo *synhw)
+ps2_print_ident(const struct PS2SynapticsHwInfo *synhw)
 {
     xf86Msg(X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(synhw));
     xf86Msg(X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(synhw),
@@ -381,11 +381,11 @@ PS2QueryHardware(InputInfoPtr pInfo)
 {
     int mode;
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
-    struct SynapticsHwInfo *synhw;
+    struct PS2SynapticsHwInfo *synhw;
 
     if (!priv->proto_data)
-        priv->proto_data = calloc(1, sizeof(struct SynapticsHwInfo));
-    synhw = (struct SynapticsHwInfo*)priv->proto_data;
+        priv->proto_data = calloc(1, sizeof(struct PS2SynapticsHwInfo));
+    synhw = (struct PS2SynapticsHwInfo*)priv->proto_data;
 
     /* is the synaptics touchpad active? */
     if (!ps2_query_is_synaptics(pInfo->fd, synhw))
@@ -424,7 +424,7 @@ PS2QueryHardware(InputInfoPtr pInfo)
  * Decide if the current packet stored in priv->protoBuf is valid.
  */
 static Bool
-ps2_packet_ok(struct SynapticsHwInfo *synhw, struct CommData *comm)
+ps2_packet_ok(struct PS2SynapticsHwInfo *synhw, struct CommData *comm)
 {
     unsigned char *buf = comm->protoBuf;
     int newabs = SYN_MODEL_NEWABS(synhw);
@@ -453,7 +453,7 @@ ps2_packet_ok(struct SynapticsHwInfo *synhw, struct CommData *comm)
 }
 
 static Bool
-ps2_synaptics_get_packet(InputInfoPtr pInfo, struct SynapticsHwInfo *synhw,
+ps2_synaptics_get_packet(InputInfoPtr pInfo, struct PS2SynapticsHwInfo *synhw,
 			 struct SynapticsProtocolOperations *proto_ops,
 			 struct CommData *comm)
 {
@@ -522,11 +522,11 @@ PS2ReadHwState(InputInfoPtr pInfo,
     struct SynapticsHwState *hw = &(comm->hwState);
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     SynapticsParameters *para = &priv->synpara;
-    struct SynapticsHwInfo *synhw;
+    struct PS2SynapticsHwInfo *synhw;
     int newabs;
     int w, i;
 
-    synhw = (struct SynapticsHwInfo*)priv->proto_data;
+    synhw = (struct PS2SynapticsHwInfo*)priv->proto_data;
     if (!synhw)
     {
         xf86Msg(X_ERROR,

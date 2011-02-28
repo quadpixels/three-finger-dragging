@@ -103,7 +103,7 @@ PSMQueryIsSynaptics(InputInfoPtr pInfo)
 }
 
 static void
-convert_hw_info(const synapticshw_t *psm_ident, struct SynapticsHwInfo *synhw)
+convert_hw_info(const synapticshw_t *psm_ident, struct PS2SynapticsHwInfo *synhw)
 {
     memset(synhw, 0, sizeof(*synhw));
     synhw->model_id = ((psm_ident->infoRot180 << 23) |
@@ -130,14 +130,14 @@ static Bool
 PSMQueryHardware(InputInfoPtr pInfo)
 {
     synapticshw_t psm_ident;
-    struct SynapticsHwInfo *synhw;
+    struct PS2SynapticsHwInfo *synhw;
     SynapticsPrivate *priv;
 
     priv = (SynapticsPrivate *)pInfo->private;
 
     if(!priv->proto_data)
-        priv->proto_data = calloc(1, sizeof(struct SynapticsHwInfo));
-    synhw = (struct SynapticsHwInfo*)priv->proto_data;
+        priv->proto_data = calloc(1, sizeof(struct PS2SynapticsHwInfo));
+    synhw = (struct PS2SynapticsHwInfo*)priv->proto_data;
 
     /* is the synaptics touchpad active? */
     if (!PSMQueryIsSynaptics(pInfo))
