@@ -220,17 +220,11 @@ ALPSReadHwState(InputInfoPtr pInfo,
     return TRUE;
 }
 
-static Bool
-ALPSAutoDevProbe(InputInfoPtr pInfo)
-{
-    return FALSE;
-}
-
 struct SynapticsProtocolOperations alps_proto_operations = {
     NULL,
     NULL,
     ALPSQueryHardware,
     ALPSReadHwState,
-    ALPSAutoDevProbe,
+    NULL,
     NULL
 };

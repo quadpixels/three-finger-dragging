@@ -136,6 +136,21 @@ void InitDeviceProperties(InputInfoPtr pInfo);
 int SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
                 BOOL checkonly);
 
+const static struct {
+    const char *name;
+    struct SynapticsProtocolOperations *proto_ops;
+} protocols[] = {
+#ifdef BUILD_EVENTCOMM
+    {"event", &event_proto_operations},
+#endif
+#ifdef BUILD_PSMCOMM
+    {"psm", &psm_proto_operations},
+#endif
+    {"psaux", &psaux_proto_operations},
+    {"alps", &alps_proto_operations},
+    {NULL, NULL}
+};
+
 InputDriverRec SYNAPTICS = {
     1,
     "synaptics",
@@ -235,61 +250,24 @@ SanitizeDimensions(InputInfoPtr pInfo)
 static void
 SetDeviceAndProtocol(InputInfoPtr pInfo)
 {
-    char *str_par, *device;
     SynapticsPrivate *priv = pInfo->private;
-    enum SynapticsProtocol proto = SYN_PROTO_PSAUX;
+    char *proto, *device;
+    int i;
 
+    proto = xf86SetStrOption(pInfo->options, "Protocol", NULL);
     device = xf86SetStrOption(pInfo->options, "Device", NULL);
-    if (!device) {
-	device = xf86SetStrOption(pInfo->options, "Path", NULL);
-	if (device) {
-	    pInfo->options =
-	    	xf86ReplaceStrOption(pInfo->options, "Device", device);
-	}
+    for (i = 0; protocols[i].name; i++) {
+        if ((!device || !proto) &&
+            protocols[i].proto_ops->AutoDevProbe &&
+            protocols[i].proto_ops->AutoDevProbe(pInfo))
+            break;
+        else if (proto && !strcmp(proto, protocols[i].name))
+            break;
     }
-    if (device && strstr(device, "/dev/input/event")) {
-#ifdef BUILD_EVENTCOMM
-	proto = SYN_PROTO_EVENT;
-#endif
-    } else {
-	str_par = xf86FindOptionValue(pInfo->options, "Protocol");
-	if (str_par && !strcmp(str_par, "psaux")) {
-	    /* Already set up */
-#ifdef BUILD_EVENTCOMM
-	} else if (str_par && !strcmp(str_par, "event")) {
-	    proto = SYN_PROTO_EVENT;
-#endif /* BUILD_EVENTCOMM */
-#ifdef BUILD_PSMCOMM
-	} else if (str_par && !strcmp(str_par, "psm")) {
-	    proto = SYN_PROTO_PSM;
-#endif /* BUILD_PSMCOMM */
-	} else if (str_par && !strcmp(str_par, "alps")) {
-	    proto = SYN_PROTO_ALPS;
-	} else { /* default to auto-dev */
-#ifdef BUILD_EVENTCOMM
-	    if (!device && event_proto_operations.AutoDevProbe(pInfo))
-		proto = SYN_PROTO_EVENT;
-#endif
-	}
-    }
-    switch (proto) {
-    case SYN_PROTO_PSAUX:
-	priv->proto_ops = &psaux_proto_operations;
-	break;
-#ifdef BUILD_EVENTCOMM
-    case SYN_PROTO_EVENT:
-	priv->proto_ops = &event_proto_operations;
-	break;
-#endif /* BUILD_EVENTCOMM */
-#ifdef BUILD_PSMCOMM
-    case SYN_PROTO_PSM:
-	priv->proto_ops = &psm_proto_operations;
-	break;
-#endif /* BUILD_PSMCOMM */
-    case SYN_PROTO_ALPS:
-	priv->proto_ops = &alps_proto_operations;
-	break;
-    }
+    free(proto);
+    free(device);
+
+    priv->proto_ops = protocols[i].proto_ops;
 }
 
 /*
@@ -714,6 +692,10 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
     /* may change pInfo->options */
     SetDeviceAndProtocol(pInfo);
+    if (priv->proto_ops == NULL) {
+        xf86Msg(X_ERROR, "Synaptics driver unable to detect protocol\n");
+        goto SetupProc_fail;
+    }
 
     /* open the touchpad device */
     pInfo->fd = xf86OpenSerial(pInfo->options);

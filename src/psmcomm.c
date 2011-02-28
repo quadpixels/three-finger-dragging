@@ -162,16 +162,11 @@ PSMReadHwState(InputInfoPtr pInfo,
     return PS2ReadHwStateProto(pInfo, &psm_proto_operations, comm, hwRet);
 }
 
-static Bool PSMAutoDevProbe(InputInfoPtr pInfo)
-{
-    return FALSE;
-}
-
 struct SynapticsProtocolOperations psm_proto_operations = {
     NULL,
     NULL,
     PSMQueryHardware,
     PSMReadHwState,
-    PSMAutoDevProbe,
+    NULL,
     NULL
 };

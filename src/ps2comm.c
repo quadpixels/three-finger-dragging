@@ -660,17 +660,11 @@ PS2ReadHwState(InputInfoPtr pInfo,
     return PS2ReadHwStateProto(pInfo, &psaux_proto_operations, comm, hwRet);
 }
 
-static Bool
-PS2AutoDevProbe(InputInfoPtr pInfo)
-{
-    return FALSE;
-}
-
 struct SynapticsProtocolOperations psaux_proto_operations = {
     NULL,
     PS2DeviceOffHook,
     PS2QueryHardware,
     PS2ReadHwState,
-    PS2AutoDevProbe,
+    NULL,
     NULL
 };
