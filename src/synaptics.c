@@ -844,7 +844,6 @@ DeviceOn(DeviceIntPtr dev)
 
     DBG(3, "Synaptics DeviceOn called\n");
 
-    SetDeviceAndProtocol(pInfo);
     pInfo->fd = xf86OpenSerial(pInfo->options);
     if (pInfo->fd == -1) {
 	xf86Msg(X_WARNING, "%s: cannot open input device\n", pInfo->name);
