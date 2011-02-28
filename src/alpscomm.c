@@ -33,7 +33,7 @@
 #endif
 
 #include <xorg-server.h>
-#include "alpscomm.h"
+#include "ps2comm.h"
 #include "synproto.h"
 #include "synaptics.h"
 #include "synapticsstr.h"
