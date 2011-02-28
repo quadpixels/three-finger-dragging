@@ -316,7 +316,6 @@ SynapticsReadEvent(InputInfoPtr pInfo, struct input_event *ev)
 
 static Bool
 EventReadHwState(InputInfoPtr pInfo,
-		 struct SynapticsProtocolOperations *proto_ops,
 		 struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     struct input_event ev;

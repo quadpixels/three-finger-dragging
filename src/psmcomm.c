@@ -157,10 +157,9 @@ PSMQueryHardware(InputInfoPtr pInfo)
 
 static Bool
 PSMReadHwState(InputInfoPtr pInfo,
-	       struct SynapticsProtocolOperations *proto_ops,
 	       struct CommData *comm, struct SynapticsHwState *hwRet)
 {
-    return psaux_proto_operations.ReadHwState(pInfo, proto_ops, comm, hwRet);
+    return PS2ReadHwStateProto(pInfo, &psm_proto_operations, comm, hwRet);
 }
 
 static Bool PSMAutoDevProbe(InputInfoPtr pInfo)

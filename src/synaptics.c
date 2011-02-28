@@ -1254,8 +1254,7 @@ static Bool
 SynapticsGetHwState(InputInfoPtr pInfo, SynapticsPrivate *priv,
 		    struct SynapticsHwState *hw)
 {
-    return priv->proto_ops->ReadHwState(pInfo, priv->proto_ops,
-					&priv->comm, hw);
+    return priv->proto_ops->ReadHwState(pInfo, &priv->comm, hw);
 }
 
 /*

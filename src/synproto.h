@@ -86,7 +86,6 @@ struct SynapticsProtocolOperations {
     void (*DeviceOffHook)(InputInfoPtr pInfo);
     Bool (*QueryHardware)(InputInfoPtr pInfo);
     Bool (*ReadHwState)(InputInfoPtr pInfo,
-			struct SynapticsProtocolOperations *proto_ops,
 			struct CommData *comm, struct SynapticsHwState *hwRet);
     Bool (*AutoDevProbe)(InputInfoPtr pInfo);
     void (*ReadDevDimensions)(InputInfoPtr pInfo);

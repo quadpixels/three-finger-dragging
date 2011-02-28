@@ -33,10 +33,10 @@
 #endif
 
 #include <xorg-server.h>
-#include "ps2comm.h"
 #include "synproto.h"
 #include "synaptics.h"
 #include "synapticsstr.h"
+#include "ps2comm.h"
 #include <xf86.h>
 
 
@@ -206,7 +206,6 @@ ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
 
 static Bool
 ALPSReadHwState(InputInfoPtr pInfo,
-		struct SynapticsProtocolOperations *proto_ops,
 		struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     unsigned char *buf = comm->protoBuf;

@@ -37,10 +37,10 @@
 #endif
 
 #include <xorg-server.h>
-#include "ps2comm.h"
 #include "synproto.h"
 #include "synaptics.h"
 #include "synapticsstr.h"
+#include "ps2comm.h"
 #include <xf86.h>
 
 #define MAX_UNSYNC_PACKETS 10				/* i.e. 10 to 60 bytes */
@@ -513,8 +513,8 @@ ps2_synaptics_get_packet(InputInfoPtr pInfo, struct PS2SynapticsHwInfo *synhw,
     return FALSE;
 }
 
-static Bool
-PS2ReadHwState(InputInfoPtr pInfo,
+Bool
+PS2ReadHwStateProto(InputInfoPtr pInfo,
 	       struct SynapticsProtocolOperations *proto_ops,
 	       struct CommData *comm, struct SynapticsHwState *hwRet)
 {
@@ -651,6 +651,13 @@ PS2ReadHwState(InputInfoPtr pInfo,
 
     *hwRet = *hw;
     return TRUE;
+}
+
+static Bool
+PS2ReadHwState(InputInfoPtr pInfo,
+               struct CommData *comm, struct SynapticsHwState *hwRet)
+{
+    return PS2ReadHwStateProto(pInfo, &psaux_proto_operations, comm, hwRet);
 }
 
 static Bool
