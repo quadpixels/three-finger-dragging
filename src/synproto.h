@@ -79,14 +79,15 @@ struct SynapticsProtocolOperations {
     void (*ReadDevDimensions)(InputInfoPtr pInfo);
 };
 
+#ifdef BUILD_PS2COMM
 extern struct SynapticsProtocolOperations psaux_proto_operations;
+extern struct SynapticsProtocolOperations alps_proto_operations;
+#endif /* BUILD_PS2COMM */
 #ifdef BUILD_EVENTCOMM
 extern struct SynapticsProtocolOperations event_proto_operations;
 #endif /* BUILD_EVENTCOMM */
 #ifdef BUILD_PSMCOMM
 extern struct SynapticsProtocolOperations psm_proto_operations;
 #endif /* BUILD_PSMCOMM */
-extern struct SynapticsProtocolOperations alps_proto_operations;
-
 
 #endif /* _SYNPROTO_H_ */

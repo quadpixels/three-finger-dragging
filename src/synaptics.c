@@ -146,8 +146,10 @@ const static struct {
 #ifdef BUILD_PSMCOMM
     {"psm", &psm_proto_operations},
 #endif
+#ifdef BUILD_PS2COMM
     {"psaux", &psaux_proto_operations},
     {"alps", &alps_proto_operations},
+#endif
     {NULL, NULL}
 };
 
