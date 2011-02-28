@@ -672,5 +672,5 @@ struct SynapticsProtocolOperations psaux_proto_operations = {
     PS2QueryHardware,
     PS2ReadHwState,
     PS2AutoDevProbe,
-    SynapticsDefaultDimensions
+    NULL
 };

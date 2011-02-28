@@ -130,6 +130,7 @@ static Bool QueryHardware(InputInfoPtr);
 static void ReadDevDimensions(InputInfoPtr);
 static void ScaleCoordinates(SynapticsPrivate *priv, struct SynapticsHwState *hw);
 static void CalculateScalingCoeffs(SynapticsPrivate *priv);
+static void SynapticsDefaultDimensions(InputInfoPtr pInfo);
 
 void InitDeviceProperties(InputInfoPtr pInfo);
 int SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
@@ -183,7 +184,7 @@ _X_EXPORT XF86ModuleData synapticsModuleData = {
  * The default values 1900, etc. come from the dawn of time, when men where
  * men, or possibly apes.
  */
-void
+static void
 SynapticsDefaultDimensions(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
@@ -444,7 +445,6 @@ static void set_default_parameters(InputInfoPtr pInfo)
      * If the range was autodetected, apply these edge widths to all four
      * sides.
      */
-    SynapticsDefaultDimensions(pInfo);
 
     width = abs(priv->maxx - priv->minx);
     height = abs(priv->maxy - priv->miny);
@@ -2613,6 +2613,8 @@ ReadDevDimensions(InputInfoPtr pInfo)
 
     if (priv->proto_ops->ReadDevDimensions)
 	priv->proto_ops->ReadDevDimensions(pInfo);
+
+    SynapticsDefaultDimensions(pInfo);
 }
 
 static Bool
