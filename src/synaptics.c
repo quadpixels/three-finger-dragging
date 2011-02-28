@@ -130,7 +130,7 @@ static Bool QueryHardware(InputInfoPtr);
 static void ReadDevDimensions(InputInfoPtr);
 static void ScaleCoordinates(SynapticsPrivate *priv, struct SynapticsHwState *hw);
 static void CalculateScalingCoeffs(SynapticsPrivate *priv);
-static void SynapticsDefaultDimensions(InputInfoPtr pInfo);
+static void SanitizeDimensions(InputInfoPtr pInfo);
 
 void InitDeviceProperties(InputInfoPtr pInfo);
 int SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
@@ -185,7 +185,7 @@ _X_EXPORT XF86ModuleData synapticsModuleData = {
  * men, or possibly apes.
  */
 static void
-SynapticsDefaultDimensions(InputInfoPtr pInfo)
+SanitizeDimensions(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
 
@@ -2614,7 +2614,7 @@ ReadDevDimensions(InputInfoPtr pInfo)
     if (priv->proto_ops->ReadDevDimensions)
 	priv->proto_ops->ReadDevDimensions(pInfo);
 
-    SynapticsDefaultDimensions(pInfo);
+    SanitizeDimensions(pInfo);
 }
 
 static Bool
