@@ -98,21 +98,31 @@ AM_CONDITIONAL(DEBUG, [test "x$DEBUGGING" = xyes])
 AC_MSG_CHECKING([which optional backends will be build])
 case "${host}" in
 *linux*)
-	AC_MSG_RESULT([eventcomm])
+	AC_MSG_RESULT([ps2comm alpscomm eventcomm])
+	BUILD_PS2COMM="yes"
 	BUILD_EVENTCOMM="yes"
-	AC_DEFINE(BUILD_EVENTCOMM, 1, [Optional backend eventcomm enabled])
 	;;
-*freebsd* | *openbsd* | *netbsd* | *dragonfly*)
-	AC_MSG_RESULT([psmcomm])
+*freebsd* | *netbsd* | *dragonfly*)
+	AC_MSG_RESULT([ps2comm alpscomm psmcomm])
+	BUILD_PS2COMM="yes"
 	BUILD_PSMCOMM="yes"
-	AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])
 	;;
 *)
 	AC_MSG_RESULT([none])
 	;;
 esac
+if test "x$BUILD_EVENTCOMM" = xyes; then
+    AC_DEFINE(BUILD_EVENTCOMM, 1, [Optional backend eventcomm enabled])
+fi
+if test "x$BUILD_PSMCOMM" = xyes; then
+    AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])
+fi
+if test "x$BUILD_PS2COMM" = xyes; then
+    AC_DEFINE(BUILD_PS2COMM, 1, [Optional backend ps2comm and alpscomm enabled])
+fi
 AM_CONDITIONAL([BUILD_EVENTCOMM], [test "x${BUILD_EVENTCOMM}" = "xyes"])
 AM_CONDITIONAL([BUILD_PSMCOMM], [test "x${BUILD_PSMCOMM}" = "xyes"])
+AM_CONDITIONAL([BUILD_PS2COMM], [test "x${BUILD_PS2COMM}" = "xyes"])
 
 # -----------------------------------------------------------------------------
 #			Dependencies for synclient and syndaemon
