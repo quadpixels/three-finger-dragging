@@ -1342,12 +1342,16 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
     enum FingerState finger;
 
     /* finger detection thru pressure and threshold */
+    if (hw->z < para->finger_low)
+        return FS_UNTOUCHED;
+
+    if (priv->finger_state == FS_BLOCKED)
+        return FS_BLOCKED;
+
     if (hw->z > para->finger_press && priv->finger_state < FS_PRESSED)
         finger = FS_PRESSED;
-    else if (hw->z > para->finger_high && priv->finger_state < FS_TOUCHED)
+    else if (hw->z > para->finger_high && priv->finger_state == FS_UNTOUCHED)
         finger = FS_TOUCHED;
-    else if (hw->z < para->finger_low &&  priv->finger_state > FS_UNTOUCHED)
-        finger = FS_UNTOUCHED;
     else
 	finger = priv->finger_state;
 
@@ -1355,17 +1359,16 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 	return finger;
 
     /* palm detection */
-    if (finger) {
-	if ((hw->z > para->palm_min_z) && (hw->fingerWidth > para->palm_min_width))
-	    priv->palm = TRUE;
-    } else {
-	priv->palm = FALSE;
-    }
-    if (hw->x == 0)
+
+    if ((hw->z > para->palm_min_z) && (hw->fingerWidth > para->palm_min_width))
+        return FS_BLOCKED;
+
+    if (hw->x == 0 || priv->finger_state == FS_UNTOUCHED)
 	priv->avg_width = 0;
     else
 	priv->avg_width += (hw->fingerWidth - priv->avg_width + 1) / 2;
-    if (finger && !priv->finger_state) {
+
+    if (finger != FS_UNTOUCHED && priv->finger_state == FS_UNTOUCHED) {
 	int safe_width = MAX(hw->fingerWidth, priv->avg_width);
 
 	if (hw->numFingers > 1 ||	/* more than one finger -> not a palm */
@@ -1381,9 +1384,6 @@ SynapticsDetectFinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 	    finger = FS_UNTOUCHED;
     }
     priv->prev_z = hw->z;
-
-    if (priv->palm)
-	finger = FS_UNTOUCHED;
 
     return finger;
 }
@@ -1526,12 +1526,12 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     edge_type edge;
     int delay = 1000000000;
 
-    if (priv->palm)
+    if (priv->finger_state == FS_BLOCKED)
 	return delay;
 
-    touch = finger && !priv->finger_state;
-    release = !finger && priv->finger_state;
-    move = (finger &&
+    touch = finger >= FS_TOUCHED && priv->finger_state == FS_UNTOUCHED;
+    release = finger == FS_UNTOUCHED && priv->finger_state >= FS_TOUCHED;
+    move = (finger >= FS_TOUCHED &&
 	     (priv->tap_max_fingers <= ((priv->horiz_scroll_twofinger_on || priv->vert_scroll_twofinger_on)? 2 : 1)) &&
 	     ((abs(hw->x - priv->touch_on.x) >= para->tap_move) ||
 	     (abs(hw->y - priv->touch_on.y) >= para->tap_move)));
@@ -1896,7 +1896,7 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
 	}
     }
 
-    if (!inside_area || !moving_state || priv->palm ||
+    if (!inside_area || !moving_state || priv->finger_state == FS_BLOCKED ||
 	priv->vert_scroll_edge_on || priv->horiz_scroll_edge_on ||
 	priv->vert_scroll_twofinger_on || priv->horiz_scroll_twofinger_on ||
 	priv->circ_scroll_on || priv->prevFingers != hw->numFingers)
@@ -2019,7 +2019,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
     sd->left = sd->right = sd->up = sd->down = 0;
 
-    if (priv->synpara.touchpad_off == 2) {
+    if ((priv->synpara.touchpad_off == 2) || (priv->finger_state == FS_BLOCKED)) {
 	stop_coasting(priv);
 	priv->circ_scroll_on = FALSE;
 	priv->vert_scroll_edge_on = FALSE;
@@ -2030,7 +2030,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     }
 
     /* scroll detection */
-    if (finger && !priv->finger_state) {
+    if (finger && priv->finger_state == FS_UNTOUCHED) {
 	stop_coasting(priv);
 	if (para->circular_scrolling) {
 	    if ((para->circular_trigger == 0 && edge) ||
@@ -2068,7 +2068,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		}
 	    }
 	}
-	if (finger && !priv->finger_state) {
+	if (finger && priv->finger_state == FS_UNTOUCHED) {
 	    if (!priv->vert_scroll_twofinger_on && !priv->horiz_scroll_twofinger_on) {
 		if ((para->scroll_edge_vert) && (para->scroll_dist_vert != 0) &&
 		    (edge & RIGHT_EDGE)) {
@@ -2501,7 +2501,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters *para = &priv->synpara;
-    int finger;
+    enum FingerState finger;
     int dx, dy, buttons, id;
     edge_type edge = NO_EDGE;
     int change;
@@ -2555,7 +2555,10 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     /* no edge or finger detection outside of area */
     if (inside_active_area) {
 	edge = edge_detection(priv, hw->x, hw->y);
-	finger = SynapticsDetectFinger(priv, hw);
+	if (!from_timer)
+	    finger = SynapticsDetectFinger(priv, hw);
+	else
+	    finger = priv->finger_state;
     }
 
     /* tap and drag detection. Needs to be performed even if the finger is in
@@ -2567,7 +2570,8 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     if (inside_active_area)
     {
 	/* Don't bother about scrolling in the dead area of the touchpad. */
-	timeleft = HandleScrolling(priv, hw, edge, finger, &scroll);
+	timeleft = HandleScrolling(priv, hw, edge, (finger >= FS_TOUCHED),
+				   &scroll);
 	if (timeleft > 0)
 	    delay = MIN(delay, timeleft);
 

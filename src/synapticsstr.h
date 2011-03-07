@@ -52,6 +52,7 @@ typedef struct _SynapticsMoveHist
 } SynapticsMoveHistRec;
 
 enum FingerState {              /* Note! The order matters. Compared with < operator. */
+    FS_BLOCKED = -1,
     FS_UNTOUCHED = 0, /* this is 0 so it's the initialized value. */
     FS_TOUCHED = 1,
     FS_PRESSED = 2,
@@ -227,8 +228,6 @@ typedef struct _SynapticsPrivateRec
     int repeatButtons;			/* buttons for repeat */
     int nextRepeat;			/* Time when to trigger next auto repeat event */
     int lastButtons;			/* last state of the buttons */
-    int palm;				/* Set to true when palm detected, reset to false when
-					   palm/finger contact disappears */
     int prev_z;				/* previous z value, for palm detection */
     int prevFingers;			/* previous numFingers, for transition detection */
     int avg_width;			/* weighted average of previous fingerWidth values */
