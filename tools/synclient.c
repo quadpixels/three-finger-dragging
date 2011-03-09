@@ -143,6 +143,7 @@ static struct Parameter params[] = {
     {"AreaRightEdge",         PT_INT,    0, 10000, SYNAPTICS_PROP_AREA,	32,	1},
     {"AreaTopEdge",           PT_INT,    0, 10000, SYNAPTICS_PROP_AREA,	32,	2},
     {"AreaBottomEdge",        PT_INT,    0, 10000, SYNAPTICS_PROP_AREA,	32,	3},
+    {"Orientation",           PT_INT,    0, 3,     SYNAPTICS_ORIENTATION, 32,   0},
     { NULL, 0, 0, 0, 0 }
 };
 

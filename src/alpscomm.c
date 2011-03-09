@@ -149,11 +149,12 @@ ALPS_get_packet(struct CommData *comm, InputInfoPtr pInfo)
  * reflects left,right,down,up in lef1,rig1,mid1,up1.
  */
 static void
-ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
+ALPS_process_packet(SynapticsPrivate *priv, unsigned char *packet, struct SynapticsHwState *hw)
 {
     int x = 0, y = 0, z = 0;
     int left = 0, right = 0, middle = 0;
     int i;
+    SynapticsParameters *para = &priv->synpara;
 
     x = (packet[1] & 0x7f) | ((packet[2] & 0x78) << (7-3));
     y = (packet[4] & 0x7f) | ((packet[3] & 0x70) << (7-4));
@@ -172,8 +173,27 @@ ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
 	hw->multi[i] = FALSE;
 
     if (z > 0) {
-	hw->x = x;
-	hw->y = y;
+	if (para->orientation==0)
+	    hw->x = x;
+	else if (para->orientation==2)
+	    hw->x = priv->maxx + priv->minx - x;
+	else if (para->orientation==3)
+	    hw->y = (priv->maxx - x) * (priv->maxy - priv->miny) / (priv->maxx - priv->minx) + priv->miny;
+	else if (para->orientation==1)
+	    hw->y = (x - priv->minx) * (priv->maxy - priv->miny) / (priv->maxx - priv->minx) + priv->miny;
+	else
+	    hw->x = x;
+
+	if (para->orientation==0)
+	    hw->y = y;
+	else if (para->orientation==2)
+	    hw->y = priv->maxy + priv->miny - y;
+	else if (para->orientation==3)
+	    hw->x = (y - priv->miny) * (priv->maxx - priv->minx) / (priv->maxy - priv->miny) + priv->minx;
+	else if (para->orientation==1)
+	    hw->x = (priv->maxy - y) * (priv->maxx - priv->minx) / (priv->maxy - priv->miny) + priv->minx;
+	else
+	    hw->y = y;
     }
     hw->z = z;
     hw->numFingers = (z > 0) ? 1 : 0;
@@ -210,11 +230,12 @@ ALPSReadHwState(InputInfoPtr pInfo,
 {
     unsigned char *buf = comm->protoBuf;
     struct SynapticsHwState *hw = &(comm->hwState);
+    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
 
     if (!ALPS_get_packet(comm, pInfo))
 	return FALSE;
 
-    ALPS_process_packet(buf, hw);
+    ALPS_process_packet(priv, buf, hw);
 
     *hwRet = *hw;
     return TRUE;

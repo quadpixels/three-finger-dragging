@@ -524,7 +524,7 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
     SynapticsParameters *para = &priv->synpara;
     struct PS2SynapticsHwInfo *synhw;
     int newabs;
-    int w, i;
+    int w, i, x, y;
 
     synhw = (struct PS2SynapticsHwInfo*)priv->proto_data;
     if (!synhw)
@@ -541,17 +541,17 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
 	return FALSE;
 
     /* Handle normal packets */
-    hw->x = hw->y = hw->z = hw->numFingers = hw->fingerWidth = 0;
+    hw->x = hw->y = hw->z = hw->numFingers = hw->fingerWidth = x = y = 0;
     hw->left = hw->right = hw->up = hw->down = hw->middle = FALSE;
     for (i = 0; i < 8; i++)
 	hw->multi[i] = FALSE;
 
     if (newabs) {			    /* newer protos...*/
 	DBG(7, "using new protocols\n");
-	hw->x = (((buf[3] & 0x10) << 8) |
+	x = (((buf[3] & 0x10) << 8) |
 		 ((buf[1] & 0x0f) << 8) |
 		 buf[4]);
-	hw->y = (((buf[3] & 0x20) << 7) |
+	y = (((buf[3] & 0x20) << 7) |
 		 ((buf[1] & 0xf0) << 4) |
 		 buf[5]);
 
@@ -598,9 +598,9 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
 	}
     } else {			    /* old proto...*/
 	DBG(7, "using old protocol\n");
-	hw->x = (((buf[1] & 0x1F) << 8) |
+	x = (((buf[1] & 0x1F) << 8) |
 		 buf[2]);
-	hw->y = (((buf[4] & 0x1F) << 8) |
+	y = (((buf[4] & 0x1F) << 8) |
 		 buf[5]);
 
 	hw->z = (((buf[0] & 0x30) << 2) |
@@ -612,7 +612,29 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
 	hw->right = (buf[0] & 0x02) ? 1 : 0;
     }
 
-    hw->y = YMAX_NOMINAL + YMIN_NOMINAL - hw->y;
+    y = YMAX_NOMINAL + YMIN_NOMINAL - y;
+
+    if (para->orientation==0)
+	hw->x = x;
+    else if (para->orientation==2)
+	hw->x = priv->maxx + priv->minx - x;
+    else if (para->orientation==3)
+	hw->y = (priv->maxx - x) * (priv->maxy - priv->miny) / (priv->maxx - priv->minx) + priv->miny;
+    else if (para->orientation==1)
+	hw->y = (x - priv->minx) * (priv->maxy - priv->miny) / (priv->maxx - priv->minx) + priv->miny;
+    else
+	hw->x = x;
+
+    if (para->orientation==0)
+	hw->y = y;
+    else if (para->orientation==2)
+	hw->y = priv->maxy + priv->miny - y;
+    else if (para->orientation==3)
+	hw->x = (y - priv->miny) * (priv->maxx - priv->minx) / (priv->maxy - priv->miny) + priv->minx;
+    else if (para->orientation==1)
+	hw->x = (priv->maxy - y) * (priv->maxx - priv->minx) / (priv->maxy - priv->miny) + priv->minx;
+    else
+	hw->y = y;
 
     if (hw->z >= para->finger_high) {
 	int w_ok = 0;

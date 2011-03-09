@@ -400,10 +400,28 @@ EventReadHwState(InputInfoPtr pInfo,
 	case EV_ABS:
 	    switch (ev.code) {
 	    case ABS_X:
-		hw->x = ev.value;
+		if (para->orientation==0)
+		    hw->x = ev.value;
+		else if (para->orientation==2)
+		    hw->x = priv->maxx + priv->minx - ev.value;
+		else if (para->orientation==3)
+		    hw->y = (priv->maxx - ev.value) * (priv->maxy - priv->miny) / (priv->maxx - priv->minx) + priv->miny;
+		else if (para->orientation==1)
+		    hw->y = (ev.value - priv->minx) * (priv->maxy - priv->miny) / (priv->maxx - priv->minx) + priv->miny;
+		else
+		    hw->x = ev.value;
 		break;
 	    case ABS_Y:
-		hw->y = ev.value;
+		if (para->orientation==0)
+		    hw->y = ev.value;
+		else if (para->orientation==2)
+		    hw->y = priv->maxy + priv->miny - ev.value;
+		else if (para->orientation==3)
+		    hw->x = (ev.value - priv->miny) * (priv->maxx - priv->minx) / (priv->maxy - priv->miny) + priv->minx;
+		else if (para->orientation==1)
+		    hw->x = (priv->maxy - ev.value) * (priv->maxx - priv->minx) / (priv->maxy - priv->miny) + priv->minx;
+		else
+		    hw->y = ev.value;
 		break;
 	    case ABS_PRESSURE:
 		hw->z = ev.value;
