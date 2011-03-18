@@ -43,6 +43,7 @@ m4_ifndef([XORG_MACROS_VERSION],
           [m4_fatal([must install xorg-macros 1.13 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.13)
 XORG_DEFAULT_OPTIONS
+XORG_ENABLE_UNIT_TESTS
 
 # Checks for libraries.
 AC_CHECK_LIB([m], [rint])
@@ -149,6 +150,7 @@ AC_CONFIG_FILES([Makefile
                 tools/Makefile
                 conf/Makefile
                 include/Makefile
+                test/Makefile
                 xorg-synaptics.pc])
 AC_OUTPUT
 
