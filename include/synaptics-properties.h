@@ -158,7 +158,4 @@
 /* 32 Bit Integer, 2 values, horizontal hysteresis, vertical hysteresis */
 #define SYNAPTICS_PROP_NOISE_CANCELLATION "Synaptics Noise Cancellation"
 
-/* 32 bit, 4 values, normal, inverted, left, right */
-#define SYNAPTICS_ORIENTATION "Synaptics Orientation"
-
 #endif /* _SYNAPTICS_PROPERTIES_H_ */

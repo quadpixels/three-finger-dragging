@@ -510,12 +510,6 @@ AreaBottomEdge option to any integer value other than zero. If supported by the
 server (version 1.9 and later), the edge may be specified in percent of
 the total height of the touchpad. Property: "Synaptics Area"
 .
-.TP
-.BI "Option \*qOrientation\*q \*q" integer \*q
-Rotate the touchpad similar to xrandr -o.
-.
-The orientation can be 0 (normal), 1(left), 2 (inverted) or 3(right).
-.
 
 .SH CONFIGURATION DETAILS
 .SS Area handling

@@ -83,7 +83,6 @@ Atom prop_capabilities          = 0;
 Atom prop_resolution            = 0;
 Atom prop_area                  = 0;
 Atom prop_noise_cancellation    = 0;
-Atom prop_orientation           = 0;
 
 static Atom
 InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
@@ -285,8 +284,6 @@ InitDeviceProperties(InputInfoPtr pInfo)
     values[1] = para->hyst_y;
     prop_noise_cancellation = InitAtom(pInfo->dev,
             SYNAPTICS_PROP_NOISE_CANCELLATION, 32, 2, values);
-
-    prop_orientation = InitAtom(pInfo->dev, SYNAPTICS_ORIENTATION, 32, 1, &para->orientation);
 
 }
 
@@ -669,11 +666,6 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
             return BadValue;
         para->hyst_x = hyst[0];
         para->hyst_y = hyst[1];
-    } else if (property == prop_orientation)
-    {
-        if (prop->size != 1 || prop->format != 32 || prop->type != XA_INTEGER)
-            return BadMatch;
-        para->orientation = *(INT32*)prop->data;
     }
 
     return Success;
