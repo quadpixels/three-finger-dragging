@@ -337,7 +337,7 @@ static int count_fingers(const struct CommData *comm)
 }
 
 
-static Bool
+Bool
 EventReadHwState(InputInfoPtr pInfo,
 		 struct CommData *comm, struct SynapticsHwState *hwRet)
 {
