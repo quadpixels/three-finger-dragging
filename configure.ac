@@ -38,10 +38,10 @@ AM_MAINTAINER_MODE
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
-# Initialize X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+# Initialize X.Org macros 1.13 or later for XORG_ENABLE_UNIT_TESTS
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.8)
+          [m4_fatal([must install xorg-macros 1.13 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.13)
 XORG_DEFAULT_OPTIONS
 
 # Checks for libraries.
