@@ -340,6 +340,7 @@ EventReadHwState(InputInfoPtr pInfo,
 		*hwRet = *hw;
 		return TRUE;
 	    }
+	    break;
 	case EV_KEY:
 	    v = (ev.value ? TRUE : FALSE);
 	    switch (ev.code) {
