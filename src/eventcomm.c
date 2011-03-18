@@ -314,6 +314,29 @@ SynapticsReadEvent(InputInfoPtr pInfo, struct input_event *ev)
     return rc;
 }
 
+/**
+ * Count the number of fingers based on the CommData information.
+ * The CommData struct contains the event information based on previous
+ * struct input_events, now we're just counting based on that.
+ *
+ * @param comm Assembled information from previous events.
+ * @return The number of fingers currently set.
+ */
+static int count_fingers(const struct CommData *comm)
+{
+    int fingers = 0;
+
+    if (comm->oneFinger)
+	fingers = 1;
+    else if (comm->twoFingers)
+	fingers = 2;
+    else if (comm->threeFingers)
+	fingers = 3;
+
+    return fingers;
+}
+
+
 static Bool
 EventReadHwState(InputInfoPtr pInfo,
 		 struct CommData *comm, struct SynapticsHwState *hwRet)
@@ -329,14 +352,7 @@ EventReadHwState(InputInfoPtr pInfo,
 	case EV_SYN:
 	    switch (ev.code) {
 	    case SYN_REPORT:
-		if (comm->oneFinger)
-		    hw->numFingers = 1;
-		else if (comm->twoFingers)
-		    hw->numFingers = 2;
-		else if (comm->threeFingers)
-		    hw->numFingers = 3;
-		else
-		    hw->numFingers = 0;
+		hw->numFingers = count_fingers(comm);
 		*hwRet = *hw;
 		return TRUE;
 	    }
