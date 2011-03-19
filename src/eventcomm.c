@@ -76,6 +76,20 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters *para)
     *need_grab = FALSE;
 }
 
+/**
+ * Test if the device on the file descriptior is recognized as touchpad
+ * device. Required bits for touchpad recognition are:
+ * - ABS_X + ABS_Y for absolute axes
+ * - ABS_PRESSURE or BTN_TOUCH
+ * - BTN_TOOL_FINGER
+ * - BTN_TOOL_PEN is _not_ set
+ *
+ * @param fd The file descriptor to an event device.
+ * @param test_grab If true, test whether an EVIOCGRAB is possible on the
+ * device. A failure to grab the event device returns in a failure.
+ *
+ * @return TRUE if the device is a touchpad or FALSE otherwise.
+ */
 static Bool
 event_query_is_touchpad(int fd, BOOL test_grab)
 {
