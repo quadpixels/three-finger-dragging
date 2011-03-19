@@ -158,23 +158,34 @@ static model_lookup_t model_lookup_table[] = {
 	{0x0, 0x0, 0x0}
 };
 
-static void
-event_query_info(InputInfoPtr pInfo)
+/**
+ * Check for the vendor/product id on the file descriptor and compare
+ * with the built-in model LUT. This information is used in synaptics.c to
+ * initialize model-specific dimensions.
+ *
+ * @param fd The file descriptor to a event device.
+ * @param[out] model_out The type of touchpad model detected.
+ *
+ * @return TRUE on success or FALSE otherwise.
+ */
+static Bool
+event_query_model(int fd, enum TouchpadModel *model_out)
 {
-    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     short id[4];
     int rc;
     model_lookup_t *model_lookup;
 
-    SYSCALL(rc = ioctl(pInfo->fd, EVIOCGID, id));
+    SYSCALL(rc = ioctl(fd, EVIOCGID, id));
     if (rc < 0)
-        return;
+        return FALSE;
 
     for(model_lookup = model_lookup_table; model_lookup->vendor; model_lookup++) {
         if(model_lookup->vendor == id[ID_VENDOR] &&
            (model_lookup->product == id[ID_PRODUCT] || model_lookup->product == PRODUCT_ANY))
-            priv->model = model_lookup->model;
+            *model_out = model_lookup->model;
     }
+
+    return TRUE;
 }
 
 /* Query device for axis ranges */
@@ -462,7 +473,7 @@ EventReadDevDimensions(InputInfoPtr pInfo)
 
     if (event_query_is_touchpad(pInfo->fd, (need_grab) ? *need_grab : TRUE))
 	event_query_axis_ranges(pInfo);
-    event_query_info(pInfo);
+    event_query_model(pInfo->fd, &priv->model);
 }
 
 static Bool
