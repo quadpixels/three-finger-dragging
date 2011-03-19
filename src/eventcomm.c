@@ -47,9 +47,6 @@
 
 #define LONG_BITS (sizeof(long) * 8)
 #define NBITS(x) (((x) + LONG_BITS - 1) / LONG_BITS)
-#define OFF(x)   ((x) % LONG_BITS)
-#define LONG(x)  ((x) / LONG_BITS)
-#define TEST_BIT(bit, array) ((array[LONG(bit)] >> OFF(bit)) & 1)
 
 /*****************************************************************************
  *	Function Definitions
@@ -99,16 +96,16 @@ event_query_is_touchpad(int fd, BOOL grab)
     SYSCALL(rc = ioctl(fd, EVIOCGBIT(0, sizeof(evbits)), evbits));
     if (rc < 0)
 	goto unwind;
-    if (!TEST_BIT(EV_SYN, evbits) ||
-	!TEST_BIT(EV_ABS, evbits) ||
-	!TEST_BIT(EV_KEY, evbits))
+    if (!BitIsOn(evbits, EV_SYN) ||
+	!BitIsOn(evbits, EV_ABS) ||
+	!BitIsOn(evbits, EV_KEY))
 	goto unwind;
 
     SYSCALL(rc = ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absbits)), absbits));
     if (rc < 0)
 	goto unwind;
-    if (!TEST_BIT(ABS_X, absbits) ||
-	!TEST_BIT(ABS_Y, absbits))
+    if (!BitIsOn(absbits, ABS_X) ||
+	!BitIsOn(absbits, ABS_Y))
 	goto unwind;
 
     SYSCALL(rc = ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits));
@@ -116,12 +113,12 @@ event_query_is_touchpad(int fd, BOOL grab)
 	goto unwind;
 
     /* we expect touchpad either report raw pressure or touches */
-    if (!TEST_BIT(ABS_PRESSURE, absbits) && !TEST_BIT(BTN_TOUCH, keybits))
+    if (!BitIsOn(absbits, ABS_PRESSURE) && !BitIsOn(keybits, BTN_TOUCH))
 	goto unwind;
     /* all Synaptics-like touchpad report BTN_TOOL_FINGER */
-    if (!TEST_BIT(BTN_TOOL_FINGER, keybits))
+    if (!BitIsOn(keybits, BTN_TOOL_FINGER))
 	goto unwind;
-    if (TEST_BIT(BTN_TOOL_PEN, keybits))
+    if (BitIsOn(keybits, BTN_TOOL_PEN))
 	goto unwind;			    /* Don't match wacom tablets */
 
     ret = TRUE;
@@ -218,8 +215,8 @@ event_query_axis_ranges(InputInfoPtr pInfo)
     SYSCALL(rc = ioctl(pInfo->fd, EVIOCGBIT(EV_ABS, sizeof(absbits)), absbits));
     if (rc >= 0)
     {
-	priv->has_pressure = (TEST_BIT(ABS_PRESSURE, absbits) != 0);
-	priv->has_width = (TEST_BIT(ABS_TOOL_WIDTH, absbits) != 0);
+	priv->has_pressure = (BitIsOn(absbits, ABS_PRESSURE) != 0);
+	priv->has_width = (BitIsOn(absbits, ABS_TOOL_WIDTH) != 0);
     }
     else
 	xf86Msg(X_ERROR, "%s: failed to query ABS bits (%s)\n", pInfo->name,
@@ -256,21 +253,21 @@ event_query_axis_ranges(InputInfoPtr pInfo)
     if (rc >= 0)
     {
 	buf[0] = 0;
-	if ((priv->has_left = (TEST_BIT(BTN_LEFT, keybits) != 0)))
+	if ((priv->has_left = (BitIsOn(keybits, BTN_LEFT) != 0)))
 	   strcat(buf, " left");
-	if ((priv->has_right = (TEST_BIT(BTN_RIGHT, keybits) != 0)))
+	if ((priv->has_right = (BitIsOn(keybits, BTN_RIGHT) != 0)))
 	   strcat(buf, " right");
-	if ((priv->has_middle = (TEST_BIT(BTN_MIDDLE, keybits) != 0)))
+	if ((priv->has_middle = (BitIsOn(keybits, BTN_MIDDLE) != 0)))
 	   strcat(buf, " middle");
-	if ((priv->has_double = (TEST_BIT(BTN_TOOL_DOUBLETAP, keybits) != 0)))
+	if ((priv->has_double = (BitIsOn(keybits, BTN_TOOL_DOUBLETAP) != 0)))
 	   strcat(buf, " double");
-	if ((priv->has_triple = (TEST_BIT(BTN_TOOL_TRIPLETAP, keybits) != 0)))
+	if ((priv->has_triple = (BitIsOn(keybits, BTN_TOOL_TRIPLETAP) != 0)))
 	   strcat(buf, " triple");
 
-	if ((TEST_BIT(BTN_0, keybits) != 0) ||
-	    (TEST_BIT(BTN_1, keybits) != 0) ||
-	    (TEST_BIT(BTN_2, keybits) != 0) ||
-	    (TEST_BIT(BTN_3, keybits) != 0))
+	if ((BitIsOn(keybits, BTN_0) != 0) ||
+	    (BitIsOn(keybits, BTN_1) != 0) ||
+	    (BitIsOn(keybits, BTN_2) != 0) ||
+	    (BitIsOn(keybits, BTN_3) != 0))
 	{
 	    priv->has_scrollbuttons = 1;
 	    strcat(buf, " scroll-buttons");
