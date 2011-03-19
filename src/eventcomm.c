@@ -77,14 +77,14 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters *para)
 }
 
 static Bool
-event_query_is_touchpad(int fd, BOOL grab)
+event_query_is_touchpad(int fd, BOOL test_grab)
 {
     int ret = FALSE, rc;
     unsigned long evbits[NBITS(EV_MAX)] = {0};
     unsigned long absbits[NBITS(ABS_MAX)] = {0};
     unsigned long keybits[NBITS(KEY_MAX)] = {0};
 
-    if (grab)
+    if (test_grab)
     {
         SYSCALL(rc = ioctl(fd, EVIOCGRAB, (pointer)1));
         if (rc < 0)
@@ -124,7 +124,7 @@ event_query_is_touchpad(int fd, BOOL grab)
     ret = TRUE;
 
 unwind:
-    if (grab)
+    if (test_grab)
         SYSCALL(ioctl(fd, EVIOCGRAB, (pointer)0));
 
     return (ret == TRUE);
