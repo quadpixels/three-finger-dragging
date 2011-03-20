@@ -188,6 +188,44 @@ event_query_model(int fd, enum TouchpadModel *model_out)
     return TRUE;
 }
 
+/**
+ * Get absinfo information from the given file descriptor for the given
+ * ABS_FOO code and store the information in min, max, fuzz and res.
+ *
+ * @param fd File descriptor to an event device
+ * @param code Event code (e.g. ABS_X)
+ * @param[out] min Minimum axis range
+ * @param[out] max Maximum axis range
+ * @param[out] fuzz Fuzz of this axis. If NULL, fuzz is ignored.
+ * @param[out] res Axis resolution. If NULL or the current kernel does not
+ * support the resolution field, res is ignored
+ *
+ * @return Zero on success, or errno otherwise.
+ */
+static int
+event_get_abs(int fd, int code, int *min, int *max, int *fuzz, int *res)
+{
+    int rc;
+    struct input_absinfo abs =  {0};
+
+    SYSCALL(rc = ioctl(fd, EVIOCGABS(code), &abs));
+    if (rc < 0)
+	return errno;
+
+    *min = abs.minimum;
+    *max = abs.maximum;
+    /* We dont trust a zero fuzz as it probably is just a lazy value */
+    if (fuzz && abs.fuzz > 0)
+	*fuzz = abs.fuzz;
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)
+    if (res)
+	*res = abs.resolution;
+#endif
+
+    return 0;
+}
+
+
 /* Query device for axis ranges */
 static void
 event_query_axis_ranges(InputInfoPtr pInfo)
@@ -199,41 +237,25 @@ event_query_axis_ranges(InputInfoPtr pInfo)
     char buf[256];
     int rc;
 
-    SYSCALL(rc = ioctl(pInfo->fd, EVIOCGABS(ABS_X), &abs));
-    if (rc >= 0)
-    {
+    /* The kernel's fuzziness concept seems a bit weird, but it can more or
+     * less be applied as hysteresis directly, i.e. no factor here. */
+    rc = event_get_abs(pInfo->fd, ABS_X, &priv->minx, &priv->maxx,
+			&priv->synpara.hyst_x, &priv->resx);
+    if (rc == 0)
 	xf86Msg(X_PROBED, "%s: x-axis range %d - %d\n", pInfo->name,
-		abs.minimum, abs.maximum);
-	priv->minx = abs.minimum;
-	priv->maxx = abs.maximum;
-	/* The kernel's fuzziness concept seems a bit weird, but it can more or
-	 * less be applied as hysteresis directly, i.e. no factor here. Though,
-	 * we don't trust a zero fuzz as it probably is just a lazy value. */
-	if (abs.fuzz > 0)
-	    priv->synpara.hyst_x = abs.fuzz;
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)
-	priv->resx = abs.resolution;
-#endif
-    } else
+		priv->minx, priv->maxx);
+    else
 	xf86Msg(X_ERROR, "%s: failed to query axis range (%s)\n", pInfo->name,
-		strerror(errno));
+		strerror(rc));
 
-    SYSCALL(rc = ioctl(pInfo->fd, EVIOCGABS(ABS_Y), &abs));
-    if (rc >= 0)
-    {
+    rc = event_get_abs(pInfo->fd, ABS_Y, &priv->miny, &priv->maxy,
+			&priv->synpara.hyst_y, &priv->resy);
+    if (rc == 0)
 	xf86Msg(X_PROBED, "%s: y-axis range %d - %d\n", pInfo->name,
-		abs.minimum, abs.maximum);
-	priv->miny = abs.minimum;
-	priv->maxy = abs.maximum;
-	/* don't trust a zero fuzz */
-	if (abs.fuzz > 0)
-	    priv->synpara.hyst_y = abs.fuzz;
-#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)
-	priv->resy = abs.resolution;
-#endif
-    } else
+		priv->miny, priv->maxy);
+    else
 	xf86Msg(X_ERROR, "%s: failed to query axis range (%s)\n", pInfo->name,
-		strerror(errno));
+		strerror(rc));
 
     priv->has_pressure = FALSE;
     priv->has_width = FALSE;
@@ -249,14 +271,12 @@ event_query_axis_ranges(InputInfoPtr pInfo)
 
     if (priv->has_pressure)
     {
-	SYSCALL(rc = ioctl(pInfo->fd, EVIOCGABS(ABS_PRESSURE), &abs));
-	if (rc >= 0)
-	{
+	rc = event_get_abs(pInfo->fd, ABS_PRESSURE,
+			   &priv->minp, &priv->maxp,
+			   NULL, NULL);
+	if (rc == 0)
 	    xf86Msg(X_PROBED, "%s: pressure range %d - %d\n", pInfo->name,
-		    abs.minimum, abs.maximum);
-	    priv->minp = abs.minimum;
-	    priv->maxp = abs.maximum;
-	}
+		    priv->minp, priv->maxp);
     } else
 	xf86Msg(X_INFO,
 		"%s: device does not report pressure, will use touch data.\n",
@@ -264,14 +284,12 @@ event_query_axis_ranges(InputInfoPtr pInfo)
 
     if (priv->has_width)
     {
-	SYSCALL(rc = ioctl(pInfo->fd, EVIOCGABS(ABS_TOOL_WIDTH), &abs));
-	if (rc >= 0)
-	{
+	rc = event_get_abs(pInfo->fd, ABS_TOOL_WIDTH,
+			   &priv->minw, &priv->maxw,
+			   NULL, NULL);
+	if (rc == 0)
 	    xf86Msg(X_PROBED, "%s: finger width range %d - %d\n", pInfo->name,
 		    abs.minimum, abs.maximum);
-	    priv->minw = abs.minimum;
-	    priv->maxw = abs.maximum;
-	}
     }
 
     SYSCALL(rc = ioctl(pInfo->fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits));
