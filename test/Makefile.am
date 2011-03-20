@@ -6,6 +6,7 @@ if BUILD_EVENTCOMM
 noinst_PROGRAMS = eventcomm-test
 
 eventcomm_test_SOURCES = eventcomm-test.c\
+			 $(top_srcdir)/src/eventcomm.c \
 			 $(fake_syms)
 endif
 
