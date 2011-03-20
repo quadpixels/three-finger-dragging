@@ -209,8 +209,11 @@ event_get_abs(int fd, int code, int *min, int *max, int *fuzz, int *res)
     struct input_absinfo abs =  {0};
 
     SYSCALL(rc = ioctl(fd, EVIOCGABS(code), &abs));
-    if (rc < 0)
+    if (rc < 0) {
+	xf86Msg(X_ERROR, "%s: EVIOCGABS error on %d (%s)\n",
+		__func__, code, strerror(rc));
 	return errno;
+    }
 
     *min = abs.minimum;
     *max = abs.maximum;
@@ -244,18 +247,12 @@ event_query_axis_ranges(InputInfoPtr pInfo)
     if (rc == 0)
 	xf86Msg(X_PROBED, "%s: x-axis range %d - %d\n", pInfo->name,
 		priv->minx, priv->maxx);
-    else
-	xf86Msg(X_ERROR, "%s: failed to query axis range (%s)\n", pInfo->name,
-		strerror(rc));
 
     rc = event_get_abs(pInfo->fd, ABS_Y, &priv->miny, &priv->maxy,
 			&priv->synpara.hyst_y, &priv->resy);
     if (rc == 0)
 	xf86Msg(X_PROBED, "%s: y-axis range %d - %d\n", pInfo->name,
 		priv->miny, priv->maxy);
-    else
-	xf86Msg(X_ERROR, "%s: failed to query axis range (%s)\n", pInfo->name,
-		strerror(rc));
 
     priv->has_pressure = FALSE;
     priv->has_width = FALSE;
