@@ -48,20 +48,29 @@
 #define LONG_BITS (sizeof(long) * 8)
 #define NBITS(x) (((x) + LONG_BITS - 1) / LONG_BITS)
 
-/*****************************************************************************
- *	Function Definitions
- ****************************************************************************/
+/**
+ * Protocol-specific data.
+ */
+struct eventcomm_proto_data
+{
+    /**
+     * Do we need to grab the event device?
+     * Note that in the current flow, this variable is always false and
+     * exists for readability of the code.
+     */
+    BOOL need_grab;
+};
 
 static void
 EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters *para)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
-    BOOL *need_grab;
+    struct eventcomm_proto_data *proto_data = (struct eventcomm_proto_data*)priv->proto_data;
 
-    if (!priv->proto_data)
-        priv->proto_data = calloc(1, sizeof(BOOL));
-
-    need_grab = (BOOL*)priv->proto_data;
+    if (!proto_data) {
+	proto_data = calloc(1, sizeof(struct eventcomm_proto_data));
+	priv->proto_data = proto_data;
+    }
 
     if (para->grab_event_device) {
 	/* Try to grab the event device so that data don't leak to /dev/input/mice */
@@ -73,7 +82,7 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters *para)
 	}
     }
 
-    *need_grab = FALSE;
+    proto_data->need_grab = FALSE;
 }
 
 /**
@@ -324,9 +333,9 @@ static Bool
 EventQueryHardware(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
-    BOOL *need_grab = (BOOL*)priv->proto_data;
+    struct eventcomm_proto_data *proto_data = priv->proto_data;
 
-    if (!event_query_is_touchpad(pInfo->fd, (need_grab) ? *need_grab : TRUE))
+    if (!event_query_is_touchpad(pInfo->fd, (proto_data) ? proto_data->need_grab : TRUE))
 	return FALSE;
 
     xf86Msg(X_PROBED, "%s: touchpad found\n", pInfo->name);
@@ -487,9 +496,9 @@ static void
 EventReadDevDimensions(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
-    BOOL *need_grab = (BOOL*)priv->proto_data;
+    struct eventcomm_proto_data *proto_data = priv->proto_data;
 
-    if (event_query_is_touchpad(pInfo->fd, (need_grab) ? *need_grab : TRUE))
+    if (event_query_is_touchpad(pInfo->fd, (proto_data) ? proto_data->need_grab : TRUE))
 	event_query_axis_ranges(pInfo);
     event_query_model(pInfo->fd, &priv->model);
 }
