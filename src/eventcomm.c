@@ -237,22 +237,16 @@ event_query_axis_ranges(InputInfoPtr pInfo)
     struct input_absinfo abs = {0};
     unsigned long absbits[NBITS(ABS_MAX)] = {0};
     unsigned long keybits[NBITS(KEY_MAX)] = {0};
-    char buf[256];
+    char buf[256] = {0};
     int rc;
 
     /* The kernel's fuzziness concept seems a bit weird, but it can more or
      * less be applied as hysteresis directly, i.e. no factor here. */
-    rc = event_get_abs(pInfo->fd, ABS_X, &priv->minx, &priv->maxx,
-			&priv->synpara.hyst_x, &priv->resx);
-    if (rc == 0)
-	xf86Msg(X_PROBED, "%s: x-axis range %d - %d\n", pInfo->name,
-		priv->minx, priv->maxx);
+    event_get_abs(pInfo->fd, ABS_X, &priv->minx, &priv->maxx,
+		  &priv->synpara.hyst_x, &priv->resx);
 
-    rc = event_get_abs(pInfo->fd, ABS_Y, &priv->miny, &priv->maxy,
-			&priv->synpara.hyst_y, &priv->resy);
-    if (rc == 0)
-	xf86Msg(X_PROBED, "%s: y-axis range %d - %d\n", pInfo->name,
-		priv->miny, priv->maxy);
+    event_get_abs(pInfo->fd, ABS_Y, &priv->miny, &priv->maxy,
+		  &priv->synpara.hyst_y, &priv->resy);
 
     priv->has_pressure = FALSE;
     priv->has_width = FALSE;
@@ -267,54 +261,63 @@ event_query_axis_ranges(InputInfoPtr pInfo)
 		strerror(errno));
 
     if (priv->has_pressure)
-    {
-	rc = event_get_abs(pInfo->fd, ABS_PRESSURE,
-			   &priv->minp, &priv->maxp,
-			   NULL, NULL);
-	if (rc == 0)
-	    xf86Msg(X_PROBED, "%s: pressure range %d - %d\n", pInfo->name,
-		    priv->minp, priv->maxp);
-    } else
-	xf86Msg(X_INFO,
-		"%s: device does not report pressure, will use touch data.\n",
-		pInfo->name);
+	event_get_abs(pInfo->fd, ABS_PRESSURE, &priv->minp, &priv->maxp,
+		      NULL, NULL);
 
     if (priv->has_width)
-    {
-	rc = event_get_abs(pInfo->fd, ABS_TOOL_WIDTH,
-			   &priv->minw, &priv->maxw,
-			   NULL, NULL);
-	if (rc == 0)
-	    xf86Msg(X_PROBED, "%s: finger width range %d - %d\n", pInfo->name,
-		    abs.minimum, abs.maximum);
-    }
+	event_get_abs(pInfo->fd, ABS_TOOL_WIDTH,
+		      &priv->minw, &priv->maxw,
+		      NULL, NULL);
 
     SYSCALL(rc = ioctl(pInfo->fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits));
     if (rc >= 0)
     {
-	buf[0] = 0;
-	if ((priv->has_left = (BitIsOn(keybits, BTN_LEFT) != 0)))
-	   strcat(buf, " left");
-	if ((priv->has_right = (BitIsOn(keybits, BTN_RIGHT) != 0)))
-	   strcat(buf, " right");
-	if ((priv->has_middle = (BitIsOn(keybits, BTN_MIDDLE) != 0)))
-	   strcat(buf, " middle");
-	if ((priv->has_double = (BitIsOn(keybits, BTN_TOOL_DOUBLETAP) != 0)))
-	   strcat(buf, " double");
-	if ((priv->has_triple = (BitIsOn(keybits, BTN_TOOL_TRIPLETAP) != 0)))
-	   strcat(buf, " triple");
+	priv->has_left = (BitIsOn(keybits, BTN_LEFT) != 0);
+	priv->has_right = (BitIsOn(keybits, BTN_RIGHT) != 0);
+	priv->has_middle = (BitIsOn(keybits, BTN_MIDDLE) != 0);
+	priv->has_double = (BitIsOn(keybits, BTN_TOOL_DOUBLETAP) != 0);
+	priv->has_triple = (BitIsOn(keybits, BTN_TOOL_TRIPLETAP) != 0);
 
 	if ((BitIsOn(keybits, BTN_0) != 0) ||
 	    (BitIsOn(keybits, BTN_1) != 0) ||
 	    (BitIsOn(keybits, BTN_2) != 0) ||
 	    (BitIsOn(keybits, BTN_3) != 0))
-	{
 	    priv->has_scrollbuttons = 1;
-	    strcat(buf, " scroll-buttons");
-	}
-
-	xf86Msg(X_PROBED, "%s: buttons:%s\n", pInfo->name, buf);
     }
+
+    /* Now print the device information */
+    xf86Msg(X_PROBED, "%s: x-axis range %d - %d\n", pInfo->name,
+	    priv->minx, priv->maxx);
+    xf86Msg(X_PROBED, "%s: y-axis range %d - %d\n", pInfo->name,
+	    priv->miny, priv->maxy);
+    if (priv->has_pressure)
+	xf86Msg(X_PROBED, "%s: pressure range %d - %d\n", pInfo->name,
+		priv->minp, priv->maxp);
+    else
+	xf86Msg(X_INFO,
+		"%s: device does not report pressure, will use touch data.\n",
+		pInfo->name);
+    if (priv->has_width)
+	xf86Msg(X_PROBED, "%s: finger width range %d - %d\n", pInfo->name,
+		abs.minimum, abs.maximum);
+    else
+	xf86Msg(X_INFO,
+		"%s: device does not report finger width.\n", pInfo->name);
+
+    if (priv->has_left)
+	strcat(buf, " left");
+    if (priv->has_right)
+	strcat(buf, " right");
+    if (priv->has_middle)
+	strcat(buf, " middle");
+    if (priv->has_double)
+	strcat(buf, " double");
+    if (priv->has_triple)
+	strcat(buf, " triple");
+    if (priv->has_scrollbuttons)
+	strcat(buf, " scroll-buttons");
+
+    xf86Msg(X_PROBED, "%s: buttons:%s\n", pInfo->name, buf);
 }
 
 static Bool
