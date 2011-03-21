@@ -545,12 +545,14 @@ EventAutoDevProbe(InputInfoPtr pInfo)
 		}
 		free(namelist[i]);
     }
-	free(namelist);
 
-	if (!touchpad_found) {
-		xf86Msg(X_ERROR, "%s no synaptics event device found\n", pInfo->name);
-		return FALSE;
-	}
+    free(namelist);
+
+    if (!touchpad_found) {
+	xf86Msg(X_ERROR, "%s no synaptics event device found\n", pInfo->name);
+	return FALSE;
+    }
+
     return TRUE;
 }
 
