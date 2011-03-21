@@ -266,7 +266,7 @@ InitDeviceProperties(InputInfoPtr pInfo)
 
     values[0] = para->press_motion_min_z;
     values[1] = para->press_motion_max_z;
-    prop_pressuremotion = InitAtom(pInfo->dev, SYNAPTICS_PROP_PRESSURE_MOTION, 32, 2, values);
+    prop_pressuremotion = InitTypedAtom(pInfo->dev, SYNAPTICS_PROP_PRESSURE_MOTION, XA_CARDINAL, 32, 2, values);
 
     fvalues[0] = para->press_motion_min_factor;
     fvalues[1] = para->press_motion_max_factor;
@@ -652,11 +652,11 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->coasting_friction = coast_speeds[1];
     } else if (property == prop_pressuremotion)
     {
-        float *press;
-        if (prop->size != 2 || prop->format != 32 || prop->type != float_type)
+        CARD32 *press;
+        if (prop->size != 2 || prop->format != 32 || prop->type != XA_CARDINAL)
             return BadMatch;
 
-        press = (float*)prop->data;
+        press = (CARD32*)prop->data;
         if (press[0] > press[1])
             return BadValue;
 
