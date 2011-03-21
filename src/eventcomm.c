@@ -504,13 +504,29 @@ EventReadDevDimensions(InputInfoPtr pInfo)
 }
 
 static Bool
-EventAutoDevProbe(InputInfoPtr pInfo)
+EventAutoDevProbe(InputInfoPtr pInfo, const char *device)
 {
     /* We are trying to find the right eventX device or fall back to
        the psaux protocol and the given device from XF86Config */
     int i;
     Bool touchpad_found = FALSE;
     struct dirent **namelist;
+
+    if (device) {
+	int fd = -1;
+	SYSCALL(fd = open(device, O_RDONLY));
+	if (fd >= 0)
+	{
+	    touchpad_found = event_query_is_touchpad(fd, TRUE);
+
+	    SYSCALL(close(fd));
+            /* if a device is set and not a touchpad (or already grabbed),
+             * we must return FALSE.  Otherwise, we'll add a device that
+             * wasn't requested for and repeat
+             * f5687a6741a19ef3081e7fd83ac55f6df8bcd5c2. */
+	    return touchpad_found;
+	}
+    }
 
     i = scandir(DEV_INPUT_EVENT, &namelist, EventDevOnly, alphasort);
     if (i < 0) {

@@ -261,7 +261,7 @@ SetDeviceAndProtocol(InputInfoPtr pInfo)
     for (i = 0; protocols[i].name; i++) {
         if ((!device || !proto) &&
             protocols[i].proto_ops->AutoDevProbe &&
-            protocols[i].proto_ops->AutoDevProbe(pInfo))
+            protocols[i].proto_ops->AutoDevProbe(pInfo, device))
             break;
         else if (proto && !strcmp(proto, protocols[i].name))
             break;
