@@ -35,6 +35,8 @@
 #include "synapticsstr.h"
 #include "eventcomm.h"
 
+#define ArrayLength(a) (sizeof(a) / (sizeof((a)[0])))
+
 int fd_read, fd_write;
 
 /* A syn event, always handy to have */
@@ -181,10 +183,103 @@ test_read_hw_state(void)
     test_buttons(fd_write, &info, &hw, &comm);
 }
 
+/**
+ * Make sure that axes/keys unknown to the driver don't change the hardware
+ * state.
+ */
+static void
+test_ignore_hw_state(void)
+{
+    int i;
+    InputInfoRec                info    = {0};
+    SynapticsPrivate            private;
+    struct SynapticsHwState     hw      = {0};
+    struct SynapticsHwState     hw_zero = {0};
+    struct CommData             comm    = {0};
+
+    int known_abs[] = {
+        ABS_X,
+        ABS_Y,
+        ABS_PRESSURE,
+        ABS_TOOL_WIDTH,
+    };
+
+    int known_keys[] = {
+        BTN_LEFT,
+        BTN_RIGHT,
+        BTN_MIDDLE,
+        BTN_FORWARD,
+        BTN_BACK,
+        BTN_0,
+        BTN_1,
+        BTN_2,
+        BTN_3,
+        BTN_4,
+        BTN_5,
+        BTN_6,
+        BTN_7,
+        BTN_TOOL_FINGER,
+        BTN_TOOL_DOUBLETAP,
+        BTN_TOOL_TRIPLETAP,
+        BTN_TOUCH
+    };
+
+    struct input_event ev = {{0, 0}, 0, 0, 1};
+
+    memset(&private, 0, sizeof(private));
+    info.private = &private;
+    info.fd = fd_read;
+
+#define _assert_no_change(_type, _code) \
+        reset_data(&hw, &comm);                         \
+        ev.type = _type;                                \
+        ev.code = _code;                                \
+        ev.value = 1;                                   \
+        write_event(fd_write, &ev, 1);                  \
+        EventReadHwState(&info, &comm, &hw);            \
+        assert(memcmp(&hw, &hw_zero, sizeof(hw)) == 0);
+
+
+    for (i = ABS_X; i < ABS_MAX; i++)
+    {
+        int j, skip = 0;
+
+        for (j = 0; j < ArrayLength(known_abs); j++) {
+            if (i == known_abs[j]) {
+                skip = 1;
+                break;
+            }
+        }
+
+        if (skip)
+            continue;
+
+        _assert_no_change(EV_ABS, i);
+    }
+
+    for (i = KEY_RESERVED; i < KEY_MAX; i++)
+    {
+        int j, skip = 0;
+        for (j = 0; j < ArrayLength(known_keys); j++) {
+            if (i == known_keys[j]) {
+                skip = 1;
+                break;
+            }
+        }
+
+        if (skip)
+            continue;
+
+        _assert_no_change(EV_KEY, i);
+    }
+
+}
+
 int main (int argc, char **argv)
 {
     create_pipe_fd();
 
     test_read_hw_state();
+    test_ignore_hw_state();
     return 0;
 }
