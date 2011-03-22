@@ -1,3 +1,4 @@
+if ENABLE_UNIT_TESTS
 AM_CPPFLAGS = -I$(top_srcdir)/src
 AM_CFLAGS = $(XORG_CFLAGS) $(CWARNFLAGS)
 fake_syms = fake-symbols.c fake-symbols.h
@@ -10,6 +11,5 @@ eventcomm_test_SOURCES = eventcomm-test.c\
 			 $(fake_syms)
 endif
 
-if ENABLE_UNIT_TESTS
 TESTS = $(noinst_PROGRAMS)
 endif
