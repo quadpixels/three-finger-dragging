@@ -1778,7 +1778,7 @@ get_edge_speed(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
  * history and return relative co-ordinates.
  */
 static void regress(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
-                    double *dx, double *dy)
+                    double *dx, double *dy, CARD32 start_time)
 {
     int i;
     int packet_count = MIN(priv->count_packet_finger, 3);
@@ -1827,13 +1827,13 @@ static void regress(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
      * Here we use the slope component (b1) of the regression line as a speed
      * estimate, and calculate how far the contact would have moved between
      * the current time (hw->millis) and the last time we output a delta
-     * (from the history).
+     * (start_time).
      *
      * The negative is because the slope is going the exact wrong direction
      * (see above).
      */
-    *dx = -xb1 * (HIST(0).millis - hw->millis);
-    *dy = -yb1 * (HIST(0).millis - hw->millis);
+    *dx = -xb1 * (start_time - hw->millis);
+    *dy = -yb1 * (start_time - hw->millis);
     return;
 }
 
@@ -1849,7 +1849,8 @@ get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     int y_edge_speed = 0;
 
     /* regress() performs the actual motion prediction. */
-    regress(priv, hw, dx, dy);
+    regress(priv, hw, dx, dy, priv->last_motion_millis);
+    priv->last_motion_millis = hw->millis;
 
     if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always)
         get_edge_speed(priv, hw, edge, &x_edge_speed, &y_edge_speed);
@@ -2654,7 +2655,6 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     /* generate a history of the absolute positions */
     if (inside_active_area && !from_timer)
 	store_history(priv, hw->x, hw->y, hw->millis);
-
     return delay;
 }
 
