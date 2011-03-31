@@ -404,6 +404,7 @@ EventReadHwState(InputInfoPtr pInfo,
 	    switch (ev.code) {
 	    case SYN_REPORT:
 		hw->numFingers = count_fingers(comm);
+		hw->millis = 1000 * ev.time.tv_sec + ev.time.tv_usec / 1000;
 		*hwRet = *hw;
 		return TRUE;
 	    }

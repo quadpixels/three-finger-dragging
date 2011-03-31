@@ -14,6 +14,7 @@
  * Copyright © 2007 Joseph P. Skudlarek
  * Copyright © 2008 Fedor P. Goncharov
  * Copyright © 2008-2009 Red Hat, Inc.
+ * Copyright © 2011 The Chromium OS Authors
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -132,7 +133,8 @@ static InputInfoPtr SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 static void SynapticsUnInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags);
 static Bool DeviceControl(DeviceIntPtr, int);
 static void ReadInput(InputInfoPtr);
-static int HandleState(InputInfoPtr, struct SynapticsHwState*);
+static int HandleState(InputInfoPtr, struct SynapticsHwState*, CARD32 now,
+                       Bool from_timer);
 static int ControlProc(InputInfoPtr, xDeviceCtl*);
 static int SwitchMode(ClientPtr, DeviceIntPtr, int);
 static Bool DeviceInit(DeviceIntPtr);
@@ -1196,20 +1198,12 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 
     sigstate = xf86BlockSIGIO();
 
+    priv->hwState.millis += now - priv->timer_time;
     hw = priv->hwState;
-    hw.millis = now;
-    delay = HandleState(pInfo, &hw);
+    delay = HandleState(pInfo, &hw, hw.millis, TRUE);
 
-    /*
-     * Workaround for wraparound bug in the TimerSet function. This bug is already
-     * fixed in CVS, but this driver needs to work with XFree86 versions 4.2.x and
-     * 4.3.x too.
-     */
-    wakeUpTime = now + delay;
-    if (wakeUpTime <= now)
-	wakeUpTime = 0xffffffffL;
-
-    priv->timer = TimerSet(priv->timer, TimerAbsolute, wakeUpTime, timerFunc, pInfo);
+    priv->timer_time = now;
+    priv->timer = TimerSet(priv->timer, 0, delay, timerFunc, pInfo);
 
     xf86UnblockSIGIO(sigstate);
 
@@ -1246,18 +1240,19 @@ ReadInput(InputInfoPtr pInfo)
     Bool newDelay = FALSE;
 
     while (SynapticsGetHwState(pInfo, priv, &hw)) {
-	hw.millis = GetTimeInMillis();
 	priv->hwState = hw;
-	delay = HandleState(pInfo, &hw);
+	delay = HandleState(pInfo, &hw, hw.millis, FALSE);
 	newDelay = TRUE;
     }
 
-    if (newDelay)
+    if (newDelay) {
+	priv->timer_time = GetTimeInMillis();
 	priv->timer = TimerSet(priv->timer, 0, delay, timerFunc, pInfo);
+    }
 }
 
 static int
-HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, int *delay)
+HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, CARD32 now, int *delay)
 {
     SynapticsParameters *para = &priv->synpara;
     Bool done = FALSE;
@@ -1269,7 +1264,7 @@ HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, in
 	case MBE_LEFT_CLICK:
 	case MBE_RIGHT_CLICK:
 	case MBE_OFF:
-	    priv->button_delay_millis = hw->millis;
+	    priv->button_delay_millis = now;
 	    if (hw->left) {
 		priv->mid_emu_state = MBE_LEFT;
 	    } else if (hw->right) {
@@ -1280,7 +1275,7 @@ HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, in
 	    break;
 	case MBE_LEFT:
 	    timeleft = TIME_DIFF(priv->button_delay_millis + para->emulate_mid_button_time,
-				 hw->millis);
+				 now);
 	    if (timeleft > 0)
 		*delay = MIN(*delay, timeleft);
 
@@ -1301,7 +1296,7 @@ HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, in
 	    break;
 	case MBE_RIGHT:
 	    timeleft = TIME_DIFF(priv->button_delay_millis + para->emulate_mid_button_time,
-				 hw->millis);
+				 now);
 	    if (timeleft > 0)
 		*delay = MIN(*delay, timeleft);
 
@@ -1522,7 +1517,8 @@ GetTimeOut(SynapticsPrivate *priv)
 
 static int
 HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
-		    enum FingerState finger, Bool inside_active_area)
+		    CARD32 now, enum FingerState finger,
+		    Bool inside_active_area)
 {
     SynapticsParameters *para = &priv->synpara;
     Bool touch, release, is_timeout, move;
@@ -1543,35 +1539,35 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     if (touch) {
 	priv->touch_on.x = hw->x;
 	priv->touch_on.y = hw->y;
-	priv->touch_on.millis = hw->millis;
+	priv->touch_on.millis = now;
     } else if (release) {
-	priv->touch_on.millis = hw->millis;
+	priv->touch_on.millis = now;
     }
     if (hw->z > para->finger_high)
 	if (priv->tap_max_fingers < hw->numFingers)
 	    priv->tap_max_fingers = hw->numFingers;
     timeout = GetTimeOut(priv);
-    timeleft = TIME_DIFF(priv->touch_on.millis + timeout, hw->millis);
+    timeleft = TIME_DIFF(priv->touch_on.millis + timeout, now);
     is_timeout = timeleft <= 0;
 
  restart:
     switch (priv->tap_state) {
     case TS_START:
 	if (touch)
-	    SetTapState(priv, TS_1, hw->millis);
+	    SetTapState(priv, TS_1, now);
 	break;
     case TS_1:
 	if (move) {
-	    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
-	    SetTapState(priv, TS_MOVE, hw->millis);
+	    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+	    SetTapState(priv, TS_MOVE, now);
 	    goto restart;
 	} else if (is_timeout) {
 	    if (finger == FS_TOUCHED) {
-		SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
+		SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 	    } else if (finger == FS_PRESSED) {
-		SetMovingState(priv, MS_TRACKSTICK, hw->millis);
+		SetMovingState(priv, MS_TRACKSTICK, now);
 	    }
-	    SetTapState(priv, TS_MOVE, hw->millis);
+	    SetTapState(priv, TS_MOVE, now);
 	    goto restart;
 	} else if (release) {
 	    edge = edge_detection(priv, priv->touch_on.x, priv->touch_on.y);
@@ -1580,97 +1576,97 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    if (!inside_active_area) {
 		priv->tap_button = 0;
 	    }
-	    SetTapState(priv, TS_2A, hw->millis);
+	    SetTapState(priv, TS_2A, now);
 	}
 	break;
     case TS_MOVE:
 	if (move && priv->moving_state == MS_TRACKSTICK) {
-	    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
+	    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 	}
 	if (release) {
-	    SetMovingState(priv, MS_FALSE, hw->millis);
-	    SetTapState(priv, TS_START, hw->millis);
+	    SetMovingState(priv, MS_FALSE, now);
+	    SetTapState(priv, TS_START, now);
 	}
 	break;
     case TS_2A:
 	if (touch)
-	    SetTapState(priv, TS_3, hw->millis);
+	    SetTapState(priv, TS_3, now);
 	else if (is_timeout)
-	    SetTapState(priv, TS_SINGLETAP, hw->millis);
+	    SetTapState(priv, TS_SINGLETAP, now);
 	break;
     case TS_2B:
 	if (touch) {
-	    SetTapState(priv, TS_3, hw->millis);
+	    SetTapState(priv, TS_3, now);
 	} else if (is_timeout) {
-	    SetTapState(priv, TS_START, hw->millis);
+	    SetTapState(priv, TS_START, now);
 	    priv->tap_button_state = TBS_BUTTON_DOWN_UP;
 	}
 	break;
     case TS_SINGLETAP:
 	if (touch)
-	    SetTapState(priv, TS_1, hw->millis);
+	    SetTapState(priv, TS_1, now);
 	else if (is_timeout)
-	    SetTapState(priv, TS_START, hw->millis);
+	    SetTapState(priv, TS_START, now);
 	break;
     case TS_3:
 	if (move) {
 	    if (para->tap_and_drag_gesture) {
-		SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
-		SetTapState(priv, TS_DRAG, hw->millis);
+		SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+		SetTapState(priv, TS_DRAG, now);
 	    } else {
-		SetTapState(priv, TS_1, hw->millis);
+		SetTapState(priv, TS_1, now);
 	    }
 	    goto restart;
 	} else if (is_timeout) {
 	    if (para->tap_and_drag_gesture) {
 		if (finger == FS_TOUCHED) {
-		    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
+		    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 		} else if (finger == FS_PRESSED) {
-		    SetMovingState(priv, MS_TRACKSTICK, hw->millis);
+		    SetMovingState(priv, MS_TRACKSTICK, now);
 		}
-		SetTapState(priv, TS_DRAG, hw->millis);
+		SetTapState(priv, TS_DRAG, now);
 	    } else {
-		SetTapState(priv, TS_1, hw->millis);
+		SetTapState(priv, TS_1, now);
 	    }
 	    goto restart;
 	} else if (release) {
-	    SetTapState(priv, TS_2B, hw->millis);
+	    SetTapState(priv, TS_2B, now);
 	}
 	break;
     case TS_DRAG:
 	if (move)
-	    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, hw->millis);
+	    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 	if (release) {
-	    SetMovingState(priv, MS_FALSE, hw->millis);
+	    SetMovingState(priv, MS_FALSE, now);
 	    if (para->locked_drags) {
-		SetTapState(priv, TS_4, hw->millis);
+		SetTapState(priv, TS_4, now);
 	    } else {
-		SetTapState(priv, TS_START, hw->millis);
+		SetTapState(priv, TS_START, now);
 	    }
 	}
 	break;
     case TS_4:
 	if (is_timeout) {
-	    SetTapState(priv, TS_START, hw->millis);
+	    SetTapState(priv, TS_START, now);
 	    goto restart;
 	}
 	if (touch)
-	    SetTapState(priv, TS_5, hw->millis);
+	    SetTapState(priv, TS_5, now);
 	break;
     case TS_5:
 	if (is_timeout || move) {
-	    SetTapState(priv, TS_DRAG, hw->millis);
+	    SetTapState(priv, TS_DRAG, now);
 	    goto restart;
 	} else if (release) {
-	    SetMovingState(priv, MS_FALSE, hw->millis);
-	    SetTapState(priv, TS_START, hw->millis);
+	    SetMovingState(priv, MS_FALSE, now);
+	    SetTapState(priv, TS_START, now);
 	}
 	break;
     }
 
     timeout = GetTimeOut(priv);
     if (timeout >= 0) {
-	timeleft = TIME_DIFF(priv->touch_on.millis + timeout, hw->millis);
+	timeleft = TIME_DIFF(priv->touch_on.millis + timeout, now);
 	delay = clamp(timeleft, 1, delay);
     }
     return delay;
@@ -2328,7 +2324,8 @@ adjust_state_from_scrollbuttons(const InputInfoPtr pInfo, struct SynapticsHwStat
 }
 
 static void
-update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw, int *delay)
+update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
+                       CARD32 now, int *delay)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters *para = &priv->synpara;
@@ -2338,7 +2335,7 @@ update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw, in
     hw->down |= hw->multi[1];
 
     /* 3rd button emulation */
-    hw->middle |= HandleMidButtonEmulation(priv, hw, delay);
+    hw->middle |= HandleMidButtonEmulation(priv, hw, now, delay);
 
     /* Fingers emulate other buttons */
     if(hw->left && hw->numFingers >= 1){
@@ -2379,7 +2376,7 @@ post_scroll_events(const InputInfoPtr pInfo, struct ScrollData scroll)
 static inline int
 repeat_scrollbuttons(const InputInfoPtr pInfo,
                      const struct SynapticsHwState *hw,
-		     int buttons, int delay)
+		     int buttons, CARD32 now, int delay)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters *para = &priv->synpara;
@@ -2395,7 +2392,7 @@ repeat_scrollbuttons(const InputInfoPtr pInfo,
 	 para->leftright_button_scrolling)) {
 	priv->repeatButtons = buttons & rep_buttons;
 	if (!priv->nextRepeat) {
-	    priv->nextRepeat = hw->millis + repeat_delay * 2;
+	    priv->nextRepeat = now + repeat_delay * 2;
 	}
     } else {
 	priv->repeatButtons = 0;
@@ -2403,7 +2400,7 @@ repeat_scrollbuttons(const InputInfoPtr pInfo,
     }
 
     if (priv->repeatButtons) {
-	timeleft = TIME_DIFF(priv->nextRepeat, hw->millis);
+	timeleft = TIME_DIFF(priv->nextRepeat, now);
 	if (timeleft > 0)
 	    delay = MIN(delay, timeleft);
 	if (timeleft <= 0) {
@@ -2416,7 +2413,7 @@ repeat_scrollbuttons(const InputInfoPtr pInfo,
 		xf86PostButtonEvent(pInfo->dev, FALSE, id, TRUE, 0, 0);
 	    }
 
-	    priv->nextRepeat = hw->millis + repeat_delay;
+	    priv->nextRepeat = now + repeat_delay;
 	    delay = MIN(delay, repeat_delay);
 	}
     }
@@ -2429,9 +2426,14 @@ repeat_scrollbuttons(const InputInfoPtr pInfo,
  * the hardware state changes. The return value is used to specify how many
  * milliseconds to wait before calling the function again if no state change
  * occurs.
+ *
+ * from_timer denotes if HandleState was triggered from a timer (e.g. to
+ * generate fake motion events, or for the tap-to-click state machine), rather
+ * than from having received a motion event.
  */
 static int
-HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
+HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
+            Bool from_timer)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters *para = &priv->synpara;
@@ -2482,7 +2484,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
     }
 
     /* these two just update hw->left, right, etc. */
-    update_hw_button_state(pInfo, hw, &delay);
+    update_hw_button_state(pInfo, hw, now, &delay);
     if (priv->has_scrollbuttons)
 	double_click = adjust_state_from_scrollbuttons(pInfo, hw);
 
@@ -2494,7 +2496,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
 
     /* tap and drag detection. Needs to be performed even if the finger is in
      * the dead area to reset the state. */
-    timeleft = HandleTapProcessing(priv, hw, finger, inside_active_area);
+    timeleft = HandleTapProcessing(priv, hw, now, finger, inside_active_area);
     if (timeleft > 0)
 	delay = MIN(delay, timeleft);
 
@@ -2580,7 +2582,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
     }
 
     if (priv->has_scrollbuttons)
-	delay = repeat_scrollbuttons(pInfo, hw, buttons, delay);
+	delay = repeat_scrollbuttons(pInfo, hw, buttons, now, delay);
 
     /* Save old values of some state variables */
     priv->finger_state = finger;

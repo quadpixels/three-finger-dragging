@@ -182,6 +182,7 @@ typedef struct _SynapticsPrivateRec
     char *device;			/* device node */
     Bool shm_config;			/* True when shared memory area allocated */
 
+    CARD32 timer_time;			/* when timer last fired */
     OsTimerPtr timer;			/* for up/down-button repeat, tap processing, etc */
 
     struct CommData comm;
