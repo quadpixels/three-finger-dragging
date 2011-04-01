@@ -450,17 +450,12 @@ static void set_default_parameters(InputInfoPtr pInfo)
     fingerLow = priv->minp + range * (25.0/256);
     fingerHigh = priv->minp + range * (30.0/256);
     fingerPress = priv->minp + range * 1.000;
+    emulateTwoFingerMinZ = priv->minp + range * (282.0/256);
     edgeMotionMinZ = priv->minp + range * (30.0/256);
     edgeMotionMaxZ = priv->minp + range * (160.0/256);
     pressureMotionMinZ = priv->minp + range * (30.0/256);
     pressureMotionMaxZ = priv->minp + range * (160.0/256);
     palmMinZ = priv->minp + range * (200.0/256);
-
-    /* Enable emulation when hw supports both pressure and width. */
-    if (!priv->has_double && priv->has_width)
-	emulateTwoFingerMinZ = fingerHigh;
-    else
-	emulateTwoFingerMinZ = priv->minp + range * (282.0/256);
 
     range = priv->maxw - priv->minw;
 
