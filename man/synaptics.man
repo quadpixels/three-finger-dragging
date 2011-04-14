@@ -190,7 +190,7 @@ Fastest setting for edge motion speed. Property: "Synaptics Edge Motion Speed"
 .BI "Option \*qEdgeMotionUseAlways\*q \*q" boolean \*q
 If on, edge motion is also used for normal movements.
 .
-If off, egde motion is used only when dragging. Property: "Synaptics Edge
+If off, edge motion is used only when dragging. Property: "Synaptics Edge
 Motion Always"
 .TP
 .BI "Option \*qMinSpeed\*q \*q" float \*q
@@ -640,7 +640,7 @@ For a pressure value between PressureMotionMinZ and
 PressureMotionMaxZ, the factor is increased linearly.
 .
 .SS Edge motion
-When hitting an egde, movement can be automatically continued.
+When hitting an edge, movement can be automatically continued.
 .
 If EdgeMotionUseAlways is false, edge motion is only used when
 dragging.

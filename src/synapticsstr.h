@@ -125,7 +125,7 @@ typedef struct _SynapticsParameters
     int edge_motion_max_z;		    /* finger pressure at which maximum edge motion speed is set */
     int edge_motion_min_speed;		    /* slowest setting for edge motion speed */
     int edge_motion_max_speed;		    /* fastest setting for edge motion speed */
-    Bool edge_motion_use_always;	    /* If false, egde motion is used only when dragging */
+    Bool edge_motion_use_always;	    /* If false, edge motion is used only when dragging */
 
     Bool updown_button_scrolling;	    /* Up/Down-Button scrolling or middle/double-click */
     Bool leftright_button_scrolling;	    /* Left/right-button scrolling, or two lots of middle button */
