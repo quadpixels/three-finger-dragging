@@ -421,6 +421,14 @@ void record_main_loop(Display* display, double idle_time) {
 
 	    XRecordProcessReplies(dpy_data);
 
+	    /* If there are any events left over, they are in error. Drain them
+	     * from the connection queue so we don't get stuck. */
+	    while (XEventsQueued(dpy_data, QueuedAlready) > 0) {
+	        XEvent event;
+	        XNextEvent(dpy_data, &event);
+	        fprintf(stderr, "bad event received, major opcode %d\n", event.type);
+	    }
+
 	    if (!ignore_modifier_keys && cbres.key_event) {
 		disable_event = 1;
 	    }
