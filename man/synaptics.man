@@ -728,7 +728,7 @@ active, scrolling will stop, and circular scrolling will not start,
 when the finger leaves the corner.
 
 .SS Noise cancellation
-The synaptics has a built-in nose canellation based on hysteresis. This means
+The synaptics has a built-in noise cancellation based on hysteresis. This means
 that incoming coordinates actually shift a box of predefined dimensions such
 that it covers the incoming coordinate, and only the boxes own center is used
 as input. Obviously, the smaller the box the better, but the likelyhood of
