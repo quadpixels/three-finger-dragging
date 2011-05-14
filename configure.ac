@@ -147,12 +147,6 @@ fi
 # -----------------------------------------------------------------------------
 
 AC_CONFIG_FILES([Makefile
-                src/Makefile
-                man/Makefile
-                tools/Makefile
-                conf/Makefile
-                include/Makefile
-                test/Makefile
                 xorg-synaptics.pc])
 AC_OUTPUT
 
