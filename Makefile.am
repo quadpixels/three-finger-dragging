@@ -124,3 +124,6 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog INSTALL
+
+dist_doc_DATA = ChangeLog README docs/README.alps		\
+		docs/trouble-shooting.txt docs/tapndrag.dia
