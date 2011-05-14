@@ -49,6 +49,8 @@ XORG_ENABLE_UNIT_TESTS
 AC_CHECK_LIB([m], [rint])
 
 # Store the list of server defined optional extensions in REQUIRED_MODULES
+m4_ifndef([XORG_DRIVER_CHECK_EXT],
+          [m4_fatal([must install xorg-server development files before running autoconf/autogen])])
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 
 # Obtain compiler/linker options for the Synaptics driver dependencies
