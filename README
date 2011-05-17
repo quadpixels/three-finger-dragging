@@ -122,7 +122,7 @@ Authors
 Many people have contributed to this driver. Look at the top of
 synaptics.c and ps2comm.c for details.
 
-The current maintainer is Christoph Brill <egore911@egore911.de>.
+The current maintainer is X.org development team <xorg-devel@lists.x.org>.
 
 
 Contacts
