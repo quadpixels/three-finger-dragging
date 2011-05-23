@@ -487,24 +487,24 @@ dp_get_device(Display *dpy)
 	    properties = XListDeviceProperties(dpy, dev, &nprops);
 	    if (!properties || !nprops)
 	    {
-	  fprintf(stderr, "No properties on device '%s'.\n",
-		  info[ndevices].name);
-	  error = 1;
-	  goto unwind;
-      }
+		fprintf(stderr, "No properties on device '%s'.\n",
+			info[ndevices].name);
+		error = 1;
+		goto unwind;
+	    }
 
 	    while(nprops--)
 	    {
-	  if (properties[nprops] == synaptics_property)
-	      break;
-      }
+		if (properties[nprops] == synaptics_property)
+		    break;
+	    }
 	    if (!nprops)
 	    {
-	  fprintf(stderr, "No synaptics properties on device '%s'.\n",
-		  info[ndevices].name);
-	  error = 1;
-	  goto unwind;
-      }
+		fprintf(stderr, "No synaptics properties on device '%s'.\n",
+			info[ndevices].name);
+		error = 1;
+		goto unwind;
+	    }
 
 	    break; /* Yay, device is suitable */
 	}
