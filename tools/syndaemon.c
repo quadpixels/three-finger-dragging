@@ -465,7 +465,6 @@ dp_get_device(Display *dpy)
     XDeviceInfo *info		= NULL;
     int ndevices		= 0;
     Atom touchpad_type		= 0;
-    Atom synaptics_property	= 0;
     Atom *properties		= NULL;
     int nprops			= 0;
     int error			= 0;
@@ -495,10 +494,10 @@ dp_get_device(Display *dpy)
 
 	    while(nprops--)
 	    {
-		if (properties[nprops] == synaptics_property)
+		if (properties[nprops] == touchpad_off_prop)
 		    break;
 	    }
-	    if (!nprops)
+	    if (nprops < 0)
 	    {
 		fprintf(stderr, "No synaptics properties on device '%s'.\n",
 			info[ndevices].name);
