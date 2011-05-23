@@ -629,3 +629,5 @@ main(int argc, char *argv[])
       }
     return 0;
 }
+
+/* vim: set noexpandtab tabstop=8 shiftwidth=4: */
