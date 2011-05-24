@@ -42,6 +42,11 @@
 #ifndef XATOM_FLOAT
 #define XATOM_FLOAT "FLOAT"
 #endif
+
+#ifndef XI_PROP_PRODUCT_ID
+#define XI_PROP_PRODUCT_ID "Device Product ID"
+#endif
+
 static Atom float_type;
 
 Atom prop_edges                 = 0;
@@ -83,6 +88,7 @@ Atom prop_capabilities          = 0;
 Atom prop_resolution            = 0;
 Atom prop_area                  = 0;
 Atom prop_noise_cancellation    = 0;
+Atom prop_product_id            = 0;
 
 static Atom
 InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
@@ -284,6 +290,14 @@ InitDeviceProperties(InputInfoPtr pInfo)
     values[1] = para->hyst_y;
     prop_noise_cancellation = InitAtom(pInfo->dev,
             SYNAPTICS_PROP_NOISE_CANCELLATION, 32, 2, values);
+
+    /* only init product_id property if we actually know them */
+    if (priv->id_vendor || priv->id_product)
+    {
+        values[0] = priv->id_vendor;
+        values[1] = priv->id_product;
+        prop_product_id = InitAtom(pInfo->dev, XI_PROP_PRODUCT_ID, 32, 2, values);
+    }
 
 }
 
@@ -666,7 +680,8 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
             return BadValue;
         para->hyst_x = hyst[0];
         para->hyst_y = hyst[1];
-    }
+    } else if (property == prop_product_id)
+        return BadValue; /* read-only */
 
     return Success;
 }

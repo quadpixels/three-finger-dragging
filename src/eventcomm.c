@@ -178,7 +178,7 @@ static model_lookup_t model_lookup_table[] = {
  * @return TRUE on success or FALSE otherwise.
  */
 static Bool
-event_query_model(int fd, enum TouchpadModel *model_out)
+event_query_model(int fd, enum TouchpadModel *model_out, unsigned short *vendor_id, unsigned short *product_id)
 {
     struct input_id id;
     int rc;
@@ -193,6 +193,9 @@ event_query_model(int fd, enum TouchpadModel *model_out)
            (model_lookup->product == id.product|| model_lookup->product == PRODUCT_ANY))
             *model_out = model_lookup->model;
     }
+
+    *vendor_id = id.vendor;
+    *product_id = id.product;
 
     return TRUE;
 }
@@ -500,7 +503,10 @@ EventReadDevDimensions(InputInfoPtr pInfo)
 
     if (event_query_is_touchpad(pInfo->fd, (proto_data) ? proto_data->need_grab : TRUE))
 	event_query_axis_ranges(pInfo);
-    event_query_model(pInfo->fd, &priv->model);
+    event_query_model(pInfo->fd, &priv->model, &priv->id_vendor, &priv->id_product);
+
+    xf86IDrvMsg(pInfo, X_PROBED, "Vendor %#hx Product %#hx\n",
+                priv->id_vendor, priv->id_product);
 }
 
 static Bool

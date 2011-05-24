@@ -240,7 +240,9 @@ typedef struct _SynapticsPrivateRec
     Bool has_width;			/* device reports finger width */
     Bool has_scrollbuttons;		/* device has physical scrollbuttons */
 
-    enum TouchpadModel model;          /* The detected model */
+    enum TouchpadModel model;		/* The detected model */
+    unsigned short id_vendor;		/* vendor id */
+    unsigned short id_product;		/* product id */
 } SynapticsPrivate;
 
 #endif /* _SYNAPTICSSTR_H_ */
