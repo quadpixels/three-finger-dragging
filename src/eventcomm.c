@@ -180,17 +180,17 @@ static model_lookup_t model_lookup_table[] = {
 static Bool
 event_query_model(int fd, enum TouchpadModel *model_out)
 {
-    short id[4];
+    struct input_id id;
     int rc;
     model_lookup_t *model_lookup;
 
-    SYSCALL(rc = ioctl(fd, EVIOCGID, id));
+    SYSCALL(rc = ioctl(fd, EVIOCGID, &id));
     if (rc < 0)
         return FALSE;
 
     for(model_lookup = model_lookup_table; model_lookup->vendor; model_lookup++) {
-        if(model_lookup->vendor == id[ID_VENDOR] &&
-           (model_lookup->product == id[ID_PRODUCT] || model_lookup->product == PRODUCT_ANY))
+        if(model_lookup->vendor == id.vendor &&
+           (model_lookup->product == id.product|| model_lookup->product == PRODUCT_ANY))
             *model_out = model_lookup->model;
     }
 
