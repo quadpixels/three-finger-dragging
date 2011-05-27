@@ -1872,9 +1872,25 @@ struct ScrollData {
     int left, right, up, down;
 };
 
+static double
+estimate_delta_circ(SynapticsPrivate *priv)
+{
+	double a1 = angle(priv, HIST(3).x, HIST(3).y);
+	double a2 = angle(priv, HIST(2).x, HIST(2).y);
+	double a3 = angle(priv, HIST(1).x, HIST(1).y);
+	double a4 = angle(priv, HIST(0).x, HIST(0).y);
+	double d1 = diffa(a2, a1);
+	double d2 = d1 + diffa(a3, a2);
+	double d3 = d2 + diffa(a4, a3);
+	return estimate_delta(d3, d2, d1, 0);
+}
+
+/* vert and horiz are to know which direction to start coasting
+ * circ is true if the user had been circular scrolling.
+ */
 static void
-start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw, edge_type edge,
-	       Bool vertical)
+start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw,
+	       Bool vert, Bool horiz, Bool circ)
 {
     SynapticsParameters *para = &priv->synpara;
 
@@ -1883,10 +1899,10 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw, edge_type ed
 
     if ((priv->scroll_packet_count > 3) && (para->coasting_speed > 0.0)) {
 	double pkt_time = (HIST(0).millis - HIST(3).millis) / 1000.0;
-	if (para->scroll_twofinger_vert || vertical) {
+	if (vert && !circ) {
 	    double dy = estimate_delta(HIST(0).y, HIST(1).y, HIST(2).y, HIST(3).y);
 	    int sdelta = para->scroll_dist_vert;
-	    if ((para->scroll_twofinger_vert || (edge & RIGHT_EDGE)) && pkt_time > 0 && sdelta > 0) {
+	    if (pkt_time > 0 && sdelta > 0) {
 		double scrolls_per_sec = dy / pkt_time / sdelta;
 		if (fabs(scrolls_per_sec) >= para->coasting_speed) {
 		    priv->autoscroll_yspd = scrolls_per_sec;
@@ -1894,15 +1910,32 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw, edge_type ed
 		}
 	    }
 	}
-	if (para->scroll_twofinger_horiz || !vertical){
+	if (horiz && !circ){
 	    double dx = estimate_delta(HIST(0).x, HIST(1).x, HIST(2).x, HIST(3).x);
 	    int sdelta = para->scroll_dist_horiz;
-	    if ((para->scroll_twofinger_horiz || (edge & BOTTOM_EDGE)) && pkt_time > 0 && sdelta > 0) {
+	    if (pkt_time > 0 && sdelta > 0) {
 		double scrolls_per_sec = dx / pkt_time / sdelta;
 		if (fabs(scrolls_per_sec) >= para->coasting_speed) {
 		    priv->autoscroll_xspd = scrolls_per_sec;
 		    priv->autoscroll_x = (hw->x - priv->scroll_x) / (double)sdelta;
 		}
+	    }
+	}
+	if (circ) {
+	    double da = estimate_delta_circ(priv);
+	    double sdelta = para->scroll_dist_circ;
+	    if (pkt_time > 0 && sdelta > 0) {
+	        double scrolls_per_sec = da / pkt_time / sdelta;
+	        if (fabs(scrolls_per_sec) >= para->coasting_speed) {
+	            if (vert) {
+	                priv->autoscroll_yspd = scrolls_per_sec;
+	                priv->autoscroll_y = diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) / sdelta;
+	            }
+	            else if (horiz) {
+	                priv->autoscroll_xspd = scrolls_per_sec;
+	                priv->autoscroll_x = diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) / sdelta;
+	            }
+	        }
 	    }
 	}
     }
@@ -1995,8 +2028,12 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     {
 	Bool oldv = priv->vert_scroll_twofinger_on || priv->vert_scroll_edge_on ||
 	              (priv->circ_scroll_on && priv->circ_scroll_vert);
+
 	Bool oldh = priv->horiz_scroll_twofinger_on || priv->horiz_scroll_edge_on ||
 	              (priv->circ_scroll_on && !priv->circ_scroll_vert);
+
+	Bool oldc = priv->circ_scroll_on;
+
 	if (priv->circ_scroll_on && !finger) {
 	    /* circular scroll locks in until finger is raised */
 	    DBG(7, "cicular scroll off\n");
@@ -2035,11 +2072,16 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	}
 	/* if we were scrolling, but couldn't corner edge scroll,
 	 * and are no longer scrolling, then start coasting */
-	if ((oldv || oldh) && !para->scroll_edge_corner &&
-	    !(priv->circ_scroll_on || priv->vert_scroll_edge_on ||
-	      priv->horiz_scroll_edge_on || priv->horiz_scroll_twofinger_on ||
-	      priv->vert_scroll_twofinger_on)) {
-	    start_coasting(priv, hw, edge, oldv);
+	oldv = oldv && !(priv->vert_scroll_twofinger_on || priv->vert_scroll_edge_on ||
+	              (priv->circ_scroll_on && priv->circ_scroll_vert));
+
+	oldh = oldh && !(priv->horiz_scroll_twofinger_on || priv->horiz_scroll_edge_on ||
+	              (priv->circ_scroll_on && !priv->circ_scroll_vert));
+
+	oldc = oldc && !priv->circ_scroll_on;
+
+	if ((oldv || oldh) && !para->scroll_edge_corner) {
+	    start_coasting(priv, hw, oldv, oldh, oldc);
 	}
     }
 
@@ -2054,7 +2096,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		 * we're in the corner, but we were moving so slowly when we
 		 * got here that we didn't actually start coasting. */
 		DBG(7, "corner edge scroll on\n");
-		start_coasting(priv, hw, edge, TRUE);
+		start_coasting(priv, hw, TRUE, FALSE, FALSE);
 	    }
 	} else if (para->circular_scrolling) {
 	    priv->vert_scroll_edge_on = FALSE;
@@ -2073,7 +2115,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		 * we're in the corner, but we were moving so slowly when we
 		 * got here that we didn't actually start coasting. */
 		DBG(7, "corner edge scroll on\n");
-		start_coasting(priv, hw, edge, FALSE);
+		start_coasting(priv, hw, FALSE, TRUE, FALSE);
 	    }
 	} else if (para->circular_scrolling) {
 	    priv->horiz_scroll_edge_on = FALSE;
