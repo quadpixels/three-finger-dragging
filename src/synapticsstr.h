@@ -175,6 +175,7 @@ typedef struct _SynapticsPrivateRec
 
     struct SynapticsHwState hwState;
 
+    char *device;			/* device node */
     Bool shm_config;			/* True when shared memory area allocated */
 
     OsTimerPtr timer;			/* for up/down-button repeat, tap processing, etc */

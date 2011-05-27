@@ -47,6 +47,10 @@
 #define XI_PROP_PRODUCT_ID "Device Product ID"
 #endif
 
+#ifndef XI_PROP_DEVICE_NODE
+#define XI_PROP_DEVICE_NODE "Device Node"
+#endif
+
 static Atom float_type;
 
 Atom prop_edges                 = 0;
@@ -89,6 +93,7 @@ Atom prop_resolution            = 0;
 Atom prop_area                  = 0;
 Atom prop_noise_cancellation    = 0;
 Atom prop_product_id            = 0;
+Atom prop_device_node           = 0;
 
 static Atom
 InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
@@ -297,6 +302,15 @@ InitDeviceProperties(InputInfoPtr pInfo)
         values[0] = priv->id_vendor;
         values[1] = priv->id_product;
         prop_product_id = InitAtom(pInfo->dev, XI_PROP_PRODUCT_ID, 32, 2, values);
+    }
+
+    if (priv->device)
+    {
+        prop_device_node = MakeAtom(XI_PROP_DEVICE_NODE, strlen(XI_PROP_DEVICE_NODE), TRUE);
+        XIChangeDeviceProperty(pInfo->dev, prop_device_node, XA_STRING, 8,
+                               PropModeReplace, strlen(priv->device),
+                               priv->device, FALSE);
+        XISetDevicePropertyDeletable(pInfo->dev, prop_device_node, FALSE);
     }
 
 }
@@ -680,7 +694,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
             return BadValue;
         para->hyst_x = hyst[0];
         para->hyst_y = hyst[1];
-    } else if (property == prop_product_id)
+    } else if (property == prop_product_id || property == prop_device_node)
         return BadValue; /* read-only */
 
     return Success;

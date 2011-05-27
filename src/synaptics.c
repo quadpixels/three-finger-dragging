@@ -694,6 +694,8 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
         goto SetupProc_fail;
     }
 
+    priv->device = xf86FindOptionValue(pInfo->options, "Device");
+
     /* open the touchpad device */
     pInfo->fd = xf86OpenSerial(pInfo->options);
     if (pInfo->fd == -1) {
