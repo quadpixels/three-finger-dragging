@@ -212,9 +212,9 @@ SanitizeDimensions(InputInfoPtr pInfo)
 	priv->maxx = 5685;
 	priv->resx = 0;
 
-	xf86Msg(X_PROBED,
-		"%s: invalid x-axis range.  defaulting to %d - %d\n",
-		pInfo->name, priv->minx, priv->maxx);
+	xf86IDrvMsg(pInfo, X_PROBED,
+		    "invalid x-axis range.  defaulting to %d - %d\n",
+		    priv->minx, priv->maxx);
     }
 
     if (priv->miny >= priv->maxy)
@@ -223,9 +223,9 @@ SanitizeDimensions(InputInfoPtr pInfo)
 	priv->maxy = 4171;
 	priv->resy = 0;
 
-	xf86Msg(X_PROBED,
-		"%s: invalid y-axis range.  defaulting to %d - %d\n",
-		pInfo->name, priv->miny, priv->maxy);
+	xf86IDrvMsg(pInfo, X_PROBED,
+		    "invalid y-axis range.  defaulting to %d - %d\n",
+		    priv->miny, priv->maxy);
     }
 
     if (priv->minp >= priv->maxp)
@@ -233,9 +233,9 @@ SanitizeDimensions(InputInfoPtr pInfo)
 	priv->minp = 0;
 	priv->maxp = 256;
 
-	xf86Msg(X_PROBED,
-		"%s: invalid pressure range.  defaulting to %d - %d\n",
-		pInfo->name, priv->minp, priv->maxp);
+	xf86IDrvMsg(pInfo, X_PROBED,
+		    "invalid pressure range.  defaulting to %d - %d\n",
+		    priv->minp, priv->maxp);
     }
 
     if (priv->minw >= priv->maxw)
@@ -243,9 +243,9 @@ SanitizeDimensions(InputInfoPtr pInfo)
 	priv->minw = 0;
 	priv->maxw = 16;
 
-	xf86Msg(X_PROBED,
-		"%s: invalid finger width range.  defaulting to %d - %d\n",
-		pInfo->name, priv->minw, priv->maxw);
+	xf86IDrvMsg(pInfo, X_PROBED,
+		    "invalid finger width range.  defaulting to %d - %d\n",
+		    priv->minw, priv->maxw);
     }
 }
 
@@ -291,11 +291,11 @@ alloc_shm_data(InputInfoPtr pInfo)
 	    shmctl(shmid, IPC_RMID, NULL);
 	if ((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM),
 				0774 | IPC_CREAT)) == -1) {
-	    xf86Msg(X_ERROR, "%s error shmget\n", pInfo->name);
+	    xf86IDrvMsg(pInfo, X_ERROR, "error shmget\n");
 	    return FALSE;
 	}
 	if ((priv->synshm = (SynapticsSHM*)shmat(shmid, NULL, 0)) == NULL) {
-	    xf86Msg(X_ERROR, "%s error shmat\n", pInfo->name);
+	    xf86IDrvMsg(pInfo, X_ERROR, "error shmat\n");
 	    return FALSE;
 	}
     } else {
@@ -574,8 +574,7 @@ static void set_default_parameters(InputInfoPtr pInfo)
 	int tmp = pars->top_edge;
 	pars->top_edge = pars->bottom_edge;
 	pars->bottom_edge = tmp;
-	xf86Msg(X_WARNING, "%s: TopEdge is bigger than BottomEdge. Fixing.\n",
-		pInfo->name);
+	xf86IDrvMsg(pInfo, X_WARNING, "TopEdge is bigger than BottomEdge. Fixing.\n");
     }
 }
 
@@ -690,7 +689,7 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     /* may change pInfo->options */
     SetDeviceAndProtocol(pInfo);
     if (priv->proto_ops == NULL) {
-        xf86Msg(X_ERROR, "Synaptics driver unable to detect protocol\n");
+        xf86IDrvMsg(pInfo, X_ERROR, "Synaptics driver unable to detect protocol\n");
         goto SetupProc_fail;
     }
 
@@ -699,7 +698,7 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     /* open the touchpad device */
     pInfo->fd = xf86OpenSerial(pInfo->options);
     if (pInfo->fd == -1) {
-	xf86Msg(X_ERROR, "Synaptics driver unable to open device\n");
+	xf86IDrvMsg(pInfo, X_ERROR, "Synaptics driver unable to open device\n");
 	goto SetupProc_fail;
     }
     xf86ErrorFVerb(6, "port opened successfully\n");
@@ -731,7 +730,7 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     priv->comm.buffer = XisbNew(pInfo->fd, INPUT_BUFFER_SIZE);
 
     if (!QueryHardware(pInfo)) {
-	xf86Msg(X_ERROR, "%s Unable to query/initialize Synaptics hardware.\n", pInfo->name);
+	xf86IDrvMsg(pInfo, X_ERROR, "Unable to query/initialize Synaptics hardware.\n");
 	goto SetupProc_fail;
     }
 
@@ -827,7 +826,7 @@ DeviceOn(DeviceIntPtr dev)
 
     pInfo->fd = xf86OpenSerial(pInfo->options);
     if (pInfo->fd == -1) {
-	xf86Msg(X_WARNING, "%s: cannot open input device\n", pInfo->name);
+	xf86IDrvMsg(pInfo, X_WARNING, "cannot open input device\n");
 	return !Success;
     }
 
@@ -992,8 +991,8 @@ DeviceInit(DeviceIntPtr dev)
 	 * May be overridden in xf86InitValuatorDefaults */
 	tmpf = 1.0 / priv->synpara.min_speed;
 
-	xf86Msg(X_CONFIG, "%s: (accel) MinSpeed is now constant deceleration "
-	        "%.1f\n", dev->name, tmpf);
+	xf86IDrvMsg(pInfo, X_CONFIG, "(accel) MinSpeed is now constant deceleration "
+		    "%.1f\n", tmpf);
 	prop = XIGetKnownProperty(ACCEL_PROP_CONSTANT_DECELERATION);
 	XIChangeDeviceProperty(dev, prop, float_type, 32,
 	                       PropModeReplace, 1, &tmpf, FALSE);
@@ -1006,10 +1005,10 @@ DeviceInit(DeviceIntPtr dev)
 	 * 100 packet/s by default. */
 	pVel->corr_mul = 12.5f; /*1000[ms]/80[/s] = 12.5 */
 
-	xf86Msg(X_CONFIG, "%s: MaxSpeed is now %.2f\n",
-		dev->name, priv->synpara.max_speed);
-	xf86Msg(X_CONFIG, "%s: AccelFactor is now %.3f\n",
-		dev->name, priv->synpara.accl);
+	xf86IDrvMsg(pInfo, X_CONFIG, "MaxSpeed is now %.2f\n",
+		    priv->synpara.max_speed);
+	xf86IDrvMsg(pInfo, X_CONFIG, "AccelFactor is now %.3f\n",
+		    priv->synpara.accl);
 
 	prop = XIGetKnownProperty(ACCEL_PROP_PROFILE_NUMBER);
 	i = AccelProfileDeviceSpecific;
@@ -2646,7 +2645,7 @@ QueryHardware(InputInfoPtr pInfo)
     priv->comm.protoBufTail = 0;
 
     if (!priv->proto_ops->QueryHardware(pInfo)) {
-	xf86Msg(X_PROBED, "%s: no supported touchpad found\n", pInfo->name);
+	xf86IDrvMsg(pInfo, X_PROBED, "no supported touchpad found\n");
 	if (priv->proto_ops->DeviceOffHook)
             priv->proto_ops->DeviceOffHook(pInfo);
         return FALSE;

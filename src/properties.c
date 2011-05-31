@@ -157,8 +157,8 @@ InitDeviceProperties(InputInfoPtr pInfo)
         float_type = MakeAtom(XATOM_FLOAT, strlen(XATOM_FLOAT), TRUE);
         if (!float_type)
         {
-            xf86Msg(X_ERROR, "%s: Failed to init float atom. "
-                             "Disabling property support.\n", pInfo->name);
+            xf86IDrvMsg(pInfo, X_ERROR, "Failed to init float atom. "
+                        "Disabling property support.\n");
             return;
         }
     }

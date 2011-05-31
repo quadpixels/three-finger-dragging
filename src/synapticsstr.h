@@ -35,6 +35,10 @@
 #define DBG(verb, msg, ...) /* */
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+#define xf86IDrvMsg(pInfo, type, ...) xf86Msg(type, __VA_ARGS__)
+#endif
+
 /******************************************************************************
  *		Definitions
  *					structs, typedefs, #defines, enums
