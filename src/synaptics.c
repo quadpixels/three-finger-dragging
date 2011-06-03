@@ -2246,7 +2246,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     }
 
     if (priv->autoscroll_yspd) {
-	double dtime = (hw->millis - HIST(0).millis) / 1000.0;
+	double dtime = (hw->millis - priv->scroll.last_millis) / 1000.0;
 	double ddy = para->coasting_friction * dtime;
 	priv->autoscroll_y += priv->autoscroll_yspd * dtime;
 	delay = MIN(delay, POLL_MS);
@@ -2267,7 +2267,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     }
 
     if (priv->autoscroll_xspd) {
-	double dtime = (hw->millis - HIST(0).millis) / 1000.0;
+	double dtime = (hw->millis - priv->scroll.last_millis) / 1000.0;
 	double ddx = para->coasting_friction * dtime;
 	priv->autoscroll_x += priv->autoscroll_xspd * dtime;
 	delay = MIN(delay, POLL_MS);
@@ -2645,8 +2645,12 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     /* Process scroll events only if coordinates are
      * in the Synaptics Area
      */
-    if (inside_active_area)
+    if (inside_active_area &&
+        (scroll.down != 0 || scroll.up != 0 || scroll.left != 0 ||
+         scroll.right != 0)) {
 	post_scroll_events(pInfo, scroll);
+	priv->scroll.last_millis = hw->millis;
+    }
 
     if (double_click) {
 	post_button_click(pInfo, 1);

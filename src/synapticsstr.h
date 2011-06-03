@@ -197,6 +197,7 @@ typedef struct _SynapticsPrivateRec
         int last_x;			/* last x-scroll position */
         int last_y;			/* last y-scroll position */
         double last_a;			/* last angle-scroll position */
+        CARD32 last_millis;		/* time last scroll event posted */
     } scroll;
     int count_packet_finger;		/* packet counter with finger on the touchpad */
     int button_delay_millis;		/* button delay for 3rd button emulation */
