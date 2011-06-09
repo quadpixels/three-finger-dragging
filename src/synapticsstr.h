@@ -51,10 +51,10 @@ typedef struct _SynapticsMoveHist
     int millis;
 } SynapticsMoveHistRec;
 
-enum FingerState {		/* Note! The order matters. Compared with < operator. */
-    FS_UNTOUCHED,
-    FS_TOUCHED,
-    FS_PRESSED
+enum FingerState {              /* Note! The order matters. Compared with < operator. */
+    FS_UNTOUCHED = 0, /* this is 0 so it's the initialized value. */
+    FS_TOUCHED = 1,
+    FS_PRESSED = 2,
 };
 
 enum MovingState {

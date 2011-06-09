@@ -2527,7 +2527,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
     }
 
     /* Post events */
-    if (finger > FS_UNTOUCHED) {
+    if (finger >= FS_TOUCHED) {
         if (priv->absolute_events && inside_active_area) {
             xf86PostMotionEvent(pInfo->dev, 1, 0, 2, hw->x, hw->y);
         } else if (dx || dy) {
