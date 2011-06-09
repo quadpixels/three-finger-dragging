@@ -23,6 +23,7 @@
 #define _SYNAPTICSSTR_H_
 
 #include "synproto.h"
+#include <xserver-properties.h>
 
 #ifdef DBG
 #  undef DBG
@@ -37,6 +38,10 @@
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 #define xf86IDrvMsg(pInfo, type, ...) xf86Msg(type, __VA_ARGS__)
+#endif
+
+#ifdef AXIS_LABEL_PROP_REL_VSCROLL
+#define HAVE_SMOOTH_SCROLL
 #endif
 
 /******************************************************************************
@@ -254,6 +259,12 @@ typedef struct _SynapticsPrivateRec
     enum TouchpadModel model;		/* The detected model */
     unsigned short id_vendor;		/* vendor id */
     unsigned short id_product;		/* product id */
+
+#ifdef HAVE_SMOOTH_SCROLL
+    int scroll_axis_horiz;              /* Horizontal smooth-scrolling axis */
+    int scroll_axis_vert;               /* Vertical smooth-scrolling axis */
+    ValuatorMask *scroll_events_mask;   /* ValuatorMask for smooth-scrolling */
+#endif
 } SynapticsPrivate;
 
 #endif /* _SYNAPTICSSTR_H_ */

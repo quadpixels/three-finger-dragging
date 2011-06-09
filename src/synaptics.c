@@ -72,6 +72,7 @@
 #include <exevents.h>
 
 #include <X11/Xatom.h>
+#include <X11/extensions/XI2.h>
 #include <xserver-properties.h>
 #include <ptrveloc.h>
 
@@ -802,6 +803,10 @@ static void SynapticsUnInit(InputDriverPtr drv,
         free(priv->timer);
     if (priv && priv->proto_data)
         free(priv->proto_data);
+#ifdef HAVE_SMOOTH_SCROLL
+    if (priv && priv->scroll_events_mask)
+        valuator_mask_free(&priv->scroll_events_mask);
+#endif
     free(pInfo->private);
     pInfo->private = NULL;
     xf86DeleteInput(pInfo, 0);
@@ -931,6 +936,12 @@ static void InitAxesLabels(Atom *labels, int nlabels)
     switch(nlabels)
     {
         default:
+#ifdef HAVE_SMOOTH_SCROLL
+        case 4:
+            labels[3] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_VSCROLL);
+        case 3:
+            labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_HSCROLL);
+#endif
         case 2:
             labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y);
         case 1:
@@ -973,11 +984,16 @@ DeviceInit(DeviceIntPtr dev)
     unsigned char map[SYN_MAX_BUTTONS + 1];
     int i;
     int min, max;
+    int num_axes = 2;
     Atom btn_labels[SYN_MAX_BUTTONS] = { 0 };
-    Atom axes_labels[2] = { 0 };
+    Atom axes_labels[4] = { 0 };
     DeviceVelocityPtr pVel;
 
-    InitAxesLabels(axes_labels, 2);
+#ifdef HAVE_SMOOTH_SCROLL
+    num_axes += 2;
+#endif
+
+    InitAxesLabels(axes_labels, num_axes);
     InitButtonLabels(btn_labels, SYN_MAX_BUTTONS);
 
     DBG(3, "Synaptics DeviceInit called\n");
@@ -992,7 +1008,7 @@ DeviceInit(DeviceIntPtr dev)
                             btn_labels,
 			    SynapticsCtrl,
 			    GetMotionHistorySize(),
-                            2,
+                            num_axes,
                             axes_labels);
 
     /*
@@ -1073,6 +1089,21 @@ DeviceInit(DeviceIntPtr dev)
 #endif
             );
     xf86InitValuatorDefaults(dev, 1);
+
+#ifdef HAVE_SMOOTH_SCROLL
+    xf86InitValuatorAxisStruct(dev, 2, axes_labels[2], 0, -1, 0, 0, 0,
+                               Relative);
+    priv->scroll_axis_horiz = 2;
+    xf86InitValuatorAxisStruct(dev, 3, axes_labels[3], 0, -1, 0, 0, 0,
+                               Relative);
+    priv->scroll_axis_vert = 3;
+    priv->scroll_events_mask = valuator_mask_new(MAX_VALUATORS);
+    if (!priv->scroll_events_mask)
+        return !Success;
+
+    SetScrollValuator(dev, priv->scroll_axis_horiz, SCROLL_TYPE_HORIZONTAL, 1, 0);
+    SetScrollValuator(dev, priv->scroll_axis_vert, SCROLL_TYPE_VERTICAL, 1, 0);
+#endif
 
     if (!alloc_shm_data(pInfo))
 	return !Success;
@@ -2393,6 +2424,26 @@ post_scroll_events(const InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
 
+#ifdef HAVE_SMOOTH_SCROLL
+    valuator_mask_zero(priv->scroll_events_mask);
+
+    if (priv->scroll.delta_y != 0.0)
+    {
+        valuator_mask_set_double(priv->scroll_events_mask,
+                                 priv->scroll_axis_vert,
+                                 priv->scroll.delta_y);
+        priv->scroll.delta_y = 0;
+    }
+    if (priv->scroll.delta_x != 0.0)
+    {
+        valuator_mask_set_double(priv->scroll_events_mask,
+                                 priv->scroll_axis_horiz,
+                                 priv->scroll.delta_x);
+        priv->scroll.delta_x = 0;
+    }
+    if (valuator_mask_num_valuators(priv->scroll_events_mask))
+        xf86PostMotionEventM(pInfo->dev, FALSE, priv->scroll_events_mask);
+#else
     while (priv->scroll.delta_y <= -1.0)
     {
         post_button_click(pInfo, 4);
@@ -2416,6 +2467,7 @@ post_scroll_events(const InputInfoPtr pInfo)
         post_button_click(pInfo, 7);
         priv->scroll.delta_x -= 1.0;
     }
+#endif
 }
 
 static inline int
