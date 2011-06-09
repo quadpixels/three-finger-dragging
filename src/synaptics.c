@@ -2445,8 +2445,12 @@ repeat_scrollbuttons(const InputInfoPtr pInfo,
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters *para = &priv->synpara;
     int repeat_delay, timeleft;
-    int rep_buttons = ((para->updown_button_repeat ? 0x18 : 0) |
-			(para->leftright_button_repeat ? 0x60 : 0));
+    int rep_buttons = 0;
+
+    if (para->updown_button_repeat)
+        rep_buttons |= (1 << (4 - 1)) | (1 << (5 - 1));
+    if (para->leftright_button_repeat)
+        rep_buttons |= (1 << (6 - 1)) | (1 << (7 - 1));
 
     /* Handle auto repeat buttons */
     repeat_delay = clamp(para->scroll_button_repeat, SBR_MIN, SBR_MAX);
