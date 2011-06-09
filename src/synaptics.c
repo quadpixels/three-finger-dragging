@@ -1662,6 +1662,7 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 }
 
 #define HIST(a) (priv->move_hist[((priv->hist_index - (a) + SYNAPTICS_MOVE_HISTORY) % SYNAPTICS_MOVE_HISTORY)])
+#define HIST_DELTA(a, b, e) ((HIST((a)).e) - (HIST((b)).e))
 
 static void
 store_history(SynapticsPrivate *priv, int x, int y, unsigned int millis)
@@ -1881,7 +1882,7 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     priv->autoscroll_x = 0.0;
 
     if ((priv->scroll_packet_count > 3) && (para->coasting_speed > 0.0)) {
-	double pkt_time = (HIST(0).millis - HIST(3).millis) / 1000.0;
+	double pkt_time = HIST_DELTA(0, 3, millis) / 1000.0;
 	if (vert && !circ) {
 	    double dy = estimate_delta(HIST(0).y, HIST(1).y, HIST(2).y, HIST(3).y);
 	    int sdelta = para->scroll_dist_vert;
