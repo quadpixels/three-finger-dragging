@@ -2440,7 +2440,8 @@ post_scroll_events(const InputInfoPtr pInfo, struct ScrollData scroll)
 static inline int
 repeat_scrollbuttons(const InputInfoPtr pInfo,
                      const struct SynapticsHwState *hw,
-		     int buttons, CARD32 now, int delay)
+		     int buttons, CARD32 now, int delay,
+		     struct ScrollData *sd)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters *para = &priv->synpara;
@@ -2477,8 +2478,14 @@ repeat_scrollbuttons(const InputInfoPtr pInfo,
 	    while (change) {
 		id = ffs(change);
 		change &= ~(1 << (id - 1));
-		xf86PostButtonEvent(pInfo->dev, FALSE, id, FALSE, 0, 0);
-		xf86PostButtonEvent(pInfo->dev, FALSE, id, TRUE, 0, 0);
+		if (id == 4)
+		    sd->up++;
+		else if (id == 5)
+		    sd->down++;
+		else if (id == 6)
+		    sd->left++;
+		else if (id == 7)
+		    sd->right++;
 	    }
 
 	    priv->nextRepeat = now + repeat_delay;
@@ -2642,6 +2649,9 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 	xf86PostButtonEvent(pInfo->dev, FALSE, id, (buttons & (1 << (id - 1))), 0, 0);
     }
 
+    if (priv->has_scrollbuttons)
+	delay = repeat_scrollbuttons(pInfo, hw, buttons, now, delay, &scroll);
+
     /* Process scroll events only if coordinates are
      * in the Synaptics Area
      */
@@ -2656,9 +2666,6 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 	post_button_click(pInfo, 1);
 	post_button_click(pInfo, 1);
     }
-
-    if (priv->has_scrollbuttons)
-	delay = repeat_scrollbuttons(pInfo, hw, buttons, now, delay);
 
     /* Save old values of some state variables */
     priv->finger_state = finger;
