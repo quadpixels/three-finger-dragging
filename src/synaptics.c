@@ -1941,10 +1941,6 @@ out:
     return delay;
 }
 
-struct ScrollData {
-    int left, right, up, down;
-};
-
 static double
 estimate_delta_circ(SynapticsPrivate *priv)
 {
@@ -2025,12 +2021,10 @@ stop_coasting(SynapticsPrivate *priv)
 
 static int
 HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
-		edge_type edge, Bool finger, struct ScrollData *sd)
+		edge_type edge, Bool finger)
 {
     SynapticsParameters *para = &priv->synpara;
     int delay = 1000000000;
-
-    sd->left = sd->right = sd->up = sd->down = 0;
 
     if ((priv->synpara.touchpad_off == 2) || (priv->finger_state == FS_BLOCKED)) {
 	stop_coasting(priv);
@@ -2207,96 +2201,56 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
     if (priv->vert_scroll_edge_on || priv->vert_scroll_twofinger_on) {
 	/* + = down, - = up */
-	int delta = para->scroll_dist_vert;
-	if (delta > 0) {
-	    while (hw->y - priv->scroll.last_y > delta) {
-		sd->down++;
-		priv->scroll.last_y += delta;
-	    }
-	    while (hw->y - priv->scroll.last_y < -delta) {
-		sd->up++;
-		priv->scroll.last_y -= delta;
-	    }
+	double delta = para->scroll_dist_vert;
+	if (delta > 0 && hw->y != priv->scroll.last_y) {
+	    priv->scroll.delta_y += (hw->y - priv->scroll.last_y) / delta;
+	    priv->scroll.last_y = hw->y;
 	}
     }
     if (priv->horiz_scroll_edge_on || priv->horiz_scroll_twofinger_on) {
 	/* + = right, - = left */
-	int delta = para->scroll_dist_horiz;
-	if (delta > 0) {
-	    while (hw->x - priv->scroll.last_x > delta) {
-		sd->right++;
-		priv->scroll.last_x += delta;
-	    }
-	    while (hw->x - priv->scroll.last_x < -delta) {
-		sd->left++;
-		priv->scroll.last_x -= delta;
-	    }
+	double delta = para->scroll_dist_horiz;
+	if (delta > 0 && hw->x != priv->scroll.last_x) {
+	    priv->scroll.delta_x += (hw->x - priv->scroll.last_x) / delta;
+	    priv->scroll.last_x = hw->x;
 	}
     }
     if (priv->circ_scroll_on) {
 	/* + = counter clockwise, - = clockwise */
 	double delta = para->scroll_dist_circ;
-	if (delta >= 0.005) {
-	    while (diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y)) > delta) {
-		if (priv->circ_scroll_vert)
-		    sd->up++;
-		else
-		    sd->right++;
-		priv->scroll.last_a += delta;
-		if (priv->scroll.last_a > M_PI)
-		    priv->scroll.last_a -= 2 * M_PI;
-	    }
-	    while (diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y)) < -delta) {
-		if (priv->circ_scroll_vert)
-		    sd->down++;
-		else
-		    sd->left++;
-		priv->scroll.last_a -= delta;
-		if (priv->scroll.last_a < -M_PI)
-		    priv->scroll.last_a += 2 * M_PI;
-	    }
-	}
+	double diff = diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y));
+	if (delta >= 0.005 && diff != 0.0) {
+	    if (priv->circ_scroll_vert)
+		priv->scroll.delta_y += diff / delta;
+	    else
+		priv->scroll.delta_x += diff / delta;
+	    priv->scroll.last_a = angle(priv, hw->x, hw->y);
+        }
     }
 
     if (priv->scroll.coast_speed_y) {
 	double dtime = (hw->millis - priv->scroll.last_millis) / 1000.0;
 	double ddy = para->coasting_friction * dtime;
-	priv->scroll.coast_delta_y += priv->scroll.coast_speed_y * dtime;
+	priv->scroll.delta_y += priv->scroll.coast_speed_y * dtime;
 	delay = MIN(delay, POLL_MS);
-	while (priv->scroll.coast_delta_y > 1.0) {
-	    sd->down++;
-	    priv->scroll.coast_delta_y -= 1.0;
-	}
-	while (priv->scroll.coast_delta_y < -1.0) {
-	    sd->up++;
-	    priv->scroll.coast_delta_y += 1.0;
-	}
 	if (abs(priv->scroll.coast_speed_y) < ddy) {
 	    priv->scroll.coast_speed_y = 0;
 	    priv->scroll.packets_this_scroll = 0;
 	} else {
-	    priv->scroll.coast_speed_y += (priv->scroll.coast_speed_y < 0 ? ddy : -1*ddy);
+	    priv->scroll.coast_speed_y += (priv->scroll.coast_speed_y < 0 ? ddy : -ddy);
 	}
     }
 
     if (priv->scroll.coast_speed_x) {
 	double dtime = (hw->millis - priv->scroll.last_millis) / 1000.0;
 	double ddx = para->coasting_friction * dtime;
-	priv->scroll.coast_delta_x += priv->scroll.coast_speed_x * dtime;
+	priv->scroll.delta_x += priv->scroll.coast_speed_x * dtime;
 	delay = MIN(delay, POLL_MS);
-	while (priv->scroll.coast_delta_x > 1.0) {
-	    sd->right++;
-	    priv->scroll.coast_delta_x -= 1.0;
-	}
-	while (priv->scroll.coast_delta_x < -1.0) {
-	    sd->left++;
-	    priv->scroll.coast_delta_x += 1.0;
-	}
 	if (abs(priv->scroll.coast_speed_x) < ddx) {
 	    priv->scroll.coast_speed_x = 0;
 	    priv->scroll.packets_this_scroll = 0;
 	} else {
-	    priv->scroll.coast_speed_x += (priv->scroll.coast_speed_x < 0 ? ddx : -1*ddx);
+	    priv->scroll.coast_speed_x += (priv->scroll.coast_speed_x < 0 ? ddx : -ddx);
 	}
     }
 
@@ -2435,26 +2389,40 @@ post_button_click(const InputInfoPtr pInfo, const int button)
 
 
 static void
-post_scroll_events(const InputInfoPtr pInfo, struct ScrollData scroll)
+post_scroll_events(const InputInfoPtr pInfo)
 {
-    while (scroll.up-- > 0)
+    SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
+    SynapticsParameters *para = &priv->synpara;
+
+    while (priv->scroll.delta_y <= -1.0)
+    {
         post_button_click(pInfo, 4);
+        priv->scroll.delta_y += 1.0;
+    }
 
-    while (scroll.down-- > 0)
+    while (priv->scroll.delta_y >= 1.0)
+    {
         post_button_click(pInfo, 5);
+        priv->scroll.delta_y -= 1.0;
+    }
 
-    while (scroll.left-- > 0)
+    while (priv->scroll.delta_x <= -1.0)
+    {
         post_button_click(pInfo, 6);
+        priv->scroll.delta_x += 1.0;
+    }
 
-    while (scroll.right-- > 0)
+    while (priv->scroll.delta_x >= 1.0)
+    {
         post_button_click(pInfo, 7);
+        priv->scroll.delta_x -= 1.0;
+    }
 }
 
 static inline int
 repeat_scrollbuttons(const InputInfoPtr pInfo,
                      const struct SynapticsHwState *hw,
-		     int buttons, CARD32 now, int delay,
-		     struct ScrollData *sd)
+		     int buttons, CARD32 now, int delay)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters *para = &priv->synpara;
@@ -2492,13 +2460,13 @@ repeat_scrollbuttons(const InputInfoPtr pInfo,
 		id = ffs(change);
 		change &= ~(1 << (id - 1));
 		if (id == 4)
-		    sd->up++;
+		    priv->scroll.delta_y -= 1.0;
 		else if (id == 5)
-		    sd->down++;
+		    priv->scroll.delta_y += 1.0;
 		else if (id == 6)
-		    sd->left++;
+		    priv->scroll.delta_x -= 1.0;
 		else if (id == 7)
-		    sd->right++;
+		    priv->scroll.delta_x += 1.0;
 	    }
 
 	    priv->nextRepeat = now + repeat_delay;
@@ -2529,7 +2497,6 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     int dx, dy, buttons, id;
     edge_type edge = NO_EDGE;
     int change;
-    struct ScrollData scroll;
     int double_click = FALSE;
     int delay = 1000000000;
     int timeleft;
@@ -2594,8 +2561,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     if (inside_active_area)
     {
 	/* Don't bother about scrolling in the dead area of the touchpad. */
-	timeleft = HandleScrolling(priv, hw, edge, (finger >= FS_TOUCHED),
-				   &scroll);
+	timeleft = HandleScrolling(priv, hw, edge, (finger >= FS_TOUCHED));
 	if (timeleft > 0)
 	    delay = MIN(delay, timeleft);
 
@@ -2663,15 +2629,14 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     }
 
     if (priv->has_scrollbuttons)
-	delay = repeat_scrollbuttons(pInfo, hw, buttons, now, delay, &scroll);
+	delay = repeat_scrollbuttons(pInfo, hw, buttons, now, delay);
 
     /* Process scroll events only if coordinates are
      * in the Synaptics Area
      */
     if (inside_active_area &&
-        (scroll.down != 0 || scroll.up != 0 || scroll.left != 0 ||
-         scroll.right != 0)) {
-	post_scroll_events(pInfo, scroll);
+        (priv->scroll.delta_x != 0.0 || priv->scroll.delta_y != 0.0)) {
+	post_scroll_events(pInfo);
 	priv->scroll.last_millis = hw->millis;
     }
 

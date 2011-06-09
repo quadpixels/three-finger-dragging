@@ -196,6 +196,8 @@ typedef struct _SynapticsPrivateRec
     struct {
         int last_x;			/* last x-scroll position */
         int last_y;			/* last y-scroll position */
+        double delta_x;			/* accumulated horiz scroll delta */
+        double delta_y;			/* accumulated vert scroll delta */
         double last_a;			/* last angle-scroll position */
         CARD32 last_millis;		/* time last scroll event posted */
         double coast_speed_x;		/* Horizontal coasting speed */
