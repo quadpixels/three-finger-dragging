@@ -90,6 +90,21 @@ typedef enum {
     LEFT_TOP_EDGE = TOP_EDGE | LEFT_EDGE
 } edge_type;
 
+/*
+ * We expect to be receiving a steady 80 packets/sec (which gives 40
+ * reports/sec with more than one finger on the pad, as Advanced Gesture Mode
+ * requires two PS/2 packets per report).  Instead of a random scattering of
+ * magic 13 and 20ms numbers scattered throughout the driver, introduce
+ * POLL_MS as 14ms, which is slightly less than 80Hz.  13ms is closer to
+ * 80Hz, but if the kernel event reporting was even slightly delayed,
+ * we would produce synthetic motion followed immediately by genuine
+ * motion, so use 14.
+ *
+ * We use this to call back at a constant rate to at least produce the
+ * illusion of smooth motion.  It works a lot better than you'd expect.
+*/
+#define POLL_MS 14
+
 #define MAX(a, b) (((a)>(b))?(a):(b))
 #define MIN(a, b) (((a)<(b))?(a):(b))
 #define TIME_DIFF(a, b) ((int)((a)-(b)))
@@ -1829,9 +1844,10 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
         goto out;
     }
 
-    /* to create fluid edge motion, call back 'soon'
-     * even in the absence of new hardware events */
-    delay = MIN(delay, 13);
+    /* To create the illusion of fluid motion, call back at roughly the report
+     * rate, even in the absence of new hardware events; see comment above
+     * POLL_MS declaration. */
+    delay = MIN(delay, POLL_MS);
 
     if (priv->count_packet_finger <= 3) /* min. 3 packets, see get_delta() */
         goto skip; /* skip the lot */
@@ -2173,7 +2189,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	double dtime = (hw->millis - HIST(0).millis) / 1000.0;
 	double ddy = para->coasting_friction * dtime;
 	priv->autoscroll_y += priv->autoscroll_yspd * dtime;
-	delay = MIN(delay, 20);
+	delay = MIN(delay, POLL_MS);
 	while (priv->autoscroll_y > 1.0) {
 	    sd->down++;
 	    priv->autoscroll_y -= 1.0;
@@ -2194,7 +2210,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	double dtime = (hw->millis - HIST(0).millis) / 1000.0;
 	double ddx = para->coasting_friction * dtime;
 	priv->autoscroll_x += priv->autoscroll_xspd * dtime;
-	delay = MIN(delay, 20);
+	delay = MIN(delay, POLL_MS);
 	while (priv->autoscroll_x > 1.0) {
 	    sd->right++;
 	    priv->autoscroll_x -= 1.0;
