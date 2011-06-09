@@ -593,11 +593,22 @@ static void set_default_parameters(InputInfoPtr pInfo)
     }
 }
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 14
+static double SynapticsAccelerationProfile(DeviceIntPtr dev,
+                                           DeviceVelocityPtr vel,
+                                           double velocity,
+                                           double thr,
+                                           double acc) {
+#else
 static float SynapticsAccelerationProfile(DeviceIntPtr dev,
                                           DeviceVelocityPtr vel,
-                                          float velocity,
-                                          float thr,
-                                          float acc) {
+                                          float velocity_f,
+                                          float thr_f,
+                                          float acc_f) {
+    double velocity = velocity_f;
+    double thr = thr_f;
+    double acc = acc_f;
+#endif
     InputInfoPtr pInfo = dev->public.devicePrivate;
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters* para = &priv->synpara;
