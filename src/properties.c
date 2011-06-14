@@ -96,7 +96,8 @@ Atom prop_product_id            = 0;
 Atom prop_device_node           = 0;
 
 static Atom
-InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
+InitTypedAtom(DeviceIntPtr dev, char *name, Atom type, int format, int nvalues,
+              int *values)
 {
     int i;
     Atom atom;
@@ -124,11 +125,16 @@ InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
     }
 
     atom = MakeAtom(name, strlen(name), TRUE);
-    XIChangeDeviceProperty(dev, atom, XA_INTEGER, format,
-                           PropModeReplace, nvalues,
+    XIChangeDeviceProperty(dev, atom, type, format, PropModeReplace, nvalues,
                            converted, FALSE);
     XISetDevicePropertyDeletable(dev, atom, FALSE);
     return atom;
+}
+
+static Atom
+InitAtom(DeviceIntPtr dev, char *name, int format, int nvalues, int *values)
+{
+    return InitTypedAtom(dev, name, XA_INTEGER, format, nvalues, values);
 }
 
 static Atom
