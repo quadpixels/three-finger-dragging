@@ -70,15 +70,15 @@
 #include <xf86Xinput.h>
 #include <exevents.h>
 
-#include "synaptics.h"
-#include "synapticsstr.h"
-#include "synaptics-properties.h"
-
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 #include <X11/Xatom.h>
 #include <xserver-properties.h>
 #include <ptrveloc.h>
 #endif
+
+#include "synaptics.h"
+#include "synapticsstr.h"
+#include "synaptics-properties.h"
 
 typedef enum {
     NO_EDGE = 0,
