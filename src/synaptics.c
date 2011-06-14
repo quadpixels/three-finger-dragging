@@ -1683,6 +1683,8 @@ store_history(SynapticsPrivate *priv, int x, int y, CARD32 millis)
     priv->move_hist[idx].y = y;
     priv->move_hist[idx].millis = millis;
     priv->hist_index = idx;
+    if (priv->count_packet_finger < SYNAPTICS_MOVE_HISTORY)
+        priv->count_packet_finger++;
 }
 
 /*
@@ -1846,15 +1848,13 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     delay = MIN(delay, POLL_MS);
 
     if (priv->count_packet_finger <= 3) /* min. 3 packets, see get_delta() */
-        goto skip; /* skip the lot */
+        goto out; /* skip the lot */
 
     if (priv->moving_state == MS_TRACKSTICK)
         get_delta_for_trackstick(priv, hw, &dx, &dy);
     else if (moving_state == MS_TOUCHPAD_RELATIVE)
         get_delta(priv, hw, edge, &dx, &dy);
 
-skip:
-    priv->count_packet_finger++;
 out:
     priv->prevFingers = hw->numFingers;
 
