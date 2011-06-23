@@ -193,9 +193,11 @@ typedef struct _SynapticsPrivateRec
     int hist_index;			/* Last added entry in move_hist[] */
     int hyst_center_x;			/* center x of hysteresis*/
     int hyst_center_y;			/* center y of hysteresis*/
-    int scroll_y;			/* last y-scroll position */
-    int scroll_x;			/* last x-scroll position */
-    double scroll_a;			/* last angle-scroll position */
+    struct {
+        int last_x;			/* last x-scroll position */
+        int last_y;			/* last y-scroll position */
+        double last_a;			/* last angle-scroll position */
+    } scroll;
     int count_packet_finger;		/* packet counter with finger on the touchpad */
     int button_delay_millis;		/* button delay for 3rd button emulation */
     Bool prev_up;			/* Previous up button value, for double click emulation */

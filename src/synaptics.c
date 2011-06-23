@@ -1966,7 +1966,7 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		double scrolls_per_sec = dy / pkt_time / sdelta;
 		if (fabs(scrolls_per_sec) >= para->coasting_speed) {
 		    priv->autoscroll_yspd = scrolls_per_sec;
-		    priv->autoscroll_y = (hw->y - priv->scroll_y) / (double)sdelta;
+		    priv->autoscroll_y = (hw->y - priv->scroll.last_y) / (double)sdelta;
 		}
 	    }
 	}
@@ -1977,7 +1977,7 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		double scrolls_per_sec = dx / pkt_time / sdelta;
 		if (fabs(scrolls_per_sec) >= para->coasting_speed) {
 		    priv->autoscroll_xspd = scrolls_per_sec;
-		    priv->autoscroll_x = (hw->x - priv->scroll_x) / (double)sdelta;
+		    priv->autoscroll_x = (hw->x - priv->scroll.last_x) / (double)sdelta;
 		}
 	    }
 	}
@@ -1989,11 +1989,11 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	        if (fabs(scrolls_per_sec) >= para->coasting_speed) {
 	            if (vert) {
 	                priv->autoscroll_yspd = scrolls_per_sec;
-	                priv->autoscroll_y = diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) / sdelta;
+	                priv->autoscroll_y = diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y)) / sdelta;
 	            }
 	            else if (horiz) {
 	                priv->autoscroll_xspd = scrolls_per_sec;
-	                priv->autoscroll_x = diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) / sdelta;
+	                priv->autoscroll_x = diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y)) / sdelta;
 	            }
 	        }
 	    }
@@ -2044,7 +2044,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		(para->circular_trigger == 8 && edge & LEFT_EDGE && edge & TOP_EDGE)) {
 		priv->circ_scroll_on = TRUE;
 		priv->circ_scroll_vert = TRUE;
-		priv->scroll_a = angle(priv, hw->x, hw->y);
+		priv->scroll.last_a = angle(priv, hw->x, hw->y);
 		DBG(7, "circular scroll detected on edge\n");
 	    }
 	}
@@ -2056,14 +2056,14 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		    (para->scroll_twofinger_vert) && (para->scroll_dist_vert != 0)) {
 		    priv->vert_scroll_twofinger_on = TRUE;
 		    priv->vert_scroll_edge_on = FALSE;
-		    priv->scroll_y = hw->y;
+		    priv->scroll.last_y = hw->y;
 		    DBG(7, "vert two-finger scroll detected\n");
 		}
 		if (!priv->horiz_scroll_twofinger_on &&
 		    (para->scroll_twofinger_horiz) && (para->scroll_dist_horiz != 0)) {
 		    priv->horiz_scroll_twofinger_on = TRUE;
 		    priv->horiz_scroll_edge_on = FALSE;
-		    priv->scroll_x = hw->x;
+		    priv->scroll.last_x = hw->x;
 		    DBG(7, "horiz two-finger scroll detected\n");
 		}
 	    }
@@ -2073,13 +2073,13 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		if ((para->scroll_edge_vert) && (para->scroll_dist_vert != 0) &&
 		    (edge & RIGHT_EDGE)) {
 		    priv->vert_scroll_edge_on = TRUE;
-		    priv->scroll_y = hw->y;
+		    priv->scroll.last_y = hw->y;
 		    DBG(7, "vert edge scroll detected on right edge\n");
 		}
 		if ((para->scroll_edge_horiz) && (para->scroll_dist_horiz != 0) &&
 		    (edge & BOTTOM_EDGE)) {
 		    priv->horiz_scroll_edge_on = TRUE;
-		    priv->scroll_x = hw->x;
+		    priv->scroll.last_x = hw->x;
 		    DBG(7, "horiz edge scroll detected on bottom edge\n");
 		}
 	    }
@@ -2162,7 +2162,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    priv->vert_scroll_edge_on = FALSE;
 	    priv->circ_scroll_on = TRUE;
 	    priv->circ_scroll_vert = TRUE;
-	    priv->scroll_a = angle(priv, hw->x, hw->y);
+	    priv->scroll.last_a = angle(priv, hw->x, hw->y);
 	    DBG(7, "switching to circular scrolling\n");
 	}
     }
@@ -2181,7 +2181,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    priv->horiz_scroll_edge_on = FALSE;
 	    priv->circ_scroll_on = TRUE;
 	    priv->circ_scroll_vert = FALSE;
-	    priv->scroll_a = angle(priv, hw->x, hw->y);
+	    priv->scroll.last_a = angle(priv, hw->x, hw->y);
 	    DBG(7, "switching to circular scrolling\n");
 	}
     }
@@ -2196,13 +2196,13 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	/* + = down, - = up */
 	int delta = para->scroll_dist_vert;
 	if (delta > 0) {
-	    while (hw->y - priv->scroll_y > delta) {
+	    while (hw->y - priv->scroll.last_y > delta) {
 		sd->down++;
-		priv->scroll_y += delta;
+		priv->scroll.last_y += delta;
 	    }
-	    while (hw->y - priv->scroll_y < -delta) {
+	    while (hw->y - priv->scroll.last_y < -delta) {
 		sd->up++;
-		priv->scroll_y -= delta;
+		priv->scroll.last_y -= delta;
 	    }
 	}
     }
@@ -2210,13 +2210,13 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	/* + = right, - = left */
 	int delta = para->scroll_dist_horiz;
 	if (delta > 0) {
-	    while (hw->x - priv->scroll_x > delta) {
+	    while (hw->x - priv->scroll.last_x > delta) {
 		sd->right++;
-		priv->scroll_x += delta;
+		priv->scroll.last_x += delta;
 	    }
-	    while (hw->x - priv->scroll_x < -delta) {
+	    while (hw->x - priv->scroll.last_x < -delta) {
 		sd->left++;
-		priv->scroll_x -= delta;
+		priv->scroll.last_x -= delta;
 	    }
 	}
     }
@@ -2224,23 +2224,23 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	/* + = counter clockwise, - = clockwise */
 	double delta = para->scroll_dist_circ;
 	if (delta >= 0.005) {
-	    while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) > delta) {
+	    while (diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y)) > delta) {
 		if (priv->circ_scroll_vert)
 		    sd->up++;
 		else
 		    sd->right++;
-		priv->scroll_a += delta;
-		if (priv->scroll_a > M_PI)
-		    priv->scroll_a -= 2 * M_PI;
+		priv->scroll.last_a += delta;
+		if (priv->scroll.last_a > M_PI)
+		    priv->scroll.last_a -= 2 * M_PI;
 	    }
-	    while (diffa(priv->scroll_a, angle(priv, hw->x, hw->y)) < -delta) {
+	    while (diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y)) < -delta) {
 		if (priv->circ_scroll_vert)
 		    sd->down++;
 		else
 		    sd->left++;
-		priv->scroll_a -= delta;
-		if (priv->scroll_a < -M_PI)
-		    priv->scroll_a += 2 * M_PI;
+		priv->scroll.last_a -= delta;
+		if (priv->scroll.last_a < -M_PI)
+		    priv->scroll.last_a += 2 * M_PI;
 	    }
 	}
     }
