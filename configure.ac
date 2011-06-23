@@ -54,7 +54,7 @@ m4_ifndef([XORG_DRIVER_CHECK_EXT],
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 
 # Obtain compiler/linker options for the Synaptics driver dependencies
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.6] xproto inputproto $REQUIRED_MODULES)
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.7] xproto inputproto $REQUIRED_MODULES)
 
 # X Server SDK location is required to install Synaptics header files
 # This location is also relayed in the xorg-synaptics.pc file

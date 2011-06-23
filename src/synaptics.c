@@ -70,11 +70,9 @@
 #include <xf86Xinput.h>
 #include <exevents.h>
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 #include <X11/Xatom.h>
 #include <xserver-properties.h>
 #include <ptrveloc.h>
-#endif
 
 #include "synaptics.h"
 #include "synapticsstr.h"
@@ -896,7 +894,6 @@ DeviceClose(DeviceIntPtr dev)
     return RetValue;
 }
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
 static void InitAxesLabels(Atom *labels, int nlabels)
 {
     memset(labels, 0, nlabels * sizeof(Atom));
@@ -934,7 +931,6 @@ static void InitButtonLabels(Atom *labels, int nlabels)
             break;
     }
 }
-#endif
 
 static Bool
 DeviceInit(DeviceIntPtr dev)
@@ -946,14 +942,12 @@ DeviceInit(DeviceIntPtr dev)
     unsigned char map[SYN_MAX_BUTTONS + 1];
     int i;
     int min, max;
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
     Atom btn_labels[SYN_MAX_BUTTONS] = { 0 };
     Atom axes_labels[2] = { 0 };
     DeviceVelocityPtr pVel;
 
     InitAxesLabels(axes_labels, 2);
     InitButtonLabels(btn_labels, SYN_MAX_BUTTONS);
-#endif
 
     DBG(3, "Synaptics DeviceInit called\n");
 
@@ -964,22 +958,17 @@ DeviceInit(DeviceIntPtr dev)
 
     InitPointerDeviceStruct((DevicePtr)dev, map,
 			    SYN_MAX_BUTTONS,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                             btn_labels,
-#endif
 			    SynapticsCtrl,
-			    GetMotionHistorySize(), 2
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-                            , axes_labels
-#endif
-			    );
+			    GetMotionHistorySize(),
+                            2,
+                            axes_labels);
 
     /*
      * setup dix acceleration to match legacy synaptics settings, and
      * etablish a device-specific profile to do stuff like pressure-related
      * acceleration.
      */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
     if (NULL != (pVel = GetDevicePredictableAccelData(dev))) {
 	SetDeviceSpecificAccelerationProfile(pVel,
 	                                     SynapticsAccelerationProfile);
@@ -1015,7 +1004,6 @@ DeviceInit(DeviceIntPtr dev)
 	XIChangeDeviceProperty(dev, prop, XA_INTEGER, 32,
 	                       PropModeReplace, 1, &i, FALSE);
     }
-#endif
 
     /* X valuator */
     if (priv->minx < priv->maxx)
@@ -1028,10 +1016,7 @@ DeviceInit(DeviceIntPtr dev)
         max = -1;
     }
 
-    xf86InitValuatorAxisStruct(dev, 0,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-            axes_labels[0],
-#endif
+    xf86InitValuatorAxisStruct(dev, 0, axes_labels[0],
             min, max, priv->resx * 1000, 0, priv->resx * 1000
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
             , Relative
@@ -1050,10 +1035,7 @@ DeviceInit(DeviceIntPtr dev)
         max = -1;
     }
 
-    xf86InitValuatorAxisStruct(dev, 1,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-            axes_labels[1],
-#endif
+    xf86InitValuatorAxisStruct(dev, 1, axes_labels[1],
             min, max, priv->resy * 1000, 0, priv->resy * 1000
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
             , Relative
