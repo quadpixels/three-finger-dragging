@@ -36,7 +36,7 @@
  * A structure to describe the state of the touchpad hardware (buttons and pad)
  */
 struct SynapticsHwState {
-    int millis;			/* Timestamp in milliseconds */
+    CARD32 millis;		/* Timestamp in milliseconds */
     int x;			/* X position of finger */
     int y;			/* Y position of finger */
     int z;			/* Finger pressure */

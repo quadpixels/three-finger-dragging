@@ -1444,7 +1444,7 @@ SelectTapButton(SynapticsPrivate *priv, edge_type edge)
 }
 
 static void
-SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
+SetTapState(SynapticsPrivate *priv, enum TapState tap_state, CARD32 millis)
 {
     SynapticsParameters *para = &priv->synpara;
     DBG(7, "SetTapState - %d -> %d (millis:%d)\n", priv->tap_state, tap_state, millis);
@@ -1485,7 +1485,7 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, int millis)
 }
 
 static void
-SetMovingState(SynapticsPrivate *priv, enum MovingState moving_state, int millis)
+SetMovingState(SynapticsPrivate *priv, enum MovingState moving_state, CARD32 millis)
 {
     DBG(7, "SetMovingState - %d -> %d center at %d/%d (millis:%d)\n", priv->moving_state,
 		  moving_state,priv->hwState.x, priv->hwState.y, millis);
@@ -1680,7 +1680,7 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 #define HIST_DELTA(a, b, e) ((HIST((a)).e) - (HIST((b)).e))
 
 static void
-store_history(SynapticsPrivate *priv, int x, int y, unsigned int millis)
+store_history(SynapticsPrivate *priv, int x, int y, CARD32 millis)
 {
     int idx = (priv->hist_index + 1) % SYNAPTICS_MOVE_HISTORY;
     priv->move_hist[idx].x = x;

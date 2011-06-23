@@ -48,7 +48,7 @@
 typedef struct _SynapticsMoveHist
 {
     int x, y;
-    int millis;
+    CARD32 millis;
 } SynapticsMoveHistRec;
 
 enum FingerState {              /* Note! The order matters. Compared with < operator. */
