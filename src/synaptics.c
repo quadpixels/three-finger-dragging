@@ -1954,10 +1954,10 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 {
     SynapticsParameters *para = &priv->synpara;
 
-    priv->autoscroll_y = 0.0;
-    priv->autoscroll_x = 0.0;
+    priv->scroll.coast_delta_y = 0.0;
+    priv->scroll.coast_delta_x = 0.0;
 
-    if ((priv->scroll_packet_count > 3) && (para->coasting_speed > 0.0)) {
+    if ((priv->scroll.packets_this_scroll > 3) && (para->coasting_speed > 0.0)) {
 	double pkt_time = HIST_DELTA(0, 3, millis) / 1000.0;
 	if (vert && !circ) {
 	    double dy = estimate_delta(HIST(0).y, HIST(1).y, HIST(2).y, HIST(3).y);
@@ -1965,8 +1965,8 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    if (pkt_time > 0 && sdelta > 0) {
 		double scrolls_per_sec = dy / pkt_time / sdelta;
 		if (fabs(scrolls_per_sec) >= para->coasting_speed) {
-		    priv->autoscroll_yspd = scrolls_per_sec;
-		    priv->autoscroll_y = (hw->y - priv->scroll.last_y) / (double)sdelta;
+		    priv->scroll.coast_speed_y = scrolls_per_sec;
+		    priv->scroll.coast_delta_y = (hw->y - priv->scroll.last_y) / (double)sdelta;
 		}
 	    }
 	}
@@ -1976,8 +1976,8 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    if (pkt_time > 0 && sdelta > 0) {
 		double scrolls_per_sec = dx / pkt_time / sdelta;
 		if (fabs(scrolls_per_sec) >= para->coasting_speed) {
-		    priv->autoscroll_xspd = scrolls_per_sec;
-		    priv->autoscroll_x = (hw->x - priv->scroll.last_x) / (double)sdelta;
+		    priv->scroll.coast_speed_x = scrolls_per_sec;
+		    priv->scroll.coast_delta_x = (hw->x - priv->scroll.last_x) / (double)sdelta;
 		}
 	    }
 	}
@@ -1988,26 +1988,26 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	        double scrolls_per_sec = da / pkt_time / sdelta;
 	        if (fabs(scrolls_per_sec) >= para->coasting_speed) {
 	            if (vert) {
-	                priv->autoscroll_yspd = scrolls_per_sec;
-	                priv->autoscroll_y = diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y)) / sdelta;
+	                priv->scroll.coast_speed_y = scrolls_per_sec;
+	                priv->scroll.coast_delta_y = diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y)) / sdelta;
 	            }
 	            else if (horiz) {
-	                priv->autoscroll_xspd = scrolls_per_sec;
-	                priv->autoscroll_x = diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y)) / sdelta;
+	                priv->scroll.coast_speed_x = scrolls_per_sec;
+	                priv->scroll.coast_delta_x = diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y)) / sdelta;
 	            }
 	        }
 	    }
 	}
     }
-    priv->scroll_packet_count = 0;
+    priv->scroll.packets_this_scroll = 0;
 }
 
 static void
 stop_coasting(SynapticsPrivate *priv)
 {
-    priv->autoscroll_xspd = 0;
-    priv->autoscroll_yspd = 0;
-    priv->scroll_packet_count = 0;
+    priv->scroll.coast_speed_x = 0;
+    priv->scroll.coast_speed_y = 0;
+    priv->scroll.packets_this_scroll = 0;
 }
 
 static int
@@ -2121,7 +2121,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	}
 	/* If we were corner edge scrolling (coasting),
 	 * but no longer in corner or raised a finger, then stop coasting. */
-	if (para->scroll_edge_corner && (priv->autoscroll_xspd || priv->autoscroll_yspd)) {
+	if (para->scroll_edge_corner && (priv->scroll.coast_speed_x || priv->scroll.coast_speed_y)) {
 	    Bool is_in_corner =
 		((edge & RIGHT_EDGE)  && (edge & (TOP_EDGE | BOTTOM_EDGE))) ||
 		((edge & BOTTOM_EDGE) && (edge & (LEFT_EDGE | RIGHT_EDGE))) ;
@@ -2151,7 +2151,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     if (priv->vert_scroll_edge_on && !priv->horiz_scroll_edge_on &&
 	(edge & RIGHT_EDGE) && (edge & (TOP_EDGE | BOTTOM_EDGE))) {
 	if (para->scroll_edge_corner) {
-	    if (priv->autoscroll_yspd == 0) {
+	    if (priv->scroll.coast_speed_y == 0) {
 		/* FYI: We can generate multiple start_coasting requests if
 		 * we're in the corner, but we were moving so slowly when we
 		 * got here that we didn't actually start coasting. */
@@ -2170,7 +2170,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     if (priv->horiz_scroll_edge_on && !priv->vert_scroll_edge_on &&
 	(edge & BOTTOM_EDGE) && (edge & (LEFT_EDGE | RIGHT_EDGE))) {
 	if (para->scroll_edge_corner) {
-	    if (priv->autoscroll_xspd == 0) {
+	    if (priv->scroll.coast_speed_x == 0) {
 		/* FYI: We can generate multiple start_coasting requests if
 		 * we're in the corner, but we were moving so slowly when we
 		 * got here that we didn't actually start coasting. */
@@ -2189,7 +2189,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     if (priv->vert_scroll_edge_on || priv->horiz_scroll_edge_on ||
 	priv->vert_scroll_twofinger_on || priv->horiz_scroll_twofinger_on ||
 	priv->circ_scroll_on) {
-	priv->scroll_packet_count++;
+	priv->scroll.packets_this_scroll++;
     }
 
     if (priv->vert_scroll_edge_on || priv->vert_scroll_twofinger_on) {
@@ -2245,45 +2245,45 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	}
     }
 
-    if (priv->autoscroll_yspd) {
+    if (priv->scroll.coast_speed_y) {
 	double dtime = (hw->millis - priv->scroll.last_millis) / 1000.0;
 	double ddy = para->coasting_friction * dtime;
-	priv->autoscroll_y += priv->autoscroll_yspd * dtime;
+	priv->scroll.coast_delta_y += priv->scroll.coast_speed_y * dtime;
 	delay = MIN(delay, POLL_MS);
-	while (priv->autoscroll_y > 1.0) {
+	while (priv->scroll.coast_delta_y > 1.0) {
 	    sd->down++;
-	    priv->autoscroll_y -= 1.0;
+	    priv->scroll.coast_delta_y -= 1.0;
 	}
-	while (priv->autoscroll_y < -1.0) {
+	while (priv->scroll.coast_delta_y < -1.0) {
 	    sd->up++;
-	    priv->autoscroll_y += 1.0;
+	    priv->scroll.coast_delta_y += 1.0;
 	}
-	if (abs(priv->autoscroll_yspd) < ddy) {
-	    priv->autoscroll_yspd = 0;
-	    priv->scroll_packet_count = 0;
+	if (abs(priv->scroll.coast_speed_y) < ddy) {
+	    priv->scroll.coast_speed_y = 0;
+	    priv->scroll.packets_this_scroll = 0;
 	} else {
-	    priv->autoscroll_yspd += (priv->autoscroll_yspd < 0 ? ddy : -1*ddy);
+	    priv->scroll.coast_speed_y += (priv->scroll.coast_speed_y < 0 ? ddy : -1*ddy);
 	}
     }
 
-    if (priv->autoscroll_xspd) {
+    if (priv->scroll.coast_speed_x) {
 	double dtime = (hw->millis - priv->scroll.last_millis) / 1000.0;
 	double ddx = para->coasting_friction * dtime;
-	priv->autoscroll_x += priv->autoscroll_xspd * dtime;
+	priv->scroll.coast_delta_x += priv->scroll.coast_speed_x * dtime;
 	delay = MIN(delay, POLL_MS);
-	while (priv->autoscroll_x > 1.0) {
+	while (priv->scroll.coast_delta_x > 1.0) {
 	    sd->right++;
-	    priv->autoscroll_x -= 1.0;
+	    priv->scroll.coast_delta_x -= 1.0;
 	}
-	while (priv->autoscroll_x < -1.0) {
+	while (priv->scroll.coast_delta_x < -1.0) {
 	    sd->left++;
-	    priv->autoscroll_x += 1.0;
+	    priv->scroll.coast_delta_x += 1.0;
 	}
-	if (abs(priv->autoscroll_xspd) < ddx) {
-	    priv->autoscroll_xspd = 0;
-	    priv->scroll_packet_count = 0;
+	if (abs(priv->scroll.coast_speed_x) < ddx) {
+	    priv->scroll.coast_speed_x = 0;
+	    priv->scroll.packets_this_scroll = 0;
 	} else {
-	    priv->autoscroll_xspd += (priv->autoscroll_xspd < 0 ? ddx : -1*ddx);
+	    priv->scroll.coast_speed_x += (priv->scroll.coast_speed_x < 0 ? ddx : -1*ddx);
 	}
     }
 

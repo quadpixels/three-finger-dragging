@@ -198,6 +198,11 @@ typedef struct _SynapticsPrivateRec
         int last_y;			/* last y-scroll position */
         double last_a;			/* last angle-scroll position */
         CARD32 last_millis;		/* time last scroll event posted */
+        double coast_speed_x;		/* Horizontal coasting speed */
+        double coast_speed_y;		/* Vertical coasting speed */
+        double coast_delta_x;		/* Accumulated horizontal coast delta */
+        double coast_delta_y;		/* Accumulated vertical coast delta */
+        int packets_this_scroll;	/* Events received for this scroll */
     } scroll;
     int count_packet_finger;		/* packet counter with finger on the touchpad */
     int button_delay_millis;		/* button delay for 3rd button emulation */
@@ -221,11 +226,6 @@ typedef struct _SynapticsPrivateRec
 					   False: Generate horizontal events */
     int trackstick_neutral_x;		/* neutral x position for trackstick mode */
     int trackstick_neutral_y;		/* neutral y position for trackstick mode */
-    double autoscroll_xspd;		/* Horizontal coasting speed */
-    double autoscroll_yspd;		/* Vertical coasting speed */
-    double autoscroll_x;		/* Accumulated horizontal coasting scroll */
-    double autoscroll_y;		/* Accumulated vertical coasting scroll */
-    int scroll_packet_count;		/* Scroll duration */
     double frac_x, frac_y;		/* absolute -> relative fraction */
     enum MidButtonEmulation mid_emu_state;	/* emulated 3rd button */
     int repeatButtons;			/* buttons for repeat */
