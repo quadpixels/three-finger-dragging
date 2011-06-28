@@ -18,18 +18,10 @@
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-SUBDIRS = include src man tools conf test
-MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = xorg-synaptics.pc
-
-.PHONY: ChangeLog INSTALL
-
-INSTALL:
-	$(INSTALL_CMD)
-
-ChangeLog:
-	$(CHANGELOG_CMD)
-
-dist-hook: ChangeLog INSTALL
+if HAS_XORG_CONF_DIR
+dist_config_DATA = 50-synaptics.conf
+else
+fdidir = $(datadir)/hal/fdi/policy/20thirdparty
+dist_fdi_DATA = 11-x11-synaptics.fdi
+endif

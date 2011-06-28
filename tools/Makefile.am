@@ -1,4 +1,4 @@
-#  Copyright 2005 Adam Jackson.
+#  Copyright 2008 Red Hat, Inc.
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -18,18 +18,14 @@
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-SUBDIRS = include src man tools conf test
-MAINTAINERCLEANFILES = ChangeLog INSTALL
+bin_PROGRAMS = synclient syndaemon
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = xorg-synaptics.pc
+AM_CPPFLAGS = -I$(top_srcdir)/include $(XORG_CFLAGS)
 
-.PHONY: ChangeLog INSTALL
+synclient_SOURCES = synclient.c
+synclient_CFLAGS = $(XI_CFLAGS)
+synclient_LDADD = $(XI_LIBS)
 
-INSTALL:
-	$(INSTALL_CMD)
-
-ChangeLog:
-	$(CHANGELOG_CMD)
-
-dist-hook: ChangeLog INSTALL
+syndaemon_SOURCES = syndaemon.c
+syndaemon_CFLAGS = $(XI_CFLAGS) $(XTST_CFLAGS)
+syndaemon_LDADD = $(XI_LIBS) $(XTST_LIBS)
