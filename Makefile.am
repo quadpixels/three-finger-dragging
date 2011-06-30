@@ -20,7 +20,9 @@
 
 # During distcheck, system locations (as provided by pkg-config) may
 # not be writable; provide instead relative locations.
-DISTCHECK_CONFIGURE_FLAGS = --with-sdkdir='$${includedir}/xorg'
+DISTCHECK_CONFIGURE_FLAGS = \
+	--with-sdkdir='$${includedir}/xorg' \
+	--with-xorg-conf-dir='$${datadir}/X11/xorg.conf.d'
 
 SUBDIRS = include src man tools conf test
 MAINTAINERCLEANFILES = ChangeLog INSTALL
