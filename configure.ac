@@ -146,6 +146,10 @@ if test "x$have_libxtst" = "xyes" ; then
 fi
 # -----------------------------------------------------------------------------
 
+# Workaround overriding sdkdir to be able to create a tarball when user has no
+# write permission in sdkdir. See DISTCHECK_CONFIGURE_FLAGS in Makefile.am
+AC_ARG_WITH([sdkdir], [], [sdkdir="$withval"])
+
 AC_CONFIG_FILES([Makefile
                 src/Makefile
                 man/Makefile
