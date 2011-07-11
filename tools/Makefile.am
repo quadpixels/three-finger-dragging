@@ -20,7 +20,7 @@
 
 bin_PROGRAMS = synclient syndaemon
 
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(sdkdir)
+AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = $(XI_CFLAGS)
 AM_LDFLAGS = $(XI_LIBS)
 
