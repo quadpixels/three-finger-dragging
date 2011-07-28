@@ -449,7 +449,6 @@ void record_main_loop(Display* display, double idle_time) {
 
 	if (ret == 0 && pad_disabled) { /* timeout => enable event */
 	    toggle_touchpad(True);
-	    if (verbose) printf("enable touchpad\n");
 	}
 
     } /* end while(1) */
