@@ -8,7 +8,7 @@ the touchpad when the keyboard is being used.
 .SH "SYNOPSIS"
 .LP
 syndaemon [\fI\-i idle\-time\fP] [\fI\-m poll-inverval\fP] [\fI\-d\fP] [\fI\-p pid\-file\fP]
-[\fI\-t\fP] [\fI\-k\fP] [\fI\-K\fP] [\fI\-R\fP] [\fI\-s\fP]
+[\fI\-t\fP] [\fI\-k\fP] [\fI\-K\fP] [\fI\-R\fP]
 .SH "DESCRIPTION"
 .LP
 Disabling the touchpad while typing avoids unwanted movements of the
@@ -61,13 +61,6 @@ Like \-k but also ignore Modifier+Key combos.
 \fB\-R\fP
 Use the XRecord extension for detecting keyboard activity instead of polling
 the keyboard state.
-.LP
-.TP
-\fB\-s\fP
-Use a shared memory area to enable/disable the touchpad instead of device
-properties. WARNING: The SHM mechanism is not secure if you are in an untrusted multiuser
-environment. All local users can change the parameters at any time. This
-option requires the driver Option "SHMConfig" to be enabled.
 .SH "ENVIRONMENT VARIABLES"
 .LP
 .TP
