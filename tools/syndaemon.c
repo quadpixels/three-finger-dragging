@@ -598,7 +598,7 @@ main(int argc, char *argv[])
 	    FILE *fd = fopen(pid_file, "w");
 	    if (!fd) {
 		perror("Can't create pid file");
-		exit(2);
+		exit(3);
 	    }
 	    fprintf(fd, "%d\n", getpid());
 	    fclose(fd);
@@ -616,7 +616,7 @@ main(int argc, char *argv[])
 	else {
 	    fprintf(stderr, "Use of XRecord requested, but failed to "
 		    " initialize.\n");
-            exit(2);
+            exit(4);
         }
     } else
 #endif /* HAVE_X11_EXTENSIONS_RECORD_H */
