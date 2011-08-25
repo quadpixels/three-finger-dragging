@@ -1194,7 +1194,6 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
     struct SynapticsHwState hw;
     int delay;
     int sigstate;
-    CARD32 wakeUpTime;
 
     sigstate = xf86BlockSIGIO();
 
