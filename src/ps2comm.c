@@ -369,11 +369,13 @@ ps2_print_ident(InputInfoPtr pInfo, const struct PS2SynapticsHwInfo *synhw)
     }
 }
 
-static void
+static Bool
 PS2DeviceOffHook(InputInfoPtr pInfo)
 {
     ps2_synaptics_reset(pInfo->fd);
     ps2_synaptics_enable_device(pInfo->fd);
+
+    return TRUE;
 }
 
 static Bool

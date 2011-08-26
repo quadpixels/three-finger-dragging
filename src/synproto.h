@@ -70,8 +70,8 @@ struct CommData {
 struct _SynapticsParameters;
 
 struct SynapticsProtocolOperations {
-    void (*DeviceOnHook)(InputInfoPtr pInfo, struct _SynapticsParameters *para);
-    void (*DeviceOffHook)(InputInfoPtr pInfo);
+    Bool (*DeviceOnHook)(InputInfoPtr pInfo, struct _SynapticsParameters *para);
+    Bool (*DeviceOffHook)(InputInfoPtr pInfo);
     Bool (*QueryHardware)(InputInfoPtr pInfo);
     Bool (*ReadHwState)(InputInfoPtr pInfo,
 			struct CommData *comm, struct SynapticsHwState *hwRet);

@@ -61,7 +61,7 @@ struct eventcomm_proto_data
     BOOL need_grab;
 };
 
-static void
+static Bool
 EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters *para)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
@@ -79,10 +79,13 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters *para)
 	if (ret < 0) {
 	    xf86IDrvMsg(pInfo, X_WARNING, "can't grab event device, errno=%d\n",
 			errno);
+	    return FALSE;
 	}
     }
 
     proto_data->need_grab = FALSE;
+
+    return TRUE;
 }
 
 /**

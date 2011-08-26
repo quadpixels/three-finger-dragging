@@ -845,8 +845,9 @@ DeviceOn(DeviceIntPtr dev)
 	return !Success;
     }
 
-    if (priv->proto_ops->DeviceOnHook)
-        priv->proto_ops->DeviceOnHook(pInfo, &priv->synpara);
+    if (priv->proto_ops->DeviceOnHook &&
+        !priv->proto_ops->DeviceOnHook(pInfo, &priv->synpara))
+        return !Success;
 
     priv->comm.buffer = XisbNew(pInfo->fd, INPUT_BUFFER_SIZE);
     if (!priv->comm.buffer) {
@@ -878,14 +879,16 @@ DeviceOff(DeviceIntPtr dev)
 {
     InputInfoPtr pInfo = dev->public.devicePrivate;
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
+    Bool rc = Success;
 
     DBG(3, "Synaptics DeviceOff called\n");
 
     if (pInfo->fd != -1) {
 	TimerCancel(priv->timer);
 	xf86RemoveEnabledDevice(pInfo);
-        if (priv->proto_ops->DeviceOffHook)
-            priv->proto_ops->DeviceOffHook(pInfo);
+        if (priv->proto_ops->DeviceOffHook &&
+            !priv->proto_ops->DeviceOffHook(pInfo))
+            rc = !Success;
 	if (priv->comm.buffer) {
 	    XisbFree(priv->comm.buffer);
 	    priv->comm.buffer = NULL;
@@ -894,7 +897,7 @@ DeviceOff(DeviceIntPtr dev)
 	pInfo->fd = -1;
     }
     dev->public.on = FALSE;
-    return Success;
+    return rc;
 }
 
 static Bool
