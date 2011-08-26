@@ -246,7 +246,7 @@ SanitizeDimensions(InputInfoPtr pInfo)
     if (priv->minp >= priv->maxp)
     {
 	priv->minp = 0;
-	priv->maxp = 256;
+	priv->maxp = 255;
 
 	xf86IDrvMsg(pInfo, X_PROBED,
 		    "invalid pressure range.  defaulting to %d - %d\n",
@@ -256,7 +256,7 @@ SanitizeDimensions(InputInfoPtr pInfo)
     if (priv->minw >= priv->maxw)
     {
 	priv->minw = 0;
-	priv->maxw = 16;
+	priv->maxw = 15;
 
 	xf86IDrvMsg(pInfo, X_PROBED,
 		    "invalid finger width range.  defaulting to %d - %d\n",
@@ -459,7 +459,7 @@ static void set_default_parameters(InputInfoPtr pInfo)
     horizHyst = pars->hyst_x >= 0 ? pars->hyst_x : diag * 0.005;
     vertHyst = pars->hyst_y >= 0 ? pars->hyst_y : diag * 0.005;
 
-    range = priv->maxp - priv->minp;
+    range = priv->maxp - priv->minp + 1;
 
     /* scaling based on defaults and a pressure of 256 */
     fingerLow = priv->minp + range * (25.0/256);
@@ -472,7 +472,7 @@ static void set_default_parameters(InputInfoPtr pInfo)
     pressureMotionMaxZ = priv->minp + range * (160.0/256);
     palmMinZ = priv->minp + range * (200.0/256);
 
-    range = priv->maxw - priv->minw;
+    range = priv->maxw - priv->minw + 1;
 
     /* scaling based on defaults below and a tool width of 16 */
     palmMinWidth = priv->minw + range * (10.0/16);
