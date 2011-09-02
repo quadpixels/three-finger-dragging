@@ -74,7 +74,7 @@
 #define SYN_CAP_MULTIFINGER(synhw)	((synhw)->capabilities & (1 << 1))
 #define SYN_CAP_PALMDETECT(synhw)	((synhw)->capabilities & (1 << 0))
 #define SYN_CAP_VALID(synhw)		((((synhw)->capabilities & 0x00ff00) >> 8) == 0x47)
-#define SYN_EXT_CAP_REQUESTS(synhw)	(((synhw)->capabilities & 0x700000) == 0x100000)
+#define SYN_EXT_CAP_REQUESTS(synhw)	(((synhw)->capabilities & 0x700000) != 0)
 #define SYN_CAP_MULTI_BUTTON_NO(synhw)	(((synhw)->ext_cap & 0x00f000) >> 12)
 
 /* synaptics modes query bits */
