@@ -66,7 +66,9 @@ taps for example.)
 The name "synaptics" is historical and the driver still provides the
 synaptics protocol parsing code. Under Linux however, the hardware-specifics
 are handled by the kernel and this driver will work for any touchpad that
-has a working kernel driver.
+has a working kernel driver. If your device is recognized as \*qPS/2
+Mouse\*q or similar, the kernel driver does not support your device and this
+driver will only provide limited functionality.
 
 .SH CONFIGURATION OPTIONS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
