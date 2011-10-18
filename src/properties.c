@@ -425,8 +425,22 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
             return BadMatch;
 
         dist = (INT32*)prop->data;
-        para->scroll_dist_vert = dist[0];
-        para->scroll_dist_horiz = dist[1];
+        if (para->scroll_dist_vert != dist[0])
+        {
+            para->scroll_dist_vert = dist[0];
+#ifdef HAVE_SMOOTH_SCROLL
+            SetScrollValuator(dev, priv->scroll_axis_vert, SCROLL_TYPE_VERTICAL,
+                              para->scroll_dist_vert, 0);
+#endif
+        }
+        if (para->scroll_dist_horiz != dist[1])
+        {
+            para->scroll_dist_horiz = dist[1];
+#ifdef HAVE_SMOOTH_SCROLL
+            SetScrollValuator(dev, priv->scroll_axis_horiz, SCROLL_TYPE_HORIZONTAL,
+                              para->scroll_dist_horiz, 0);
+#endif
+        }
     } else if (property == prop_scrolledge)
     {
         CARD8 *edge;

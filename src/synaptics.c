@@ -1101,8 +1101,10 @@ DeviceInit(DeviceIntPtr dev)
     if (!priv->scroll_events_mask)
         return !Success;
 
-    SetScrollValuator(dev, priv->scroll_axis_horiz, SCROLL_TYPE_HORIZONTAL, 1, 0);
-    SetScrollValuator(dev, priv->scroll_axis_vert, SCROLL_TYPE_VERTICAL, 1, 0);
+    SetScrollValuator(dev, priv->scroll_axis_horiz, SCROLL_TYPE_HORIZONTAL,
+                      priv->synpara.scroll_dist_horiz, 0);
+    SetScrollValuator(dev, priv->scroll_axis_vert, SCROLL_TYPE_VERTICAL,
+                      priv->synpara.scroll_dist_vert, 0);
 #endif
 
     if (!alloc_shm_data(pInfo))
@@ -2232,17 +2234,15 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
     if (priv->vert_scroll_edge_on || priv->vert_scroll_twofinger_on) {
 	/* + = down, - = up */
-	double delta = para->scroll_dist_vert;
-	if (delta > 0 && hw->y != priv->scroll.last_y) {
-	    priv->scroll.delta_y += (hw->y - priv->scroll.last_y) / delta;
+	if (para->scroll_dist_vert > 0 && hw->y != priv->scroll.last_y) {
+	    priv->scroll.delta_y += (hw->y - priv->scroll.last_y);
 	    priv->scroll.last_y = hw->y;
 	}
     }
     if (priv->horiz_scroll_edge_on || priv->horiz_scroll_twofinger_on) {
 	/* + = right, - = left */
-	double delta = para->scroll_dist_horiz;
-	if (delta > 0 && hw->x != priv->scroll.last_x) {
-	    priv->scroll.delta_x += (hw->x - priv->scroll.last_x) / delta;
+	if (para->scroll_dist_horiz > 0 && hw->x != priv->scroll.last_x) {
+	    priv->scroll.delta_x += (hw->x - priv->scroll.last_x);
 	    priv->scroll.last_x = hw->x;
 	}
     }
@@ -2252,9 +2252,9 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	double diff = diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y));
 	if (delta >= 0.005 && diff != 0.0) {
 	    if (priv->circ_scroll_vert)
-		priv->scroll.delta_y += diff / delta;
+		priv->scroll.delta_y += diff / delta * para->scroll_dist_vert;
 	    else
-		priv->scroll.delta_x += diff / delta;
+		priv->scroll.delta_x += diff / delta * para->scroll_dist_horiz;;
 	    priv->scroll.last_a = angle(priv, hw->x, hw->y);
         }
     }
