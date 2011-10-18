@@ -2392,7 +2392,6 @@ static void
 post_scroll_events(const InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
-    SynapticsParameters *para = &priv->synpara;
 
     while (priv->scroll.delta_y <= -1.0)
     {
