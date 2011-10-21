@@ -227,7 +227,7 @@ event_get_abs(InputInfoPtr pInfo, int fd, int code,
     SYSCALL(rc = ioctl(fd, EVIOCGABS(code), &abs));
     if (rc < 0) {
 	xf86IDrvMsg(pInfo, X_ERROR, "%s EVIOCGABS error on %d (%s)\n",
-		    __func__, code, strerror(rc));
+		    __func__, code, strerror(errno));
 	return errno;
     }
 
