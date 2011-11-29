@@ -265,7 +265,7 @@ SanitizeDimensions(InputInfoPtr pInfo)
     }
 }
 
-static void
+static Bool
 SetDeviceAndProtocol(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = pInfo->private;
@@ -286,6 +286,8 @@ SetDeviceAndProtocol(InputInfoPtr pInfo)
     free(device);
 
     priv->proto_ops = protocols[i].proto_ops;
+
+    return (priv->proto_ops != NULL);
 }
 
 /*
@@ -714,8 +716,7 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     }
 
     /* may change pInfo->options */
-    SetDeviceAndProtocol(pInfo);
-    if (priv->proto_ops == NULL) {
+    if (!SetDeviceAndProtocol(pInfo)) {
         xf86IDrvMsg(pInfo, X_ERROR, "Synaptics driver unable to detect protocol\n");
         goto SetupProc_fail;
     }
