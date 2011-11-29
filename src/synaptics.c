@@ -274,6 +274,13 @@ SetDeviceAndProtocol(InputInfoPtr pInfo)
 
     proto = xf86SetStrOption(pInfo->options, "Protocol", NULL);
     device = xf86SetStrOption(pInfo->options, "Device", NULL);
+
+    /* If proto is auto-dev, unset and let the code do the rest */
+    if (proto && !strcmp(proto, "auto-dev")) {
+        free(proto);
+        proto = NULL;
+    }
+
     for (i = 0; protocols[i].name; i++) {
         if ((!device || !proto) &&
             protocols[i].proto_ops->AutoDevProbe &&
