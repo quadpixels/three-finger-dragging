@@ -253,7 +253,6 @@ static void
 event_query_axis_ranges(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
-    struct input_absinfo abs = {0};
     unsigned long absbits[NBITS(ABS_MAX)] = {0};
     unsigned long keybits[NBITS(KEY_MAX)] = {0};
     char buf[256] = {0};
@@ -316,7 +315,7 @@ event_query_axis_ranges(InputInfoPtr pInfo)
 		    "device does not report pressure, will use touch data.\n");
     if (priv->has_width)
 	xf86IDrvMsg(pInfo, X_PROBED, "finger width range %d - %d\n",
-		    abs.minimum, abs.maximum);
+		    priv->minw, priv->maxw);
     else
 	xf86IDrvMsg(pInfo, X_INFO,
 		    "device does not report finger width.\n");
