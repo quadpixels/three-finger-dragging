@@ -616,7 +616,6 @@ static float SynapticsAccelerationProfile(DeviceIntPtr dev,
                                           float thr_f,
                                           float acc_f) {
     double velocity = velocity_f;
-    double thr = thr_f;
     double acc = acc_f;
 #endif
     InputInfoPtr pInfo = dev->public.devicePrivate;
