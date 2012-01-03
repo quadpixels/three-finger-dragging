@@ -25,7 +25,6 @@ extern char* xf86CheckStrOption(OPTTYPE optlist, const char *name, char *deflt);
 
 
 extern char * xf86SetStrOption(OPTTYPE optlist, const char *name, CONST char *deflt);
-extern _X_EXPORT char *xf86SetStrOption(XF86OptionPtr optlist, const char *name, const char *deflt);
 extern int xf86SetBoolOption(OPTTYPE optlist, const char *name, int deflt);
 extern OPTTYPE xf86AddNewOption(OPTTYPE head, const char *name, const char *val);
 extern CONST char* xf86FindOptionValue(OPTTYPE options, const char *name);
