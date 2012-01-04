@@ -315,7 +315,7 @@ InitDeviceProperties(InputInfoPtr pInfo)
         prop_device_node = MakeAtom(XI_PROP_DEVICE_NODE, strlen(XI_PROP_DEVICE_NODE), TRUE);
         XIChangeDeviceProperty(pInfo->dev, prop_device_node, XA_STRING, 8,
                                PropModeReplace, strlen(priv->device),
-                               priv->device, FALSE);
+                               (pointer) priv->device, FALSE);
         XISetDevicePropertyDeletable(pInfo->dev, prop_device_node, FALSE);
     }
 

@@ -185,7 +185,7 @@ typedef struct _SynapticsPrivateRec
 
     struct SynapticsHwState hwState;
 
-    char *device;			/* device node */
+    const char *device;			/* device node */
     Bool shm_config;			/* True when shared memory area allocated */
 
     CARD32 timer_time;			/* when timer last fired */
