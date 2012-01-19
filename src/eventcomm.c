@@ -66,6 +66,7 @@ struct eventcomm_proto_data
      */
     BOOL need_grab;
 #ifdef HAVE_MTDEV
+    struct mtdev *mtdev;
     int axis_map[MT_ABS_SIZE];
 #endif
 };
@@ -88,6 +89,16 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters *para)
     }
 
     proto_data->need_grab = FALSE;
+
+#ifdef HAVE_MTDEV
+    proto_data->mtdev = mtdev_new_open(pInfo->fd);
+    if (!proto_data->mtdev)
+    {
+        xf86IDrvMsg(pInfo, X_WARNING,
+                    "failed to create mtdev instance, ignoring touch events\n");
+        priv->has_touch = FALSE;
+    }
+#endif
 
     return TRUE;
 }
@@ -354,10 +365,20 @@ EventQueryHardware(InputInfoPtr pInfo)
 static Bool
 SynapticsReadEvent(InputInfoPtr pInfo, struct input_event *ev)
 {
+#ifdef HAVE_MTDEV
+    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    struct eventcomm_proto_data *proto_data = priv->proto_data;
+#endif
     int rc = TRUE;
     ssize_t len;
 
-    len = read(pInfo->fd, ev, sizeof(*ev));
+#ifdef HAVE_MTDEV
+    if (proto_data->mtdev)
+        len = mtdev_get(proto_data->mtdev, pInfo->fd, ev, 1) *
+              sizeof(struct input_event);
+    else
+#endif
+        len = read(pInfo->fd, ev, sizeof(*ev));
     if (len <= 0)
     {
         /* We use X_NONE here because it doesn't alloc */
