@@ -41,6 +41,9 @@
 #include "synaptics.h"
 #include "synapticsstr.h"
 #include <xf86.h>
+#ifdef HAVE_MTDEV
+#include <mtdev.h>
+#endif
 
 
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
@@ -62,6 +65,9 @@ struct eventcomm_proto_data
      * exists for readability of the code.
      */
     BOOL need_grab;
+#ifdef HAVE_MTDEV
+    int axis_map[MT_ABS_SIZE];
+#endif
 };
 
 static Bool
@@ -69,11 +75,6 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters *para)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     struct eventcomm_proto_data *proto_data = (struct eventcomm_proto_data*)priv->proto_data;
-
-    if (!proto_data) {
-	proto_data = calloc(1, sizeof(struct eventcomm_proto_data));
-	priv->proto_data = proto_data;
-    }
 
     if (para->grab_event_device) {
 	/* Try to grab the event device so that data don't leak to /dev/input/mice */
@@ -497,6 +498,120 @@ static int EventDevOnly(const struct dirent *dir) {
 	return strncmp(EVENT_DEV_NAME, dir->d_name, 5) == 0;
 }
 
+#ifdef HAVE_MTDEV
+static void
+event_query_touch(InputInfoPtr pInfo)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    struct eventcomm_proto_data *proto_data = priv->proto_data;
+    struct mtdev *mtdev;
+    int i;
+
+    priv->num_touches = 0;
+    priv->num_mt_axes = 0;
+
+    mtdev = mtdev_new_open(pInfo->fd);
+    if (!mtdev)
+    {
+        xf86IDrvMsg(pInfo, X_WARNING,
+                    "failed to open mtdev when querying touch capabilities\n");
+        return;
+    }
+
+    for (i = 0; i < MT_ABS_SIZE; i++)
+    {
+        if (mtdev->caps.has_abs[i])
+        {
+            switch (i)
+            {
+                /* X and Y axis info is handed by synaptics already */
+                case ABS_MT_POSITION_X - ABS_MT_TOUCH_MAJOR:
+                case ABS_MT_POSITION_Y - ABS_MT_TOUCH_MAJOR:
+                /* Skip tracking ID info */
+                case ABS_MT_TRACKING_ID - ABS_MT_TOUCH_MAJOR:
+                    break;
+                default:
+                    priv->num_mt_axes++;
+                    break;
+            }
+            priv->has_touch = TRUE;
+        }
+    }
+
+    if (priv->has_touch)
+    {
+        int axnum;
+        static const char *labels[] =
+        {
+            AXIS_LABEL_PROP_ABS_MT_TOUCH_MAJOR,
+            AXIS_LABEL_PROP_ABS_MT_TOUCH_MINOR,
+            AXIS_LABEL_PROP_ABS_MT_WIDTH_MAJOR,
+            AXIS_LABEL_PROP_ABS_MT_WIDTH_MINOR,
+            AXIS_LABEL_PROP_ABS_MT_ORIENTATION,
+            AXIS_LABEL_PROP_ABS_MT_POSITION_X,
+            AXIS_LABEL_PROP_ABS_MT_POSITION_Y,
+            AXIS_LABEL_PROP_ABS_MT_TOOL_TYPE,
+            AXIS_LABEL_PROP_ABS_MT_BLOB_ID,
+            AXIS_LABEL_PROP_ABS_MT_TRACKING_ID,
+            AXIS_LABEL_PROP_ABS_MT_PRESSURE,
+        };
+
+        if (mtdev->caps.slot.maximum > 0)
+            priv->num_touches = mtdev->caps.slot.maximum -
+                                mtdev->caps.slot.minimum + 1;
+
+        priv->touch_axes = malloc(priv->num_mt_axes *
+                                  sizeof(SynapticsTouchAxisRec));
+        if (!priv->touch_axes)
+        {
+            priv->has_touch = FALSE;
+            goto out;
+        }
+
+        axnum = 0;
+        for (i = 0; i < MT_ABS_SIZE; i++)
+        {
+            if (mtdev->caps.has_abs[i])
+            {
+                switch (i)
+                {
+                    /* X and Y axis info is handed by synaptics already, we just
+                     * need to map the evdev codes to the valuator numbers */
+                    case ABS_MT_POSITION_X - ABS_MT_TOUCH_MAJOR:
+                        proto_data->axis_map[i] = 0;
+                        break;
+
+                    case ABS_MT_POSITION_Y - ABS_MT_TOUCH_MAJOR:
+                        proto_data->axis_map[i] = 1;
+                        break;
+
+                    /* Skip tracking ID info */
+                    case ABS_MT_TRACKING_ID - ABS_MT_TOUCH_MAJOR:
+                        break;
+
+                    default:
+                        priv->touch_axes[axnum].label = labels[i];
+                        priv->touch_axes[axnum].min =
+                            mtdev->caps.abs[i].minimum;
+                        priv->touch_axes[axnum].max =
+                            mtdev->caps.abs[i].maximum;
+                        /* Kernel provides units/mm, X wants units/m */
+                        priv->touch_axes[axnum].res =
+                            mtdev->caps.abs[i].resolution * 1000;
+                        /* Valuators 0-3 are used for X, Y, and scrolling */
+                        proto_data->axis_map[i] = 4 + axnum;
+                        axnum++;
+                        break;
+                }
+            }
+        }
+    }
+
+out:
+    mtdev_close(mtdev);
+}
+#endif
+
 /**
  * Probe the open device for dimensions.
  */
@@ -505,9 +620,25 @@ EventReadDevDimensions(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
+#ifdef HAVE_MTDEV
+    int i;
+#endif
+
+    proto_data = calloc(1, sizeof(struct eventcomm_proto_data));
+    priv->proto_data = proto_data;
+
+#ifdef HAVE_MTDEV
+    for (i = 0; i < MT_ABS_SIZE; i++)
+        proto_data->axis_map[i] = -1;
+#endif
 
     if (event_query_is_touchpad(pInfo->fd, (proto_data) ? proto_data->need_grab : TRUE))
-	event_query_axis_ranges(pInfo);
+    {
+        event_query_axis_ranges(pInfo);
+#ifdef HAVE_MTDEV
+        event_query_touch(pInfo);
+#endif
+    }
     event_query_model(pInfo->fd, &priv->model, &priv->id_vendor, &priv->id_product);
 
     xf86IDrvMsg(pInfo, X_PROBED, "Vendor %#hx Product %#hx\n",

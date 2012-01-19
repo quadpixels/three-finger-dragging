@@ -9,6 +9,8 @@ noinst_PROGRAMS = eventcomm-test
 eventcomm_test_SOURCES = eventcomm-test.c\
 			 $(top_srcdir)/src/eventcomm.c \
 			 $(fake_syms)
+
+eventcomm_test_LDADD = $(MTDEV_LIBS)
 endif
 
 TESTS = $(noinst_PROGRAMS)
