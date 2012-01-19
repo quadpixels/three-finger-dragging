@@ -993,12 +993,19 @@ DeviceInit(DeviceIntPtr dev)
     int min, max;
     int num_axes = 2;
     Atom btn_labels[SYN_MAX_BUTTONS] = { 0 };
-    Atom axes_labels[4] = { 0 };
+    Atom *axes_labels;
     DeviceVelocityPtr pVel;
 
 #ifdef HAVE_SMOOTH_SCROLL
     num_axes += 2;
 #endif
+
+    axes_labels = calloc(num_axes, sizeof(Atom));
+    if (!axes_labels)
+    {
+        xf86IDrvMsg(pInfo, X_ERROR, "failed to allocate axis labels\n");
+        return !Success;
+    }
 
     InitAxesLabels(axes_labels, num_axes);
     InitButtonLabels(btn_labels, SYN_MAX_BUTTONS);
@@ -1104,6 +1111,9 @@ DeviceInit(DeviceIntPtr dev)
     xf86InitValuatorAxisStruct(dev, 3, axes_labels[3], 0, -1, 0, 0, 0,
                                Relative);
     priv->scroll_axis_vert = 3;
+
+    free(axes_labels);
+
     priv->scroll_events_mask = valuator_mask_new(MAX_VALUATORS);
     if (!priv->scroll_events_mask)
         return !Success;
