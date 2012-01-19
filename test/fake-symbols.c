@@ -450,3 +450,34 @@ Bool QueueWorkProc (
 {
     return FALSE;
 }
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+_X_EXPORT ValuatorMask  *valuator_mask_new(int num_valuators)
+{
+    return NULL;
+}
+
+_X_EXPORT void valuator_mask_free(ValuatorMask **mask)
+{
+}
+
+_X_EXPORT void valuator_mask_set(ValuatorMask *mask, int valuator, int data)
+{
+}
+
+_X_EXPORT void valuator_mask_zero(ValuatorMask *mask)
+{
+}
+
+_X_EXPORT void valuator_mask_copy(ValuatorMask *dest, const ValuatorMask *src)
+{
+}
+#endif
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 16
+_X_EXPORT void xf86PostTouchEvent(DeviceIntPtr dev, uint32_t touchid,
+                                  uint16_t type, uint32_t flags,
+                                  const ValuatorMask *mask)
+{
+}
+#endif
