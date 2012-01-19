@@ -64,6 +64,11 @@ AC_SUBST([sdkdir])
 DRIVER_NAME=synaptics
 AC_SUBST([DRIVER_NAME])
 
+PKG_CHECK_MODULES(XI22, [inputproto >= 2.1.99.3] [xorg-server >= 1.11.99.901], HAVE_XI22="yes", HAVE_XI22="no")
+if test "x$HAVE_XI22" = xyes; then
+    AC_DEFINE(HAVE_MULTITOUCH, 1, [XI2.2 available])
+fi
+
 # -----------------------------------------------------------------------------
 #			Configuration options
 # -----------------------------------------------------------------------------

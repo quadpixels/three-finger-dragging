@@ -56,6 +56,14 @@ typedef struct _SynapticsMoveHist
     CARD32 millis;
 } SynapticsMoveHistRec;
 
+typedef struct _SynapticsTouchAxis
+{
+    const char *label;
+    int min;
+    int max;
+    int res;
+} SynapticsTouchAxisRec;
+
 enum FingerState {              /* Note! The order matters. Compared with < operator. */
     FS_BLOCKED = -1,
     FS_UNTOUCHED = 0, /* this is 0 so it's the initialized value. */
@@ -264,6 +272,13 @@ typedef struct _SynapticsPrivateRec
     int scroll_axis_horiz;              /* Horizontal smooth-scrolling axis */
     int scroll_axis_vert;               /* Vertical smooth-scrolling axis */
     ValuatorMask *scroll_events_mask;   /* ValuatorMask for smooth-scrolling */
+#endif
+
+#ifdef HAVE_MULTITOUCH
+    Bool has_touch;                     /* Device has multitouch capabilities */
+    int num_touches;                    /* Number of touches supported */
+    int num_mt_axes;                    /* Number of multitouch axes other than X, Y */
+    SynapticsTouchAxisRec *touch_axes;  /* Touch axis information other than X, Y */
 #endif
 } SynapticsPrivate;
 

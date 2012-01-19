@@ -937,8 +937,13 @@ DeviceClose(DeviceIntPtr dev)
     return RetValue;
 }
 
-static void InitAxesLabels(Atom *labels, int nlabels)
+static void InitAxesLabels(Atom *labels, int nlabels,
+                           const SynapticsPrivate *priv)
 {
+#ifdef HAVE_MULTITOUCH
+    int i;
+#endif
+
     memset(labels, 0, nlabels * sizeof(Atom));
     switch(nlabels)
     {
@@ -955,6 +960,15 @@ static void InitAxesLabels(Atom *labels, int nlabels)
             labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_X);
             break;
     }
+
+#ifdef HAVE_MULTITOUCH
+    for (i = 0; i < priv->num_mt_axes; i++)
+    {
+        SynapticsTouchAxisRec *axis = &priv->touch_axes[i];
+        int axnum = nlabels - priv->num_mt_axes + i;
+        labels[axnum] = XIGetKnownProperty(axis->label);
+    }
+#endif
 }
 
 static void InitButtonLabels(Atom *labels, int nlabels)
@@ -1000,6 +1014,10 @@ DeviceInit(DeviceIntPtr dev)
     num_axes += 2;
 #endif
 
+#ifdef HAVE_MULTITOUCH
+    num_axes += priv->num_mt_axes;
+#endif
+
     axes_labels = calloc(num_axes, sizeof(Atom));
     if (!axes_labels)
     {
@@ -1007,7 +1025,7 @@ DeviceInit(DeviceIntPtr dev)
         return !Success;
     }
 
-    InitAxesLabels(axes_labels, num_axes);
+    InitAxesLabels(axes_labels, num_axes, priv);
     InitButtonLabels(btn_labels, SYN_MAX_BUTTONS);
 
     DBG(3, "Synaptics DeviceInit called\n");
@@ -1111,18 +1129,55 @@ DeviceInit(DeviceIntPtr dev)
     xf86InitValuatorAxisStruct(dev, 3, axes_labels[3], 0, -1, 0, 0, 0,
                                Relative);
     priv->scroll_axis_vert = 3;
-
-    free(axes_labels);
-
     priv->scroll_events_mask = valuator_mask_new(MAX_VALUATORS);
     if (!priv->scroll_events_mask)
+    {
+        free(axes_labels);
         return !Success;
+    }
 
     SetScrollValuator(dev, priv->scroll_axis_horiz, SCROLL_TYPE_HORIZONTAL,
                       priv->synpara.scroll_dist_horiz, 0);
     SetScrollValuator(dev, priv->scroll_axis_vert, SCROLL_TYPE_VERTICAL,
                       priv->synpara.scroll_dist_vert, 0);
 #endif
+
+#ifdef HAVE_MULTITOUCH
+    if (priv->has_touch)
+    {
+        if (!InitTouchClassDeviceStruct(dev, priv->num_touches,
+                                        XIDependentTouch, priv->num_mt_axes))
+        {
+            xf86IDrvMsg(pInfo, X_ERROR,
+                        "failed to initialize touch class device\n");
+            priv->has_touch = 0;
+            goto no_touch;
+        }
+
+        for (i = 0; i < priv->num_mt_axes; i++)
+        {
+            SynapticsTouchAxisRec *axis = &priv->touch_axes[i];
+            int axnum = num_axes - priv->num_mt_axes + i;
+            Atom atom = axes_labels[axnum];
+
+            if (!xf86InitValuatorAxisStruct(dev, axnum, axes_labels[axnum],
+                                            axis->min, axis->max, axis->res, 0,
+                                            axis->res, Absolute))
+            {
+                xf86IDrvMsg(pInfo, X_WARNING,
+                            "failed to initialize axis %s, skipping\n",
+                            axis->label);
+                continue;
+            }
+
+            xf86InitValuatorDefaults(dev, axnum);
+        }
+    }
+
+no_touch:
+#endif
+
+    free(axes_labels);
 
     if (!alloc_shm_data(pInfo))
 	return !Success;
