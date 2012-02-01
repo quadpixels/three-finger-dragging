@@ -78,6 +78,8 @@ struct eventcomm_proto_data
     } slot_state;
     ValuatorMask *mt_mask;
     ValuatorMask **last_mt_vals;
+    unsigned int num_touches;
+    int *open_slots;
 #endif
 };
 
@@ -108,6 +110,9 @@ UninitializeTouch(InputInfoPtr pInfo)
 
     if (!proto_data->mtdev)
         return;
+
+    free(proto_data->open_slots);
+    proto_data->open_slots = NULL;
 
     valuator_mask_free(&proto_data->mt_mask);
     if (proto_data->last_mt_vals)
@@ -183,6 +188,8 @@ InitializeTouch(InputInfoPtr pInfo)
         for (j = 4; j < priv->num_mt_axes; j++)
             valuator_mask_set(proto_data->last_mt_vals[i], j, 0);
     }
+
+    proto_data->open_slots = malloc(num_slots(proto_data) * sizeof(int));
 }
 #endif
 
@@ -511,13 +518,82 @@ SynapticsReadEvent(InputInfoPtr pInfo, struct input_event *ev)
     return rc;
 }
 
+#ifdef HAVE_MTDEV
+static void
+EventBeginTouches(InputInfoPtr pInfo)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    struct eventcomm_proto_data *proto_data = priv->proto_data;
+    int first_slot;
+
+    proto_data->num_touches++;
+    proto_data->open_slots[proto_data->num_touches - 1] = proto_data->cur_slot;
+
+    /* Don't start a touch if it's the only one. */
+    if (proto_data->num_touches < 2)
+        return;
+
+    xf86PostTouchEvent(pInfo->dev, proto_data->cur_slot, XI_TouchBegin, 0,
+                       proto_data->mt_mask);
+
+    /* If this is the third or more touch, we've already begun the first touch.
+     */
+    if (proto_data->num_touches > 2)
+        return;
+
+    /* If this is the second touch, begin the first touch at this time. */
+    first_slot = proto_data->open_slots[0];
+    xf86PostTouchEvent(pInfo->dev, first_slot, XI_TouchBegin, 0,
+                       proto_data->last_mt_vals[first_slot]);
+}
+
+static void
+EventEndTouches(InputInfoPtr pInfo)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    struct eventcomm_proto_data *proto_data = priv->proto_data;
+    int first_slot;
+    int i;
+    Bool found;
+
+    found = FALSE;
+    for (i = 0; i < proto_data->num_touches - 1; i++)
+    {
+        if (proto_data->open_slots[i] == proto_data->cur_slot)
+            found = TRUE;
+
+        if (found)
+            proto_data->open_slots[i] = proto_data->open_slots[i + 1];
+    }
+
+    proto_data->num_touches--;
+
+    /* If this was the only touch left on the device, don't send a touch end
+     * event because we are inhibiting its touch sequence. */
+    if (proto_data->num_touches == 0)
+        return;
+
+    xf86PostTouchEvent(pInfo->dev, proto_data->cur_slot, XI_TouchEnd, 0,
+                       proto_data->mt_mask);
+
+    /* If there is at least two other touches on the device, we don't need to
+     * end any more touches. */
+    if (proto_data->num_touches >= 2)
+        return;
+
+    /* We've gone down to one touch, so we must end the touch as well. */
+    first_slot = proto_data->open_slots[0];
+    xf86PostTouchEvent(pInfo->dev, first_slot, XI_TouchEnd, 0,
+                       proto_data->last_mt_vals[first_slot]);
+}
+#endif
+
 static void
 EventProcessTouch(InputInfoPtr pInfo)
 {
 #ifdef HAVE_MTDEV
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
-    int type;
 
     if (proto_data->cur_slot < 0 || !priv->has_touch)
         return;
@@ -529,18 +605,17 @@ EventProcessTouch(InputInfoPtr pInfo)
     switch (proto_data->slot_state)
     {
         case SLOTSTATE_CLOSE:
-            type = XI_TouchEnd;
+            EventEndTouches(pInfo);
             break;
         case SLOTSTATE_OPEN:
-            type = XI_TouchBegin;
+            EventBeginTouches(pInfo);
             break;
         default:
-            type = XI_TouchUpdate;
+            if (proto_data->num_touches >= 2)
+                xf86PostTouchEvent(pInfo->dev, proto_data->cur_slot,
+                                   XI_TouchUpdate, 0, proto_data->mt_mask);
             break;
     }
-
-    xf86PostTouchEvent(pInfo->dev, proto_data->cur_slot, type, 0,
-                       proto_data->mt_mask);
 
     proto_data->slot_state = SLOTSTATE_EMPTY;
     valuator_mask_zero(proto_data->mt_mask);
