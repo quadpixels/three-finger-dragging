@@ -812,9 +812,19 @@ event_query_touch(InputInfoPtr pInfo)
     struct eventcomm_proto_data *proto_data = priv->proto_data;
     struct mtdev *mtdev;
     int i;
+    int rc;
+    uint8_t prop;
 
     priv->num_touches = 0;
     priv->num_mt_axes = 0;
+
+    SYSCALL(rc = ioctl(pInfo->fd, EVIOCGPROP(sizeof(prop)), &prop));
+    if (rc >= 0 && BitIsOn(&prop, INPUT_PROP_SEMI_MT))
+    {
+        xf86IDrvMsg(pInfo, X_INFO,
+                    "ignoring touch events for semi-multitouch device\n");
+        return;
+    }
 
     mtdev = mtdev_new_open(pInfo->fd);
     if (!mtdev)
