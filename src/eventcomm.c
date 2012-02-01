@@ -108,7 +108,7 @@ UninitializeTouch(InputInfoPtr pInfo)
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     struct eventcomm_proto_data *proto_data = (struct eventcomm_proto_data*)priv->proto_data;
 
-    if (!proto_data->mtdev)
+    if (!priv->has_touch)
         return;
 
     free(proto_data->open_slots);
@@ -135,6 +135,9 @@ InitializeTouch(InputInfoPtr pInfo)
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     struct eventcomm_proto_data *proto_data = (struct eventcomm_proto_data*)priv->proto_data;
     int i;
+
+    if (!priv->has_touch)
+        return;
 
     proto_data->mtdev = mtdev_new_open(pInfo->fd);
     if (!proto_data->mtdev)
@@ -629,6 +632,9 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct CommData *comm,
 #ifdef HAVE_MTDEV
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
+
+    if (!priv->has_touch)
+        return;
 
     if (ev->code == ABS_MT_SLOT)
     {
