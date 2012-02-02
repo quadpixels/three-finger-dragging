@@ -2013,8 +2013,7 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
 	case TS_1:
 	case TS_3:
 	case TS_5:
-	    if (hw->numFingers == 1)
-		moving_state = MS_TOUCHPAD_RELATIVE;
+	    moving_state = MS_TOUCHPAD_RELATIVE;
 	    break;
 	default:
 	    break;
@@ -2024,7 +2023,8 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     if (!inside_area || !moving_state || priv->finger_state == FS_BLOCKED ||
 	priv->vert_scroll_edge_on || priv->horiz_scroll_edge_on ||
 	priv->vert_scroll_twofinger_on || priv->horiz_scroll_twofinger_on ||
-	priv->circ_scroll_on || priv->prevFingers != hw->numFingers)
+	priv->circ_scroll_on || priv->prevFingers != hw->numFingers ||
+	(moving_state == MS_TOUCHPAD_RELATIVE && hw->numFingers != 1))
     {
         /* reset packet counter. */
         priv->count_packet_finger = 0;
