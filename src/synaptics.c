@@ -646,7 +646,6 @@ set_default_parameters(InputInfoPtr pInfo)
     pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 180);
     pars->click_time = xf86SetIntOption(opts, "ClickTime", 100);
     pars->clickpad = xf86SetBoolOption(opts, "ClickPad", pars->clickpad);       /* Probed */
-    pars->fast_taps = xf86SetBoolOption(opts, "FastTaps", FALSE);
     /* middle mouse button emulation on a clickpad? nah, you're joking */
     middle_button_timeout = pars->clickpad ? 0 : 75;
     pars->emulate_mid_button_time =
@@ -1852,8 +1851,6 @@ SelectTapButton(SynapticsPrivate * priv, edge_type edge)
 static void
 SetTapState(SynapticsPrivate * priv, enum TapState tap_state, CARD32 millis)
 {
-    SynapticsParameters *para = &priv->synpara;
-
     DBG(3, "SetTapState - %d -> %d (millis:%u)\n", priv->tap_state, tap_state,
         millis);
     switch (tap_state) {
@@ -1865,10 +1862,7 @@ SetTapState(SynapticsPrivate * priv, enum TapState tap_state, CARD32 millis)
         priv->tap_button_state = TBS_BUTTON_UP;
         break;
     case TS_2A:
-        if (para->fast_taps)
-            priv->tap_button_state = TBS_BUTTON_DOWN;
-        else
-            priv->tap_button_state = TBS_BUTTON_UP;
+	priv->tap_button_state = TBS_BUTTON_UP;
         break;
     case TS_2B:
         priv->tap_button_state = TBS_BUTTON_UP;
@@ -1877,10 +1871,7 @@ SetTapState(SynapticsPrivate * priv, enum TapState tap_state, CARD32 millis)
         priv->tap_button_state = TBS_BUTTON_DOWN;
         break;
     case TS_SINGLETAP:
-        if (para->fast_taps)
-            priv->tap_button_state = TBS_BUTTON_UP;
-        else
-            priv->tap_button_state = TBS_BUTTON_DOWN;
+	priv->tap_button_state = TBS_BUTTON_DOWN;
         priv->touch_on.millis = millis;
         break;
     default:

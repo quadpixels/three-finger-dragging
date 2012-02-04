@@ -133,10 +133,6 @@ Whether the device is a click pad. See
 .B ClickPad support
 for more details. Property: "Synaptics ClickPad"
 .TP 7
-.BI "Option \*qFastTaps\*q \*q" boolean \*q
-Makes the driver react faster to a single tap, but also makes double
-clicks caused by double tapping slower. Property: "Synaptics Tap FastTap"
-.TP 7
 .BI "Option \*qVertEdgeScroll\*q \*q" boolean \*q
 Enable vertical scrolling when dragging along the right edge. Property:
 "Synaptics Edge Scrolling"
@@ -790,10 +786,6 @@ duration of a single click.
 8 bit (Bool).
 
 .TP 7
-.BI "Synaptics Tap FastTap"
-8 bit (BOOL).
-
-.TP 7
 .BI "Synaptics Middle Button Timeout"
 32 bit.
 
@@ -990,6 +982,8 @@ The following options are no longer part of the driver configuration:
 .BI "Option \*qFingerPress\*q \*q" integer \*q
 .TP
 .BI "Option \*qTrackstickSpeed\*q \*q" float \*q
+.TP
+.BI "Option \*qFastTaps\*q \*q" boolean \*q
 
 .SH "AUTHORS"
 .LP
