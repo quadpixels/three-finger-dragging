@@ -508,7 +508,7 @@ dp_show_settings(Display *dpy, XDevice *dev)
 	switch(par->prop_format) {
 	    case 8:
 		if (format != par->prop_format || type != XA_INTEGER) {
-		    fprintf(stderr, "   %-23s = format mismatch (%d)\n",
+		    fprintf(stderr, "    %-23s = format mismatch (%d)\n",
 			    par->name, format);
 		    break;
 		}
@@ -518,7 +518,7 @@ dp_show_settings(Display *dpy, XDevice *dev)
 		break;
 	    case 32:
 		if (format != par->prop_format || type != XA_INTEGER) {
-		    fprintf(stderr, "   %-23s = format mismatch (%d)\n",
+		    fprintf(stderr, "    %-23s = format mismatch (%d)\n",
 			    par->name, format);
 		    break;
 		}
@@ -530,7 +530,7 @@ dp_show_settings(Display *dpy, XDevice *dev)
 		if (!float_type)
 		    continue;
 		if (format != 32 || type != float_type) {
-		    fprintf(stderr, "   %-23s = format mismatch (%d)\n",
+		    fprintf(stderr, "    %-23s = format mismatch (%d)\n",
 			    par->name, format);
 		    break;
 		}
