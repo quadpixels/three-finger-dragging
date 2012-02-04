@@ -48,10 +48,4 @@ typedef enum {
 
 #define SYN_MAX_BUTTONS 12      /* Max number of mouse buttons */
 
-/*
- * Minimum and maximum values for scroll_button_repeat
- */
-#define SBR_MIN 10
-#define SBR_MAX 1000
-
-#endif                          /* _SYNAPTICS_H_ */
+#endif /* _SYNAPTICS_H_ */

@@ -661,19 +661,6 @@ set_default_parameters(InputInfoPtr pInfo)
         xf86SetBoolOption(opts, "VertTwoFingerScroll", vertTwoFingerScroll);
     pars->scroll_twofinger_horiz =
         xf86SetBoolOption(opts, "HorizTwoFingerScroll", horizTwoFingerScroll);
-
-    if (priv->has_scrollbuttons) {
-        pars->updown_button_scrolling =
-            xf86SetBoolOption(opts, "UpDownScrolling", TRUE);
-        pars->leftright_button_scrolling =
-            xf86SetBoolOption(opts, "LeftRightScrolling", TRUE);
-        pars->updown_button_repeat =
-            xf86SetBoolOption(opts, "UpDownScrollRepeat", TRUE);
-        pars->leftright_button_repeat =
-            xf86SetBoolOption(opts, "LeftRightScrollRepeat", TRUE);
-    }
-    pars->scroll_button_repeat =
-        xf86SetIntOption(opts, "ScrollButtonRepeat", 100);
     pars->touchpad_off = xf86SetIntOption(opts, "TouchpadOff", 0);
     pars->locked_drags = xf86SetBoolOption(opts, "LockedDrags", FALSE);
     pars->locked_drag_time = xf86SetIntOption(opts, "LockedDragTimeout", 5000);
@@ -876,8 +863,6 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     xf86ErrorFVerb(6, "port opened successfully\n");
 
     /* initialize variables */
-    priv->repeatButtons = 0;
-    priv->nextRepeat = 0;
     priv->count_packet_finger = 0;
     priv->tap_state = TS_START;
     priv->tap_button = 0;
@@ -1056,7 +1041,6 @@ SynapticsReset(SynapticsPrivate * priv)
     priv->circ_scroll_on = FALSE;
     priv->circ_scroll_vert = FALSE;
     priv->mid_emu_state = MBE_OFF;
-    priv->nextRepeat = 0;
     priv->lastButtons = 0;
     priv->prev_z = 0;
     priv->prevFingers = 0;
@@ -2684,46 +2668,6 @@ handle_clickfinger(SynapticsPrivate * priv, struct SynapticsHwState *hw)
     }
 }
 
-/* Adjust the hardware state according to the extra buttons (if the touchpad
- * has any and not many touchpads do these days). These buttons are up/down
- * tilt buttons and/or left/right buttons that then map into a specific
- * function (or scrolling into).
- */
-static Bool
-adjust_state_from_scrollbuttons(const InputInfoPtr pInfo,
-                                struct SynapticsHwState *hw)
-{
-    SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
-    SynapticsParameters *para = &priv->synpara;
-    Bool double_click = FALSE;
-
-    if (!para->updown_button_scrolling) {
-        if (hw->down) {         /* map down button to middle button */
-            hw->middle = TRUE;
-        }
-
-        if (hw->up) {           /* up button generates double click */
-            if (!priv->prev_up)
-                double_click = TRUE;
-        }
-        priv->prev_up = hw->up;
-
-        /* reset up/down button events */
-        hw->up = hw->down = FALSE;
-    }
-
-    /* Left/right button scrolling, or middle clicks */
-    if (!para->leftright_button_scrolling) {
-        if (hw->multi[2] || hw->multi[3])
-            hw->middle = TRUE;
-
-        /* reset left/right button events */
-        hw->multi[2] = hw->multi[3] = FALSE;
-    }
-
-    return double_click;
-}
-
 static void
 update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
                        struct SynapticsHwState *old, CARD32 now, int *delay)
@@ -2818,66 +2762,6 @@ post_scroll_events(const InputInfoPtr pInfo)
         priv->scroll.delta_x -= para->scroll_dist_horiz;
     }
 #endif
-}
-
-static inline int
-repeat_scrollbuttons(const InputInfoPtr pInfo,
-                     const struct SynapticsHwState *hw,
-                     int buttons, CARD32 now, int delay)
-{
-    SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
-    SynapticsParameters *para = &priv->synpara;
-    int repeat_delay, timeleft;
-    int rep_buttons = 0;
-
-    if (para->updown_button_repeat)
-        rep_buttons |= (1 << (4 - 1)) | (1 << (5 - 1));
-    if (para->leftright_button_repeat)
-        rep_buttons |= (1 << (6 - 1)) | (1 << (7 - 1));
-
-    /* Handle auto repeat buttons */
-    repeat_delay = clamp(para->scroll_button_repeat, SBR_MIN, SBR_MAX);
-    if (((hw->up || hw->down) && para->updown_button_repeat &&
-         para->updown_button_scrolling) ||
-        ((hw->multi[2] || hw->multi[3]) && para->leftright_button_repeat &&
-         para->leftright_button_scrolling)) {
-        priv->repeatButtons = buttons & rep_buttons;
-        if (!priv->nextRepeat) {
-            priv->nextRepeat = now + repeat_delay * 2;
-        }
-    }
-    else {
-        priv->repeatButtons = 0;
-        priv->nextRepeat = 0;
-    }
-
-    if (priv->repeatButtons) {
-        timeleft = TIME_DIFF(priv->nextRepeat, now);
-        if (timeleft > 0)
-            delay = MIN(delay, timeleft);
-        if (timeleft <= 0) {
-            int change, id;
-
-            change = priv->repeatButtons;
-            while (change) {
-                id = ffs(change);
-                change &= ~(1 << (id - 1));
-                if (id == 4)
-                    priv->scroll.delta_y -= para->scroll_dist_vert;
-                else if (id == 5)
-                    priv->scroll.delta_y += para->scroll_dist_vert;
-                else if (id == 6)
-                    priv->scroll.delta_x -= para->scroll_dist_horiz;
-                else if (id == 7)
-                    priv->scroll.delta_x += para->scroll_dist_horiz;
-            }
-
-            priv->nextRepeat = now + repeat_delay;
-            delay = MIN(delay, repeat_delay);
-        }
-    }
-
-    return delay;
 }
 
 /* Update the open slots and number of active touches */
@@ -3075,8 +2959,6 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 
     /* these two just update hw->left, right, etc. */
     update_hw_button_state(pInfo, hw, priv->old_hw_state, now, &delay);
-    if (priv->has_scrollbuttons)
-        double_click = adjust_state_from_scrollbuttons(pInfo, hw);
 
     /* no edge or finger detection outside of area */
     if (inside_active_area) {
@@ -3162,9 +3044,6 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
         xf86PostButtonEvent(pInfo->dev, FALSE, id, (buttons & (1 << (id - 1))),
                             0, 0);
     }
-
-    if (priv->has_scrollbuttons)
-        delay = repeat_scrollbuttons(pInfo, hw, buttons, now, delay);
 
     /* Process scroll events only if coordinates are
      * in the Synaptics Area
