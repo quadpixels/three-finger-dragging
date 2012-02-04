@@ -251,19 +251,6 @@ InitDeviceProperties(InputInfoPtr pInfo)
     fvalues[3] = 0;
     prop_speed = InitFloatAtom(pInfo->dev, SYNAPTICS_PROP_SPEED, 4, fvalues);
 
-    values[0] = para->edge_motion_min_z;
-    values[1] = para->edge_motion_max_z;
-    prop_edgemotion_pressure =
-        InitAtom(pInfo->dev, SYNAPTICS_PROP_EDGEMOTION_PRESSURE, 32, 2, values);
-
-    values[0] = para->edge_motion_min_speed;
-    values[1] = para->edge_motion_max_speed;
-    prop_edgemotion_speed =
-        InitAtom(pInfo->dev, SYNAPTICS_PROP_EDGEMOTION_SPEED, 32, 2, values);
-    prop_edgemotion_always =
-        InitAtom(pInfo->dev, SYNAPTICS_PROP_EDGEMOTION, 8, 1,
-                 &para->edge_motion_use_always);
-
     if (priv->has_scrollbuttons) {
         values[0] = para->updown_button_scrolling;
         values[1] = para->leftright_button_scrolling;
@@ -554,42 +541,6 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->min_speed = speed[0];
         para->max_speed = speed[1];
         para->accl = speed[2];
-
-    }
-    else if (property == prop_edgemotion_pressure) {
-        CARD32 *pressure;
-
-        if (prop->size != 2 || prop->format != 32 || prop->type != XA_INTEGER)
-            return BadMatch;
-
-        pressure = (CARD32 *) prop->data;
-        if (pressure[0] > pressure[1])
-            return BadValue;
-
-        para->edge_motion_min_z = pressure[0];
-        para->edge_motion_max_z = pressure[1];
-
-    }
-    else if (property == prop_edgemotion_speed) {
-        CARD32 *speed;
-
-        if (prop->size != 2 || prop->format != 32 || prop->type != XA_INTEGER)
-            return BadMatch;
-
-        speed = (CARD32 *) prop->data;
-        if (speed[0] > speed[1])
-            return BadValue;
-
-        para->edge_motion_min_speed = speed[0];
-        para->edge_motion_max_speed = speed[1];
-
-    }
-    else if (property == prop_edgemotion_always) {
-        if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
-            return BadMatch;
-
-        para->edge_motion_use_always = *(BOOL *) prop->data;
-
     }
     else if (property == prop_buttonscroll) {
         BOOL *scroll;

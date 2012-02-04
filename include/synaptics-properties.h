@@ -75,15 +75,6 @@
 /* FLOAT, 4 values, min, max, accel, <deprecated> */
 #define SYNAPTICS_PROP_SPEED "Synaptics Move Speed"
 
-/* 32 bit, 2 values, min, max */
-#define SYNAPTICS_PROP_EDGEMOTION_PRESSURE "Synaptics Edge Motion Pressure"
-
-/* 32 bit, 2 values, min, max */
-#define SYNAPTICS_PROP_EDGEMOTION_SPEED "Synaptics Edge Motion Speed"
-
-/* 8 bit (BOOL) */
-#define SYNAPTICS_PROP_EDGEMOTION "Synaptics Edge Motion Always"
-
 /* 8 bit (BOOL), 2 values, updown, leftright */
 #define SYNAPTICS_PROP_BUTTONSCROLLING "Synaptics Button Scrolling"
 

@@ -160,26 +160,6 @@ Distance"
 .BI "Option \*qHorizScrollDelta\*q \*q" integer \*q
 Move distance of the finger for a scroll event. Property: "Synaptics Scrolling
 Distance"
-.TP 7
-.BI "Option \*qEdgeMotionMinZ\*q \*q" integer \*q
-Finger pressure at which minimum edge motion speed is set. Property:
-"Synaptics Edge Motion Pressure"
-.TP
-.BI "Option \*qEdgeMotionMaxZ\*q \*q" integer \*q
-Finger pressure at which maximum edge motion speed is set. Property:
-"Synaptics Edge Motion Pressure"
-.TP
-.BI "Option \*qEdgeMotionMinSpeed\*q \*q" integer \*q
-Slowest setting for edge motion speed. Property: "Synaptics Edge Motion Speed"
-.TP
-.BI "Option \*qEdgeMotionMaxSpeed\*q \*q" integer \*q
-Fastest setting for edge motion speed. Property: "Synaptics Edge Motion Speed"
-.TP
-.BI "Option \*qEdgeMotionUseAlways\*q \*q" boolean \*q
-If on, edge motion is also used for normal movements.
-.
-If off, edge motion is used only when dragging. Property: "Synaptics Edge
-Motion Always"
 .TP
 .BI "Option \*qMinSpeed\*q \*q" float \*q
 Minimum speed factor. Property: "Synaptics Move Speed"
@@ -633,33 +613,8 @@ If the pressure is below PressureMotionMinZ, PressureMotionMinFactor
 is used, and if the pressure is greater than PressureMotionMaxZ,
 PressureMotionMaxFactor is used.
 .
-By default, PressureMotionMinZ and PressureMotionMaxZ are equal to
-EdgeMotionMinZ and EdgeMotionMaxZ.
-.
 For a pressure value between PressureMotionMinZ and
 PressureMotionMaxZ, the factor is increased linearly.
-.
-.SS Edge motion
-When hitting an edge, movement can be automatically continued.
-.
-If EdgeMotionUseAlways is false, edge motion is only used when
-dragging.
-.
-With EdgeMotionUseAlways set to true, it is also used for normal
-cursor movements.
-.
-.LP
-Edge motion speed is calculated by taking into account the amount of
-pressure applied to the touchpad.
-.
-The sensitivity can be adjusted using the EdgeMotion parameters.
-.
-If the pressure is below EdgeMotionMinZ, EdgeMotionMinSpeed is used,
-and if the pressure is greater than EdgeMotionMaxZ, EdgeMotionMaxSpeed
-is used.
-.
-For a pressure value between EdgeMotionMinZ and EdgeMotionMaxZ, the
-speed is increased linearly.
 .
 .SS Middle button emulation
 Since most synaptics touchpad models don't have a button that
@@ -812,18 +767,6 @@ duration of a single click.
 .TP 7
 .BI "Synaptics Move Speed"
 FLOAT, 4 values, min, max, accel, <deprecated>
-
-.TP 7
-.BI "Synaptics Edge Motion Pressure"
-32 bit, 2 values, min, max.
-
-.TP 7
-.BI "Synaptics Edge Motion Speed"
-32 bit, 2 values, min, max.
-
-.TP 7
-.BI "Synaptics Edge Motion Always"
-8 bit (BOOL).
 
 .TP 7
 .BI "Synaptics Button Scrolling"
@@ -984,6 +927,17 @@ The following options are no longer part of the driver configuration:
 .BI "Option \*qTrackstickSpeed\*q \*q" float \*q
 .TP
 .BI "Option \*qFastTaps\*q \*q" boolean \*q
+.TP
+.BI "Option \*qEdgeMotionMinZ\*q \*q" integer \*q
+.TP
+.BI "Option \*qEdgeMotionMaxZ\*q \*q" integer \*q
+.TP
+.BI "Option \*qEdgeMotionMinSpeed\*q \*q" integer \*q
+.TP
+.BI "Option \*qEdgeMotionMaxSpeed\*q \*q" integer \*q
+.TP
+.BI "Option \*qEdgeMotionUseAlways\*q \*q" boolean \*q
+
 
 .SH "AUTHORS"
 .LP

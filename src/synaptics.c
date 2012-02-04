@@ -529,12 +529,10 @@ set_default_parameters(InputInfoPtr pInfo)
     int horizScrollDelta, vertScrollDelta;      /* pixels */
     int tapMove;                /* pixels */
     int l, r, t, b;             /* left, right, top, bottom */
-    int edgeMotionMinSpeed, edgeMotionMaxSpeed; /* pixels/second */
     double accelFactor;         /* 1/pixels */
     int fingerLow, fingerHigh;  /* pressure */
     int emulateTwoFingerMinZ;   /* pressure */
     int emulateTwoFingerMinW;   /* width */
-    int edgeMotionMinZ, edgeMotionMaxZ; /* pressure */
     int pressureMotionMinZ, pressureMotionMaxZ; /* pressure */
     int palmMinWidth, palmMinZ; /* pressure */
     int tapButton1, tapButton2, tapButton3;
@@ -568,8 +566,6 @@ set_default_parameters(InputInfoPtr pInfo)
     horizScrollDelta = diag * .020;
     vertScrollDelta = diag * .020;
     tapMove = diag * .044;
-    edgeMotionMinSpeed = 1;
-    edgeMotionMaxSpeed = diag * .080;
     accelFactor = 200.0 / diag; /* trial-and-error */
 
     /* hysteresis, assume >= 0 is a detected value (e.g. evdev fuzz) */
@@ -582,8 +578,6 @@ set_default_parameters(InputInfoPtr pInfo)
 
     /* scaling based on defaults and a pressure of 256 */
     emulateTwoFingerMinZ = priv->minp + range * (282.0 / 256);
-    edgeMotionMinZ = priv->minp + range * (30.0 / 256);
-    edgeMotionMaxZ = priv->minp + range * (160.0 / 256);
     pressureMotionMinZ = priv->minp + range * (30.0 / 256);
     pressureMotionMaxZ = priv->minp + range * (160.0 / 256);
     palmMinZ = priv->minp + range * (200.0 / 256);
@@ -667,16 +661,7 @@ set_default_parameters(InputInfoPtr pInfo)
         xf86SetBoolOption(opts, "VertTwoFingerScroll", vertTwoFingerScroll);
     pars->scroll_twofinger_horiz =
         xf86SetBoolOption(opts, "HorizTwoFingerScroll", horizTwoFingerScroll);
-    pars->edge_motion_min_z =
-        xf86SetIntOption(opts, "EdgeMotionMinZ", edgeMotionMinZ);
-    pars->edge_motion_max_z =
-        xf86SetIntOption(opts, "EdgeMotionMaxZ", edgeMotionMaxZ);
-    pars->edge_motion_min_speed =
-        xf86SetIntOption(opts, "EdgeMotionMinSpeed", edgeMotionMinSpeed);
-    pars->edge_motion_max_speed =
-        xf86SetIntOption(opts, "EdgeMotionMaxSpeed", edgeMotionMaxSpeed);
-    pars->edge_motion_use_always =
-        xf86SetBoolOption(opts, "EdgeMotionUseAlways", FALSE);
+
     if (priv->has_scrollbuttons) {
         pars->updown_button_scrolling =
             xf86SetBoolOption(opts, "UpDownScrolling", TRUE);
@@ -2159,57 +2144,9 @@ hysteresis(int in, int center, int margin)
 }
 
 static void
-get_edge_speed(SynapticsPrivate * priv, const struct SynapticsHwState *hw,
-               edge_type edge, int *x_edge_speed, int *y_edge_speed)
-{
-    SynapticsParameters *para = &priv->synpara;
-
-    int minZ = para->edge_motion_min_z;
-    int maxZ = para->edge_motion_max_z;
-    int minSpd = para->edge_motion_min_speed;
-    int maxSpd = para->edge_motion_max_speed;
-    int edge_speed;
-
-    if (hw->z <= minZ) {
-        edge_speed = minSpd;
-    }
-    else if (hw->z >= maxZ) {
-        edge_speed = maxSpd;
-    }
-    else {
-        edge_speed =
-            minSpd + (hw->z - minZ) * (maxSpd - minSpd) / (maxZ - minZ);
-    }
-    if (!priv->synpara.circular_pad) {
-        /* on rectangular pad */
-        if (edge & RIGHT_EDGE) {
-            *x_edge_speed = edge_speed;
-        }
-        else if (edge & LEFT_EDGE) {
-            *x_edge_speed = -edge_speed;
-        }
-        if (edge & TOP_EDGE) {
-            *y_edge_speed = -edge_speed;
-        }
-        else if (edge & BOTTOM_EDGE) {
-            *y_edge_speed = edge_speed;
-        }
-    }
-    else if (edge) {
-        /* at edge of circular pad */
-        double relX, relY;
-
-        relative_coords(priv, hw->x, hw->y, &relX, &relY);
-        *x_edge_speed = (int) (edge_speed * relX);
-        *y_edge_speed = (int) (edge_speed * relY);
-    }
-}
-
-static void
-get_delta(SynapticsPrivate * priv, const struct SynapticsHwState *hw,
+get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
           edge_type edge, double *dx, double *dy)
 {
-    SynapticsParameters *para = &priv->synpara;
     double dtime = (hw->millis - HIST(0).millis) / 1000.0;
     double integral;
     double tmpf;
@@ -2218,9 +2155,6 @@ get_delta(SynapticsPrivate * priv, const struct SynapticsHwState *hw,
 
     *dx = hw->x - HIST(0).x;
     *dy = hw->y - HIST(0).y;
-
-    if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always)
-        get_edge_speed(priv, hw, edge, &x_edge_speed, &y_edge_speed);
 
     /* report edge speed as synthetic motion. Of course, it would be
      * cooler to report floats than to buffer, but anyway. */
