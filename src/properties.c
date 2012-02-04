@@ -205,7 +205,7 @@ InitDeviceProperties(InputInfoPtr pInfo)
 
     values[0] = para->finger_low;
     values[1] = para->finger_high;
-    values[2] = para->finger_press;
+    values[2] = 0;
 
     prop_finger = InitAtom(pInfo->dev, SYNAPTICS_PROP_FINGER, 32, 3, values);
     prop_tap_time =
@@ -251,7 +251,7 @@ InitDeviceProperties(InputInfoPtr pInfo)
     fvalues[0] = para->min_speed;
     fvalues[1] = para->max_speed;
     fvalues[2] = para->accl;
-    fvalues[3] = para->trackstick_speed;
+    fvalues[3] = 0;
     prop_speed = InitFloatAtom(pInfo->dev, SYNAPTICS_PROP_SPEED, 4, fvalues);
 
     values[0] = para->edge_motion_min_z;
@@ -443,8 +443,6 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
 
         para->finger_low = finger[0];
         para->finger_high = finger[1];
-        para->finger_press = finger[2];
-
     }
     else if (property == prop_tap_time) {
         if (prop->size != 1 || prop->format != 32 || prop->type != XA_INTEGER)
@@ -566,7 +564,6 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->min_speed = speed[0];
         para->max_speed = speed[1];
         para->accl = speed[2];
-        para->trackstick_speed = speed[3];
 
     }
     else if (property == prop_edgemotion_pressure) {

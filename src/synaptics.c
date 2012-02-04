@@ -330,7 +330,7 @@ calculate_edge_widths(SynapticsPrivate * priv, int *l, int *r, int *t, int *b)
 
 static void
 calculate_tap_hysteresis(SynapticsPrivate * priv, int range,
-                         int *fingerLow, int *fingerHigh, int *fingerPress)
+                         int *fingerLow, int *fingerHigh)
 {
     if (priv->model == MODEL_ELANTECH) {
         /* All Elantech touchpads don't need the Z filtering to get the
@@ -344,8 +344,6 @@ calculate_tap_hysteresis(SynapticsPrivate * priv, int range,
         *fingerLow = priv->minp + range * (25.0 / 256);
         *fingerHigh = priv->minp + range * (30.0 / 256);
     }
-
-    *fingerPress = priv->minp + range * 1.000;
 }
 
 /* Area options support both percent values and absolute values. This is
@@ -533,7 +531,7 @@ set_default_parameters(InputInfoPtr pInfo)
     int l, r, t, b;             /* left, right, top, bottom */
     int edgeMotionMinSpeed, edgeMotionMaxSpeed; /* pixels/second */
     double accelFactor;         /* 1/pixels */
-    int fingerLow, fingerHigh, fingerPress;     /* pressure */
+    int fingerLow, fingerHigh;  /* pressure */
     int emulateTwoFingerMinZ;   /* pressure */
     int emulateTwoFingerMinW;   /* width */
     int edgeMotionMinZ, edgeMotionMaxZ; /* pressure */
@@ -580,8 +578,7 @@ set_default_parameters(InputInfoPtr pInfo)
 
     range = priv->maxp - priv->minp + 1;
 
-    calculate_tap_hysteresis(priv, range, &fingerLow, &fingerHigh,
-                             &fingerPress);
+    calculate_tap_hysteresis(priv, range, &fingerLow, &fingerHigh);
 
     /* scaling based on defaults and a pressure of 256 */
     emulateTwoFingerMinZ = priv->minp + range * (282.0 / 256);
@@ -644,7 +641,6 @@ set_default_parameters(InputInfoPtr pInfo)
 
     pars->finger_low = xf86SetIntOption(opts, "FingerLow", fingerLow);
     pars->finger_high = xf86SetIntOption(opts, "FingerHigh", fingerHigh);
-    pars->finger_press = xf86SetIntOption(opts, "FingerPress", fingerPress);
     pars->tap_time = xf86SetIntOption(opts, "MaxTapTime", 180);
     pars->tap_move = xf86SetIntOption(opts, "MaxTapMove", tapMove);
     pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 180);
@@ -726,7 +722,6 @@ set_default_parameters(InputInfoPtr pInfo)
     pars->min_speed = xf86SetRealOption(opts, "MinSpeed", 0.4);
     pars->max_speed = xf86SetRealOption(opts, "MaxSpeed", 0.7);
     pars->accl = xf86SetRealOption(opts, "AccelFactor", accelFactor);
-    pars->trackstick_speed = xf86SetRealOption(opts, "TrackstickSpeed", 40);
     pars->scroll_dist_circ = xf86SetRealOption(opts, "CircScrollDelta", 0.1);
     pars->coasting_speed = xf86SetRealOption(opts, "CoastingSpeed", 20.0);
     pars->coasting_friction = xf86SetRealOption(opts, "CoastingFriction", 50);
@@ -1764,9 +1759,7 @@ SynapticsDetectFinger(SynapticsPrivate * priv, struct SynapticsHwState *hw)
     if (priv->finger_state == FS_BLOCKED)
         return FS_BLOCKED;
 
-    if (hw->z > para->finger_press && priv->finger_state < FS_PRESSED)
-        finger = FS_PRESSED;
-    else if (hw->z > para->finger_high && priv->finger_state == FS_UNTOUCHED)
+    if (hw->z > para->finger_high && priv->finger_state == FS_UNTOUCHED)
         finger = FS_TOUCHED;
     else
         finger = priv->finger_state;
@@ -1904,10 +1897,6 @@ SetMovingState(SynapticsPrivate * priv, enum MovingState moving_state,
         priv->moving_state, moving_state, priv->hwState->x, priv->hwState->y,
         millis);
 
-    if (moving_state == MS_TRACKSTICK) {
-        priv->trackstick_neutral_x = priv->hwState->x;
-        priv->trackstick_neutral_y = priv->hwState->y;
-    }
     priv->moving_state = moving_state;
 }
 
@@ -1993,9 +1982,6 @@ HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
             if (finger == FS_TOUCHED) {
                 SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
             }
-            else if (finger == FS_PRESSED) {
-                SetMovingState(priv, MS_TRACKSTICK, now);
-            }
             SetTapState(priv, TS_MOVE, now);
             goto restart;
         }
@@ -2013,9 +1999,6 @@ HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
         if (para->clickpad && press) {
             SetTapState(priv, TS_CLICKPAD_MOVE, now);
             goto restart;
-        }
-        if (move && priv->moving_state == MS_TRACKSTICK) {
-            SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
         }
         if (release) {
             SetMovingState(priv, MS_FALSE, now);
@@ -2058,9 +2041,6 @@ HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
             if (para->tap_and_drag_gesture) {
                 if (finger == FS_TOUCHED) {
                     SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
-                }
-                else if (finger == FS_PRESSED) {
-                    SetMovingState(priv, MS_TRACKSTICK, now);
                 }
                 SetTapState(priv, TS_DRAG, now);
             }
@@ -2188,21 +2168,6 @@ hysteresis(int in, int center, int margin)
 }
 
 static void
-get_delta_for_trackstick(SynapticsPrivate * priv,
-                         const struct SynapticsHwState *hw, double *dx,
-                         double *dy)
-{
-    SynapticsParameters *para = &priv->synpara;
-    double dtime = (hw->millis - HIST(0).millis) / 1000.0;
-
-    *dx = (hw->x - priv->trackstick_neutral_x);
-    *dy = (hw->y - priv->trackstick_neutral_y);
-
-    *dx = *dx * dtime * para->trackstick_speed;
-    *dy = *dy * dtime * para->trackstick_speed;
-}
-
-static void
 get_edge_speed(SynapticsPrivate * priv, const struct SynapticsHwState *hw,
                edge_type edge, int *x_edge_speed, int *y_edge_speed)
 {
@@ -2285,7 +2250,7 @@ get_delta(SynapticsPrivate * priv, const struct SynapticsHwState *hw,
 }
 
 /**
- * Compute relative motion ('deltas') including edge motion xor trackstick.
+ * Compute relative motion ('deltas') including edge motion.
  */
 static int
 ComputeDeltas(SynapticsPrivate * priv, const struct SynapticsHwState *hw,
@@ -2332,9 +2297,7 @@ ComputeDeltas(SynapticsPrivate * priv, const struct SynapticsHwState *hw,
     if (priv->count_packet_finger <= 1)
         goto out;               /* skip the lot */
 
-    if (priv->moving_state == MS_TRACKSTICK)
-        get_delta_for_trackstick(priv, hw, &dx, &dy);
-    else if (moving_state == MS_TOUCHPAD_RELATIVE)
+    if (moving_state == MS_TOUCHPAD_RELATIVE)
         get_delta(priv, hw, edge, &dx, &dy);
 
  out:

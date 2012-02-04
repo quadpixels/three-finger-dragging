@@ -73,7 +73,6 @@ enum FingerState {              /* Note! The order matters. Compared with < oper
 enum MovingState {
     MS_FALSE,
     MS_TOUCHPAD_RELATIVE,
-    MS_TRACKSTICK               /* trackstick is always relative */
 };
 
 enum MidButtonEmulation {
@@ -139,7 +138,6 @@ typedef struct _SynapticsParameters {
     Bool scroll_twofinger_vert; /* Enable/disable vertical two-finger scrolling */
     Bool scroll_twofinger_horiz;        /* Enable/disable horizontal two-finger scrolling */
     double min_speed, max_speed, accl;  /* movement parameters */
-    double trackstick_speed;    /* trackstick mode speed */
     int edge_motion_min_z;      /* finger pressure at which minimum edge motion speed is set */
     int edge_motion_max_z;      /* finger pressure at which maximum edge motion speed is set */
     int edge_motion_min_speed;  /* slowest setting for edge motion speed */
@@ -238,8 +236,6 @@ struct _SynapticsPrivateRec {
     Bool circ_scroll_on;        /* Keeps track of currently active scroll modes */
     Bool circ_scroll_vert;      /* True: Generate vertical scroll events
                                    False: Generate horizontal events */
-    int trackstick_neutral_x;   /* neutral x position for trackstick mode */
-    int trackstick_neutral_y;   /* neutral y position for trackstick mode */
     double frac_x, frac_y;      /* absolute -> relative fraction */
     enum MidButtonEmulation mid_emu_state;      /* emulated 3rd button */
     int repeatButtons;          /* buttons for repeat */

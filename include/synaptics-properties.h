@@ -35,7 +35,7 @@
 /* 32 bit, 4 values, left, right, top, bottom */
 #define SYNAPTICS_PROP_EDGES "Synaptics Edges"
 
-/* 32 bit, 3 values, low, high, press */
+/* 32 bit, 3 values, low, high, <deprecated> */
 #define SYNAPTICS_PROP_FINGER "Synaptics Finger"
 
 /* 32 bit */
@@ -72,7 +72,7 @@
 /* 8 bit (BOOL), 2 values, vertical, horizontal */
 #define SYNAPTICS_PROP_SCROLL_TWOFINGER "Synaptics Two-Finger Scrolling"
 
-/* FLOAT, 4 values, min, max, accel, trackstick */
+/* FLOAT, 4 values, min, max, accel, <deprecated> */
 #define SYNAPTICS_PROP_SPEED "Synaptics Move Speed"
 
 /* 32 bit, 2 values, min, max */

@@ -112,13 +112,6 @@ release. Property: "Synaptics Finger"
 When finger pressure goes above this value, the driver counts it as a
 touch. Property: "Synaptics Finger"
 .TP 7
-.BI "Option \*qFingerPress\*q \*q" integer \*q
-When finger pressure goes above this value, the driver counts it as a
-press.
-.
-Currently a press is equivalent to putting the touchpad in trackstick
-emulation mode. Property: "Synaptics Finger"
-.TP 7
 .BI "Option \*qMaxTapTime\*q \*q" integer \*q
 Maximum time (in milliseconds) for detecting a tap. Property: "Synaptics Tap
 Durations"
@@ -201,9 +194,6 @@ Maximum speed factor. Property: "Synaptics Move Speed"
 .BI "Option \*qAccelFactor\*q \*q" float \*q
 Acceleration factor for normal pointer movements. Property: "Synaptics Move
 Speed"
-.TP
-.BI "Option \*qTrackstickSpeed\*q \*q" float \*q
-Speed scale when in trackstick emulation mode. Property: "Synaptics Move Speed"
 .TP
 .BI "Option \*qPressureMotionMinZ\*q \*q" integer \*q
 Finger pressure at which minimum pressure motion factor is applied. Property:
@@ -748,26 +738,6 @@ that it covers the incoming coordinate, and only the boxes own center is used
 as input. Obviously, the smaller the box the better, but the likelyhood of
 noise motion coming through also increases.
 
-.SS Trackstick mode
-Trackstick emulation mode is entered when pressing the finger hard on
-the touchpad.
-.
-The FingerPress parameter controls the minimum required finger
-pressure.
-.
-If the finger hasn't moved more than MaxTapMove after MaxTapTime has
-elapsed, trackstick mode is entered.
-.
-In this mode, moving the finger slightly in any direction gives a
-speed vector that moves the pointer.
-.
-The TrackstickSpeed parameter controls the ratio between pointer speed
-and finger movement distance.
-.
-Trackstick mode is exited when the finger pressure drops below
-FingerLow or when the finger is moved further than MaxTapMove away
-from the initial position.
-
 .SS ClickPad support
 A click pad device has button(s) integrated into the touchpad surface. The
 user must press downward on the touchpad in order to generated a button
@@ -849,7 +819,7 @@ duration of a single click.
 
 .TP 7
 .BI "Synaptics Move Speed"
-FLOAT, 4 values, min, max, accel, trackstick.
+FLOAT, 4 values, min, max, accel, <deprecated>
 
 .TP 7
 .BI "Synaptics Edge Motion Pressure"
@@ -1016,6 +986,10 @@ The following options are no longer part of the driver configuration:
 .BI "Option \*qGuestMouseOff\*q \*q" boolean \*q
 .TP
 .BI "Option \*qSHMConfig\*q \*q" boolean \*q
+.TP
+.BI "Option \*qFingerPress\*q \*q" integer \*q
+.TP
+.BI "Option \*qTrackstickSpeed\*q \*q" float \*q
 
 .SH "AUTHORS"
 .LP
