@@ -48,20 +48,6 @@ typedef enum {
 
 #define SYN_MAX_BUTTONS 12      /* Max number of mouse buttons */
 
-#define SHM_SYNAPTICS 23947
-typedef struct _SynapticsSHM {
-    int version;                /* Driver version */
-
-    /* Current device state */
-    int x, y;                   /* actual x, y coordinates */
-    int z;                      /* pressure value */
-    int numFingers;             /* number of fingers */
-    int fingerWidth;            /* finger width value */
-    int left, right, up, down;  /* left/right/up/down buttons */
-    Bool multi[8];
-    Bool middle;
-} SynapticsSHM;
-
 /*
  * Minimum and maximum values for scroll_button_repeat
  */

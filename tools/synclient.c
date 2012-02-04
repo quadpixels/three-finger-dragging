@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
-#include <sys/shm.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <string.h>
@@ -195,108 +194,6 @@ parse_cmd(char *cmd, struct Parameter **par)
     }
 
     return 0;
-}
-
-static int
-is_equal(SynapticsSHM * s1, SynapticsSHM * s2)
-{
-    int i;
-
-    if ((s1->x != s2->x) ||
-        (s1->y != s2->y) ||
-        (s1->z != s2->z) ||
-        (s1->numFingers != s2->numFingers) ||
-        (s1->fingerWidth != s2->fingerWidth) ||
-        (s1->left != s2->left) ||
-        (s1->right != s2->right) ||
-        (s1->up != s2->up) ||
-        (s1->down != s2->down) || (s1->middle != s2->middle))
-        return 0;
-
-    for (i = 0; i < 8; i++)
-        if (s1->multi[i] != s2->multi[i])
-            return 0;
-
-    return 1;
-}
-
-static double
-get_time(void)
-{
-    struct timeval tv;
-
-    gettimeofday(&tv, NULL);
-    return tv.tv_sec + tv.tv_usec / 1000000.0;
-}
-
-static void
-shm_monitor(SynapticsSHM * synshm, int delay)
-{
-    int header = 0;
-    SynapticsSHM old;
-    double t0 = get_time();
-
-    memset(&old, 0, sizeof(SynapticsSHM));
-    old.x = -1;                 /* Force first equality test to fail */
-
-    while (1) {
-        SynapticsSHM cur = *synshm;
-
-        if (!is_equal(&old, &cur)) {
-            if (!header) {
-                printf("%8s  %4s %4s %3s %s %2s %2s %s %s %s %s  %8s  "
-                       "%2s %2s %2s %3s %3s\n",
-                       "time", "x", "y", "z", "f", "w", "l", "r", "u", "d", "m",
-                       "multi", "gl", "gm", "gr", "gdx", "gdy");
-                header = 20;
-            }
-            header--;
-            printf
-                ("%8.3f  %4d %4d %3d %d %2d %2d %d %d %d %d  %d%d%d%d%d%d%d%d\n",
-                 get_time() - t0, cur.x, cur.y, cur.z, cur.numFingers,
-                 cur.fingerWidth, cur.left, cur.right, cur.up, cur.down,
-                 cur.middle, cur.multi[0], cur.multi[1], cur.multi[2],
-                 cur.multi[3], cur.multi[4], cur.multi[5], cur.multi[6],
-                 cur.multi[7]);
-            fflush(stdout);
-            old = cur;
-        }
-        usleep(delay * 1000);
-    }
-}
-
-/** Init and return SHM area or NULL on error */
-static SynapticsSHM *
-shm_init()
-{
-    SynapticsSHM *synshm = NULL;
-    int shmid = 0;
-
-    if ((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM), 0)) == -1) {
-        if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) == -1)
-            fprintf(stderr,
-                    "Can't access shared memory area. SHMConfig disabled?\n");
-        else
-            fprintf(stderr,
-                    "Incorrect size of shared memory area. Incompatible driver version?\n");
-    }
-    else if ((synshm = (SynapticsSHM *) shmat(shmid, NULL, SHM_RDONLY)) == NULL)
-        perror("shmat");
-
-    return synshm;
-}
-
-static void
-shm_process_commands(int do_monitor, int delay)
-{
-    SynapticsSHM *synshm = NULL;
-
-    synshm = shm_init();
-    if (!synshm)
-        return;
-
-    if (do_monitor)
-        shm_monitor(synshm, delay);
 }
 
 /** Init display connection or NULL on error */
@@ -576,11 +473,7 @@ dp_show_settings(Display * dpy, XDevice * dev)
 static void
 usage(void)
 {
-    fprintf(stderr,
-            "Usage: synclient [-s] [-m interval] [-h] [-l] [-V] [-?] [var1=value1 [var2=value2] ...]\n");
-    fprintf(stderr,
-            "  -m monitor changes to the touchpad state (implies -s)\n"
-            "     interval specifies how often (in ms) to poll the touchpad state\n");
+    fprintf(stderr, "Usage: synclient [-s] [-h] [-l] [-V] [-?] [var1=value1 [var2=value2] ...]\n");
     fprintf(stderr, "  -l List current user settings\n");
     fprintf(stderr, "  -V Print synclient version string and exit\n");
     fprintf(stderr, "  -? Show this help message\n");
@@ -592,8 +485,6 @@ int
 main(int argc, char *argv[])
 {
     int c;
-    int delay = -1;
-    int do_monitor = 0;
     int dump_settings = 0;
     int first_cmd;
 
@@ -606,11 +497,6 @@ main(int argc, char *argv[])
     /* Parse command line parameters */
     while ((c = getopt(argc, argv, "sm:hlV")) != -1) {
         switch (c) {
-        case 'm':
-            do_monitor = 1;
-            if ((delay = atoi(optarg)) < 0)
-                usage();
-            break;
         case 'l':
             dump_settings = 1;
             break;
@@ -623,12 +509,8 @@ main(int argc, char *argv[])
     }
 
     first_cmd = optind;
-    if (!do_monitor && !dump_settings && first_cmd == argc)
+    if (!dump_settings && first_cmd == argc)
         usage();
-
-    /* Connect to the shared memory area */
-    if (do_monitor)
-        shm_process_commands(do_monitor, delay);
 
     dpy = dp_init();
     if (!dpy || !(dev = dp_get_device(dpy)))

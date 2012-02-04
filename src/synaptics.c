@@ -63,7 +63,6 @@
 #include <unistd.h>
 #include <misc.h>
 #include <xf86.h>
-#include <sys/shm.h>
 #include <math.h>
 #include <stdio.h>
 #include <xf86_OSproc.h>
@@ -295,64 +294,6 @@ SetDeviceAndProtocol(InputInfoPtr pInfo)
     priv->proto_ops = protocols[i].proto_ops;
 
     return (priv->proto_ops != NULL);
-}
-
-/*
- * Allocate and initialize read-only memory for the SynapticsParameters data to hold
- * driver settings.
- * The function will allocate shared memory if priv->shm_config is TRUE.
- */
-static Bool
-alloc_shm_data(InputInfoPtr pInfo)
-{
-    int shmid;
-    SynapticsPrivate *priv = pInfo->private;
-
-    if (priv->synshm)
-        return TRUE;            /* Already allocated */
-
-    if (priv->shm_config) {
-        if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) != -1)
-            shmctl(shmid, IPC_RMID, NULL);
-        if ((shmid = shmget(SHM_SYNAPTICS, sizeof(SynapticsSHM),
-                            0774 | IPC_CREAT)) == -1) {
-            xf86IDrvMsg(pInfo, X_ERROR, "error shmget\n");
-            return FALSE;
-        }
-        if ((priv->synshm = (SynapticsSHM *) shmat(shmid, NULL, 0)) == NULL) {
-            xf86IDrvMsg(pInfo, X_ERROR, "error shmat\n");
-            return FALSE;
-        }
-    }
-    else {
-        priv->synshm = calloc(1, sizeof(SynapticsSHM));
-        if (!priv->synshm)
-            return FALSE;
-    }
-
-    return TRUE;
-}
-
-/*
- * Free SynapticsParameters data previously allocated by alloc_shm_data().
- */
-static void
-free_shm_data(SynapticsPrivate * priv)
-{
-    int shmid;
-
-    if (!priv->synshm)
-        return;
-
-    if (priv->shm_config) {
-        if ((shmid = shmget(SHM_SYNAPTICS, 0, 0)) != -1)
-            shmctl(shmid, IPC_RMID, NULL);
-    }
-    else {
-        free(priv->synshm);
-    }
-
-    priv->synshm = NULL;
 }
 
 static void
@@ -607,12 +548,6 @@ set_default_parameters(InputInfoPtr pInfo)
     int width, height, diag, range;
     int horizHyst, vertHyst;
     int middle_button_timeout;
-
-    /* read the parameters */
-    if (priv->synshm)
-        priv->synshm->version =
-            (PACKAGE_VERSION_MAJOR * 10000 + PACKAGE_VERSION_MINOR * 100 +
-             PACKAGE_VERSION_PATCHLEVEL);
 
     /* The synaptics specs specify typical edge widths of 4% on x, and 5.4% on
      * y (page 7) [Synaptics TouchPad Interfacing Guide, 510-000080 - A
@@ -975,15 +910,9 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     /* read hardware dimensions */
     ReadDevDimensions(pInfo);
 
-    /* install shared memory or normal memory for parameters */
-    priv->shm_config = xf86SetBoolOption(pInfo->options, "SHMConfig", FALSE);
-
     set_default_parameters(pInfo);
 
     CalculateScalingCoeffs(priv);
-
-    if (!alloc_shm_data(pInfo))
-        goto SetupProc_fail;
 
     priv->comm.buffer = XisbNew(pInfo->fd, INPUT_BUFFER_SIZE);
 
@@ -1014,7 +943,6 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
     if (priv->comm.buffer)
         XisbFree(priv->comm.buffer);
-    free_shm_data(priv);
     free(priv->proto_data);
     free(priv->timer);
     free(priv);
@@ -1193,7 +1121,6 @@ DeviceClose(DeviceIntPtr dev)
     RetValue = DeviceOff(dev);
     TimerFree(priv->timer);
     priv->timer = NULL;
-    free_shm_data(priv);
     SynapticsHwStateFree(&priv->hwState);
     SynapticsHwStateFree(&priv->old_hw_state);
     SynapticsHwStateFree(&priv->local_hw_state);
@@ -1471,16 +1398,12 @@ DeviceInit(DeviceIntPtr dev)
 
     priv->comm.hwState = SynapticsHwStateAlloc(priv);
 
-    if (!alloc_shm_data(pInfo))
-        goto fail;
-
     InitDeviceProperties(pInfo);
     XIRegisterPropertyHandler(pInfo->dev, SetProperty, NULL, NULL);
 
     return Success;
 
  fail:
-    free_shm_data(priv);
     free(priv->local_hw_state);
     free(priv->hwState);
 #ifdef HAVE_MULTITOUCH
@@ -2873,33 +2796,6 @@ handle_clickfinger(SynapticsPrivate * priv, struct SynapticsHwState *hw)
     }
 }
 
-/* Update the hardware state in shared memory. This is read-only these days,
- * nothing in the driver reads back from SHM. SHM configuration is a thing of the past.
- */
-static void
-update_shm(const InputInfoPtr pInfo, const struct SynapticsHwState *hw)
-{
-    int i;
-    SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
-    SynapticsSHM *shm = priv->synshm;
-
-    if (!shm)
-        return;
-
-    shm->x = hw->x;
-    shm->y = hw->y;
-    shm->z = hw->z;
-    shm->numFingers = hw->numFingers;
-    shm->fingerWidth = hw->fingerWidth;
-    shm->left = hw->left;
-    shm->right = hw->right;
-    shm->up = hw->up;
-    shm->down = hw->down;
-    for (i = 0; i < 8; i++)
-        shm->multi[i] = hw->multi[i];
-    shm->middle = hw->middle;
-}
-
 /* Adjust the hardware state according to the extra buttons (if the touchpad
  * has any and not many touchpads do these days). These buttons are up/down
  * tilt buttons and/or left/right buttons that then map into a specific
@@ -3257,8 +3153,6 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     int delay = 1000000000;
     int timeleft;
     Bool inside_active_area;
-
-    update_shm(pInfo, hw);
 
     /* If touchpad is switched off, we skip the whole thing and return delay */
     if (para->touchpad_off == 1) {

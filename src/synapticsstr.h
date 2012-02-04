@@ -186,8 +186,6 @@ typedef struct _SynapticsParameters {
 struct _SynapticsPrivateRec {
     SynapticsParameters synpara;        /* Default parameter settings, read from
                                            the X config file */
-    SynapticsSHM *synshm;       /* Current parameter settings. Will point to
-                                   shared memory if shm_config is true */
     struct SynapticsProtocolOperations *proto_ops;
     void *proto_data;           /* protocol-specific data */
 
@@ -195,8 +193,6 @@ struct _SynapticsPrivateRec {
     struct SynapticsHwState *old_hw_state;      /* previous logical hw state */
 
     const char *device;         /* device node */
-    Bool shm_config;            /* True when shared memory area allocated */
-
     CARD32 timer_time;          /* when timer last fired */
     OsTimerPtr timer;           /* for up/down-button repeat, tap processing, etc */
 

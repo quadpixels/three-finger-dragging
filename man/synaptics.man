@@ -92,11 +92,6 @@ psaux	raw device access (Linux 2.4)
 psm	FreeBSD psm driver
 .TE
 .TP 7
-.BI "Option \*qSHMConfig\*q \*q" boolean \*q
-Switch on/off shared memory for run-time debugging. This option does not
-have an effect on run-time configuration anymore and is only useful for
-hardware event debugging.
-.TP 7
 .BI "Option \*qLeftEdge\*q \*q" integer \*q
 X coordinate for left edge. Property: "Synaptics Edges"
 .TP 7
@@ -563,9 +558,9 @@ Coordinates to the left of LeftEdge are part of the left edge (areas
 1, 4 and 7), coordinates to the left of LeftEdge and above TopEdge
 (area 1) are part of the upper left corner, etc.
 .PP
-A good way to find appropriate edge parameters is to enable the
-SHMConfig option and run "synclient \-m 1" to see the x/y coordinates
-corresponding to different positions on the touchpad.
+A good way to find appropriate edge parameters is to use evtest(1) on the
+device to see the x/y coordinates corresponding to different positions on
+the touchpad.
 .PP
 The perceived physical edges may be adjusted with the AreaLeftEdge,
 AreaRightEdge, AreaTopEdge, and AreaBottomEdge options. If these values are
@@ -795,8 +790,7 @@ area, a right or middle click is performed.
 
 .SH "DEVICE PROPERTIES"
 Synaptics 1.0 and higher support input device properties if the driver is
-running on X server 1.6 or higher. On these driver versions, Option
-"SHMConfig" is not needed to enable run-time configuration. The synclient tool
+running on X server 1.6 or higher. The synclient tool
 shipped with synaptics version 1.1 uses input device properties by default.
 .
 Properties supported:
@@ -1020,6 +1014,8 @@ The following options are no longer part of the driver configuration:
 .BI "Option \*qSpecialScrollAreaRight\*q \*q" boolean \*q
 .TP
 .BI "Option \*qGuestMouseOff\*q \*q" boolean \*q
+.TP
+.BI "Option \*qSHMConfig\*q \*q" boolean \*q
 
 .SH "AUTHORS"
 .LP
