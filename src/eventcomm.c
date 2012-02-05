@@ -180,8 +180,8 @@ InitializeTouch(InputInfoPtr pInfo)
          * and Y. */
         valuator_mask_set(proto_data->last_mt_vals[i], 0, 0);
         valuator_mask_set(proto_data->last_mt_vals[i], 1, 0);
-        for (j = 4; j < priv->num_mt_axes; j++)
-            valuator_mask_set(proto_data->last_mt_vals[i], j, 0);
+        for (j = 0; j < priv->num_mt_axes; j++)
+            valuator_mask_set(proto_data->last_mt_vals[i], 4 + j, 0);
     }
 }
 #endif
