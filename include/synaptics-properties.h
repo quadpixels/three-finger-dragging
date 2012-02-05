@@ -116,9 +116,6 @@
 #define SYNAPTICS_PROP_CIRCULAR_SCROLLING_TRIGGER "Synaptics Circular Scrolling Trigger"
 
 /* 8 bit (BOOL) */
-#define SYNAPTICS_PROP_CIRCULAR_PAD "Synaptics Circular Pad"
-
-/* 8 bit (BOOL) */
 #define SYNAPTICS_PROP_PALM_DETECT "Synaptics Palm Detection"
 
 /* 32 bit, 2 values, width, z */

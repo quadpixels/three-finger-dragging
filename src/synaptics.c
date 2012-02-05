@@ -680,7 +680,6 @@ set_default_parameters(InputInfoPtr pInfo)
     pars->circular_scrolling =
         xf86SetBoolOption(opts, "CircularScrolling", FALSE);
     pars->circular_trigger = xf86SetIntOption(opts, "CircScrollTrigger", 0);
-    pars->circular_pad = xf86SetBoolOption(opts, "CircularPad", FALSE);
     pars->palm_detect = xf86SetBoolOption(opts, "PalmDetect", FALSE);
     pars->palm_min_width = xf86SetIntOption(opts, "PalmMinWidth", palmMinWidth);
     pars->palm_min_z = xf86SetIntOption(opts, "PalmMinZ", palmMinZ);
@@ -1375,32 +1374,6 @@ DeviceInit(DeviceIntPtr dev)
     return !Success;
 }
 
-/*
- * Convert from absolute X/Y coordinates to a coordinate system where
- * -1 corresponds to the left/upper edge and +1 corresponds to the
- * right/lower edge.
- */
-static void
-relative_coords(SynapticsPrivate * priv, int x, int y,
-                double *relX, double *relY)
-{
-    int minX = priv->synpara.left_edge;
-    int maxX = priv->synpara.right_edge;
-    int minY = priv->synpara.top_edge;
-    int maxY = priv->synpara.bottom_edge;
-    double xCenter = (minX + maxX) / 2.0;
-    double yCenter = (minY + maxY) / 2.0;
-
-    if ((maxX - xCenter > 0) && (maxY - yCenter > 0)) {
-        *relX = (x - xCenter) / (maxX - xCenter);
-        *relY = (y - yCenter) / (maxY - yCenter);
-    }
-    else {
-        *relX = 0;
-        *relY = 0;
-    }
-}
-
 /* return angle of point relative to center */
 static double
 angle(SynapticsPrivate * priv, int x, int y)
@@ -1425,37 +1398,9 @@ diffa(double a1, double a2)
 }
 
 static edge_type
-circular_edge_detection(SynapticsPrivate * priv, int x, int y)
-{
-    edge_type edge = 0;
-    double relX, relY, relR;
-
-    relative_coords(priv, x, y, &relX, &relY);
-    relR = SQR(relX) + SQR(relY);
-
-    if (relR > 1) {
-        /* we are outside the ellipse enclosed by the edge parameters */
-        if (relX > M_SQRT1_2)
-            edge |= RIGHT_EDGE;
-        else if (relX < -M_SQRT1_2)
-            edge |= LEFT_EDGE;
-
-        if (relY < -M_SQRT1_2)
-            edge |= TOP_EDGE;
-        else if (relY > M_SQRT1_2)
-            edge |= BOTTOM_EDGE;
-    }
-
-    return edge;
-}
-
-static edge_type
 edge_detection(SynapticsPrivate * priv, int x, int y)
 {
     edge_type edge = NO_EDGE;
-
-    if (priv->synpara.circular_pad)
-        return circular_edge_detection(priv, x, y);
 
     if (x > priv->synpara.right_edge)
         edge |= RIGHT_EDGE;
