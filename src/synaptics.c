@@ -1158,7 +1158,6 @@ DeviceInit(DeviceIntPtr dev)
         {
             SynapticsTouchAxisRec *axis = &priv->touch_axes[i];
             int axnum = num_axes - priv->num_mt_axes + i;
-            Atom atom = axes_labels[axnum];
 
             if (!xf86InitValuatorAxisStruct(dev, axnum, axes_labels[axnum],
                                             axis->min, axis->max, axis->res, 0,
