@@ -1145,8 +1145,9 @@ DeviceInit(DeviceIntPtr dev)
 #ifdef HAVE_MULTITOUCH
     if (priv->has_touch)
     {
+        /* x/y + whatever other MT axes we found */
         if (!InitTouchClassDeviceStruct(dev, priv->num_touches,
-                                        XIDependentTouch, priv->num_mt_axes))
+                                        XIDependentTouch, 2 + priv->num_mt_axes))
         {
             xf86IDrvMsg(pInfo, X_ERROR,
                         "failed to initialize touch class device\n");
