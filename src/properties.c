@@ -92,6 +92,7 @@ Atom prop_gestures              = 0;
 Atom prop_capabilities          = 0;
 Atom prop_resolution            = 0;
 Atom prop_area                  = 0;
+Atom prop_softbutton_areas      = 0;
 Atom prop_noise_cancellation    = 0;
 Atom prop_product_id            = 0;
 Atom prop_device_node           = 0;
@@ -299,6 +300,16 @@ InitDeviceProperties(InputInfoPtr pInfo)
     values[2] = para->area_top_edge;
     values[3] = para->area_bottom_edge;
     prop_area = InitAtom(pInfo->dev, SYNAPTICS_PROP_AREA, 32, 4, values);
+
+    values[0] = para->softbutton_areas[0][0];
+    values[1] = para->softbutton_areas[0][1];
+    values[2] = para->softbutton_areas[0][2];
+    values[3] = para->softbutton_areas[0][3];
+    values[4] = para->softbutton_areas[1][0];
+    values[5] = para->softbutton_areas[1][1];
+    values[6] = para->softbutton_areas[1][2];
+    values[7] = para->softbutton_areas[1][3];
+    prop_softbutton_areas = InitAtom(pInfo->dev, SYNAPTICS_PROP_SOFTBUTTON_AREAS, 32, 8, values);
 
     values[0] = para->hyst_x;
     values[1] = para->hyst_y;
@@ -711,6 +722,19 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->area_right_edge  = area[1];
         para->area_top_edge    = area[2];
         para->area_bottom_edge = area[3];
+    } else if (property == prop_softbutton_areas)
+    {
+        int *areas;
+
+        if (prop->size != 8 || prop->format != 32 || prop->type != XA_INTEGER)
+            return BadMatch;
+
+        areas = (int*)prop->data;
+        if (!SynapticsIsSoftButtonAreasValid(areas))
+            return BadValue;
+
+        memcpy(para->softbutton_areas[0], areas, 4 * sizeof(int));
+        memcpy(para->softbutton_areas[1], areas + 4, 4 * sizeof(int));
     } else if (property == prop_noise_cancellation) {
         INT32 *hyst;
         if (prop->size != 2 || prop->format != 32 || prop->type != XA_INTEGER)

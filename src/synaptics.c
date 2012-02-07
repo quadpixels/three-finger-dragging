@@ -429,6 +429,126 @@ static int set_percent_option(pointer options, const char* optname,
     return result;
 }
 
+Bool SynapticsIsSoftButtonAreasValid(int *values)
+{
+    Bool right_disabled = FALSE;
+    Bool middle_disabled = FALSE;
+
+    /* Check right button area */
+    if ((((values[0] != 0) && (values[1] != 0)) && (values[0] > values[1])) ||
+        (((values[2] != 0) && (values[3] != 0)) && (values[2] > values[3])))
+        return FALSE;
+
+    /* Check middle button area */
+    if ((((values[4] != 0) && (values[5] != 0)) && (values[4] > values[5])) ||
+        (((values[6] != 0) && (values[7] != 0)) && (values[6] > values[7])))
+        return FALSE;
+
+    if (values[0] == 0 && values[1] == 0 && values[2] == 0 && values[3] == 0)
+        right_disabled = TRUE;
+
+    if (values[4] == 0 && values[5] == 0 && values[6] == 0 && values[7] == 0)
+        middle_disabled = TRUE;
+
+    if (!right_disabled &&
+            ((values[0] && values[0] == values[1]) ||
+             (values[2] && values[2] == values[3])))
+        return FALSE;
+
+    if (!middle_disabled &&
+        ((values[4] && values[4] == values[5]) ||
+         (values[6] && values[6] == values[7])))
+        return FALSE;
+
+    /* Check for overlapping button areas */
+    if (!right_disabled && !middle_disabled)
+    {
+        int right_left = values[0] ? values[0] : INT_MIN;
+        int right_right = values[1] ? values[1] : INT_MAX;
+        int right_top = values[2] ? values[2] : INT_MIN;
+        int right_bottom = values[3] ? values[3] : INT_MAX;
+        int middle_left = values[4] ? values[4] : INT_MIN;
+        int middle_right = values[5] ? values[5] : INT_MAX;
+        int middle_top = values[6] ? values[6] : INT_MIN;
+        int middle_bottom = values[7] ? values[7] : INT_MAX;
+
+        /* If areas overlap in the Y axis */
+        if ((right_bottom <= middle_bottom && right_bottom >= middle_top) ||
+            (right_top <= middle_bottom && right_top >= middle_top))
+        {
+            /* Check for overlapping left edges */
+            if ((right_left < middle_left && right_right >= middle_left) ||
+                (middle_left < right_left && middle_right >= right_left))
+                return FALSE;
+
+            /* Check for overlapping right edges */
+            if ((right_right > middle_right && right_left <= middle_right) ||
+                (middle_right > right_right && middle_left <= right_right))
+                return FALSE;
+        }
+
+        /* If areas overlap in the X axis */
+        if ((right_left >= middle_left && right_left <= middle_right) ||
+            (right_right >= middle_left && right_right <= middle_right))
+        {
+            /* Check for overlapping top edges */
+            if ((right_top < middle_top && right_bottom >= middle_top) ||
+                (middle_top < right_top && middle_bottom >= right_top))
+                return FALSE;
+
+            /* Check for overlapping bottom edges */
+            if ((right_bottom > middle_bottom && right_top <= middle_bottom) ||
+                (middle_bottom > right_bottom && middle_top <= right_bottom))
+                return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+static void set_softbutton_areas_option(InputInfoPtr pInfo)
+{
+    SynapticsPrivate *priv = pInfo->private;
+    SynapticsParameters *pars = &priv->synpara;
+    int values[8];
+    char *option_string;
+    char *next_num;
+    char *end_str;
+    int i;
+
+    option_string = xf86CheckStrOption(pInfo->options, "SoftButtonAreas", NULL);
+    if (!option_string)
+        return;
+
+    next_num = option_string;
+
+    for (i = 0; i < 8 && *next_num != '\0'; i++)
+    {
+        long int value = strtol(next_num, &end_str, 0);
+        if (value > INT_MAX || value < -INT_MAX)
+            goto fail;
+
+        values[i] = value;
+
+        if (next_num != end_str)
+            next_num = end_str;
+        else
+            goto fail;
+    }
+
+    if (i < 8 || *next_num != '\0' || !SynapticsIsSoftButtonAreasValid(values))
+        goto fail;
+
+    memcpy(pars->softbutton_areas[0], values, 4 * sizeof(int));
+    memcpy(pars->softbutton_areas[1], values + 4, 4 * sizeof(int));
+
+    return;
+
+fail:
+    xf86IDrvMsg(pInfo, X_ERROR, "invalid SoftButtonAreas value '%s', keeping defaults\n",
+                option_string);
+}
+
 static void set_default_parameters(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = pInfo->private; /* read-only */
@@ -623,6 +743,8 @@ static void set_default_parameters(InputInfoPtr pInfo)
 	pars->bottom_edge = tmp;
 	xf86IDrvMsg(pInfo, X_WARNING, "TopEdge is bigger than BottomEdge. Fixing.\n");
     }
+
+    set_softbutton_areas_option(pInfo);
 }
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 14
@@ -1379,6 +1501,45 @@ is_inside_active_area(SynapticsPrivate *priv, int x, int y)
 	inside_area = FALSE;
 
     return inside_area;
+}
+
+static Bool
+is_inside_button_area(SynapticsParameters *para, int which, int x, int y)
+{
+    Bool inside_area = TRUE;
+
+    if (para->softbutton_areas[which][0] == 0 &&
+        para->softbutton_areas[which][1] == 0 &&
+        para->softbutton_areas[which][2] == 0 &&
+        para->softbutton_areas[which][3] == 0)
+        return FALSE;
+
+    if (para->softbutton_areas[which][0] &&
+        x < para->softbutton_areas[which][0])
+	inside_area = FALSE;
+    else if (para->softbutton_areas[which][1] &&
+             x > para->softbutton_areas[which][1])
+	inside_area = FALSE;
+    else if (para->softbutton_areas[which][2] &&
+             y < para->softbutton_areas[which][2])
+	inside_area = FALSE;
+    else if (para->softbutton_areas[which][3] &&
+             y > para->softbutton_areas[which][3])
+	inside_area = FALSE;
+
+    return inside_area;
+}
+
+static Bool
+is_inside_rightbutton_area(SynapticsParameters *para, int x, int y)
+{
+    return is_inside_button_area(para, 0, x, y);
+}
+
+static Bool
+is_inside_middlebutton_area(SynapticsParameters *para, int x, int y)
+{
+    return is_inside_button_area(para, 1, x, y);
 }
 
 static CARD32
@@ -2588,6 +2749,22 @@ update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
 
     /* 3rd button emulation */
     hw->middle |= HandleMidButtonEmulation(priv, hw, now, delay);
+
+    /* If this is a clickpad and the user clicks in a soft button area, press
+     * the soft button instead. */
+    if (para->clickpad && hw->left && !hw->right && !hw->middle)
+    {
+        if (is_inside_rightbutton_area(para, hw->x, hw->y))
+        {
+            hw->left = 0;
+            hw->right = 1;
+        }
+        else if (is_inside_middlebutton_area(para, hw->x, hw->y))
+        {
+            hw->left = 0;
+            hw->middle = 1;
+        }
+    }
 
     /* Fingers emulate other buttons. ClickFinger can only be
        triggered on transition, when left is pressed

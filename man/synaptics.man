@@ -518,6 +518,20 @@ AreaBottomEdge option to any integer value other than zero. If supported by the
 server (version 1.9 and later), the edge may be specified in percent of
 the total height of the touchpad. Property: "Synaptics Area"
 .
+.TP
+.BI "Option \*qSoftButtonAreas\*q \*q" "RBL RBR RBT RBB MBL MBR MBT MBB" \*q
+Enable soft button click area support on ClickPad devices. The first four
+parameters define the area of the right button, and the second four parameters
+define the area of the middle button. The areas are defined by the left, right,
+top, and bottom edges as sequential values of the property. If any edge is set
+to 0, the button is assumed to extend to infinity in the given direction.
+.
+When the user performs a click within the defined soft button areas, the right
+or middle click action is performed.
+.
+The use of soft button areas is disabled by setting all the values for the area
+to 0. Property: "Synaptics Soft Button Areas"
+.
 
 .SH CONFIGURATION DETAILS
 .SS Area handling
@@ -925,6 +939,14 @@ which take place outside of this area will be ignored. This property is disabled
 default.
 
 32 bit, 4 values, left, right, top, bottom. 0 disables an element.
+
+.TP 7
+.BI "Synaptics Soft Button Areas"
+The Right and middle soft button areas are used to support right and middle
+click actions on a ClickPad device. Providing 0 for all values of a given button
+disables the button area.
+
+32 bit, 8 values, RBL, RBR, RBT, RBB, MBL, MBR, MBT, MBB.
 
 .TP 7
 .BI "Synaptics Capabilities"

@@ -120,4 +120,6 @@ extern void SynapticsCopyHwState(struct SynapticsHwState *dst,
                                  const struct SynapticsHwState *src);
 extern void SynapticsResetTouchHwState(struct SynapticsHwState *hw);
 
+extern Bool SynapticsIsSoftButtonAreasValid(int *values);
+
 #endif /* _SYNPROTO_H_ */
