@@ -32,8 +32,18 @@
 #include <xf86Xinput.h>
 #include <xisb.h>
 
+#include "config.h"
+
 struct _SynapticsPrivateRec;
 typedef struct _SynapticsPrivateRec SynapticsPrivate;
+
+enum SynapticsSlotState
+{
+    SLOTSTATE_EMPTY = 0,
+    SLOTSTATE_OPEN,
+    SLOTSTATE_CLOSE,
+    SLOTSTATE_UPDATE,
+};
 
 /*
  * A structure to describe the state of the touchpad hardware (buttons and pad)
@@ -53,6 +63,12 @@ struct SynapticsHwState {
 
     Bool multi[8];
     Bool middle;		/* Some ALPS touchpads have a middle button */
+
+#ifdef HAVE_MULTITOUCH
+    int num_mt_mask;
+    ValuatorMask **mt_mask;
+    enum SynapticsSlotState *slot_state;
+#endif
 };
 
 struct CommData {

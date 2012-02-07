@@ -281,6 +281,7 @@ typedef struct _SynapticsPrivateRec
     int max_touches;                    /* Number of touches supported */
     int num_mt_axes;                    /* Number of multitouch axes other than X, Y */
     SynapticsTouchAxisRec *touch_axes;  /* Touch axis information other than X, Y */
+    int num_slots;                      /* Number of touch slots allocated */
 #endif
 } SynapticsPrivate;
 

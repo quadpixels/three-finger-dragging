@@ -69,13 +69,7 @@ struct eventcomm_proto_data
     struct mtdev *mtdev;
     int axis_map[MT_ABS_SIZE];
     int cur_slot;
-    enum
-    {
-        SLOTSTATE_OPEN = 0,
-        SLOTSTATE_CLOSE,
-        SLOTSTATE_UPDATE,
-        SLOTSTATE_EMPTY,
-    } slot_state;
+    enum SynapticsSlotState slot_state;
     ValuatorMask *mt_mask;
     ValuatorMask **last_mt_vals;
     unsigned int num_touches;

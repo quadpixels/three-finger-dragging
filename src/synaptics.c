@@ -1148,6 +1148,8 @@ DeviceInit(DeviceIntPtr dev)
 #ifdef HAVE_MULTITOUCH
     if (priv->has_touch)
     {
+        priv->num_slots = priv->max_touches ? priv->max_touches : 10;
+
         /* x/y + whatever other MT axes we found */
         if (!InitTouchClassDeviceStruct(dev, priv->max_touches,
                                         XIDependentTouch, 2 + priv->num_mt_axes))
@@ -1155,6 +1157,7 @@ DeviceInit(DeviceIntPtr dev)
             xf86IDrvMsg(pInfo, X_ERROR,
                         "failed to initialize touch class device\n");
             priv->has_touch = 0;
+            priv->num_slots = 0;
             goto no_touch;
         }
 
