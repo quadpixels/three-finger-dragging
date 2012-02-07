@@ -201,6 +201,8 @@ typedef struct _SynapticsPrivateRec
 
     struct CommData comm;
 
+    struct SynapticsHwState *local_hw_state; /* used in place of local hw state variables */
+
     Bool absolute_events;               /* post absolute motion events instead of relative */
     SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY]; /* movement history */
     int hist_index;			/* Last added entry in move_hist[] */

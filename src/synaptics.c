@@ -934,6 +934,7 @@ DeviceClose(DeviceIntPtr dev)
     TimerFree(priv->timer);
     priv->timer = NULL;
     free_shm_data(priv);
+    SynapticsHwStateFree(&priv->local_hw_state);
     return RetValue;
 }
 
@@ -1179,8 +1180,15 @@ no_touch:
 
     free(axes_labels);
 
-    if (!alloc_shm_data(pInfo))
+    priv->local_hw_state = SynapticsHwStateAlloc(priv);
+    if (!priv->local_hw_state)
 	return !Success;
+
+    if (!alloc_shm_data(pInfo))
+    {
+	free(priv->local_hw_state);
+	return !Success;
+    }
 
     InitDeviceProperties(pInfo);
     XIRegisterPropertyHandler(pInfo->dev, SetProperty, NULL, NULL);
@@ -1310,15 +1318,15 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 {
     InputInfoPtr pInfo = arg;
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
-    struct SynapticsHwState hw;
+    struct SynapticsHwState *hw = priv->local_hw_state;
     int delay;
     int sigstate;
 
     sigstate = xf86BlockSIGIO();
 
     priv->hwState.millis += now - priv->timer_time;
-    hw = priv->hwState;
-    delay = HandleState(pInfo, &hw, hw.millis, TRUE);
+    *hw = priv->hwState;
+    delay = HandleState(pInfo, hw, hw->millis, TRUE);
 
     priv->timer_time = now;
     priv->timer = TimerSet(priv->timer, 0, delay, timerFunc, pInfo);
@@ -1353,13 +1361,13 @@ static void
 ReadInput(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
-    struct SynapticsHwState hw;
+    struct SynapticsHwState *hw = priv->local_hw_state;
     int delay = 0;
     Bool newDelay = FALSE;
 
-    while (SynapticsGetHwState(pInfo, priv, &hw)) {
-	priv->hwState = hw;
-	delay = HandleState(pInfo, &hw, hw.millis, FALSE);
+    while (SynapticsGetHwState(pInfo, priv, hw)) {
+	priv->hwState = *hw;
+	delay = HandleState(pInfo, hw, hw->millis, FALSE);
 	newDelay = TRUE;
     }
 
