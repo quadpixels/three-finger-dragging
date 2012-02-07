@@ -41,3 +41,10 @@ SynapticsHwStateFree(struct SynapticsHwState **hw)
     free(*hw);
     *hw = NULL;
 }
+
+void
+SynapticsCopyHwState(struct SynapticsHwState *dst,
+                     const struct SynapticsHwState *src)
+{
+    *dst = *src;
+}

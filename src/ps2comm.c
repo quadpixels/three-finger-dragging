@@ -650,7 +650,7 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
 	}
     }
     hw->millis = GetTimeInMillis();
-    *hwRet = *hw;
+    SynapticsCopyHwState(hwRet, hw);
     return TRUE;
 }
 

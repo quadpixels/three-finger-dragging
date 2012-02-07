@@ -1337,7 +1337,7 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
     sigstate = xf86BlockSIGIO();
 
     priv->hwState->millis += now - priv->timer_time;
-    *hw = *priv->hwState;
+    SynapticsCopyHwState(hw, priv->hwState);
     delay = HandleState(pInfo, hw, hw->millis, TRUE);
 
     priv->timer_time = now;
@@ -1378,7 +1378,7 @@ ReadInput(InputInfoPtr pInfo)
     Bool newDelay = FALSE;
 
     while (SynapticsGetHwState(pInfo, priv, hw)) {
-	*priv->hwState = *hw;
+	SynapticsCopyHwState(priv->hwState, hw);
 	delay = HandleState(pInfo, hw, hw->millis, FALSE);
 	newDelay = TRUE;
     }

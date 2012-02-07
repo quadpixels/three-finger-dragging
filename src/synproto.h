@@ -95,5 +95,7 @@ extern struct SynapticsProtocolOperations psm_proto_operations;
 
 extern struct SynapticsHwState *SynapticsHwStateAlloc(SynapticsPrivate *priv);
 extern void SynapticsHwStateFree(struct SynapticsHwState **hw);
+extern void SynapticsCopyHwState(struct SynapticsHwState *dst,
+                                 const struct SynapticsHwState *src);
 
 #endif /* _SYNPROTO_H_ */

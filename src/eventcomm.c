@@ -720,7 +720,7 @@ EventReadHwState(InputInfoPtr pInfo,
 		EventProcessTouch(pInfo);
 		hw->numFingers = count_fingers(comm);
 		hw->millis = 1000 * ev.time.tv_sec + ev.time.tv_usec / 1000;
-		*hwRet = *hw;
+		SynapticsCopyHwState(hwRet, hw);
 		return TRUE;
 	    }
 	    break;

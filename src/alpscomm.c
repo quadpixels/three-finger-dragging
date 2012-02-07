@@ -218,7 +218,7 @@ ALPSReadHwState(InputInfoPtr pInfo,
 
     ALPS_process_packet(buf, hw);
 
-    *hwRet = *hw;
+    SynapticsCopyHwState(hwRet, hw);
     return TRUE;
 }
 
