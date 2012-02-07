@@ -1891,70 +1891,6 @@ get_edge_speed(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     }
 }
 
-/*
- * Fit a line through the three most recent points in the motion
- * history and return relative co-ordinates.
- */
-static void regress(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
-                    double *dx, double *dy, CARD32 start_time)
-{
-    int i;
-    int packet_count = MIN(priv->count_packet_finger, 3);
-    double ym = 0, xm = 0, tm = 0;
-    double yb1n = 0, xb1n = 0, b1d = 0, xb1, yb1;
-
-    /* If there's only one packet, we can't really fit a line.  However, we
-     * don't want to lose very short interactions with the pad, so we pass on
-     * an unfiltered delta using the current hardware position. */
-    if (packet_count == 1) {
-	*dx = hw->x - HIST(0).x;
-	*dy = hw->y - HIST(0).y;
-	return;
-    }
-
-    /*
-     * Using ordinary least squares, calculate best fit lines through the most
-     * recent (up to) 3 entries in the motion history.
-     *
-     * Because millis is unsigned, we do our subtractions in reverse order to
-     * ensure the result is always positive.  The end result is that our slope
-     * is the negative of the slope we actually want.
-     *
-     * Note: the X and Y axes are treated as independent data sets for
-     * simplicity.
-     */
-    for (i = 0; i < packet_count; i++) {
-	ym += HIST(i).y;
-	xm += HIST(i).x;
-	tm += HIST_DELTA(i, 0, millis);
-    }
-    ym /= packet_count;
-    tm /= packet_count;
-    xm /= packet_count;
-
-    for (i = 0; i < packet_count; i++) {
-	double t = HIST_DELTA(i, 0, millis);
-	yb1n += (t - tm) * (HIST(i).y - ym);
-	xb1n += (t - tm) * (HIST(i).x - xm);
-	b1d += (t - tm) * (t - tm);
-    }
-    xb1 = xb1n/b1d;
-    yb1 = yb1n/b1d;
-
-    /*
-     * Here we use the slope component (b1) of the regression line as a speed
-     * estimate, and calculate how far the contact would have moved between
-     * the current time (hw->millis) and the last time we output a delta
-     * (start_time).
-     *
-     * The negative is because the slope is going the exact wrong direction
-     * (see above).
-     */
-    *dx = -xb1 * (start_time - hw->millis);
-    *dy = -yb1 * (start_time - hw->millis);
-    return;
-}
-
 static void
 get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
           edge_type edge, double *dx, double *dy)
@@ -1966,9 +1902,9 @@ get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     int x_edge_speed = 0;
     int y_edge_speed = 0;
 
-    /* regress() performs the actual motion prediction. */
-    regress(priv, hw, dx, dy, priv->last_motion_millis);
-    priv->last_motion_millis = hw->millis;
+    /* HIST is full enough: priv->count_packet_finger > 3 */
+    *dx = estimate_delta(hw->x, HIST(0).x, HIST(1).x, HIST(2).x);
+    *dy = estimate_delta(hw->y, HIST(0).y, HIST(1).y, HIST(2).y);
 
     if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always)
         get_edge_speed(priv, hw, edge, &x_edge_speed, &y_edge_speed);
@@ -2037,7 +1973,7 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
      * POLL_MS declaration. */
     delay = MIN(delay, POLL_MS);
 
-    if (priv->count_packet_finger < 1) /* min. 1 packet, see regress() */
+    if (priv->count_packet_finger <= 3) /* min. 3 packets, see get_delta() */
         goto out; /* skip the lot */
 
     if (priv->moving_state == MS_TRACKSTICK)
