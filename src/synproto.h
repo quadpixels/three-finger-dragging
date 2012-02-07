@@ -32,6 +32,9 @@
 #include <xf86Xinput.h>
 #include <xisb.h>
 
+struct _SynapticsPrivateRec;
+typedef struct _SynapticsPrivateRec SynapticsPrivate;
+
 /*
  * A structure to describe the state of the touchpad hardware (buttons and pad)
  */
@@ -89,5 +92,8 @@ extern struct SynapticsProtocolOperations event_proto_operations;
 #ifdef BUILD_PSMCOMM
 extern struct SynapticsProtocolOperations psm_proto_operations;
 #endif /* BUILD_PSMCOMM */
+
+extern struct SynapticsHwState *SynapticsHwStateAlloc(SynapticsPrivate *priv);
+extern void SynapticsHwStateFree(struct SynapticsHwState **hw);
 
 #endif /* _SYNPROTO_H_ */

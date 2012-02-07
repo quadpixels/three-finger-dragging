@@ -32,6 +32,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = $(XORG_CFLAGS)
 
 @DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c synapticsstr.h \
+	synproto.c \
 	synproto.h \
 	properties.c
 
