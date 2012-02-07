@@ -935,6 +935,7 @@ DeviceClose(DeviceIntPtr dev)
     priv->timer = NULL;
     free_shm_data(priv);
     SynapticsHwStateFree(&priv->local_hw_state);
+    SynapticsHwStateFree(&priv->comm.hwState);
     return RetValue;
 }
 
@@ -1183,6 +1184,8 @@ no_touch:
     priv->local_hw_state = SynapticsHwStateAlloc(priv);
     if (!priv->local_hw_state)
 	return !Success;
+
+    priv->comm.hwState = SynapticsHwStateAlloc(priv);
 
     if (!alloc_shm_data(pInfo))
     {

@@ -64,7 +64,7 @@ struct CommData {
     int protoBufTail;
 
     /* Used for keeping track of partial HwState updates. */
-    struct SynapticsHwState hwState;
+    struct SynapticsHwState *hwState;
     Bool oneFinger;
     Bool twoFingers;
     Bool threeFingers;

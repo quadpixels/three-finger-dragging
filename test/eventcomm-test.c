@@ -57,9 +57,11 @@ static void
 reset_data(struct SynapticsHwState **hw, struct CommData *comm,
            SynapticsPrivate *priv)
 {
+    SynapticsHwStateFree(&comm->hwState);
     memset(comm, 0, sizeof(struct CommData));
     SynapticsHwStateFree(hw);
     *hw = SynapticsHwStateAlloc(priv);
+    comm->hwState = SynapticsHwStateAlloc(priv);
 }
 
 /**
@@ -190,6 +192,7 @@ test_read_hw_state(void)
 
     free(private.proto_data);
     SynapticsHwStateFree(&hw);
+    SynapticsHwStateFree(&comm.hwState);
 }
 
 static Bool
@@ -315,6 +318,7 @@ test_ignore_hw_state(void)
     free(private.proto_data);
     SynapticsHwStateFree(&hw);
     SynapticsHwStateFree(&hw_zero);
+    SynapticsHwStateFree(&comm.hwState);
 }
 
 int main (int argc, char **argv)

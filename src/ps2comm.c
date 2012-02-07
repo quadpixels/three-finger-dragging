@@ -521,7 +521,7 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
 	       struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     unsigned char *buf = comm->protoBuf;
-    struct SynapticsHwState *hw = &(comm->hwState);
+    struct SynapticsHwState *hw = comm->hwState;
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     SynapticsParameters *para = &priv->synpara;
     struct PS2SynapticsHwInfo *synhw;

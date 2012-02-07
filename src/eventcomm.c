@@ -708,7 +708,7 @@ EventReadHwState(InputInfoPtr pInfo,
 {
     struct input_event ev;
     Bool v;
-    struct SynapticsHwState *hw = &(comm->hwState);
+    struct SynapticsHwState *hw = comm->hwState;
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     SynapticsParameters *para = &priv->synpara;
 
