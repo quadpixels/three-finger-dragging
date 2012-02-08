@@ -135,3 +135,22 @@ SynapticsCopyHwState(struct SynapticsHwState *dst,
            dst->num_mt_mask * sizeof(enum SynapticsSlotState));
 #endif
 }
+
+void
+SynapticsResetTouchHwState(struct SynapticsHwState *hw)
+{
+#ifdef HAVE_MULTITOUCH
+    int i;
+
+    for (i = 0; i < hw->num_mt_mask; i++)
+    {
+        int j;
+
+        /* Leave x and y valuators in case we need to restart touch */
+        for (j = 2; j < valuator_mask_num_valuators(hw->mt_mask[i]); j++)
+            valuator_mask_unset(hw->mt_mask[i], j);
+
+        hw->slot_state[i] = SLOTSTATE_EMPTY;
+    }
+#endif
+}

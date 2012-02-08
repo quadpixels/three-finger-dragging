@@ -465,6 +465,15 @@ _X_EXPORT void valuator_mask_set(ValuatorMask *mask, int valuator, int data)
 {
 }
 
+extern _X_EXPORT void valuator_mask_unset(ValuatorMask *mask, int bit)
+{
+}
+
+_X_EXPORT int valuator_mask_num_valuators(const ValuatorMask *mask)
+{
+    return 0;
+}
+
 _X_EXPORT void valuator_mask_zero(ValuatorMask *mask)
 {
 }

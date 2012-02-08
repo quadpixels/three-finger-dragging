@@ -113,5 +113,6 @@ extern struct SynapticsHwState *SynapticsHwStateAlloc(SynapticsPrivate *priv);
 extern void SynapticsHwStateFree(struct SynapticsHwState **hw);
 extern void SynapticsCopyHwState(struct SynapticsHwState *dst,
                                  const struct SynapticsHwState *src);
+extern void SynapticsResetTouchHwState(struct SynapticsHwState *hw);
 
 #endif /* _SYNPROTO_H_ */

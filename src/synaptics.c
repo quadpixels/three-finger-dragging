@@ -1367,6 +1367,7 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 
     priv->hwState->millis += now - priv->timer_time;
     SynapticsCopyHwState(hw, priv->hwState);
+    SynapticsResetTouchHwState(hw);
     delay = HandleState(pInfo, hw, hw->millis, TRUE);
 
     priv->timer_time = now;
@@ -1405,6 +1406,8 @@ ReadInput(InputInfoPtr pInfo)
     struct SynapticsHwState *hw = priv->local_hw_state;
     int delay = 0;
     Bool newDelay = FALSE;
+
+    SynapticsResetTouchHwState(hw);
 
     while (SynapticsGetHwState(pInfo, priv, hw)) {
 	SynapticsCopyHwState(priv->hwState, hw);
@@ -2593,6 +2596,111 @@ repeat_scrollbuttons(const InputInfoPtr pInfo,
     return delay;
 }
 
+static void
+HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
+{
+#ifdef HAVE_MULTITOUCH
+    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    int new_active_touches = priv->num_active_touches;
+    Bool restart_touches = FALSE;
+    int i;
+
+    /* Count new number of active touches */
+    for (i = 0; i < hw->num_mt_mask; i++)
+    {
+        if (hw->slot_state[i] == SLOTSTATE_OPEN)
+            new_active_touches++;
+        else if (hw->slot_state[i] == SLOTSTATE_CLOSE)
+            new_active_touches--;
+    }
+
+    if (priv->num_active_touches < 2 && new_active_touches < 2)
+    {
+        /* We stayed below number of touches needed to send events */
+        goto out;
+    } else if (priv->num_active_touches >= 2 && new_active_touches < 2)
+    {
+        /* We are transitioning to less than the number of touches needed to
+         * send events. End all currently open touches. */
+        for (i = 0; i < priv->num_active_touches; i++)
+        {
+            int slot = priv->open_slots[i];
+            xf86PostTouchEvent(pInfo->dev, slot, XI_TouchEnd, 0,
+                               hw->mt_mask[slot]);
+        }
+
+        /* Don't send any more events */
+        goto out;
+    } else if (priv->num_active_touches < 2 && new_active_touches >= 2)
+    {
+        /* We are transitioning to more than the number of touches needed to
+         * send events. Begin all already open touches. */
+        restart_touches = TRUE;
+        for (i = 0; i < priv->num_active_touches; i++)
+        {
+            int slot = priv->open_slots[i];
+
+            xf86PostTouchEvent(pInfo->dev, slot, XI_TouchBegin, 0,
+                               hw->mt_mask[slot]);
+        }
+    }
+
+    /* Send touch begin events for all new touches */
+    for (i = 0; i < hw->num_mt_mask; i++)
+        if (hw->slot_state[i] == SLOTSTATE_OPEN)
+            xf86PostTouchEvent(pInfo->dev, i, XI_TouchBegin, 0,
+                               hw->mt_mask[i]);
+
+    /* Send touch update/end events for all the rest */
+    for (i = 0; i < priv->num_active_touches; i++)
+    {
+        int slot = priv->open_slots[i];
+
+        /* Don't send update event if we just reopened the touch above */
+        if (hw->slot_state[slot] == SLOTSTATE_UPDATE && !restart_touches)
+            xf86PostTouchEvent(pInfo->dev, slot, XI_TouchUpdate, 0,
+                               hw->mt_mask[slot]);
+        else if (hw->slot_state[slot] == SLOTSTATE_CLOSE)
+            xf86PostTouchEvent(pInfo->dev, slot, XI_TouchEnd, 0,
+                               hw->mt_mask[slot]);
+    }
+            
+out:
+    /* Update the open slots and number of active touches */
+    for (i = 0; i < hw->num_mt_mask; i++)
+    {
+        if (hw->slot_state[i] == SLOTSTATE_OPEN)
+        {
+            priv->open_slots[priv->num_active_touches] = i;
+            priv->num_active_touches++;
+        } else if (hw->slot_state[i] == SLOTSTATE_CLOSE)
+        {
+            Bool found = FALSE;
+            int j;
+
+            for (j = 0; j < priv->num_active_touches - 1; j++)
+            {
+                if (priv->open_slots[j] == i)
+                    found = TRUE;
+
+                if (found)
+                    priv->open_slots[j] = priv->open_slots[j + 1];
+            }
+
+            priv->num_active_touches--;
+        }
+    }
+
+    /* We calculated the value twice, might as well double check our math */
+    if (priv->num_active_touches != new_active_touches)
+        xf86IDrvMsg(pInfo, X_WARNING,
+                    "calculated wrong number of active touches (%d vs %d)\n",
+                    priv->num_active_touches, new_active_touches);
+
+    SynapticsResetTouchHwState(hw);
+#endif
+}
+
 /*
  * React on changes in the hardware state. This function is called every time
  * the hardware state changes. The return value is used to specify how many
@@ -2760,6 +2868,8 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 	post_button_click(pInfo, 1);
 	post_button_click(pInfo, 1);
     }
+
+    HandleTouches(pInfo, hw);
 
     /* Save old values of some state variables */
     priv->finger_state = finger;

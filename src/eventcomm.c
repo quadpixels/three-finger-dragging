@@ -69,11 +69,7 @@ struct eventcomm_proto_data
     struct mtdev *mtdev;
     int axis_map[MT_ABS_SIZE];
     int cur_slot;
-    enum SynapticsSlotState slot_state;
-    ValuatorMask *mt_mask;
     ValuatorMask **last_mt_vals;
-    unsigned int num_touches;
-    int *open_slots;
 #endif
 };
 
@@ -85,21 +81,12 @@ EventProtoDataAlloc(void)
 
 #ifdef HAVE_MTDEV
 static int
-num_slots(const struct eventcomm_proto_data *proto_data)
+last_mt_vals_slot(const SynapticsPrivate *priv)
 {
-    int value = proto_data->mtdev->caps.slot.maximum -
-                proto_data->mtdev->caps.slot.minimum + 1;
-
-    /* If we don't know how many slots there are, assume at least 10 */
-    return value > 1 ? value : 10;
-}
-
-static int
-last_mt_vals_slot(const struct eventcomm_proto_data *proto_data)
-{
+    struct eventcomm_proto_data *proto_data = (struct eventcomm_proto_data*)priv->proto_data;
     int value = proto_data->cur_slot - proto_data->mtdev->caps.slot.minimum;
 
-    return value < num_slots(proto_data) ? value : -1;
+    return value < priv->num_slots ? value : -1;
 }
 
 static void
@@ -111,15 +98,11 @@ UninitializeTouch(InputInfoPtr pInfo)
     if (!priv->has_touch)
         return;
 
-    free(proto_data->open_slots);
-    proto_data->open_slots = NULL;
-
-    valuator_mask_free(&proto_data->mt_mask);
     if (proto_data->last_mt_vals)
     {
         int i;
 
-        for (i = 0; i < num_slots(proto_data); i++)
+        for (i = 0; i < priv->num_slots; i++)
             valuator_mask_free(&proto_data->last_mt_vals[i]);
         free(proto_data->last_mt_vals);
         proto_data->last_mt_vals = NULL;
@@ -149,19 +132,7 @@ InitializeTouch(InputInfoPtr pInfo)
 
     proto_data->cur_slot = proto_data->mtdev->caps.slot.value;
 
-    /* Axes 0-4 are for X, Y, and scrolling. num_mt_axes does not include X and
-     * Y. */
-    proto_data->mt_mask = valuator_mask_new(4 + priv->num_mt_axes);
-    if (!proto_data->mt_mask)
-    {
-        xf86IDrvMsg(pInfo, X_WARNING,
-                    "failed to create MT valuator mask, ignoring touch "
-                    "events\n");
-        UninitializeTouch(pInfo);
-        return;
-    }
-
-    proto_data->last_mt_vals = calloc(num_slots(proto_data),
+    proto_data->last_mt_vals = calloc(priv->num_slots,
                                       sizeof(ValuatorMask *));
     if (!proto_data->last_mt_vals)
     {
@@ -171,7 +142,7 @@ InitializeTouch(InputInfoPtr pInfo)
         return;
     }
 
-    for (i = 0; i < num_slots(proto_data); i++)
+    for (i = 0; i < priv->num_slots; i++)
     {
         int j;
 
@@ -191,8 +162,6 @@ InitializeTouch(InputInfoPtr pInfo)
         for (j = 0; j < priv->num_mt_axes; j++)
             valuator_mask_set(proto_data->last_mt_vals[i], 4 + j, 0);
     }
-
-    proto_data->open_slots = malloc(num_slots(proto_data) * sizeof(int));
 }
 #endif
 
@@ -521,112 +490,8 @@ SynapticsReadEvent(InputInfoPtr pInfo, struct input_event *ev)
     return rc;
 }
 
-#ifdef HAVE_MTDEV
 static void
-EventBeginTouches(InputInfoPtr pInfo)
-{
-    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
-    struct eventcomm_proto_data *proto_data = priv->proto_data;
-    int first_slot;
-
-    proto_data->num_touches++;
-    proto_data->open_slots[proto_data->num_touches - 1] = proto_data->cur_slot;
-
-    /* Don't start a touch if it's the only one. */
-    if (proto_data->num_touches < 2)
-        return;
-
-    xf86PostTouchEvent(pInfo->dev, proto_data->cur_slot, XI_TouchBegin, 0,
-                       proto_data->mt_mask);
-
-    /* If this is the third or more touch, we've already begun the first touch.
-     */
-    if (proto_data->num_touches > 2)
-        return;
-
-    /* If this is the second touch, begin the first touch at this time. */
-    first_slot = proto_data->open_slots[0];
-    xf86PostTouchEvent(pInfo->dev, first_slot, XI_TouchBegin, 0,
-                       proto_data->last_mt_vals[first_slot]);
-}
-
-static void
-EventEndTouches(InputInfoPtr pInfo)
-{
-    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
-    struct eventcomm_proto_data *proto_data = priv->proto_data;
-    int first_slot;
-    int i;
-    Bool found;
-
-    found = FALSE;
-    for (i = 0; i < proto_data->num_touches - 1; i++)
-    {
-        if (proto_data->open_slots[i] == proto_data->cur_slot)
-            found = TRUE;
-
-        if (found)
-            proto_data->open_slots[i] = proto_data->open_slots[i + 1];
-    }
-
-    proto_data->num_touches--;
-
-    /* If this was the only touch left on the device, don't send a touch end
-     * event because we are inhibiting its touch sequence. */
-    if (proto_data->num_touches == 0)
-        return;
-
-    xf86PostTouchEvent(pInfo->dev, proto_data->cur_slot, XI_TouchEnd, 0,
-                       proto_data->mt_mask);
-
-    /* If there is at least two other touches on the device, we don't need to
-     * end any more touches. */
-    if (proto_data->num_touches >= 2)
-        return;
-
-    /* We've gone down to one touch, so we must end the touch as well. */
-    first_slot = proto_data->open_slots[0];
-    xf86PostTouchEvent(pInfo->dev, first_slot, XI_TouchEnd, 0,
-                       proto_data->last_mt_vals[first_slot]);
-}
-#endif
-
-static void
-EventProcessTouch(InputInfoPtr pInfo)
-{
-#ifdef HAVE_MTDEV
-    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
-    struct eventcomm_proto_data *proto_data = priv->proto_data;
-
-    if (proto_data->cur_slot < 0 || !priv->has_touch)
-        return;
-
-    /* If the ABS_MT_SLOT is the first event we get after EV_SYN, skip this */
-    if (proto_data->slot_state == SLOTSTATE_EMPTY)
-        return;
-
-    switch (proto_data->slot_state)
-    {
-        case SLOTSTATE_CLOSE:
-            EventEndTouches(pInfo);
-            break;
-        case SLOTSTATE_OPEN:
-            EventBeginTouches(pInfo);
-            break;
-        default:
-            if (proto_data->num_touches >= 2)
-                xf86PostTouchEvent(pInfo->dev, proto_data->cur_slot,
-                                   XI_TouchUpdate, 0, proto_data->mt_mask);
-            break;
-    }
-
-    proto_data->slot_state = SLOTSTATE_EMPTY;
-    valuator_mask_zero(proto_data->mt_mask);
-#endif
-}
-
-static void
-EventProcessTouchEvent(InputInfoPtr pInfo, struct CommData *comm,
+EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
                        struct input_event *ev)
 {
 #ifdef HAVE_MTDEV
@@ -638,33 +503,32 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct CommData *comm,
 
     if (ev->code == ABS_MT_SLOT)
     {
-        EventProcessTouch(pInfo);
         proto_data->cur_slot = ev->value;
     } else
     {
-        int slot_index = last_mt_vals_slot(proto_data);
+        int slot_index = last_mt_vals_slot(priv);
 
-        if (proto_data->slot_state == SLOTSTATE_EMPTY)
-            proto_data->slot_state = SLOTSTATE_UPDATE;
+        if (hw->slot_state[slot_index] == SLOTSTATE_EMPTY)
+            hw->slot_state[slot_index] = SLOTSTATE_UPDATE;
         if (ev->code == ABS_MT_TRACKING_ID)
         {
             if (ev->value >= 0)
             {
-                proto_data->slot_state = SLOTSTATE_OPEN;
+                hw->slot_state[slot_index] = SLOTSTATE_OPEN;
 
                 if (slot_index >= 0)
-                    valuator_mask_copy(proto_data->mt_mask,
+                    valuator_mask_copy(hw->mt_mask[slot_index],
                                        proto_data->last_mt_vals[slot_index]);
                 else
                     xf86IDrvMsg(pInfo, X_WARNING,
                                 "Attempted to copy values from out-of-range "
                                 "slot, touch events may be incorrect.\n");
             } else
-                proto_data->slot_state = SLOTSTATE_CLOSE;
+                hw->slot_state[slot_index] = SLOTSTATE_CLOSE;
         } else
         {
             int map = proto_data->axis_map[ev->code - ABS_MT_TOUCH_MAJOR];
-            valuator_mask_set(proto_data->mt_mask, map, ev->value);
+            valuator_mask_set(hw->mt_mask[slot_index], map, ev->value);
             if (slot_index >= 0)
                 valuator_mask_set(proto_data->last_mt_vals[slot_index], map,
                                   ev->value);
@@ -706,12 +570,13 @@ EventReadHwState(InputInfoPtr pInfo,
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     SynapticsParameters *para = &priv->synpara;
 
+    SynapticsResetTouchHwState(hw);
+
     while (SynapticsReadEvent(pInfo, &ev)) {
 	switch (ev.type) {
 	case EV_SYN:
 	    switch (ev.code) {
 	    case SYN_REPORT:
-		EventProcessTouch(pInfo);
 		hw->numFingers = count_fingers(comm);
 		hw->millis = 1000 * ev.time.tv_sec + ev.time.tv_usec / 1000;
 		SynapticsCopyHwState(hwRet, hw);
@@ -792,7 +657,7 @@ EventReadHwState(InputInfoPtr pInfo,
 		    break;
 		}
 	    } else
-		EventProcessTouchEvent(pInfo, comm, &ev);
+		EventProcessTouchEvent(pInfo, hw, &ev);
 	    break;
 	}
     }

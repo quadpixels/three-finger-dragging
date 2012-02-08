@@ -283,6 +283,7 @@ typedef struct _SynapticsPrivateRec
     SynapticsTouchAxisRec *touch_axes;  /* Touch axis information other than X, Y */
     int num_slots;                      /* Number of touch slots allocated */
     int *open_slots;                    /* Array of currently open touch slots */
+    int num_active_touches;             /* Number of active touches on device */
 #endif
 } SynapticsPrivate;
 
