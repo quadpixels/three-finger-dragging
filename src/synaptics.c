@@ -1149,7 +1149,7 @@ DeviceInit(DeviceIntPtr dev)
     if (priv->has_touch)
     {
         /* x/y + whatever other MT axes we found */
-        if (!InitTouchClassDeviceStruct(dev, priv->num_touches,
+        if (!InitTouchClassDeviceStruct(dev, priv->max_touches,
                                         XIDependentTouch, 2 + priv->num_mt_axes))
         {
             xf86IDrvMsg(pInfo, X_ERROR,

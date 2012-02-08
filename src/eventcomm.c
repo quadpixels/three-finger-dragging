@@ -821,7 +821,7 @@ event_query_touch(InputInfoPtr pInfo)
     int rc;
     uint8_t prop;
 
-    priv->num_touches = 0;
+    priv->max_touches = 0;
     priv->num_mt_axes = 0;
 
     SYSCALL(rc = ioctl(pInfo->fd, EVIOCGPROP(sizeof(prop)), &prop));
@@ -879,7 +879,7 @@ event_query_touch(InputInfoPtr pInfo)
         };
 
         if (mtdev->caps.slot.maximum > 0)
-            priv->num_touches = mtdev->caps.slot.maximum -
+            priv->max_touches = mtdev->caps.slot.maximum -
                                 mtdev->caps.slot.minimum + 1;
 
         priv->touch_axes = malloc(priv->num_mt_axes *

@@ -278,7 +278,7 @@ typedef struct _SynapticsPrivateRec
 
 #ifdef HAVE_MULTITOUCH
     Bool has_touch;                     /* Device has multitouch capabilities */
-    int num_touches;                    /* Number of touches supported */
+    int max_touches;                    /* Number of touches supported */
     int num_mt_axes;                    /* Number of multitouch axes other than X, Y */
     SynapticsTouchAxisRec *touch_axes;  /* Touch axis information other than X, Y */
 #endif
