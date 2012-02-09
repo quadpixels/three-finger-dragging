@@ -2607,9 +2607,9 @@ HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
     Bool restart_touches = FALSE;
     int i;
 
-    if (para->click_action[F3_CLICK1])
+    if (para->click_action[F3_CLICK1] || para.tap_action[F3_TAP])
         min_touches = 4;
-    else if (para->click_action[F2_CLICK1])
+    else if (para->click_action[F2_CLICK1] || para.tap_action[F2_TAP])
         min_touches = 3;
 
     /* Count new number of active touches */
