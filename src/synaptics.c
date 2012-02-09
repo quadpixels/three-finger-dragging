@@ -2601,9 +2601,16 @@ HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
 {
 #ifdef HAVE_MULTITOUCH
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    SynapticsParameters *para = &priv->synpara;
     int new_active_touches = priv->num_active_touches;
+    int min_touches = 2;
     Bool restart_touches = FALSE;
     int i;
+
+    if (para->click_action[F3_CLICK1])
+        min_touches = 4;
+    else if (para->click_action[F2_CLICK1])
+        min_touches = 3;
 
     /* Count new number of active touches */
     for (i = 0; i < hw->num_mt_mask; i++)
@@ -2614,11 +2621,13 @@ HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
             new_active_touches--;
     }
 
-    if (priv->num_active_touches < 2 && new_active_touches < 2)
+    if (priv->num_active_touches < min_touches &&
+        new_active_touches < min_touches)
     {
         /* We stayed below number of touches needed to send events */
         goto out;
-    } else if (priv->num_active_touches >= 2 && new_active_touches < 2)
+    } else if (priv->num_active_touches >= min_touches &&
+               new_active_touches < min_touches)
     {
         /* We are transitioning to less than the number of touches needed to
          * send events. End all currently open touches. */
@@ -2631,7 +2640,8 @@ HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
 
         /* Don't send any more events */
         goto out;
-    } else if (priv->num_active_touches < 2 && new_active_touches >= 2)
+    } else if (priv->num_active_touches < min_touches &&
+               new_active_touches >= min_touches)
     {
         /* We are transitioning to more than the number of touches needed to
          * send events. Begin all already open touches. */
