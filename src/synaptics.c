@@ -2788,6 +2788,9 @@ HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
             new_active_touches--;
     }
 
+    if (priv->has_semi_mt)
+        goto out;
+
     if (priv->num_active_touches < min_touches &&
         new_active_touches < min_touches)
     {

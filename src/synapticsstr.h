@@ -269,6 +269,7 @@ struct _SynapticsPrivateRec
     Bool has_pressure;			/* device reports pressure */
     Bool has_width;			/* device reports finger width */
     Bool has_scrollbuttons;		/* device has physical scrollbuttons */
+    Bool has_semi_mt;			/* device is only semi-multitouch capable */
 
     enum TouchpadModel model;		/* The detected model */
     unsigned short id_vendor;		/* vendor id */
