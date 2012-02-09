@@ -99,7 +99,8 @@ enum TapState {
     TS_3,			/* After second touch */
     TS_DRAG,			/* Pointer drag enabled */
     TS_4,			/* After release when "locked drags" enabled */
-    TS_5			/* After touch when "locked drags" enabled */
+    TS_5,			/* After touch when "locked drags" enabled */
+    TS_CLICKPAD_MOVE,		/* After left button press on a clickpad */
 };
 
 enum TapButtonState {

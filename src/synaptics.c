@@ -1722,7 +1722,7 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		    Bool inside_active_area)
 {
     SynapticsParameters *para = &priv->synpara;
-    Bool touch, release, is_timeout, move;
+    Bool touch, release, is_timeout, move, press;
     int timeleft, timeout;
     edge_type edge;
     int delay = 1000000000;
@@ -1736,6 +1736,7 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	     (priv->tap_max_fingers <= ((priv->horiz_scroll_twofinger_on || priv->vert_scroll_twofinger_on)? 2 : 1)) &&
 	     ((abs(hw->x - priv->touch_on.x) >= para->tap_move) ||
 	     (abs(hw->y - priv->touch_on.y) >= para->tap_move)));
+    press = (hw->left || hw->right || hw->middle);
 
     if (touch) {
 	priv->touch_on.x = hw->x;
@@ -1758,6 +1759,10 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    SetTapState(priv, TS_1, now);
 	break;
     case TS_1:
+	if (para->clickpad && press) {
+	    SetTapState(priv, TS_CLICKPAD_MOVE, now);
+	    goto restart;
+	}
 	if (move) {
 	    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 	    SetTapState(priv, TS_MOVE, now);
@@ -1781,6 +1786,10 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	}
 	break;
     case TS_MOVE:
+	if (para->clickpad && press) {
+	    SetTapState(priv, TS_CLICKPAD_MOVE, now);
+	    goto restart;
+	}
 	if (move && priv->moving_state == MS_TRACKSTICK) {
 	    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 	}
@@ -1835,6 +1844,10 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	}
 	break;
     case TS_DRAG:
+	if (para->clickpad && press) {
+	    SetTapState(priv, TS_CLICKPAD_MOVE, now);
+	    goto restart;
+	}
 	if (move)
 	    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 	if (release) {
@@ -1861,6 +1874,17 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	} else if (release) {
 	    SetMovingState(priv, MS_FALSE, now);
 	    SetTapState(priv, TS_START, now);
+	}
+	break;
+    case TS_CLICKPAD_MOVE:
+        /* Assume one touch is only for holding the clickpad button down */
+	if (hw->numFingers > 1)
+	    hw->numFingers--;
+	SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+	if (!press) {
+	    SetMovingState(priv, MS_FALSE, now);
+	    SetTapState(priv, TS_MOVE, now);
+	    priv->count_packet_finger = 0;
 	}
 	break;
     }
@@ -2870,6 +2894,14 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     {
 	UpdateTouchState(pInfo, hw);
 	return delay;
+    }
+
+    /* If a physical button is pressed on a clickpad, use cumulative relative
+     * touch movements for motion */
+    if (para->clickpad && (hw->left || hw->right || hw->middle))
+    {
+        hw->x = hw->cumulative_dx;
+        hw->y = hw->cumulative_dy;
     }
 
     /* apply hysteresis before doing anything serious. This cancels
