@@ -191,7 +191,7 @@ typedef struct _SynapticsPrivateRec
     struct SynapticsProtocolOperations* proto_ops;
     void *proto_data;			/* protocol-specific data */
 
-    struct SynapticsHwState hwState;
+    struct SynapticsHwState *hwState;
 
     const char *device;			/* device node */
     Bool shm_config;			/* True when shared memory area allocated */

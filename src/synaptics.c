@@ -645,12 +645,12 @@ static float SynapticsAccelerationProfile(DeviceIntPtr dev,
 	int maxZ = para->press_motion_max_z;
 	double minFctr = para->press_motion_min_factor;
 	double maxFctr = para->press_motion_max_factor;
-	if (priv->hwState.z <= minZ) {
+	if (priv->hwState->z <= minZ) {
 	    accelfct *= minFctr;
-	} else if (priv->hwState.z >= maxZ) {
+	} else if (priv->hwState->z >= maxZ) {
 	    accelfct *= maxFctr;
 	} else {
-	    accelfct *= minFctr + (priv->hwState.z - minZ) * (maxFctr - minFctr) / (maxZ - minZ);
+	    accelfct *= minFctr + (priv->hwState->z - minZ) * (maxFctr - minFctr) / (maxZ - minZ);
 	}
     }
 
@@ -934,6 +934,7 @@ DeviceClose(DeviceIntPtr dev)
     TimerFree(priv->timer);
     priv->timer = NULL;
     free_shm_data(priv);
+    SynapticsHwStateFree(&priv->hwState);
     SynapticsHwStateFree(&priv->local_hw_state);
     SynapticsHwStateFree(&priv->comm.hwState);
     return RetValue;
@@ -1181,15 +1182,23 @@ no_touch:
 
     free(axes_labels);
 
+    priv->hwState = SynapticsHwStateAlloc(priv);
+    if (!priv->hwState)
+        return !Success;
+
     priv->local_hw_state = SynapticsHwStateAlloc(priv);
     if (!priv->local_hw_state)
+    {
+	free(priv->hwState);
 	return !Success;
+    }
 
     priv->comm.hwState = SynapticsHwStateAlloc(priv);
 
     if (!alloc_shm_data(pInfo))
     {
 	free(priv->local_hw_state);
+	free(priv->hwState);
 	return !Success;
     }
 
@@ -1327,8 +1336,8 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 
     sigstate = xf86BlockSIGIO();
 
-    priv->hwState.millis += now - priv->timer_time;
-    *hw = priv->hwState;
+    priv->hwState->millis += now - priv->timer_time;
+    *hw = *priv->hwState;
     delay = HandleState(pInfo, hw, hw->millis, TRUE);
 
     priv->timer_time = now;
@@ -1369,7 +1378,7 @@ ReadInput(InputInfoPtr pInfo)
     Bool newDelay = FALSE;
 
     while (SynapticsGetHwState(pInfo, priv, hw)) {
-	priv->hwState = *hw;
+	*priv->hwState = *hw;
 	delay = HandleState(pInfo, hw, hw->millis, FALSE);
 	newDelay = TRUE;
     }
@@ -1612,11 +1621,11 @@ static void
 SetMovingState(SynapticsPrivate *priv, enum MovingState moving_state, CARD32 millis)
 {
     DBG(7, "SetMovingState - %d -> %d center at %d/%d (millis:%d)\n", priv->moving_state,
-		  moving_state,priv->hwState.x, priv->hwState.y, millis);
+		  moving_state,priv->hwState->x, priv->hwState->y, millis);
 
     if (moving_state == MS_TRACKSTICK) {
-	priv->trackstick_neutral_x = priv->hwState.x;
-	priv->trackstick_neutral_y = priv->hwState.y;
+	priv->trackstick_neutral_x = priv->hwState->x;
+	priv->trackstick_neutral_y = priv->hwState->y;
     }
     priv->moving_state = moving_state;
 }
