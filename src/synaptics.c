@@ -814,6 +814,10 @@ static void SynapticsUnInit(InputDriverPtr drv,
     if (priv && priv->scroll_events_mask)
         valuator_mask_free(&priv->scroll_events_mask);
 #endif
+#ifdef HAVE_MULTITOUCH
+    if (priv && priv->open_slots)
+        free(priv->open_slots);
+#endif
     free(pInfo->private);
     pInfo->private = NULL;
     xf86DeleteInput(pInfo, 0);
@@ -998,6 +1002,62 @@ static void InitButtonLabels(Atom *labels, int nlabels)
     }
 }
 
+static void
+DeviceInitTouch(DeviceIntPtr dev, Atom *axes_labels)
+{
+#ifdef HAVE_MULTITOUCH
+    InputInfoPtr pInfo = dev->public.devicePrivate;
+    SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
+    int i;
+
+    if (priv->has_touch)
+    {
+        priv->num_slots = priv->max_touches ? priv->max_touches : 10;
+
+        priv->open_slots = malloc(priv->num_slots * sizeof(int));
+        if (!priv->open_slots)
+        {
+            xf86IDrvMsg(pInfo, X_ERROR,
+                        "failed to allocate open touch slots array\n");
+            priv->has_touch = 0;
+            priv->num_slots = 0;
+            return;
+        }
+
+        /* x/y + whatever other MT axes we found */
+        if (!InitTouchClassDeviceStruct(dev, priv->max_touches,
+                                        XIDependentTouch, 2 + priv->num_mt_axes))
+        {
+            xf86IDrvMsg(pInfo, X_ERROR,
+                        "failed to initialize touch class device\n");
+            priv->has_touch = 0;
+            priv->num_slots = 0;
+            free(priv->open_slots);
+            priv->open_slots = NULL;
+            return;
+        }
+
+        for (i = 0; i < priv->num_mt_axes; i++)
+        {
+            SynapticsTouchAxisRec *axis = &priv->touch_axes[i];
+            int axnum = 4 + i; /* Skip x, y, and scroll axes */
+
+            if (!xf86InitValuatorAxisStruct(dev, axnum, axes_labels[axnum],
+                                            axis->min, axis->max, axis->res, 0,
+                                            axis->res, Absolute))
+            {
+                xf86IDrvMsg(pInfo, X_WARNING,
+                            "failed to initialize axis %s, skipping\n",
+                            axis->label);
+                continue;
+            }
+
+            xf86InitValuatorDefaults(dev, axnum);
+        }
+    }
+#endif
+}
+
 static Bool
 DeviceInit(DeviceIntPtr dev)
 {
@@ -1145,70 +1205,36 @@ DeviceInit(DeviceIntPtr dev)
                       priv->synpara.scroll_dist_vert, 0);
 #endif
 
-#ifdef HAVE_MULTITOUCH
-    if (priv->has_touch)
-    {
-        priv->num_slots = priv->max_touches ? priv->max_touches : 10;
-
-        /* x/y + whatever other MT axes we found */
-        if (!InitTouchClassDeviceStruct(dev, priv->max_touches,
-                                        XIDependentTouch, 2 + priv->num_mt_axes))
-        {
-            xf86IDrvMsg(pInfo, X_ERROR,
-                        "failed to initialize touch class device\n");
-            priv->has_touch = 0;
-            priv->num_slots = 0;
-            goto no_touch;
-        }
-
-        for (i = 0; i < priv->num_mt_axes; i++)
-        {
-            SynapticsTouchAxisRec *axis = &priv->touch_axes[i];
-            int axnum = num_axes - priv->num_mt_axes + i;
-
-            if (!xf86InitValuatorAxisStruct(dev, axnum, axes_labels[axnum],
-                                            axis->min, axis->max, axis->res, 0,
-                                            axis->res, Absolute))
-            {
-                xf86IDrvMsg(pInfo, X_WARNING,
-                            "failed to initialize axis %s, skipping\n",
-                            axis->label);
-                continue;
-            }
-
-            xf86InitValuatorDefaults(dev, axnum);
-        }
-    }
-
-no_touch:
-#endif
+    DeviceInitTouch(dev, axes_labels);
 
     free(axes_labels);
 
     priv->hwState = SynapticsHwStateAlloc(priv);
     if (!priv->hwState)
-        return !Success;
+        goto fail;
 
     priv->local_hw_state = SynapticsHwStateAlloc(priv);
     if (!priv->local_hw_state)
-    {
-	free(priv->hwState);
-	return !Success;
-    }
+	goto fail;
 
     priv->comm.hwState = SynapticsHwStateAlloc(priv);
 
     if (!alloc_shm_data(pInfo))
-    {
-	free(priv->local_hw_state);
-	free(priv->hwState);
-	return !Success;
-    }
+        goto fail;
 
     InitDeviceProperties(pInfo);
     XIRegisterPropertyHandler(pInfo->dev, SetProperty, NULL, NULL);
 
     return Success;
+
+fail:
+    free_shm_data(priv);
+    free(priv->local_hw_state);
+    free(priv->hwState);
+#ifdef HAVE_MULTITOUCH
+    free(priv->open_slots);
+#endif
+    return !Success;
 }
 
 
