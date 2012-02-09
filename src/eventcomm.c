@@ -716,6 +716,7 @@ static void
 event_query_touch(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    SynapticsParameters *para = &priv->synpara;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
     struct mtdev *mtdev;
     int i;
@@ -731,6 +732,12 @@ event_query_touch(InputInfoPtr pInfo)
         xf86IDrvMsg(pInfo, X_INFO,
                     "ignoring touch events for semi-multitouch device\n");
         return;
+    }
+
+    if (rc >= 0 && BitIsOn(&prop, INPUT_PROP_BUTTONPAD))
+    {
+        xf86IDrvMsg(pInfo, X_INFO, "found clickpad property\n");
+        para->clickpad = TRUE;
     }
 
     mtdev = mtdev_new_open(pInfo->fd);

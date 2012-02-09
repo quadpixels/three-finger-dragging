@@ -144,6 +144,7 @@ static struct Parameter params[] = {
     {"AreaBottomEdge",        PT_INT,    0, 10000, SYNAPTICS_PROP_AREA,	32,	3},
     {"HorizHysteresis",       PT_INT,    0, 10000, SYNAPTICS_PROP_NOISE_CANCELLATION, 32,	0},
     {"VertHysteresis",        PT_INT,    0, 10000, SYNAPTICS_PROP_NOISE_CANCELLATION, 32,	1},
+    {"ClickPad",              PT_BOOL,   0, 1,     SYNAPTICS_PROP_CLICKPAD,	8,	0},
     { NULL, 0, 0, 0, 0 }
 };
 
