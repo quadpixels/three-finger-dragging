@@ -56,6 +56,8 @@ struct SynapticsHwState {
     int x;			/* X position of finger */
     int y;			/* Y position of finger */
     int z;			/* Finger pressure */
+    int cumulative_dx;		/* Cumulative delta X for clickpad dragging */
+    int cumulative_dy;		/* Cumulative delta Y for clickpad dragging */
     int numFingers;
     int fingerWidth;
 

@@ -525,6 +525,20 @@ SynapticsReadEvent(InputInfoPtr pInfo, struct input_event *ev)
     return rc;
 }
 
+#ifdef HAVE_MULTITOUCH
+static Bool
+EventTouchSlotPreviouslyOpen(SynapticsPrivate *priv, int slot)
+{
+    int i;
+
+    for (i = 0; i < priv->num_active_touches; i++)
+        if (priv->open_slots[i] == slot)
+            return TRUE;
+
+    return FALSE;
+}
+#endif
+
 static void
 EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
                        struct input_event *ev)
@@ -565,8 +579,20 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
             int map = proto_data->axis_map[ev->code - ABS_MT_TOUCH_MAJOR];
             valuator_mask_set(hw->mt_mask[slot_index], map, ev->value);
             if (slot_index >= 0)
-                valuator_mask_set(proto_data->last_mt_vals[slot_index], map,
-                                  ev->value);
+            {
+                ValuatorMask *mask = proto_data->last_mt_vals[slot_index];
+                int last_val = valuator_mask_get(mask, map);
+
+                if (EventTouchSlotPreviouslyOpen(priv, slot_index))
+                {
+                    if (ev->code == ABS_MT_POSITION_X)
+                        hw->cumulative_dx += ev->value - last_val;
+                    else if (ev->code == ABS_MT_POSITION_Y)
+                        hw->cumulative_dy += ev->value - last_val;
+                }
+
+                valuator_mask_set(mask, map, ev->value);
+            }
         }
     }
 #endif
@@ -613,6 +639,13 @@ EventReadHwState(InputInfoPtr pInfo,
     struct eventcomm_proto_data *proto_data = priv->proto_data;
 
     SynapticsResetTouchHwState(hw);
+
+    /* Reset cumulative values if buttons were not previously pressed */
+    if (!hw->left && !hw->right && !hw->middle)
+    {
+        hw->cumulative_dx = hw->x;
+        hw->cumulative_dy = hw->y;
+    }
 
     while (SynapticsReadEvent(pInfo, &ev)) {
 	switch (ev.type) {

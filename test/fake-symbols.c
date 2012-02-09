@@ -461,6 +461,11 @@ _X_EXPORT void valuator_mask_free(ValuatorMask **mask)
 {
 }
 
+_X_EXPORT int valuator_mask_get(const ValuatorMask *mask, int valuator)
+{
+    return 0;
+}
+
 _X_EXPORT void valuator_mask_set(ValuatorMask *mask, int valuator, int data)
 {
 }
