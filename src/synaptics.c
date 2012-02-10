@@ -1598,6 +1598,14 @@ ReadInput(InputInfoPtr pInfo)
     SynapticsResetTouchHwState(hw);
 
     while (SynapticsGetHwState(pInfo, priv, hw)) {
+	/* Semi-mt device touch slots do not track touches. When there is a
+	 * change in the number of touches, we must disregard the temporary
+	 * motion changes. */
+	if (priv->has_semi_mt && hw->numFingers != priv->hwState->numFingers) {
+	    hw->cumulative_dx = priv->hwState->cumulative_dx;
+	    hw->cumulative_dy = priv->hwState->cumulative_dy;
+	}
+
 	SynapticsCopyHwState(priv->hwState, hw);
 	delay = HandleState(pInfo, hw, hw->millis, FALSE);
 	SynapticsCopyHwState(priv->old_hw_state, priv->hwState);
