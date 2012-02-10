@@ -83,6 +83,12 @@ struct eventcomm_proto_data
 #endif
 };
 
+struct eventcomm_proto_data *
+EventProtoDataAlloc(void)
+{
+    return calloc(1, sizeof(struct eventcomm_proto_data));
+}
+
 #ifdef HAVE_MTDEV
 static int
 num_slots(const struct eventcomm_proto_data *proto_data)
@@ -940,7 +946,7 @@ EventReadDevDimensions(InputInfoPtr pInfo)
     int i;
 #endif
 
-    proto_data = calloc(1, sizeof(struct eventcomm_proto_data));
+    proto_data = EventProtoDataAlloc();
     priv->proto_data = proto_data;
 
 #ifdef HAVE_MTDEV

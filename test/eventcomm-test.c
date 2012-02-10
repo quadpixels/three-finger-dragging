@@ -135,6 +135,7 @@ test_read_hw_state(void)
     info.private = &private;
     info.fd = fd_read;
 
+    private.proto_data = EventProtoDataAlloc();
 
     /* just the syn event */
     reset_data(&hw, &comm);
@@ -181,6 +182,8 @@ test_read_hw_state(void)
 
     /* the various buttons */
     test_buttons(fd_write, &info, &hw, &comm);
+
+    free(private.proto_data);
 }
 
 /**
@@ -230,6 +233,8 @@ test_ignore_hw_state(void)
     info.private = &private;
     info.fd = fd_read;
 
+    private.proto_data = EventProtoDataAlloc();
+
 #define _assert_no_change(_type, _code) \
         reset_data(&hw, &comm);                         \
         ev.type = _type;                                \
@@ -273,6 +278,7 @@ test_ignore_hw_state(void)
         _assert_no_change(EV_KEY, i);
     }
 
+    free(private.proto_data);
 }
 
 int main (int argc, char **argv)
