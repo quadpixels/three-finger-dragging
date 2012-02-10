@@ -8,6 +8,7 @@ noinst_PROGRAMS = eventcomm-test
 
 eventcomm_test_SOURCES = eventcomm-test.c\
 			 $(top_srcdir)/src/eventcomm.c \
+			 $(top_srcdir)/src/synproto.c \
 			 $(fake_syms)
 
 eventcomm_test_LDADD = $(MTDEV_LIBS)
