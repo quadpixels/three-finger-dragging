@@ -1972,9 +1972,8 @@ get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     int x_edge_speed = 0;
     int y_edge_speed = 0;
 
-    /* HIST is full enough: priv->count_packet_finger > 3 */
-    *dx = estimate_delta(hw->x, HIST(0).x, HIST(1).x, HIST(2).x);
-    *dy = estimate_delta(hw->y, HIST(0).y, HIST(1).y, HIST(2).y);
+    *dx = hw->x - HIST(0).x;
+    *dy = hw->y - HIST(0).y;
 
     if ((priv->tap_state == TS_DRAG) || para->edge_motion_use_always)
         get_edge_speed(priv, hw, edge, &x_edge_speed, &y_edge_speed);
@@ -2043,7 +2042,7 @@ ComputeDeltas(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
      * POLL_MS declaration. */
     delay = MIN(delay, POLL_MS);
 
-    if (priv->count_packet_finger <= 3) /* min. 3 packets, see get_delta() */
+    if (priv->count_packet_finger <= 1)
         goto out; /* skip the lot */
 
     if (priv->moving_state == MS_TRACKSTICK)
