@@ -65,6 +65,10 @@ struct eventcomm_proto_data
      * exists for readability of the code.
      */
     BOOL need_grab;
+    int st_to_mt_offset_x;
+    double st_to_mt_scale_x;
+    int st_to_mt_offset_y;
+    double st_to_mt_scale_y;
 #ifdef HAVE_MTDEV
     struct mtdev *mtdev;
     int axis_map[MT_ABS_SIZE];
@@ -76,7 +80,16 @@ struct eventcomm_proto_data
 struct eventcomm_proto_data *
 EventProtoDataAlloc(void)
 {
-    return calloc(1, sizeof(struct eventcomm_proto_data));
+    struct eventcomm_proto_data *proto_data;
+
+    proto_data = calloc(1, sizeof(struct eventcomm_proto_data));
+    if (!proto_data)
+        return NULL;
+
+    proto_data->st_to_mt_scale_x = 1;
+    proto_data->st_to_mt_scale_y = 1;
+
+    return proto_data;
 }
 
 #ifdef HAVE_MTDEV
@@ -363,6 +376,7 @@ static void
 event_query_axis_ranges(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    struct eventcomm_proto_data *proto_data = priv->proto_data;
     unsigned long absbits[NBITS(ABS_MAX)] = {0};
     unsigned long keybits[NBITS(KEY_MAX)] = {0};
     char buf[256] = {0};
@@ -395,6 +409,26 @@ event_query_axis_ranges(InputInfoPtr pInfo)
 	event_get_abs(pInfo, pInfo->fd, ABS_TOOL_WIDTH,
 		      &priv->minw, &priv->maxw,
 		      NULL, NULL);
+
+    if (priv->has_touch)
+    {
+        int st_minx = priv->minx;
+        int st_maxx = priv->maxx;
+        int st_miny = priv->miny;
+        int st_maxy = priv->maxy;
+
+        event_get_abs(pInfo, pInfo->fd, ABS_MT_POSITION_X, &priv->minx,
+                      &priv->maxx, &priv->synpara.hyst_x, &priv->resx);
+        event_get_abs(pInfo, pInfo->fd, ABS_MT_POSITION_Y, &priv->miny,
+                      &priv->maxy, &priv->synpara.hyst_y, &priv->resy);
+
+        proto_data->st_to_mt_offset_x = priv->minx - st_minx;
+        proto_data->st_to_mt_scale_x =
+            (priv->maxx - priv->minx) / (st_maxx - st_minx);
+        proto_data->st_to_mt_offset_y = priv->miny - st_miny;
+        proto_data->st_to_mt_scale_y =
+            (priv->maxy - priv->miny) / (st_maxy - st_miny);
+    }
 
     SYSCALL(rc = ioctl(pInfo->fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits));
     if (rc >= 0)
@@ -569,6 +603,7 @@ EventReadHwState(InputInfoPtr pInfo,
     struct SynapticsHwState *hw = comm->hwState;
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     SynapticsParameters *para = &priv->synpara;
+    struct eventcomm_proto_data *proto_data = priv->proto_data;
 
     SynapticsResetTouchHwState(hw);
 
@@ -644,10 +679,12 @@ EventReadHwState(InputInfoPtr pInfo,
 	    if (ev.code < ABS_MT_SLOT) {
 		switch (ev.code) {
 		case ABS_X:
-		    hw->x = ev.value;
+		    hw->x = ev.value * proto_data->st_to_mt_scale_x +
+			proto_data->st_to_mt_offset_x;
 		    break;
 		case ABS_Y:
-		    hw->y = ev.value;
+		    hw->y = ev.value * proto_data->st_to_mt_scale_y +
+			proto_data->st_to_mt_offset_y;
 		    break;
 		case ABS_PRESSURE:
 		    hw->z = ev.value;
@@ -816,10 +853,10 @@ EventReadDevDimensions(InputInfoPtr pInfo)
 
     if (event_query_is_touchpad(pInfo->fd, (proto_data) ? proto_data->need_grab : TRUE))
     {
-        event_query_axis_ranges(pInfo);
 #ifdef HAVE_MTDEV
         event_query_touch(pInfo);
 #endif
+        event_query_axis_ranges(pInfo);
     }
     event_query_model(pInfo->fd, &priv->model, &priv->id_vendor, &priv->id_product);
 
