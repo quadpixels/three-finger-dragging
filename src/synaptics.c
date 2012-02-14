@@ -1877,6 +1877,12 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	}
 	break;
     case TS_CLICKPAD_MOVE:
+	/* Disable scrolling once a button is pressed on a clickpad */
+	priv->vert_scroll_edge_on = FALSE;
+	priv->horiz_scroll_edge_on = FALSE;
+	priv->vert_scroll_twofinger_on = FALSE;
+	priv->horiz_scroll_twofinger_on = FALSE;
+
         /* Assume one touch is only for holding the clickpad button down */
 	if (hw->numFingers > 1)
 	    hw->numFingers--;
