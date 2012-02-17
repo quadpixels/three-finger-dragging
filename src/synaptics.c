@@ -2887,7 +2887,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     priv->lastButtons = buttons;
 
     /* generate a history of the absolute positions */
-    if (inside_active_area && !from_timer)
+    if (inside_active_area)
 	store_history(priv, hw->x, hw->y, hw->millis);
     return delay;
 }
