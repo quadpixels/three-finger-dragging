@@ -410,6 +410,7 @@ event_query_axis_ranges(InputInfoPtr pInfo)
 		      &priv->minw, &priv->maxw,
 		      NULL, NULL);
 
+#if HAVE_MTDEV
     if (priv->has_touch)
     {
         int st_minx = priv->minx;
@@ -429,6 +430,7 @@ event_query_axis_ranges(InputInfoPtr pInfo)
         proto_data->st_to_mt_scale_y =
             (priv->maxy - priv->miny) / (st_maxy - st_miny);
     }
+#endif
 
     SYSCALL(rc = ioctl(pInfo->fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits));
     if (rc >= 0)
