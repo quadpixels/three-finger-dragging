@@ -446,7 +446,8 @@ dp_set_variables(Display *dpy, XDevice* dev, int argc, char *argv[], int first_c
 		b[par->prop_offset] = rint(val);
 		break;
 	    case 32:
-		if (format != par->prop_format || type != XA_INTEGER) {
+		if (format != par->prop_format ||
+                    (type != XA_INTEGER && type != XA_CARDINAL)) {
 		    fprintf(stderr, "   %-23s = format mismatch (%d)\n",
 			    par->name, format);
 		    break;
@@ -517,7 +518,8 @@ dp_show_settings(Display *dpy, XDevice *dev)
 		printf("    %-23s = %d\n", par->name, b[par->prop_offset]);
 		break;
 	    case 32:
-		if (format != par->prop_format || type != XA_INTEGER) {
+		if (format != par->prop_format ||
+                    (type != XA_INTEGER && type != XA_CARDINAL)) {
 		    fprintf(stderr, "    %-23s = format mismatch (%d)\n",
 			    par->name, format);
 		    break;
