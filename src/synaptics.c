@@ -2596,6 +2596,42 @@ repeat_scrollbuttons(const InputInfoPtr pInfo,
     return delay;
 }
 
+/* Update the open slots and number of active touches */
+static void
+UpdateTouchState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
+{
+#ifdef HAVE_MULTITOUCH
+    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    int i;
+
+    for (i = 0; i < hw->num_mt_mask; i++)
+    {
+        if (hw->slot_state[i] == SLOTSTATE_OPEN)
+        {
+            priv->open_slots[priv->num_active_touches] = i;
+            priv->num_active_touches++;
+        } else if (hw->slot_state[i] == SLOTSTATE_CLOSE)
+        {
+            Bool found = FALSE;
+            int j;
+
+            for (j = 0; j < priv->num_active_touches - 1; j++)
+            {
+                if (priv->open_slots[j] == i)
+                    found = TRUE;
+
+                if (found)
+                    priv->open_slots[j] = priv->open_slots[j + 1];
+            }
+
+            priv->num_active_touches--;
+        }
+    }
+
+    SynapticsResetTouchHwState(hw);
+#endif
+}
+
 static void
 HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
 {
@@ -2675,40 +2711,9 @@ HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
             xf86PostTouchEvent(pInfo->dev, slot, XI_TouchEnd, 0,
                                hw->mt_mask[slot]);
     }
-            
+
 out:
-    /* Update the open slots and number of active touches */
-    for (i = 0; i < hw->num_mt_mask; i++)
-    {
-        if (hw->slot_state[i] == SLOTSTATE_OPEN)
-        {
-            priv->open_slots[priv->num_active_touches] = i;
-            priv->num_active_touches++;
-        } else if (hw->slot_state[i] == SLOTSTATE_CLOSE)
-        {
-            Bool found = FALSE;
-            int j;
-
-            for (j = 0; j < priv->num_active_touches - 1; j++)
-            {
-                if (priv->open_slots[j] == i)
-                    found = TRUE;
-
-                if (found)
-                    priv->open_slots[j] = priv->open_slots[j + 1];
-            }
-
-            priv->num_active_touches--;
-        }
-    }
-
-    /* We calculated the value twice, might as well double check our math */
-    if (priv->num_active_touches != new_active_touches)
-        xf86IDrvMsg(pInfo, X_WARNING,
-                    "calculated wrong number of active touches (%d vs %d)\n",
-                    priv->num_active_touches, new_active_touches);
-
-    SynapticsResetTouchHwState(hw);
+    UpdateTouchState(pInfo, hw);
 #endif
 }
 
@@ -2741,7 +2746,10 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 
     /* If touchpad is switched off, we skip the whole thing and return delay */
     if (para->touchpad_off == 1)
+    {
+	UpdateTouchState(pInfo, hw);
 	return delay;
+    }
 
     /* apply hysteresis before doing anything serious. This cancels
      * out a lot of noise which might surface in strange phenomena
