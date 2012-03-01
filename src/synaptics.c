@@ -2512,6 +2512,12 @@ post_scroll_events(const InputInfoPtr pInfo)
     if (valuator_mask_num_valuators(priv->scroll_events_mask))
         xf86PostMotionEventM(pInfo->dev, FALSE, priv->scroll_events_mask);
 #else
+    SynapticsParameters *para = &priv->synpara;
+
+    /* smooth scrolling uses the dist as increment */
+    priv->scroll.delta_y /= para->scroll_dist_vert;
+    priv->scroll.delta_x /= para->scroll_dist_horiz;
+
     while (priv->scroll.delta_y <= -1.0)
     {
         post_button_click(pInfo, 4);
