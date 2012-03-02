@@ -112,7 +112,8 @@ enum TouchpadModel {
     MODEL_UNKNOWN = 0,
     MODEL_SYNAPTICS,
     MODEL_ALPS,
-    MODEL_APPLETOUCH
+    MODEL_APPLETOUCH,
+    MODEL_ELANTECH
 };
 
 typedef struct _SynapticsParameters

@@ -293,6 +293,7 @@ static model_lookup_t model_lookup_table[] = {
 	{0x0002, 0x0007, MODEL_SYNAPTICS},
 	{0x0002, 0x0008, MODEL_ALPS},
 	{0x05ac, PRODUCT_ANY, MODEL_APPLETOUCH},
+	{0x0002, 0x000e, MODEL_ELANTECH},
 	{0x0, 0x0, 0x0}
 };
 

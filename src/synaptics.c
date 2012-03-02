@@ -386,6 +386,25 @@ calculate_edge_widths(SynapticsPrivate *priv, int *l, int *r, int *t, int *b)
     *b = priv->maxy - eheight;
 }
 
+static void
+calculate_tap_hysteresis(SynapticsPrivate *priv, int range,
+                         int *fingerLow, int *fingerHigh, int *fingerPress)
+{
+    if (priv->model == MODEL_ELANTECH) {
+        /* All Elantech touchpads don't need the Z filtering to get the
+         * number of fingers correctly. See Documentation/elantech.txt
+         * in the kernel.
+         */
+        *fingerLow  = priv->minp + 1;
+        *fingerHigh = priv->minp + 1;
+    } else {
+        *fingerLow  = priv->minp + range * (25.0/256);
+        *fingerHigh = priv->minp + range * (30.0/256);
+    }
+
+    *fingerPress = priv->minp + range * 1.000;
+}
+
 /* Area options support both percent values and absolute values. This is
  * awkward. The xf86Set* calls will print to the log, but they'll
  * also print an error if we request a percent value but only have an
@@ -471,10 +490,9 @@ static void set_default_parameters(InputInfoPtr pInfo)
 
     range = priv->maxp - priv->minp + 1;
 
+    calculate_tap_hysteresis(priv, range, &fingerLow, &fingerHigh, &fingerPress);
+
     /* scaling based on defaults and a pressure of 256 */
-    fingerLow = priv->minp + range * (25.0/256);
-    fingerHigh = priv->minp + range * (30.0/256);
-    fingerPress = priv->minp + range * 1.000;
     emulateTwoFingerMinZ = priv->minp + range * (282.0/256);
     edgeMotionMinZ = priv->minp + range * (30.0/256);
     edgeMotionMaxZ = priv->minp + range * (160.0/256);
