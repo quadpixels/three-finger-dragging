@@ -556,8 +556,8 @@ static void set_default_parameters(InputInfoPtr pInfo)
     pars->emulate_mid_button_time = xf86SetIntOption(opts, "EmulateMidButtonTime", 75);
     pars->emulate_twofinger_z = xf86SetIntOption(opts, "EmulateTwoFingerMinZ", emulateTwoFingerMinZ);
     pars->emulate_twofinger_w = xf86SetIntOption(opts, "EmulateTwoFingerMinW", emulateTwoFingerMinW);
-    pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", horizScrollDelta);
-    pars->scroll_dist_horiz = xf86SetIntOption(opts, "HorizScrollDelta", vertScrollDelta);
+    pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", vertScrollDelta);
+    pars->scroll_dist_horiz = xf86SetIntOption(opts, "HorizScrollDelta", horizScrollDelta);
     pars->scroll_edge_vert = xf86SetBoolOption(opts, "VertEdgeScroll", vertEdgeScroll);
     pars->scroll_edge_horiz = xf86SetBoolOption(opts, "HorizEdgeScroll", horizEdgeScroll);
     pars->scroll_edge_corner = xf86SetBoolOption(opts, "CornerCoasting", FALSE);
