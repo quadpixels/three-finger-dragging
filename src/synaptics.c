@@ -2399,15 +2399,15 @@ handle_clickfinger(SynapticsParameters *para, struct SynapticsHwState *hw)
     }
     switch(action){
         case 1:
-            hw->left = 1;
+            hw->left = 1 | BTN_EMULATED_FLAG;
             break;
         case 2:
             hw->left = 0;
-            hw->middle = 1;
+            hw->middle = 1 | BTN_EMULATED_FLAG;
             break;
         case 3:
             hw->left = 0;
-            hw->right = 1;
+            hw->right = 1 | BTN_EMULATED_FLAG;
             break;
     }
 }

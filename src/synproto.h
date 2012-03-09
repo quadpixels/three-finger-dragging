@@ -45,6 +45,9 @@ enum SynapticsSlotState
     SLOTSTATE_UPDATE,
 };
 
+/* used to mark emulated hw button state */
+#define BTN_EMULATED_FLAG 0x80
+
 /*
  * A structure to describe the state of the touchpad hardware (buttons and pad)
  */
