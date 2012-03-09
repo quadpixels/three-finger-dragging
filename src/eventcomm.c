@@ -595,6 +595,12 @@ static int count_fingers(const struct CommData *comm)
 }
 
 
+static inline double
+apply_st_scaling(struct eventcomm_proto_data *proto_data, int value, int axis)
+{
+    return value * proto_data->st_to_mt_scale[axis] + proto_data->st_to_mt_offset[axis];
+}
+
 Bool
 EventReadHwState(InputInfoPtr pInfo,
 		 struct CommData *comm, struct SynapticsHwState *hwRet)
@@ -680,12 +686,10 @@ EventReadHwState(InputInfoPtr pInfo,
 	    if (ev.code < ABS_MT_SLOT) {
 		switch (ev.code) {
 		case ABS_X:
-		    hw->x = ev.value * proto_data->st_to_mt_scale[0] +
-			proto_data->st_to_mt_offset[0];
+		    hw->x = apply_st_scaling(proto_data, ev.value, 0);
 		    break;
 		case ABS_Y:
-		    hw->y = ev.value * proto_data->st_to_mt_scale[1] +
-			proto_data->st_to_mt_offset[1];
+		    hw->y = apply_st_scaling(proto_data, ev.value, 1);
 		    break;
 		case ABS_PRESSURE:
 		    hw->z = ev.value;
