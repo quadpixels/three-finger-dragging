@@ -2481,7 +2481,7 @@ adjust_state_from_scrollbuttons(const InputInfoPtr pInfo, struct SynapticsHwStat
 
 static void
 update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
-                       CARD32 now, int *delay)
+                       struct SynapticsHwState *old, CARD32 now, int *delay)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters *para = &priv->synpara;
@@ -2493,8 +2493,10 @@ update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
     /* 3rd button emulation */
     hw->middle |= HandleMidButtonEmulation(priv, hw, now, delay);
 
-    /* Fingers emulate other buttons */
-    if(hw->left && hw->numFingers >= 1){
+    /* Fingers emulate other buttons. ClickFinger can only be
+       triggered on transition, when left is pressed
+     */
+    if(hw->left && !old->left && hw->numFingers >= 1) {
         handle_clickfinger(para, hw);
     }
 
@@ -2824,7 +2826,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     }
 
     /* these two just update hw->left, right, etc. */
-    update_hw_button_state(pInfo, hw, now, &delay);
+    update_hw_button_state(pInfo, hw, priv->old_hw_state, now, &delay);
     if (priv->has_scrollbuttons)
 	double_click = adjust_state_from_scrollbuttons(pInfo, hw);
 
