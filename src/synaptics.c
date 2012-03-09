@@ -2743,6 +2743,17 @@ out:
 #endif
 }
 
+static void
+filter_jitter(SynapticsPrivate *priv, int *x, int *y)
+{
+    SynapticsParameters *para = &priv->synpara;
+
+    priv->hyst_center_x = hysteresis(*x, priv->hyst_center_x, para->hyst_x);
+    priv->hyst_center_y = hysteresis(*y, priv->hyst_center_y, para->hyst_y);
+    *x = priv->hyst_center_x;
+    *y = priv->hyst_center_y;
+}
+
 /*
  * React on changes in the hardware state. This function is called every time
  * the hardware state changes. The return value is used to specify how many
@@ -2780,10 +2791,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     /* apply hysteresis before doing anything serious. This cancels
      * out a lot of noise which might surface in strange phenomena
      * like flicker in scrolling or noise motion. */
-    priv->hyst_center_x = hysteresis(hw->x, priv->hyst_center_x, para->hyst_x);
-    priv->hyst_center_y = hysteresis(hw->y, priv->hyst_center_y, para->hyst_y);
-    hw->x = priv->hyst_center_x;
-    hw->y = priv->hyst_center_y;
+    filter_jitter(priv, &hw->x, &hw->y);
 
     inside_active_area = is_inside_active_area(priv, hw->x, hw->y);
 
