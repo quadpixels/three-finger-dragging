@@ -454,6 +454,7 @@ static void set_default_parameters(InputInfoPtr pInfo)
     int vertResolution = 1;
     int width, height, diag, range;
     int horizHyst, vertHyst;
+    int middle_button_timeout;
 
     /* read the parameters */
     if (priv->synshm)
@@ -554,7 +555,9 @@ static void set_default_parameters(InputInfoPtr pInfo)
     pars->click_time = xf86SetIntOption(opts, "ClickTime", 100);
     pars->clickpad = xf86SetIntOption(opts, "ClickPad", pars->clickpad); /* Probed */
     pars->fast_taps = xf86SetBoolOption(opts, "FastTaps", FALSE);
-    pars->emulate_mid_button_time = xf86SetIntOption(opts, "EmulateMidButtonTime", 75);
+    /* middle mouse button emulation on a clickpad? nah, you're joking */
+    middle_button_timeout = pars->clickpad ? 0 : 75;
+    pars->emulate_mid_button_time = xf86SetIntOption(opts, "EmulateMidButtonTime", middle_button_timeout);
     pars->emulate_twofinger_z = xf86SetIntOption(opts, "EmulateTwoFingerMinZ", emulateTwoFingerMinZ);
     pars->emulate_twofinger_w = xf86SetIntOption(opts, "EmulateTwoFingerMinW", emulateTwoFingerMinW);
     pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", vertScrollDelta);
