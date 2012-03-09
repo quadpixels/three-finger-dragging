@@ -2754,6 +2754,16 @@ filter_jitter(SynapticsPrivate *priv, int *x, int *y)
     *y = priv->hyst_center_y;
 }
 
+static void
+reset_hw_state(struct SynapticsHwState *hw)
+{
+    hw->x = 0;
+    hw->y = 0;
+    hw->z = 0;
+    hw->numFingers = 0;
+    hw->fingerWidth = 0;
+}
+
 /*
  * React on changes in the hardware state. This function is called every time
  * the hardware state changes. The return value is used to specify how many
@@ -2770,8 +2780,8 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters *para = &priv->synpara;
-    enum FingerState finger;
-    int dx, dy, buttons, id;
+    enum FingerState finger = FS_UNTOUCHED;
+    int dx = 0, dy = 0, buttons, id;
     edge_type edge = NO_EDGE;
     int change;
     int double_click = FALSE;
@@ -2801,18 +2811,10 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     */
     if (!inside_active_area)
     {
-	hw->x = 0;
-	hw->y = 0;
-	hw->z = 0;
-	hw->numFingers = 0;
-	hw->fingerWidth = 0;
+	reset_hw_state(hw);
 
 	/* FIXME: if finger accidentally moves into the area and doesn't
 	 * really release, the finger should remain down. */
-	finger = FS_UNTOUCHED;
-	edge = NO_EDGE;
-
-	dx = dy = 0;
     }
 
     /* these two just update hw->left, right, etc. */
