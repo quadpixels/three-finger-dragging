@@ -957,6 +957,7 @@ DeviceClose(DeviceIntPtr dev)
     priv->timer = NULL;
     free_shm_data(priv);
     SynapticsHwStateFree(&priv->hwState);
+    SynapticsHwStateFree(&priv->old_hw_state);
     SynapticsHwStateFree(&priv->local_hw_state);
     SynapticsHwStateFree(&priv->comm.hwState);
     return RetValue;
@@ -1231,6 +1232,10 @@ DeviceInit(DeviceIntPtr dev)
     if (!priv->hwState)
         goto fail;
 
+    priv->old_hw_state = SynapticsHwStateAlloc(priv);
+    if (!priv->old_hw_state)
+        goto fail;
+
     priv->local_hw_state = SynapticsHwStateAlloc(priv);
     if (!priv->local_hw_state)
 	goto fail;
@@ -1430,6 +1435,7 @@ ReadInput(InputInfoPtr pInfo)
     while (SynapticsGetHwState(pInfo, priv, hw)) {
 	SynapticsCopyHwState(priv->hwState, hw);
 	delay = HandleState(pInfo, hw, hw->millis, FALSE);
+	SynapticsCopyHwState(priv->old_hw_state, priv->hwState);
 	newDelay = TRUE;
     }
 

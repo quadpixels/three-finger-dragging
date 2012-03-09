@@ -193,6 +193,7 @@ struct _SynapticsPrivateRec
     void *proto_data;			/* protocol-specific data */
 
     struct SynapticsHwState *hwState;
+    struct SynapticsHwState *old_hw_state; /* previous hw state */
 
     const char *device;			/* device node */
     Bool shm_config;			/* True when shared memory area allocated */
