@@ -65,10 +65,8 @@ struct eventcomm_proto_data
      * exists for readability of the code.
      */
     BOOL need_grab;
-    int st_to_mt_offset_x;
-    double st_to_mt_scale_x;
-    int st_to_mt_offset_y;
-    double st_to_mt_scale_y;
+    int st_to_mt_offset[2];
+    double st_to_mt_scale[2];
 #ifdef HAVE_MULTITOUCH
     struct mtdev *mtdev;
     int axis_map[MT_ABS_SIZE];
@@ -86,8 +84,8 @@ EventProtoDataAlloc(void)
     if (!proto_data)
         return NULL;
 
-    proto_data->st_to_mt_scale_x = 1;
-    proto_data->st_to_mt_scale_y = 1;
+    proto_data->st_to_mt_scale[0] = 1;
+    proto_data->st_to_mt_scale[1] = 1;
 
     return proto_data;
 }
@@ -424,11 +422,11 @@ event_query_axis_ranges(InputInfoPtr pInfo)
         event_get_abs(pInfo, pInfo->fd, ABS_MT_POSITION_Y, &priv->miny,
                       &priv->maxy, &priv->synpara.hyst_y, &priv->resy);
 
-        proto_data->st_to_mt_offset_x = priv->minx - st_minx;
-        proto_data->st_to_mt_scale_x =
+        proto_data->st_to_mt_offset[0] = priv->minx - st_minx;
+        proto_data->st_to_mt_scale[0] =
             (priv->maxx - priv->minx) / (st_maxx - st_minx);
-        proto_data->st_to_mt_offset_y = priv->miny - st_miny;
-        proto_data->st_to_mt_scale_y =
+        proto_data->st_to_mt_offset[1] = priv->miny - st_miny;
+        proto_data->st_to_mt_scale[1] =
             (priv->maxy - priv->miny) / (st_maxy - st_miny);
     }
 #endif
@@ -682,12 +680,12 @@ EventReadHwState(InputInfoPtr pInfo,
 	    if (ev.code < ABS_MT_SLOT) {
 		switch (ev.code) {
 		case ABS_X:
-		    hw->x = ev.value * proto_data->st_to_mt_scale_x +
-			proto_data->st_to_mt_offset_x;
+		    hw->x = ev.value * proto_data->st_to_mt_scale[0] +
+			proto_data->st_to_mt_offset[0];
 		    break;
 		case ABS_Y:
-		    hw->y = ev.value * proto_data->st_to_mt_scale_y +
-			proto_data->st_to_mt_offset_y;
+		    hw->y = ev.value * proto_data->st_to_mt_scale[1] +
+			proto_data->st_to_mt_offset[1];
 		    break;
 		case ABS_PRESSURE:
 		    hw->z = ev.value;
