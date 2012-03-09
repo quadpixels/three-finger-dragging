@@ -2386,11 +2386,73 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     return delay;
 }
 
-static void
-handle_clickfinger(SynapticsParameters *para, struct SynapticsHwState *hw)
+/**
+ * Check if any 2+ fingers are close enough together to assume this is a
+ * ClickFinger action.
+ */
+static int
+clickpad_guess_clickfingers(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 {
+    int nfingers = 0;
+#if HAVE_MULTITOUCH
+    int i, j;
+    for (i = 0; i < hw->num_mt_mask - 1; i++) {
+        ValuatorMask *f1;
+
+        /* you can't click on open, you're not fast enough */
+        if (hw->slot_state[i] != SLOTSTATE_UPDATE)
+            continue;
+
+        f1 = hw->mt_mask[i];
+
+        for (j = i + 1; j < hw->num_mt_mask; j++) {
+            ValuatorMask *f2;
+            double x1, x2, y1, y2;
+
+            if (hw->slot_state[j] != SLOTSTATE_UPDATE)
+                continue;
+
+            f2 = hw->mt_mask[j];
+
+            x1 = valuator_mask_get_double(f1, 0);
+            y1 = valuator_mask_get_double(f1, 1);
+
+            x2 = valuator_mask_get_double(f2, 0);
+            y2 = valuator_mask_get_double(f2, 1);
+
+            /* FIXME: fingers closer together than 30% of touchpad width, but
+             * really, this should be dependent on the touchpad size. Also,
+             * you'll need to find a touchpad that doesn't lie about it's
+             * size. Good luck. */
+            if (abs(x1 - x2) < (priv->maxx - priv->minx) * .3 &&
+                abs(y1 - y2) < (priv->maxy - priv->miny) * .3)
+                nfingers++;
+        }
+    }
+#endif
+
+    /* 1 doesn't make sense */
+    return nfingers ? nfingers + 1 : 0;
+}
+
+
+static void
+handle_clickfinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
+{
+    SynapticsParameters *para = &priv->synpara;
     int action = 0;
-    switch(hw->numFingers){
+    int nfingers = hw->numFingers;
+
+    /* if this is a clickpad, clickfinger handling is:
+     * one finger down: no action, this is a normal click
+     * two fingers down: F2_CLICK
+     * three fingers down: F3_CLICK
+     */
+
+    if (para->clickpad)
+        nfingers = clickpad_guess_clickfingers(priv, hw);
+
+    switch(nfingers) {
         case 1:
             action = para->click_action[F1_CLICK1];
             break;
@@ -2501,7 +2563,7 @@ update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
        triggered on transition, when left is pressed
      */
     if(hw->left && !old->left && hw->numFingers >= 1) {
-        handle_clickfinger(para, hw);
+        handle_clickfinger(priv, hw);
     }
 
     /* Two finger emulation */
