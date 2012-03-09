@@ -124,10 +124,7 @@ if test "x$BUILD_EVENTCOMM" = xyes; then
 
     if test "x$HAVE_XI22" = xyes; then
         # Obtain compiler/linker options for mtdev
-        PKG_CHECK_MODULES(MTDEV, mtdev, HAVE_MTDEV="yes", HAVE_MTDEV="no")
-    fi
-    if test "x$HAVE_XI22" = xyes && test "x$HAVE_MTDEV" = xyes; then
-        AC_DEFINE(HAVE_MTDEV, 1, [MTDev available])
+        PKG_CHECK_MODULES(MTDEV, mtdev)
     fi
 fi
 if test "x$BUILD_PSMCOMM" = xyes; then

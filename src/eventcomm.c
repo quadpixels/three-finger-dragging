@@ -41,7 +41,7 @@
 #include "synaptics.h"
 #include "synapticsstr.h"
 #include <xf86.h>
-#ifdef HAVE_MTDEV
+#ifdef HAVE_MULTITOUCH
 #include <mtdev.h>
 #endif
 
@@ -69,7 +69,7 @@ struct eventcomm_proto_data
     double st_to_mt_scale_x;
     int st_to_mt_offset_y;
     double st_to_mt_scale_y;
-#ifdef HAVE_MTDEV
+#ifdef HAVE_MULTITOUCH
     struct mtdev *mtdev;
     int axis_map[MT_ABS_SIZE];
     int cur_slot;
@@ -92,7 +92,7 @@ EventProtoDataAlloc(void)
     return proto_data;
 }
 
-#ifdef HAVE_MTDEV
+#ifdef HAVE_MULTITOUCH
 static int
 last_mt_vals_slot(const SynapticsPrivate *priv)
 {
@@ -197,7 +197,7 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters *para)
 
     proto_data->need_grab = FALSE;
 
-#ifdef HAVE_MTDEV
+#ifdef HAVE_MULTITOUCH
     InitializeTouch(pInfo);
 #endif
 
@@ -207,7 +207,7 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters *para)
 static Bool
 EventDeviceOffHook(InputInfoPtr pInfo)
 {
-#ifdef HAVE_MTDEV
+#ifdef HAVE_MULTITOUCH
     UninitializeTouch(pInfo);
 #endif
 
@@ -411,7 +411,7 @@ event_query_axis_ranges(InputInfoPtr pInfo)
 		      &priv->minw, &priv->maxw,
 		      NULL, NULL);
 
-#if HAVE_MTDEV
+#if HAVE_MULTITOUCH
     if (priv->has_touch)
     {
         int st_minx = priv->minx;
@@ -500,14 +500,14 @@ EventQueryHardware(InputInfoPtr pInfo)
 static Bool
 SynapticsReadEvent(InputInfoPtr pInfo, struct input_event *ev)
 {
-#ifdef HAVE_MTDEV
+#ifdef HAVE_MULTITOUCH
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
 #endif
     int rc = TRUE;
     ssize_t len;
 
-#ifdef HAVE_MTDEV
+#ifdef HAVE_MULTITOUCH
     if (proto_data->mtdev)
         len = mtdev_get(proto_data->mtdev, pInfo->fd, ev, 1) *
               sizeof(struct input_event);
@@ -531,7 +531,7 @@ static void
 EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
                        struct input_event *ev)
 {
-#ifdef HAVE_MTDEV
+#ifdef HAVE_MULTITOUCH
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
 
@@ -709,7 +709,7 @@ static int EventDevOnly(const struct dirent *dir) {
 	return strncmp(EVENT_DEV_NAME, dir->d_name, 5) == 0;
 }
 
-#ifdef HAVE_MTDEV
+#ifdef HAVE_MULTITOUCH
 static void
 event_query_touch(InputInfoPtr pInfo)
 {
@@ -841,14 +841,14 @@ EventReadDevDimensions(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
-#ifdef HAVE_MTDEV
+#ifdef HAVE_MULTITOUCH
     int i;
 #endif
 
     proto_data = EventProtoDataAlloc();
     priv->proto_data = proto_data;
 
-#ifdef HAVE_MTDEV
+#ifdef HAVE_MULTITOUCH
     for (i = 0; i < MT_ABS_SIZE; i++)
         proto_data->axis_map[i] = -1;
     proto_data->cur_slot = -1;
@@ -856,7 +856,7 @@ EventReadDevDimensions(InputInfoPtr pInfo)
 
     if (event_query_is_touchpad(pInfo->fd, (proto_data) ? proto_data->need_grab : TRUE))
     {
-#ifdef HAVE_MTDEV
+#ifdef HAVE_MULTITOUCH
         event_query_touch(pInfo);
 #endif
         event_query_axis_ranges(pInfo);
