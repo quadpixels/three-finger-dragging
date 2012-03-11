@@ -183,7 +183,7 @@ typedef struct _SynapticsParameters
 } SynapticsParameters;
 
 
-typedef struct _SynapticsPrivateRec
+struct _SynapticsPrivateRec
 {
     SynapticsParameters synpara;            /* Default parameter settings, read from
 					       the X config file */
@@ -286,6 +286,6 @@ typedef struct _SynapticsPrivateRec
     int *open_slots;                    /* Array of currently open touch slots */
     int num_active_touches;             /* Number of active touches on device */
 #endif
-} SynapticsPrivate;
+};
 
 #endif /* _SYNAPTICSSTR_H_ */
