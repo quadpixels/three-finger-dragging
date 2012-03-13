@@ -1447,6 +1447,9 @@ HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, CA
     int timeleft;
     int mid = 0;
 
+    if (para->emulate_mid_button_time <= 0)
+        return mid;
+
     while (!done) {
 	switch (priv->mid_emu_state) {
 	case MBE_LEFT_CLICK:
