@@ -151,6 +151,24 @@ InitFloatAtom(DeviceIntPtr dev, char *name, int nvalues, float *values)
     return atom;
 }
 
+static void
+InitSoftButtonProperty(InputInfoPtr pInfo)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
+    SynapticsParameters *para = &priv->synpara;
+    int values[8];
+
+    values[0] = para->softbutton_areas[0][0];
+    values[1] = para->softbutton_areas[0][1];
+    values[2] = para->softbutton_areas[0][2];
+    values[3] = para->softbutton_areas[0][3];
+    values[4] = para->softbutton_areas[1][0];
+    values[5] = para->softbutton_areas[1][1];
+    values[6] = para->softbutton_areas[1][2];
+    values[7] = para->softbutton_areas[1][3];
+    prop_softbutton_areas = InitAtom(pInfo->dev, SYNAPTICS_PROP_SOFTBUTTON_AREAS, 32, 8, values);
+}
+
 void
 InitDeviceProperties(InputInfoPtr pInfo)
 {
@@ -301,15 +319,8 @@ InitDeviceProperties(InputInfoPtr pInfo)
     values[3] = para->area_bottom_edge;
     prop_area = InitAtom(pInfo->dev, SYNAPTICS_PROP_AREA, 32, 4, values);
 
-    values[0] = para->softbutton_areas[0][0];
-    values[1] = para->softbutton_areas[0][1];
-    values[2] = para->softbutton_areas[0][2];
-    values[3] = para->softbutton_areas[0][3];
-    values[4] = para->softbutton_areas[1][0];
-    values[5] = para->softbutton_areas[1][1];
-    values[6] = para->softbutton_areas[1][2];
-    values[7] = para->softbutton_areas[1][3];
-    prop_softbutton_areas = InitAtom(pInfo->dev, SYNAPTICS_PROP_SOFTBUTTON_AREAS, 32, 8, values);
+    if (para->clickpad)
+        InitSoftButtonProperty(pInfo);
 
     values[0] = para->hyst_x;
     values[1] = para->hyst_y;
@@ -407,8 +418,19 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->tap_time_2         = timeouts[1];
         para->click_time         = timeouts[2];
     } else if (property == prop_clickpad) {
+        BOOL value;
+
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
             return BadMatch;
+
+        value = *(BOOL*)prop->data;
+        if (!para->clickpad && value && !prop_softbutton_areas)
+            InitSoftButtonProperty(pInfo);
+        else if (para->clickpad && !value && prop_softbutton_areas)
+        {
+            XIDeleteDeviceProperty(dev, prop_softbutton_areas, FALSE);
+            prop_softbutton_areas = 0;
+        }
 
         para->clickpad = *(BOOL*)prop->data;
     } else if (property == prop_tap_fast)

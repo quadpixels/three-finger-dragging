@@ -520,6 +520,7 @@ the total height of the touchpad. Property: "Synaptics Area"
 .
 .TP
 .BI "Option \*qSoftButtonAreas\*q \*q" "RBL RBR RBT RBB MBL MBR MBT MBB" \*q
+This option is only available on ClickPad devices.
 Enable soft button click area support on ClickPad devices. The first four
 parameters define the area of the right button, and the second four parameters
 define the area of the middle button. The areas are defined by the left, right,
@@ -942,6 +943,7 @@ default.
 
 .TP 7
 .BI "Synaptics Soft Button Areas"
+This property is only available on ClickPad devices.
 The Right and middle soft button areas are used to support right and middle
 click actions on a ClickPad device. Providing 0 for all values of a given button
 disables the button area.
