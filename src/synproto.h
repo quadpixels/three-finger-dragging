@@ -45,6 +45,9 @@ enum SynapticsSlotState
     SLOTSTATE_UPDATE,
 };
 
+/* used to mark emulated hw button state */
+#define BTN_EMULATED_FLAG 0x80
+
 /*
  * A structure to describe the state of the touchpad hardware (buttons and pad)
  */
@@ -53,6 +56,8 @@ struct SynapticsHwState {
     int x;			/* X position of finger */
     int y;			/* Y position of finger */
     int z;			/* Finger pressure */
+    int cumulative_dx;		/* Cumulative delta X for clickpad dragging */
+    int cumulative_dy;		/* Cumulative delta Y for clickpad dragging */
     int numFingers;
     int fingerWidth;
 
@@ -114,5 +119,7 @@ extern void SynapticsHwStateFree(struct SynapticsHwState **hw);
 extern void SynapticsCopyHwState(struct SynapticsHwState *dst,
                                  const struct SynapticsHwState *src);
 extern void SynapticsResetTouchHwState(struct SynapticsHwState *hw);
+
+extern Bool SynapticsIsSoftButtonAreasValid(int *values);
 
 #endif /* _SYNPROTO_H_ */

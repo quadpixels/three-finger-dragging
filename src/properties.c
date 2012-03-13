@@ -58,6 +58,7 @@ Atom prop_finger                = 0;
 Atom prop_tap_time              = 0;
 Atom prop_tap_move              = 0;
 Atom prop_tap_durations         = 0;
+Atom prop_clickpad              = 0;
 Atom prop_tap_fast              = 0;
 Atom prop_middle_timeout        = 0;
 Atom prop_twofinger_pressure    = 0;
@@ -91,6 +92,7 @@ Atom prop_gestures              = 0;
 Atom prop_capabilities          = 0;
 Atom prop_resolution            = 0;
 Atom prop_area                  = 0;
+Atom prop_softbutton_areas      = 0;
 Atom prop_noise_cancellation    = 0;
 Atom prop_product_id            = 0;
 Atom prop_device_node           = 0;
@@ -149,6 +151,24 @@ InitFloatAtom(DeviceIntPtr dev, char *name, int nvalues, float *values)
     return atom;
 }
 
+static void
+InitSoftButtonProperty(InputInfoPtr pInfo)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
+    SynapticsParameters *para = &priv->synpara;
+    int values[8];
+
+    values[0] = para->softbutton_areas[0][0];
+    values[1] = para->softbutton_areas[0][1];
+    values[2] = para->softbutton_areas[0][2];
+    values[3] = para->softbutton_areas[0][3];
+    values[4] = para->softbutton_areas[1][0];
+    values[5] = para->softbutton_areas[1][1];
+    values[6] = para->softbutton_areas[1][2];
+    values[7] = para->softbutton_areas[1][3];
+    prop_softbutton_areas = InitAtom(pInfo->dev, SYNAPTICS_PROP_SOFTBUTTON_AREAS, 32, 8, values);
+}
+
 void
 InitDeviceProperties(InputInfoPtr pInfo)
 {
@@ -189,6 +209,8 @@ InitDeviceProperties(InputInfoPtr pInfo)
     values[2] = para->click_time;
 
     prop_tap_durations = InitAtom(pInfo->dev, SYNAPTICS_PROP_TAP_DURATIONS, 32, 3, values);
+    prop_clickpad = InitAtom(pInfo->dev, SYNAPTICS_PROP_CLICKPAD, 8, 1,
+                             &para->clickpad);
     prop_tap_fast = InitAtom(pInfo->dev, SYNAPTICS_PROP_TAP_FAST, 8, 1, &para->fast_taps);
     prop_middle_timeout = InitAtom(pInfo->dev, SYNAPTICS_PROP_MIDDLE_TIMEOUT,
                                    32, 1, &para->emulate_mid_button_time);
@@ -297,6 +319,9 @@ InitDeviceProperties(InputInfoPtr pInfo)
     values[3] = para->area_bottom_edge;
     prop_area = InitAtom(pInfo->dev, SYNAPTICS_PROP_AREA, 32, 4, values);
 
+    if (para->clickpad)
+        InitSoftButtonProperty(pInfo);
+
     values[0] = para->hyst_x;
     values[1] = para->hyst_y;
     prop_noise_cancellation = InitAtom(pInfo->dev,
@@ -392,7 +417,22 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->single_tap_timeout = timeouts[0];
         para->tap_time_2         = timeouts[1];
         para->click_time         = timeouts[2];
+    } else if (property == prop_clickpad) {
+        BOOL value;
 
+        if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
+            return BadMatch;
+
+        value = *(BOOL*)prop->data;
+        if (!para->clickpad && value && !prop_softbutton_areas)
+            InitSoftButtonProperty(pInfo);
+        else if (para->clickpad && !value && prop_softbutton_areas)
+        {
+            XIDeleteDeviceProperty(dev, prop_softbutton_areas, FALSE);
+            prop_softbutton_areas = 0;
+        }
+
+        para->clickpad = *(BOOL*)prop->data;
     } else if (property == prop_tap_fast)
     {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
@@ -704,6 +744,19 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->area_right_edge  = area[1];
         para->area_top_edge    = area[2];
         para->area_bottom_edge = area[3];
+    } else if (property == prop_softbutton_areas)
+    {
+        int *areas;
+
+        if (prop->size != 8 || prop->format != 32 || prop->type != XA_INTEGER)
+            return BadMatch;
+
+        areas = (int*)prop->data;
+        if (!SynapticsIsSoftButtonAreasValid(areas))
+            return BadValue;
+
+        memcpy(para->softbutton_areas[0], areas, 4 * sizeof(int));
+        memcpy(para->softbutton_areas[1], areas + 4, 4 * sizeof(int));
     } else if (property == prop_noise_cancellation) {
         INT32 *hyst;
         if (prop->size != 2 || prop->format != 32 || prop->type != XA_INTEGER)

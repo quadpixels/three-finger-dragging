@@ -120,14 +120,16 @@ SynapticsCopyHwState(struct SynapticsHwState *dst,
     dst->x = src->x;
     dst->y = src->y;
     dst->z = src->z;
+    dst->cumulative_dx = src->cumulative_dx;
+    dst->cumulative_dy = src->cumulative_dy;
     dst->numFingers = src->numFingers;
     dst->fingerWidth = src->fingerWidth;
-    dst->left = src->left;
-    dst->right = src->right;
+    dst->left = src->left & BTN_EMULATED_FLAG ? 0 : src->left;
+    dst->right = src->right & BTN_EMULATED_FLAG ? 0 : src->right;
     dst->up = src->up;
     dst->down = src->down;
     memcpy(dst->multi, src->multi, sizeof(dst->multi));
-    dst->middle = src->middle;
+    dst->middle = src->middle & BTN_EMULATED_FLAG ? 0 : src->middle;
 #ifdef HAVE_MULTITOUCH
     for (i = 0; i < dst->num_mt_mask && i < src->num_mt_mask; i++)
         valuator_mask_copy(dst->mt_mask[i], src->mt_mask[i]);

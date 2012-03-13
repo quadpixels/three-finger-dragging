@@ -429,6 +429,129 @@ static int set_percent_option(pointer options, const char* optname,
     return result;
 }
 
+Bool SynapticsIsSoftButtonAreasValid(int *values)
+{
+    Bool right_disabled = FALSE;
+    Bool middle_disabled = FALSE;
+
+    /* Check right button area */
+    if ((((values[0] != 0) && (values[1] != 0)) && (values[0] > values[1])) ||
+        (((values[2] != 0) && (values[3] != 0)) && (values[2] > values[3])))
+        return FALSE;
+
+    /* Check middle button area */
+    if ((((values[4] != 0) && (values[5] != 0)) && (values[4] > values[5])) ||
+        (((values[6] != 0) && (values[7] != 0)) && (values[6] > values[7])))
+        return FALSE;
+
+    if (values[0] == 0 && values[1] == 0 && values[2] == 0 && values[3] == 0)
+        right_disabled = TRUE;
+
+    if (values[4] == 0 && values[5] == 0 && values[6] == 0 && values[7] == 0)
+        middle_disabled = TRUE;
+
+    if (!right_disabled &&
+            ((values[0] && values[0] == values[1]) ||
+             (values[2] && values[2] == values[3])))
+        return FALSE;
+
+    if (!middle_disabled &&
+        ((values[4] && values[4] == values[5]) ||
+         (values[6] && values[6] == values[7])))
+        return FALSE;
+
+    /* Check for overlapping button areas */
+    if (!right_disabled && !middle_disabled)
+    {
+        int right_left = values[0] ? values[0] : INT_MIN;
+        int right_right = values[1] ? values[1] : INT_MAX;
+        int right_top = values[2] ? values[2] : INT_MIN;
+        int right_bottom = values[3] ? values[3] : INT_MAX;
+        int middle_left = values[4] ? values[4] : INT_MIN;
+        int middle_right = values[5] ? values[5] : INT_MAX;
+        int middle_top = values[6] ? values[6] : INT_MIN;
+        int middle_bottom = values[7] ? values[7] : INT_MAX;
+
+        /* If areas overlap in the Y axis */
+        if ((right_bottom <= middle_bottom && right_bottom >= middle_top) ||
+            (right_top <= middle_bottom && right_top >= middle_top))
+        {
+            /* Check for overlapping left edges */
+            if ((right_left < middle_left && right_right >= middle_left) ||
+                (middle_left < right_left && middle_right >= right_left))
+                return FALSE;
+
+            /* Check for overlapping right edges */
+            if ((right_right > middle_right && right_left <= middle_right) ||
+                (middle_right > right_right && middle_left <= right_right))
+                return FALSE;
+        }
+
+        /* If areas overlap in the X axis */
+        if ((right_left >= middle_left && right_left <= middle_right) ||
+            (right_right >= middle_left && right_right <= middle_right))
+        {
+            /* Check for overlapping top edges */
+            if ((right_top < middle_top && right_bottom >= middle_top) ||
+                (middle_top < right_top && middle_bottom >= right_top))
+                return FALSE;
+
+            /* Check for overlapping bottom edges */
+            if ((right_bottom > middle_bottom && right_top <= middle_bottom) ||
+                (middle_bottom > right_bottom && middle_top <= right_bottom))
+                return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+static void set_softbutton_areas_option(InputInfoPtr pInfo)
+{
+    SynapticsPrivate *priv = pInfo->private;
+    SynapticsParameters *pars = &priv->synpara;
+    int values[8];
+    char *option_string;
+    char *next_num;
+    char *end_str;
+    int i;
+
+    if (!pars->clickpad)
+        return;
+
+    option_string = xf86CheckStrOption(pInfo->options, "SoftButtonAreas", NULL);
+    if (!option_string)
+        return;
+
+    next_num = option_string;
+
+    for (i = 0; i < 8 && *next_num != '\0'; i++)
+    {
+        long int value = strtol(next_num, &end_str, 0);
+        if (value > INT_MAX || value < -INT_MAX)
+            goto fail;
+
+        values[i] = value;
+
+        if (next_num != end_str)
+            next_num = end_str;
+        else
+            goto fail;
+    }
+
+    if (i < 8 || *next_num != '\0' || !SynapticsIsSoftButtonAreasValid(values))
+        goto fail;
+
+    memcpy(pars->softbutton_areas[0], values, 4 * sizeof(int));
+    memcpy(pars->softbutton_areas[1], values + 4, 4 * sizeof(int));
+
+    return;
+
+fail:
+    xf86IDrvMsg(pInfo, X_ERROR, "invalid SoftButtonAreas value '%s', keeping defaults\n",
+                option_string);
+}
+
 static void set_default_parameters(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = pInfo->private; /* read-only */
@@ -454,6 +577,7 @@ static void set_default_parameters(InputInfoPtr pInfo)
     int vertResolution = 1;
     int width, height, diag, range;
     int horizHyst, vertHyst;
+    int middle_button_timeout;
 
     /* read the parameters */
     if (priv->synshm)
@@ -552,8 +676,11 @@ static void set_default_parameters(InputInfoPtr pInfo)
     pars->tap_move = xf86SetIntOption(opts, "MaxTapMove", tapMove);
     pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 180);
     pars->click_time = xf86SetIntOption(opts, "ClickTime", 100);
+    pars->clickpad = xf86SetIntOption(opts, "ClickPad", pars->clickpad); /* Probed */
     pars->fast_taps = xf86SetBoolOption(opts, "FastTaps", FALSE);
-    pars->emulate_mid_button_time = xf86SetIntOption(opts, "EmulateMidButtonTime", 75);
+    /* middle mouse button emulation on a clickpad? nah, you're joking */
+    middle_button_timeout = pars->clickpad ? 0 : 75;
+    pars->emulate_mid_button_time = xf86SetIntOption(opts, "EmulateMidButtonTime", middle_button_timeout);
     pars->emulate_twofinger_z = xf86SetIntOption(opts, "EmulateTwoFingerMinZ", emulateTwoFingerMinZ);
     pars->emulate_twofinger_w = xf86SetIntOption(opts, "EmulateTwoFingerMinW", emulateTwoFingerMinW);
     pars->scroll_dist_vert = xf86SetIntOption(opts, "VertScrollDelta", vertScrollDelta);
@@ -619,6 +746,8 @@ static void set_default_parameters(InputInfoPtr pInfo)
 	pars->bottom_edge = tmp;
 	xf86IDrvMsg(pInfo, X_WARNING, "TopEdge is bigger than BottomEdge. Fixing.\n");
     }
+
+    set_softbutton_areas_option(pInfo);
 }
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 14
@@ -957,6 +1086,7 @@ DeviceClose(DeviceIntPtr dev)
     priv->timer = NULL;
     free_shm_data(priv);
     SynapticsHwStateFree(&priv->hwState);
+    SynapticsHwStateFree(&priv->old_hw_state);
     SynapticsHwStateFree(&priv->local_hw_state);
     SynapticsHwStateFree(&priv->comm.hwState);
     return RetValue;
@@ -1231,6 +1361,10 @@ DeviceInit(DeviceIntPtr dev)
     if (!priv->hwState)
         goto fail;
 
+    priv->old_hw_state = SynapticsHwStateAlloc(priv);
+    if (!priv->old_hw_state)
+        goto fail;
+
     priv->local_hw_state = SynapticsHwStateAlloc(priv);
     if (!priv->local_hw_state)
 	goto fail;
@@ -1372,6 +1506,45 @@ is_inside_active_area(SynapticsPrivate *priv, int x, int y)
     return inside_area;
 }
 
+static Bool
+is_inside_button_area(SynapticsParameters *para, int which, int x, int y)
+{
+    Bool inside_area = TRUE;
+
+    if (para->softbutton_areas[which][0] == 0 &&
+        para->softbutton_areas[which][1] == 0 &&
+        para->softbutton_areas[which][2] == 0 &&
+        para->softbutton_areas[which][3] == 0)
+        return FALSE;
+
+    if (para->softbutton_areas[which][0] &&
+        x < para->softbutton_areas[which][0])
+	inside_area = FALSE;
+    else if (para->softbutton_areas[which][1] &&
+             x > para->softbutton_areas[which][1])
+	inside_area = FALSE;
+    else if (para->softbutton_areas[which][2] &&
+             y < para->softbutton_areas[which][2])
+	inside_area = FALSE;
+    else if (para->softbutton_areas[which][3] &&
+             y > para->softbutton_areas[which][3])
+	inside_area = FALSE;
+
+    return inside_area;
+}
+
+static Bool
+is_inside_rightbutton_area(SynapticsParameters *para, int x, int y)
+{
+    return is_inside_button_area(para, 0, x, y);
+}
+
+static Bool
+is_inside_middlebutton_area(SynapticsParameters *para, int x, int y)
+{
+    return is_inside_button_area(para, 1, x, y);
+}
+
 static CARD32
 timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 {
@@ -1428,8 +1601,17 @@ ReadInput(InputInfoPtr pInfo)
     SynapticsResetTouchHwState(hw);
 
     while (SynapticsGetHwState(pInfo, priv, hw)) {
+	/* Semi-mt device touch slots do not track touches. When there is a
+	 * change in the number of touches, we must disregard the temporary
+	 * motion changes. */
+	if (priv->has_semi_mt && hw->numFingers != priv->hwState->numFingers) {
+	    hw->cumulative_dx = priv->hwState->cumulative_dx;
+	    hw->cumulative_dy = priv->hwState->cumulative_dy;
+	}
+
 	SynapticsCopyHwState(priv->hwState, hw);
 	delay = HandleState(pInfo, hw, hw->millis, FALSE);
+	SynapticsCopyHwState(priv->old_hw_state, priv->hwState);
 	newDelay = TRUE;
     }
 
@@ -1446,6 +1628,9 @@ HandleMidButtonEmulation(SynapticsPrivate *priv, struct SynapticsHwState *hw, CA
     Bool done = FALSE;
     int timeleft;
     int mid = 0;
+
+    if (para->emulate_mid_button_time <= 0)
+        return mid;
 
     while (!done) {
 	switch (priv->mid_emu_state) {
@@ -1709,7 +1894,7 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		    Bool inside_active_area)
 {
     SynapticsParameters *para = &priv->synpara;
-    Bool touch, release, is_timeout, move;
+    Bool touch, release, is_timeout, move, press;
     int timeleft, timeout;
     edge_type edge;
     int delay = 1000000000;
@@ -1723,6 +1908,7 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	     (priv->tap_max_fingers <= ((priv->horiz_scroll_twofinger_on || priv->vert_scroll_twofinger_on)? 2 : 1)) &&
 	     ((abs(hw->x - priv->touch_on.x) >= para->tap_move) ||
 	     (abs(hw->y - priv->touch_on.y) >= para->tap_move)));
+    press = (hw->left || hw->right || hw->middle);
 
     if (touch) {
 	priv->touch_on.x = hw->x;
@@ -1745,6 +1931,10 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    SetTapState(priv, TS_1, now);
 	break;
     case TS_1:
+	if (para->clickpad && press) {
+	    SetTapState(priv, TS_CLICKPAD_MOVE, now);
+	    goto restart;
+	}
 	if (move) {
 	    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 	    SetTapState(priv, TS_MOVE, now);
@@ -1768,6 +1958,10 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	}
 	break;
     case TS_MOVE:
+	if (para->clickpad && press) {
+	    SetTapState(priv, TS_CLICKPAD_MOVE, now);
+	    goto restart;
+	}
 	if (move && priv->moving_state == MS_TRACKSTICK) {
 	    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 	}
@@ -1822,6 +2016,10 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	}
 	break;
     case TS_DRAG:
+	if (para->clickpad && press) {
+	    SetTapState(priv, TS_CLICKPAD_MOVE, now);
+	    goto restart;
+	}
 	if (move)
 	    SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 	if (release) {
@@ -1848,6 +2046,23 @@ HandleTapProcessing(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	} else if (release) {
 	    SetMovingState(priv, MS_FALSE, now);
 	    SetTapState(priv, TS_START, now);
+	}
+	break;
+    case TS_CLICKPAD_MOVE:
+	/* Disable scrolling once a button is pressed on a clickpad */
+	priv->vert_scroll_edge_on = FALSE;
+	priv->horiz_scroll_edge_on = FALSE;
+	priv->vert_scroll_twofinger_on = FALSE;
+	priv->horiz_scroll_twofinger_on = FALSE;
+
+        /* Assume one touch is only for holding the clickpad button down */
+	if (hw->numFingers > 1)
+	    hw->numFingers--;
+	SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+	if (!press) {
+	    SetMovingState(priv, MS_FALSE, now);
+	    SetTapState(priv, TS_MOVE, now);
+	    priv->count_packet_finger = 0;
 	}
 	break;
     }
@@ -2373,11 +2588,73 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     return delay;
 }
 
-static void
-handle_clickfinger(SynapticsParameters *para, struct SynapticsHwState *hw)
+/**
+ * Check if any 2+ fingers are close enough together to assume this is a
+ * ClickFinger action.
+ */
+static int
+clickpad_guess_clickfingers(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 {
+    int nfingers = 0;
+#if HAVE_MULTITOUCH
+    int i, j;
+    for (i = 0; i < hw->num_mt_mask - 1; i++) {
+        ValuatorMask *f1;
+
+        /* you can't click on open, you're not fast enough */
+        if (hw->slot_state[i] != SLOTSTATE_UPDATE)
+            continue;
+
+        f1 = hw->mt_mask[i];
+
+        for (j = i + 1; j < hw->num_mt_mask; j++) {
+            ValuatorMask *f2;
+            double x1, x2, y1, y2;
+
+            if (hw->slot_state[j] != SLOTSTATE_UPDATE)
+                continue;
+
+            f2 = hw->mt_mask[j];
+
+            x1 = valuator_mask_get_double(f1, 0);
+            y1 = valuator_mask_get_double(f1, 1);
+
+            x2 = valuator_mask_get_double(f2, 0);
+            y2 = valuator_mask_get_double(f2, 1);
+
+            /* FIXME: fingers closer together than 30% of touchpad width, but
+             * really, this should be dependent on the touchpad size. Also,
+             * you'll need to find a touchpad that doesn't lie about it's
+             * size. Good luck. */
+            if (abs(x1 - x2) < (priv->maxx - priv->minx) * .3 &&
+                abs(y1 - y2) < (priv->maxy - priv->miny) * .3)
+                nfingers++;
+        }
+    }
+#endif
+
+    /* 1 doesn't make sense */
+    return nfingers ? nfingers + 1 : 0;
+}
+
+
+static void
+handle_clickfinger(SynapticsPrivate *priv, struct SynapticsHwState *hw)
+{
+    SynapticsParameters *para = &priv->synpara;
     int action = 0;
-    switch(hw->numFingers){
+    int nfingers = hw->numFingers;
+
+    /* if this is a clickpad, clickfinger handling is:
+     * one finger down: no action, this is a normal click
+     * two fingers down: F2_CLICK
+     * three fingers down: F3_CLICK
+     */
+
+    if (para->clickpad)
+        nfingers = clickpad_guess_clickfingers(priv, hw);
+
+    switch(nfingers) {
         case 1:
             action = para->click_action[F1_CLICK1];
             break;
@@ -2390,15 +2667,15 @@ handle_clickfinger(SynapticsParameters *para, struct SynapticsHwState *hw)
     }
     switch(action){
         case 1:
-            hw->left = 1;
+            hw->left = 1 | BTN_EMULATED_FLAG;
             break;
         case 2:
             hw->left = 0;
-            hw->middle = 1;
+            hw->middle = 1 | BTN_EMULATED_FLAG;
             break;
         case 3:
             hw->left = 0;
-            hw->right = 1;
+            hw->right = 1 | BTN_EMULATED_FLAG;
             break;
     }
 }
@@ -2472,7 +2749,7 @@ adjust_state_from_scrollbuttons(const InputInfoPtr pInfo, struct SynapticsHwStat
 
 static void
 update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
-                       CARD32 now, int *delay)
+                       struct SynapticsHwState *old, CARD32 now, int *delay)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters *para = &priv->synpara;
@@ -2484,9 +2761,27 @@ update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
     /* 3rd button emulation */
     hw->middle |= HandleMidButtonEmulation(priv, hw, now, delay);
 
-    /* Fingers emulate other buttons */
-    if(hw->left && hw->numFingers >= 1){
-        handle_clickfinger(para, hw);
+    /* If this is a clickpad and the user clicks in a soft button area, press
+     * the soft button instead. */
+    if (para->clickpad && hw->left && !hw->right && !hw->middle)
+    {
+        if (is_inside_rightbutton_area(para, hw->x, hw->y))
+        {
+            hw->left = 0;
+            hw->right = 1;
+        }
+        else if (is_inside_middlebutton_area(para, hw->x, hw->y))
+        {
+            hw->left = 0;
+            hw->middle = 1;
+        }
+    }
+
+    /* Fingers emulate other buttons. ClickFinger can only be
+       triggered on transition, when left is pressed
+     */
+    if(hw->left && !old->left && hw->numFingers >= 1) {
+        handle_clickfinger(priv, hw);
     }
 
     /* Two finger emulation */
@@ -2681,6 +2976,9 @@ HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
             new_active_touches--;
     }
 
+    if (priv->has_semi_mt)
+        goto out;
+
     if (priv->num_active_touches < min_touches &&
         new_active_touches < min_touches)
     {
@@ -2740,6 +3038,27 @@ out:
 #endif
 }
 
+static void
+filter_jitter(SynapticsPrivate *priv, int *x, int *y)
+{
+    SynapticsParameters *para = &priv->synpara;
+
+    priv->hyst_center_x = hysteresis(*x, priv->hyst_center_x, para->hyst_x);
+    priv->hyst_center_y = hysteresis(*y, priv->hyst_center_y, para->hyst_y);
+    *x = priv->hyst_center_x;
+    *y = priv->hyst_center_y;
+}
+
+static void
+reset_hw_state(struct SynapticsHwState *hw)
+{
+    hw->x = 0;
+    hw->y = 0;
+    hw->z = 0;
+    hw->numFingers = 0;
+    hw->fingerWidth = 0;
+}
+
 /*
  * React on changes in the hardware state. This function is called every time
  * the hardware state changes. The return value is used to specify how many
@@ -2756,8 +3075,8 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters *para = &priv->synpara;
-    enum FingerState finger;
-    int dx, dy, buttons, id;
+    enum FingerState finger = FS_UNTOUCHED;
+    int dx = 0, dy = 0, buttons, id;
     edge_type edge = NO_EDGE;
     int change;
     int double_click = FALSE;
@@ -2774,13 +3093,18 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 	return delay;
     }
 
+    /* If a physical button is pressed on a clickpad, use cumulative relative
+     * touch movements for motion */
+    if (para->clickpad && (hw->left || hw->right || hw->middle))
+    {
+        hw->x = hw->cumulative_dx;
+        hw->y = hw->cumulative_dy;
+    }
+
     /* apply hysteresis before doing anything serious. This cancels
      * out a lot of noise which might surface in strange phenomena
      * like flicker in scrolling or noise motion. */
-    priv->hyst_center_x = hysteresis(hw->x, priv->hyst_center_x, para->hyst_x);
-    priv->hyst_center_y = hysteresis(hw->y, priv->hyst_center_y, para->hyst_y);
-    hw->x = priv->hyst_center_x;
-    hw->y = priv->hyst_center_y;
+    filter_jitter(priv, &hw->x, &hw->y);
 
     inside_active_area = is_inside_active_area(priv, hw->x, hw->y);
 
@@ -2790,22 +3114,14 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     */
     if (!inside_active_area)
     {
-	hw->x = 0;
-	hw->y = 0;
-	hw->z = 0;
-	hw->numFingers = 0;
-	hw->fingerWidth = 0;
+	reset_hw_state(hw);
 
 	/* FIXME: if finger accidentally moves into the area and doesn't
 	 * really release, the finger should remain down. */
-	finger = FS_UNTOUCHED;
-	edge = NO_EDGE;
-
-	dx = dy = 0;
     }
 
     /* these two just update hw->left, right, etc. */
-    update_hw_button_state(pInfo, hw, now, &delay);
+    update_hw_button_state(pInfo, hw, priv->old_hw_state, now, &delay);
     if (priv->has_scrollbuttons)
 	double_click = adjust_state_from_scrollbuttons(pInfo, hw);
 
