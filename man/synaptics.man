@@ -526,6 +526,8 @@ parameters define the area of the right button, and the second four parameters
 define the area of the middle button. The areas are defined by the left, right,
 top, and bottom edges as sequential values of the property. If any edge is set
 to 0, the button is assumed to extend to infinity in the given direction.
+Any of the values may be given as percentage of the touchpad width or
+height, whichever applies.
 .
 When the user performs a click within the defined soft button areas, the right
 or middle click action is performed.

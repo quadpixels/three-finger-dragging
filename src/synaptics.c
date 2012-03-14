@@ -511,10 +511,12 @@ static void set_softbutton_areas_option(InputInfoPtr pInfo)
     SynapticsPrivate *priv = pInfo->private;
     SynapticsParameters *pars = &priv->synpara;
     int values[8];
+    int in_percent = 0; /* bitmask for which ones are in % */
     char *option_string;
     char *next_num;
     char *end_str;
     int i;
+    int width, height;
 
     if (!pars->clickpad)
         return;
@@ -534,12 +536,36 @@ static void set_softbutton_areas_option(InputInfoPtr pInfo)
         values[i] = value;
 
         if (next_num != end_str)
+        {
+            if (end_str && *end_str == '%')
+            {
+                in_percent |= 1 << i;
+                end_str++;
+            }
             next_num = end_str;
-        else
+        } else
             goto fail;
     }
 
-    if (i < 8 || *next_num != '\0' || !SynapticsIsSoftButtonAreasValid(values))
+    if (i < 8 || *next_num != '\0')
+        goto fail;
+
+    width = priv->maxx - priv->minx;
+    height = priv->maxy - priv->miny;
+
+    for (i = 0; in_percent && i < 8; i++)
+    {
+        int base, size;
+
+        if ((in_percent & (1 << i)) == 0 || values[i] == 0)
+            continue;
+
+        size = ((i % 4) < 2) ? width : height;
+        base = ((i % 4) < 2) ? priv->minx : priv->miny;
+        values[i] = base + size * values[i]/100.0;
+    }
+
+    if (!SynapticsIsSoftButtonAreasValid(values))
         goto fail;
 
     memcpy(pars->softbutton_areas[0], values, 4 * sizeof(int));
