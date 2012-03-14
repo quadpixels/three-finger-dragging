@@ -2552,9 +2552,9 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	double diff = diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y));
 	if (delta >= 0.005 && diff != 0.0) {
 	    if (priv->circ_scroll_vert)
-		priv->scroll.delta_y += diff / delta * para->scroll_dist_vert;
+		priv->scroll.delta_y -= diff / delta * para->scroll_dist_vert;
 	    else
-		priv->scroll.delta_x += diff / delta * para->scroll_dist_horiz;;
+		priv->scroll.delta_x -= diff / delta * para->scroll_dist_horiz;
 	    priv->scroll.last_a = angle(priv, hw->x, hw->y);
         }
     }
