@@ -2600,8 +2600,8 @@ clickpad_guess_clickfingers(SynapticsPrivate *priv, struct SynapticsHwState *hw)
     for (i = 0; i < hw->num_mt_mask - 1; i++) {
         ValuatorMask *f1;
 
-        /* you can't click on open, you're not fast enough */
-        if (hw->slot_state[i] != SLOTSTATE_UPDATE)
+        if (hw->slot_state[i] == SLOTSTATE_EMPTY ||
+            hw->slot_state[i] == SLOTSTATE_CLOSE)
             continue;
 
         f1 = hw->mt_mask[i];
@@ -2610,7 +2610,8 @@ clickpad_guess_clickfingers(SynapticsPrivate *priv, struct SynapticsHwState *hw)
             ValuatorMask *f2;
             double x1, x2, y1, y2;
 
-            if (hw->slot_state[j] != SLOTSTATE_UPDATE)
+            if (hw->slot_state[j] == SLOTSTATE_EMPTY ||
+                hw->slot_state[j] == SLOTSTATE_CLOSE)
                 continue;
 
             f2 = hw->mt_mask[j];
