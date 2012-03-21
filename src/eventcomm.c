@@ -557,7 +557,8 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
     {
         int slot_index = last_mt_vals_slot(priv);
 
-        if (hw->slot_state[slot_index] == SLOTSTATE_EMPTY)
+        if (hw->slot_state[slot_index] == SLOTSTATE_EMPTY ||
+            hw->slot_state[slot_index] == SLOTSTATE_OPEN_EMPTY)
             hw->slot_state[slot_index] = SLOTSTATE_UPDATE;
         if (ev->code == ABS_MT_TRACKING_ID)
         {

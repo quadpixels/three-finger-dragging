@@ -152,7 +152,18 @@ SynapticsResetTouchHwState(struct SynapticsHwState *hw)
         for (j = 2; j < valuator_mask_num_valuators(hw->mt_mask[i]); j++)
             valuator_mask_unset(hw->mt_mask[i], j);
 
-        hw->slot_state[i] = SLOTSTATE_EMPTY;
+        switch (hw->slot_state[i])
+        {
+            case SLOTSTATE_OPEN:
+            case SLOTSTATE_OPEN_EMPTY:
+            case SLOTSTATE_UPDATE:
+                hw->slot_state[i] = SLOTSTATE_OPEN_EMPTY;
+                break;
+
+            default:
+                hw->slot_state[i] = SLOTSTATE_EMPTY;
+                break;
+        }
     }
 #endif
 }
