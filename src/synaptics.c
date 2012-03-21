@@ -1611,7 +1611,6 @@ ReadInput(InputInfoPtr pInfo)
 
 	SynapticsCopyHwState(priv->hwState, hw);
 	delay = HandleState(pInfo, hw, hw->millis, FALSE);
-	SynapticsCopyHwState(priv->old_hw_state, priv->hwState);
 	newDelay = TRUE;
     }
 
@@ -3236,6 +3235,10 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     /* generate a history of the absolute positions */
     if (inside_active_area)
 	store_history(priv, hw->x, hw->y, hw->millis);
+
+    /* Save logical state for transition comparisons */
+    SynapticsCopyHwState(priv->old_hw_state, hw);
+
     return delay;
 }
 
