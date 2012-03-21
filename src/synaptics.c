@@ -2779,7 +2779,8 @@ update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
     /* Fingers emulate other buttons. ClickFinger can only be
        triggered on transition, when left is pressed
      */
-    if(hw->left && !old->left && hw->numFingers >= 1) {
+    if(hw->left && !old->left && !old->middle && !old->right &&
+       hw->numFingers >= 1) {
         handle_clickfinger(priv, hw);
     }
 
