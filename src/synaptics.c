@@ -521,7 +521,7 @@ static void set_softbutton_areas_option(InputInfoPtr pInfo)
     if (!pars->clickpad)
         return;
 
-    option_string = xf86CheckStrOption(pInfo->options, "SoftButtonAreas", NULL);
+    option_string = xf86SetStrOption(pInfo->options, "SoftButtonAreas", NULL);
     if (!option_string)
         return;
 
