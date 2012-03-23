@@ -35,7 +35,6 @@
 #include <xf86Xinput.h>
 #include <exevents.h>
 
-#include "synaptics.h"
 #include "synapticsstr.h"
 #include "synaptics-properties.h"
 

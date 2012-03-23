@@ -74,7 +74,6 @@
 #include <xserver-properties.h>
 #include <ptrveloc.h>
 
-#include "synaptics.h"
 #include "synapticsstr.h"
 #include "synaptics-properties.h"
 

@@ -43,12 +43,13 @@
 #include <X11/Xatom.h>
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XInput.h>
-#include "synaptics.h"
 #include "synaptics-properties.h"
 
 #ifndef XATOM_FLOAT
 #define XATOM_FLOAT "FLOAT"
 #endif
+
+#define SYN_MAX_BUTTONS 12
 
 union flong {                   /* Xlibs 64-bit property handling madness */
     long l;

@@ -22,7 +22,6 @@
  */
 
 #include "synproto.h"
-#include "synaptics.h"
 #include "synapticsstr.h"
 
 static int

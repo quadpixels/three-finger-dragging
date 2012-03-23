@@ -45,7 +45,6 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 
-#include "synaptics.h"
 #include "synaptics-properties.h"
 
 typedef enum {
