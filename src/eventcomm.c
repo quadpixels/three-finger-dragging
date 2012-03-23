@@ -78,6 +78,7 @@ struct eventcomm_proto_data
     int axis_map[MT_ABS_SIZE];
     int cur_slot;
     ValuatorMask **last_mt_vals;
+    int num_touches;
 #endif
 };
 
@@ -571,6 +572,7 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
             if (ev->value >= 0)
             {
                 hw->slot_state[slot_index] = SLOTSTATE_OPEN;
+                proto_data->num_touches++;
 
                 if (slot_index >= 0)
                     valuator_mask_copy(hw->mt_mask[slot_index],
@@ -580,7 +582,10 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
                                 "Attempted to copy values from out-of-range "
                                 "slot, touch events may be incorrect.\n");
             } else
+            {
                 hw->slot_state[slot_index] = SLOTSTATE_CLOSE;
+                proto_data->num_touches--;
+            }
         } else
         {
             int map = proto_data->axis_map[ev->code - ABS_MT_TOUCH_MAJOR];
@@ -613,9 +618,16 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
  * @param comm Assembled information from previous events.
  * @return The number of fingers currently set.
  */
-static int count_fingers(const struct CommData *comm)
+static int count_fingers(InputInfoPtr pInfo, const struct CommData *comm)
 {
+    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    struct eventcomm_proto_data *proto_data = priv->proto_data;
     int fingers = 0;
+
+#ifdef HAVE_MULTITOUCH
+    if (priv->has_touch)
+        return proto_data->num_touches;
+#endif
 
     if (comm->oneFinger)
 	fingers = 1;
@@ -659,7 +671,7 @@ EventReadHwState(InputInfoPtr pInfo,
 	case EV_SYN:
 	    switch (ev.code) {
 	    case SYN_REPORT:
-		hw->numFingers = count_fingers(comm);
+		hw->numFingers = count_fingers(pInfo, comm);
 		hw->millis = 1000 * ev.time.tv_sec + ev.time.tv_usec / 1000;
 		SynapticsCopyHwState(hwRet, hw);
 		return TRUE;
