@@ -13,7 +13,7 @@
  * Copyright © 2006 Christian Thaeter
  * Copyright © 2007 Joseph P. Skudlarek
  * Copyright © 2008 Fedor P. Goncharov
- * Copyright © 2008-2009 Red Hat, Inc.
+ * Copyright © 2008-2012 Red Hat, Inc.
  * Copyright © 2011 The Chromium OS Authors
  *
  * Permission to use, copy, modify, distribute, and sell this software
