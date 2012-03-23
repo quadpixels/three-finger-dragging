@@ -1798,7 +1798,6 @@ SelectTapButton(SynapticsPrivate *priv, edge_type edge)
 
     switch (priv->tap_max_fingers) {
     case 1:
-    default:
 	switch (edge) {
 	case RIGHT_TOP_EDGE:
 	    DBG(7, "right top edge\n");
@@ -1830,6 +1829,9 @@ SelectTapButton(SynapticsPrivate *priv, edge_type edge)
 	DBG(7, "three finger tap\n");
 	tap = F3_TAP;
 	break;
+    default:
+        priv->tap_button = 0;
+        return;
     }
 
     priv->tap_button = priv->synpara.tap_action[tap];
