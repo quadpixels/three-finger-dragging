@@ -36,10 +36,6 @@
 #define DBG(verb, msg, ...)     /* */
 #endif
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-#define xf86IDrvMsg(pInfo, type, ...) xf86Msg(type, __VA_ARGS__)
-#endif
-
 #ifdef AXIS_LABEL_PROP_REL_VSCROLL
 #define HAVE_SMOOTH_SCROLL
 #endif
@@ -249,13 +245,10 @@ struct _SynapticsPrivateRec {
     unsigned short id_vendor;   /* vendor id */
     unsigned short id_product;  /* product id */
 
-#ifdef HAVE_SMOOTH_SCROLL
     int scroll_axis_horiz;      /* Horizontal smooth-scrolling axis */
     int scroll_axis_vert;       /* Vertical smooth-scrolling axis */
     ValuatorMask *scroll_events_mask;   /* ValuatorMask for smooth-scrolling */
-#endif
 
-#ifdef HAVE_MULTITOUCH
     Bool has_touch;             /* Device has multitouch capabilities */
     int max_touches;            /* Number of touches supported */
     int num_mt_axes;            /* Number of multitouch axes other than X, Y */
@@ -263,7 +256,6 @@ struct _SynapticsPrivateRec {
     int num_slots;              /* Number of touch slots allocated */
     int *open_slots;            /* Array of currently open touch slots */
     int num_active_touches;     /* Number of active touches on device */
-#endif
 };
 
 #endif                          /* _SYNAPTICSSTR_H_ */

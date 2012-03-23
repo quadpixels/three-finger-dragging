@@ -124,12 +124,7 @@ typedef enum {
 /*****************************************************************************
  * Forward declaration
  ****************************************************************************/
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
 static int SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags);
-#else
-static InputInfoPtr SynapticsPreInit(InputDriverPtr drv, IDevPtr dev,
-                                     int flags);
-#endif
 static void SynapticsUnInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags);
 static Bool DeviceControl(DeviceIntPtr, int);
 static void ReadInput(InputInfoPtr);
@@ -357,16 +352,12 @@ set_percent_option(pointer options, const char *optname,
                    const int range, const int offset, const int default_value)
 {
     int result;
-
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 11
     double percent = xf86CheckPercentOption(options, optname, -1);
 
     if (percent >= 0.0) {
         percent = xf86SetPercentOption(options, optname, -1);
         result = percent / 100.0 * range + offset;
-    }
-    else
-#endif
+    } else
         result = xf86SetIntOption(options, optname, default_value);
 
     return result;
@@ -720,21 +711,11 @@ set_default_parameters(InputInfoPtr pInfo)
     set_softbutton_areas_option(pInfo);
 }
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 14
 static double
 SynapticsAccelerationProfile(DeviceIntPtr dev,
                              DeviceVelocityPtr vel,
                              double velocity, double thr, double acc)
 {
-#else
-static float
-SynapticsAccelerationProfile(DeviceIntPtr dev,
-                             DeviceVelocityPtr vel,
-                             float velocity_f, float thr_f, float acc_f)
-{
-    double velocity = velocity_f;
-    double acc = acc_f;
-#endif
     InputInfoPtr pInfo = dev->public.devicePrivate;
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters *para = &priv->synpara;
@@ -779,49 +760,8 @@ SynapticsAccelerationProfile(DeviceIntPtr dev,
     return accelfct;
 }
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-static int
- NewSynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags);
-
-/*
- *  called by the module loader for initialization
- */
-static InputInfoPtr
-SynapticsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
-{
-    InputInfoPtr pInfo;
-
-    /* Allocate a new InputInfoRec and add it to the head xf86InputDevs. */
-    pInfo = xf86AllocateInput(drv, 0);
-    if (!pInfo) {
-        return NULL;
-    }
-
-    /* initialize the InputInfoRec */
-    pInfo->name = dev->identifier;
-    pInfo->reverse_conversion_proc = NULL;
-    pInfo->dev = NULL;
-    pInfo->private_flags = 0;
-    pInfo->flags = XI86_SEND_DRAG_EVENTS;
-    pInfo->conf_idev = dev;
-    pInfo->always_core_feedback = 0;
-
-    xf86CollectInputOptions(pInfo, NULL, NULL);
-
-    if (NewSynapticsPreInit(drv, pInfo, flags) != Success)
-        return NULL;
-
-    pInfo->flags |= XI86_CONFIGURED;
-
-    return pInfo;
-}
-
-static int
-NewSynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
-#else
 static int
 SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
-#endif
 {
     SynapticsPrivate *priv;
 
@@ -925,14 +865,10 @@ SynapticsUnInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
         free(priv->timer);
     if (priv && priv->proto_data)
         free(priv->proto_data);
-#ifdef HAVE_SMOOTH_SCROLL
     if (priv && priv->scroll_events_mask)
         valuator_mask_free(&priv->scroll_events_mask);
-#endif
-#ifdef HAVE_MULTITOUCH
     if (priv && priv->open_slots)
         free(priv->open_slots);
-#endif
     free(pInfo->private);
     pInfo->private = NULL;
     xf86DeleteInput(pInfo, 0);
@@ -1093,19 +1029,15 @@ DeviceClose(DeviceIntPtr dev)
 static void
 InitAxesLabels(Atom *labels, int nlabels, const SynapticsPrivate * priv)
 {
-#ifdef HAVE_MULTITOUCH
     int i;
-#endif
 
     memset(labels, 0, nlabels * sizeof(Atom));
     switch (nlabels) {
     default:
-#ifdef HAVE_SMOOTH_SCROLL
     case 4:
         labels[3] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_VSCROLL);
     case 3:
         labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_HSCROLL);
-#endif
     case 2:
         labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y);
     case 1:
@@ -1113,14 +1045,12 @@ InitAxesLabels(Atom *labels, int nlabels, const SynapticsPrivate * priv)
         break;
     }
 
-#ifdef HAVE_MULTITOUCH
     for (i = 0; i < priv->num_mt_axes; i++) {
         SynapticsTouchAxisRec *axis = &priv->touch_axes[i];
         int axnum = nlabels - priv->num_mt_axes + i;
 
         labels[axnum] = XIGetKnownProperty(axis->label);
     }
-#endif
 }
 
 static void
@@ -1150,7 +1080,6 @@ InitButtonLabels(Atom *labels, int nlabels)
 static void
 DeviceInitTouch(DeviceIntPtr dev, Atom *axes_labels)
 {
-#ifdef HAVE_MULTITOUCH
     InputInfoPtr pInfo = dev->public.devicePrivate;
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     int i;
@@ -1197,7 +1126,6 @@ DeviceInitTouch(DeviceIntPtr dev, Atom *axes_labels)
             xf86InitValuatorDefaults(dev, axnum);
         }
     }
-#endif
 }
 
 static Bool
@@ -1215,13 +1143,9 @@ DeviceInit(DeviceIntPtr dev)
     Atom *axes_labels;
     DeviceVelocityPtr pVel;
 
-#ifdef HAVE_SMOOTH_SCROLL
     num_axes += 2;
-#endif
 
-#ifdef HAVE_MULTITOUCH
     num_axes += priv->num_mt_axes;
-#endif
 
     axes_labels = calloc(num_axes, sizeof(Atom));
     if (!axes_labels) {
@@ -1297,12 +1221,9 @@ DeviceInit(DeviceIntPtr dev)
         max = -1;
     }
 
-    xf86InitValuatorAxisStruct(dev, 0, axes_labels[0],
-                               min, max, priv->resx * 1000, 0, priv->resx * 1000
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
-                               , Relative
-#endif
-        );
+    xf86InitValuatorAxisStruct(dev, 0, axes_labels[0], min, max,
+			       priv->resx * 1000, 0, priv->resx * 1000,
+			       Relative);
     xf86InitValuatorDefaults(dev, 0);
 
     /* Y valuator */
@@ -1315,15 +1236,11 @@ DeviceInit(DeviceIntPtr dev)
         max = -1;
     }
 
-    xf86InitValuatorAxisStruct(dev, 1, axes_labels[1],
-                               min, max, priv->resy * 1000, 0, priv->resy * 1000
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
-                               , Relative
-#endif
-        );
+    xf86InitValuatorAxisStruct(dev, 1, axes_labels[1], min, max,
+			       priv->resy * 1000, 0, priv->resy * 1000,
+			       Relative);
     xf86InitValuatorDefaults(dev, 1);
 
-#ifdef HAVE_SMOOTH_SCROLL
     xf86InitValuatorAxisStruct(dev, 2, axes_labels[2], 0, -1, 0, 0, 0,
                                Relative);
     priv->scroll_axis_horiz = 2;
@@ -1340,7 +1257,6 @@ DeviceInit(DeviceIntPtr dev)
                       priv->synpara.scroll_dist_horiz, 0);
     SetScrollValuator(dev, priv->scroll_axis_vert, SCROLL_TYPE_VERTICAL,
                       priv->synpara.scroll_dist_vert, 0);
-#endif
 
     DeviceInitTouch(dev, axes_labels);
 
@@ -1368,9 +1284,7 @@ DeviceInit(DeviceIntPtr dev)
  fail:
     free(priv->local_hw_state);
     free(priv->hwState);
-#ifdef HAVE_MULTITOUCH
     free(priv->open_slots);
-#endif
     return !Success;
 }
 
@@ -2521,8 +2435,6 @@ clickpad_guess_clickfingers(SynapticsPrivate * priv,
                             struct SynapticsHwState *hw)
 {
     int nfingers = 0;
-
-#if HAVE_MULTITOUCH
     char close_point[SYNAPTICS_MAX_TOUCHES] = { 0 };    /* 1 for each point close
                                                            to another one */
     int i, j;
@@ -2566,7 +2478,6 @@ clickpad_guess_clickfingers(SynapticsPrivate * priv,
 
     for (i = 0; i < SYNAPTICS_MAX_TOUCHES; i++)
         nfingers += close_point[i];
-#endif
 
     return nfingers;
 }
@@ -2667,7 +2578,6 @@ post_scroll_events(const InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
 
-#ifdef HAVE_SMOOTH_SCROLL
     valuator_mask_zero(priv->scroll_events_mask);
 
     if (priv->scroll.delta_y != 0.0) {
@@ -2682,38 +2592,12 @@ post_scroll_events(const InputInfoPtr pInfo)
     }
     if (valuator_mask_num_valuators(priv->scroll_events_mask))
         xf86PostMotionEventM(pInfo->dev, FALSE, priv->scroll_events_mask);
-#else
-    SynapticsParameters *para = &priv->synpara;
-
-    /* smooth scrolling uses the dist as increment */
-
-    while (priv->scroll.delta_y <= -para->scroll_dist_vert) {
-        post_button_click(pInfo, 4);
-        priv->scroll.delta_y += para->scroll_dist_vert;
-    }
-
-    while (priv->scroll.delta_y >= para->scroll_dist_vert) {
-        post_button_click(pInfo, 5);
-        priv->scroll.delta_y -= para->scroll_dist_vert;
-    }
-
-    while (priv->scroll.delta_x <= -para->scroll_dist_horiz) {
-        post_button_click(pInfo, 6);
-        priv->scroll.delta_x += para->scroll_dist_horiz;
-    }
-
-    while (priv->scroll.delta_x >= para->scroll_dist_horiz) {
-        post_button_click(pInfo, 7);
-        priv->scroll.delta_x -= para->scroll_dist_horiz;
-    }
-#endif
 }
 
 /* Update the open slots and number of active touches */
 static void
 UpdateTouchState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
 {
-#ifdef HAVE_MULTITOUCH
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     int i;
 
@@ -2739,13 +2623,11 @@ UpdateTouchState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
     }
 
     SynapticsResetTouchHwState(hw, FALSE);
-#endif
 }
 
 static void
 HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
 {
-#ifdef HAVE_MULTITOUCH
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     SynapticsParameters *para = &priv->synpara;
     int new_active_touches = priv->num_active_touches;
@@ -2822,7 +2704,6 @@ HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
 
  out:
     UpdateTouchState(pInfo, hw);
-#endif
 }
 
 static void

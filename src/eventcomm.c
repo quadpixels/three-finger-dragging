@@ -42,9 +42,7 @@
 #include "synaptics.h"
 #include "synapticsstr.h"
 #include <xf86.h>
-#ifdef HAVE_MULTITOUCH
 #include <mtdev.h>
-#endif
 
 #ifndef INPUT_PROP_BUTTONPAD
 #define INPUT_PROP_BUTTONPAD 0x02
@@ -73,13 +71,11 @@ struct eventcomm_proto_data {
     BOOL need_grab;
     int st_to_mt_offset[2];
     double st_to_mt_scale[2];
-#ifdef HAVE_MULTITOUCH
     struct mtdev *mtdev;
     int axis_map[MT_ABS_SIZE];
     int cur_slot;
     ValuatorMask **last_mt_vals;
     int num_touches;
-#endif
 };
 
 struct eventcomm_proto_data *
@@ -97,7 +93,6 @@ EventProtoDataAlloc(void)
     return proto_data;
 }
 
-#ifdef HAVE_MULTITOUCH
 static int
 last_mt_vals_slot(const SynapticsPrivate * priv)
 {
@@ -180,7 +175,6 @@ InitializeTouch(InputInfoPtr pInfo)
             valuator_mask_set(proto_data->last_mt_vals[i], 4 + j, 0);
     }
 }
-#endif
 
 static Bool
 EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
@@ -203,9 +197,7 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
 
     proto_data->need_grab = FALSE;
 
-#ifdef HAVE_MULTITOUCH
     InitializeTouch(pInfo);
-#endif
 
     return TRUE;
 }
@@ -213,9 +205,7 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
 static Bool
 EventDeviceOffHook(InputInfoPtr pInfo)
 {
-#ifdef HAVE_MULTITOUCH
     UninitializeTouch(pInfo);
-#endif
 
     return Success;
 }
@@ -416,7 +406,6 @@ event_query_axis_ranges(InputInfoPtr pInfo)
         event_get_abs(pInfo, pInfo->fd, ABS_TOOL_WIDTH,
                       &priv->minw, &priv->maxw, NULL, NULL);
 
-#if HAVE_MULTITOUCH
     if (priv->has_touch) {
         int st_minx = priv->minx;
         int st_maxx = priv->maxx;
@@ -435,7 +424,6 @@ event_query_axis_ranges(InputInfoPtr pInfo)
         proto_data->st_to_mt_scale[1] =
             (priv->maxy - priv->miny) / (st_maxy - st_miny);
     }
-#endif
 
     SYSCALL(rc = ioctl(pInfo->fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits));
     if (rc >= 0) {
@@ -502,19 +490,15 @@ EventQueryHardware(InputInfoPtr pInfo)
 static Bool
 SynapticsReadEvent(InputInfoPtr pInfo, struct input_event *ev)
 {
-#ifdef HAVE_MULTITOUCH
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
-#endif
     int rc = TRUE;
     ssize_t len;
 
-#ifdef HAVE_MULTITOUCH
     if (proto_data->mtdev)
         len = mtdev_get(proto_data->mtdev, pInfo->fd, ev, 1) *
             sizeof(struct input_event);
     else
-#endif
         len = read(pInfo->fd, ev, sizeof(*ev));
     if (len <= 0) {
         /* We use X_NONE here because it doesn't alloc */
@@ -531,7 +515,6 @@ SynapticsReadEvent(InputInfoPtr pInfo, struct input_event *ev)
     return rc;
 }
 
-#ifdef HAVE_MULTITOUCH
 static Bool
 EventTouchSlotPreviouslyOpen(SynapticsPrivate * priv, int slot)
 {
@@ -543,13 +526,11 @@ EventTouchSlotPreviouslyOpen(SynapticsPrivate * priv, int slot)
 
     return FALSE;
 }
-#endif
 
 static void
 EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
                        struct input_event *ev)
 {
-#ifdef HAVE_MULTITOUCH
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
 
@@ -605,7 +586,6 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
             }
         }
     }
-#endif
 }
 
 /**
@@ -764,7 +744,6 @@ EventDevOnly(const struct dirent *dir)
     return strncmp(EVENT_DEV_NAME, dir->d_name, 5) == 0;
 }
 
-#ifdef HAVE_MULTITOUCH
 static void
 event_query_touch(InputInfoPtr pInfo)
 {
@@ -882,7 +861,6 @@ event_query_touch(InputInfoPtr pInfo)
  out:
     mtdev_close(mtdev);
 }
-#endif
 
 /**
  * Probe the open device for dimensions.
@@ -892,25 +870,17 @@ EventReadDevDimensions(InputInfoPtr pInfo)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
-
-#ifdef HAVE_MULTITOUCH
     int i;
-#endif
 
     proto_data = EventProtoDataAlloc();
     priv->proto_data = proto_data;
 
-#ifdef HAVE_MULTITOUCH
     for (i = 0; i < MT_ABS_SIZE; i++)
         proto_data->axis_map[i] = -1;
     proto_data->cur_slot = -1;
-#endif
 
-    if (event_query_is_touchpad
-        (pInfo->fd, (proto_data) ? proto_data->need_grab : TRUE)) {
-#ifdef HAVE_MULTITOUCH
+    if (event_query_is_touchpad(pInfo->fd, (proto_data) ? proto_data->need_grab : TRUE)) {
         event_query_touch(pInfo);
-#endif
         event_query_axis_ranges(pInfo);
     }
     event_query_model(pInfo->fd, &priv->model, &priv->id_vendor,

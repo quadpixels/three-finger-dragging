@@ -69,11 +69,9 @@ struct SynapticsHwState {
     Bool multi[8];
     Bool middle;                /* Some ALPS touchpads have a middle button */
 
-#ifdef HAVE_MULTITOUCH
     int num_mt_mask;
     ValuatorMask **mt_mask;
     enum SynapticsSlotState *slot_state;
-#endif
 };
 
 struct CommData {
