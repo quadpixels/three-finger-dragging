@@ -45,6 +45,12 @@
 #include <mtdev.h>
 #endif
 
+#ifndef INPUT_PROP_BUTTONPAD
+#define INPUT_PROP_BUTTONPAD 0x02
+#endif
+#ifndef INPUT_PROP_SEMI_MT
+#define INPUT_PROP_SEMI_MT 0x03
+#endif
 
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
@@ -760,6 +766,7 @@ event_query_touch(InputInfoPtr pInfo)
     priv->max_touches = 0;
     priv->num_mt_axes = 0;
 
+#ifdef EVIOCGPROP
     SYSCALL(rc = ioctl(pInfo->fd, EVIOCGPROP(sizeof(prop)), &prop));
     if (rc >= 0 && BitIsOn(&prop, INPUT_PROP_SEMI_MT))
     {
@@ -773,6 +780,7 @@ event_query_touch(InputInfoPtr pInfo)
         xf86IDrvMsg(pInfo, X_INFO, "found clickpad property\n");
         para->clickpad = TRUE;
     }
+#endif
 
     mtdev = mtdev_new_open(pInfo->fd);
     if (!mtdev)
