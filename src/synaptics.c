@@ -2330,39 +2330,36 @@ start_coasting(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	double pkt_time = HIST_DELTA(0, 3, millis) / 1000.0;
 	if (vert && !circ) {
 	    double dy = estimate_delta(HIST(0).y, HIST(1).y, HIST(2).y, HIST(3).y);
-	    int sdelta = para->scroll_dist_vert;
-	    if (pkt_time > 0 && sdelta > 0) {
-		double scrolls_per_sec = dy / pkt_time / sdelta;
+	    if (pkt_time > 0) {
+		double scrolls_per_sec = dy / pkt_time;
 		if (fabs(scrolls_per_sec) >= para->coasting_speed) {
 		    priv->scroll.coast_speed_y = scrolls_per_sec;
-		    priv->scroll.coast_delta_y = (hw->y - priv->scroll.last_y) / (double)sdelta;
+		    priv->scroll.coast_delta_y = (hw->y - priv->scroll.last_y);
 		}
 	    }
 	}
 	if (horiz && !circ){
 	    double dx = estimate_delta(HIST(0).x, HIST(1).x, HIST(2).x, HIST(3).x);
-	    int sdelta = para->scroll_dist_horiz;
-	    if (pkt_time > 0 && sdelta > 0) {
-		double scrolls_per_sec = dx / pkt_time / sdelta;
+	    if (pkt_time > 0) {
+		double scrolls_per_sec = dx / pkt_time;
 		if (fabs(scrolls_per_sec) >= para->coasting_speed) {
 		    priv->scroll.coast_speed_x = scrolls_per_sec;
-		    priv->scroll.coast_delta_x = (hw->x - priv->scroll.last_x) / (double)sdelta;
+		    priv->scroll.coast_delta_x = (hw->x - priv->scroll.last_x);
 		}
 	    }
 	}
 	if (circ) {
 	    double da = estimate_delta_circ(priv);
-	    double sdelta = para->scroll_dist_circ;
-	    if (pkt_time > 0 && sdelta > 0) {
-	        double scrolls_per_sec = da / pkt_time / sdelta;
+	    if (pkt_time > 0) {
+	        double scrolls_per_sec = da / pkt_time;
 	        if (fabs(scrolls_per_sec) >= para->coasting_speed) {
 	            if (vert) {
 	                priv->scroll.coast_speed_y = scrolls_per_sec;
-	                priv->scroll.coast_delta_y = diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y)) / sdelta;
+	                priv->scroll.coast_delta_y = diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y));
 	            }
 	            else if (horiz) {
 	                priv->scroll.coast_speed_x = scrolls_per_sec;
-	                priv->scroll.coast_delta_x = diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y)) / sdelta;
+	                priv->scroll.coast_delta_x = diffa(priv->scroll.last_a, angle(priv, hw->x, hw->y));
 	            }
 	        }
 	    }
