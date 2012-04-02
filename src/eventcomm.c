@@ -627,17 +627,17 @@ static int count_fingers(InputInfoPtr pInfo, const struct CommData *comm)
     struct eventcomm_proto_data *proto_data = priv->proto_data;
     int fingers = 0;
 
-#ifdef HAVE_MULTITOUCH
-    if (priv->has_touch)
-        return proto_data->num_touches;
-#endif
-
     if (comm->oneFinger)
 	fingers = 1;
     else if (comm->twoFingers)
 	fingers = 2;
     else if (comm->threeFingers)
 	fingers = 3;
+
+#ifdef HAVE_MULTITOUCH
+    if (priv->has_touch && proto_data->num_touches > fingers)
+        fingers = proto_data->num_touches;
+#endif
 
     return fingers;
 }
