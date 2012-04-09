@@ -564,6 +564,9 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
     {
         int slot_index = last_mt_vals_slot(priv);
 
+        if (slot_index < 0)
+            return;
+
         if (hw->slot_state[slot_index] == SLOTSTATE_EMPTY ||
             hw->slot_state[slot_index] == SLOTSTATE_OPEN_EMPTY)
             hw->slot_state[slot_index] = SLOTSTATE_UPDATE;
