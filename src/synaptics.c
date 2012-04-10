@@ -1186,7 +1186,7 @@ DeviceInitTouch(DeviceIntPtr dev, Atom *axes_labels)
 
     if (priv->has_touch)
     {
-        priv->num_slots = priv->max_touches ? priv->max_touches : 10;
+        priv->num_slots = priv->max_touches ? priv->max_touches : SYNAPTICS_MAX_TOUCHES;
 
         priv->open_slots = malloc(priv->num_slots * sizeof(int));
         if (!priv->open_slots)

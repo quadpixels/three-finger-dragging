@@ -49,6 +49,7 @@
  *					structs, typedefs, #defines, enums
  *****************************************************************************/
 #define SYNAPTICS_MOVE_HISTORY	5
+#define SYNAPTICS_MAX_TOUCHES	10
 
 typedef struct _SynapticsMoveHist
 {
