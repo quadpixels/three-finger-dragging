@@ -2624,7 +2624,10 @@ clickpad_guess_clickfingers(SynapticsPrivate *priv, struct SynapticsHwState *hw)
 {
     int nfingers = 0;
 #if HAVE_MULTITOUCH
+    char close_point[SYNAPTICS_MAX_TOUCHES] = {0}; /* 1 for each point close
+                                                      to another one */
     int i, j;
+
     for (i = 0; i < hw->num_mt_mask - 1; i++) {
         ValuatorMask *f1;
 
@@ -2655,14 +2658,18 @@ clickpad_guess_clickfingers(SynapticsPrivate *priv, struct SynapticsHwState *hw)
              * you'll need to find a touchpad that doesn't lie about it's
              * size. Good luck. */
             if (abs(x1 - x2) < (priv->maxx - priv->minx) * .3 &&
-                abs(y1 - y2) < (priv->maxy - priv->miny) * .3)
-                nfingers++;
+                abs(y1 - y2) < (priv->maxy - priv->miny) * .3) {
+                close_point[j] = 1;
+                close_point[i] = 1;
+            }
         }
     }
+
+    for (i = 0; i < SYNAPTICS_MAX_TOUCHES; i++)
+        nfingers += close_point[i];
 #endif
 
-    /* 1 doesn't make sense */
-    return nfingers ? nfingers + 1 : 0;
+    return nfingers;
 }
 
 
