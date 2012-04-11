@@ -446,6 +446,13 @@ dp_set_variables(Display *dpy, XDevice* dev, int argc, char *argv[], int first_c
 	XGetDeviceProperty(dpy, dev, prop, 0, 1000, False, AnyPropertyType,
 				&type, &format, &nitems, &bytes_after, &data);
 
+	if (type == None)
+	{
+	    fprintf(stderr, "Property for '%s' not available. Skipping.\n",
+		    par->name);
+	    continue;
+	}
+
 	switch(par->prop_format)
 	{
 	    case 8:
@@ -517,6 +524,8 @@ dp_show_settings(Display *dpy, XDevice *dev)
 	XGetDeviceProperty(dpy, dev, a, 0, len, False,
 				AnyPropertyType, &type, &format,
 				&nitems, &bytes_after, &data);
+	if (type == None)
+	    continue;
 
 	switch(par->prop_format) {
 	    case 8:
