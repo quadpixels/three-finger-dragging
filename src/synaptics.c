@@ -2558,14 +2558,14 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 
     if (priv->vert_scroll_edge_on || priv->vert_scroll_twofinger_on) {
 	/* + = down, - = up */
-	if (para->scroll_dist_vert > 0 && hw->y != priv->scroll.last_y) {
+	if (para->scroll_dist_vert != 0 && hw->y != priv->scroll.last_y) {
 	    priv->scroll.delta_y += (hw->y - priv->scroll.last_y);
 	    priv->scroll.last_y = hw->y;
 	}
     }
     if (priv->horiz_scroll_edge_on || priv->horiz_scroll_twofinger_on) {
 	/* + = right, - = left */
-	if (para->scroll_dist_horiz > 0 && hw->x != priv->scroll.last_x) {
+	if (para->scroll_dist_horiz != 0 && hw->x != priv->scroll.last_x) {
 	    priv->scroll.delta_x += (hw->x - priv->scroll.last_x);
 	    priv->scroll.last_x = hw->x;
 	}

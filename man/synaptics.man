@@ -634,6 +634,9 @@ HorizScrollDelta parameters.
 To disable vertical or horizontal scrolling, set VertScrollDelta or
 HorizScrollDelta to zero.
 .
+To invert the direction of vertical or horizontal scrolling, set
+VertScrollDelta or HorizScrollDelta to a negative value.
+.
 .LP
 Acceleration is mostly handled outside the driver, thus the driver will
 translate MinSpeed into constant deceleration and adapt MaxSpeed at
