@@ -2418,6 +2418,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 	    if (hw->numFingers == 2) {
 		if (!priv->vert_scroll_twofinger_on &&
 		    (para->scroll_twofinger_vert) && (para->scroll_dist_vert != 0)) {
+		    stop_coasting(priv);
 		    priv->vert_scroll_twofinger_on = TRUE;
 		    priv->vert_scroll_edge_on = FALSE;
 		    priv->scroll.last_y = hw->y;
@@ -2425,6 +2426,7 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
 		}
 		if (!priv->horiz_scroll_twofinger_on &&
 		    (para->scroll_twofinger_horiz) && (para->scroll_dist_horiz != 0)) {
+		    stop_coasting(priv);
 		    priv->horiz_scroll_twofinger_on = TRUE;
 		    priv->horiz_scroll_edge_on = FALSE;
 		    priv->scroll.last_x = hw->x;
