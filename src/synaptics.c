@@ -1635,6 +1635,10 @@ ReadInput(InputInfoPtr pInfo)
 	    hw->cumulative_dy = priv->hwState->cumulative_dy;
 	}
 
+	/* timer may cause actual events to lag behind (#48777) */
+	if (priv->hwState->millis > hw->millis)
+	    hw->millis = priv->hwState->millis;
+
 	SynapticsCopyHwState(priv->hwState, hw);
 	delay = HandleState(pInfo, hw, hw->millis, FALSE);
 	newDelay = TRUE;
