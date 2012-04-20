@@ -1846,7 +1846,7 @@ static void
 SetTapState(SynapticsPrivate *priv, enum TapState tap_state, CARD32 millis)
 {
     SynapticsParameters *para = &priv->synpara;
-    DBG(7, "SetTapState - %d -> %d (millis:%d)\n", priv->tap_state, tap_state, millis);
+    DBG(3, "SetTapState - %d -> %d (millis:%u)\n", priv->tap_state, tap_state, millis);
     switch (tap_state) {
     case TS_START:
 	priv->tap_button_state = TBS_BUTTON_UP;
@@ -1886,7 +1886,7 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, CARD32 millis)
 static void
 SetMovingState(SynapticsPrivate *priv, enum MovingState moving_state, CARD32 millis)
 {
-    DBG(7, "SetMovingState - %d -> %d center at %d/%d (millis:%d)\n", priv->moving_state,
+    DBG(7, "SetMovingState - %d -> %d center at %d/%d (millis:%u)\n", priv->moving_state,
 		  moving_state,priv->hwState->x, priv->hwState->y, millis);
 
     if (moving_state == MS_TRACKSTICK) {
