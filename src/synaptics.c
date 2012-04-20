@@ -1865,10 +1865,7 @@ SetTapState(SynapticsPrivate *priv, enum TapState tap_state, CARD32 millis)
 	priv->tap_button_state = TBS_BUTTON_UP;
 	break;
     case TS_3:
-	if (para->tap_and_drag_gesture)
-	    priv->tap_button_state = TBS_BUTTON_DOWN;
-	else
-	    priv->tap_button_state = TBS_BUTTON_UP;
+	priv->tap_button_state = TBS_BUTTON_DOWN;
 	break;
     case TS_SINGLETAP:
 	if (para->fast_taps)
