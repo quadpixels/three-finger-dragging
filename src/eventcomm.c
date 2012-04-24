@@ -128,6 +128,7 @@ UninitializeTouch(InputInfoPtr pInfo)
 
     mtdev_close(proto_data->mtdev);
     proto_data->mtdev = NULL;
+    proto_data->num_touches = 0;
 }
 
 static void

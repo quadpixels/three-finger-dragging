@@ -1086,6 +1086,7 @@ DeviceOff(DeviceIntPtr dev)
     if (pInfo->fd != -1) {
 	TimerCancel(priv->timer);
 	xf86RemoveEnabledDevice(pInfo);
+        SynapticsResetTouchHwState(priv->hwState);
         if (priv->proto_ops->DeviceOffHook &&
             !priv->proto_ops->DeviceOffHook(pInfo))
             rc = !Success;
