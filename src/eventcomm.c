@@ -150,6 +150,7 @@ InitializeTouch(InputInfoPtr pInfo)
     }
 
     proto_data->cur_slot = proto_data->mtdev->caps.slot.value;
+    proto_data->num_touches = 0;
 
     proto_data->last_mt_vals = calloc(priv->num_slots,
                                       sizeof(ValuatorMask *));
