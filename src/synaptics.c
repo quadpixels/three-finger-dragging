@@ -702,7 +702,7 @@ static void set_default_parameters(InputInfoPtr pInfo)
     pars->tap_move = xf86SetIntOption(opts, "MaxTapMove", tapMove);
     pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 180);
     pars->click_time = xf86SetIntOption(opts, "ClickTime", 100);
-    pars->clickpad = xf86SetIntOption(opts, "ClickPad", pars->clickpad); /* Probed */
+    pars->clickpad = xf86SetBoolOption(opts, "ClickPad", pars->clickpad); /* Probed */
     pars->fast_taps = xf86SetBoolOption(opts, "FastTaps", FALSE);
     /* middle mouse button emulation on a clickpad? nah, you're joking */
     middle_button_timeout = pars->clickpad ? 0 : 75;
