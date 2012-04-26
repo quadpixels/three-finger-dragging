@@ -2864,31 +2864,29 @@ post_scroll_events(const InputInfoPtr pInfo)
     SynapticsParameters *para = &priv->synpara;
 
     /* smooth scrolling uses the dist as increment */
-    priv->scroll.delta_y /= para->scroll_dist_vert;
-    priv->scroll.delta_x /= para->scroll_dist_horiz;
 
-    while (priv->scroll.delta_y <= -1.0)
+    while (priv->scroll.delta_y <= -para->scroll_dist_vert)
     {
         post_button_click(pInfo, 4);
-        priv->scroll.delta_y += 1.0;
+        priv->scroll.delta_y += para->scroll_dist_vert;
     }
 
-    while (priv->scroll.delta_y >= 1.0)
+    while (priv->scroll.delta_y >= para->scroll_dist_vert)
     {
         post_button_click(pInfo, 5);
-        priv->scroll.delta_y -= 1.0;
+        priv->scroll.delta_y -= para->scroll_dist_vert;
     }
 
-    while (priv->scroll.delta_x <= -1.0)
+    while (priv->scroll.delta_x <= -para->scroll_dist_horiz)
     {
         post_button_click(pInfo, 6);
-        priv->scroll.delta_x += 1.0;
+        priv->scroll.delta_x += para->scroll_dist_horiz;
     }
 
-    while (priv->scroll.delta_x >= 1.0)
+    while (priv->scroll.delta_x >= para->scroll_dist_horiz)
     {
         post_button_click(pInfo, 7);
-        priv->scroll.delta_x -= 1.0;
+        priv->scroll.delta_x -= para->scroll_dist_horiz;
     }
 #endif
 }
@@ -2934,13 +2932,13 @@ repeat_scrollbuttons(const InputInfoPtr pInfo,
 		id = ffs(change);
 		change &= ~(1 << (id - 1));
 		if (id == 4)
-		    priv->scroll.delta_y -= 1.0;
+		    priv->scroll.delta_y -= para->scroll_dist_vert;
 		else if (id == 5)
-		    priv->scroll.delta_y += 1.0;
+		    priv->scroll.delta_y += para->scroll_dist_vert;
 		else if (id == 6)
-		    priv->scroll.delta_x -= 1.0;
+		    priv->scroll.delta_x -= para->scroll_dist_horiz;
 		else if (id == 7)
-		    priv->scroll.delta_x += 1.0;
+		    priv->scroll.delta_x += para->scroll_dist_horiz;
 	    }
 
 	    priv->nextRepeat = now + repeat_delay;
