@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-input-synaptics],
-        [1.5.99.903],
+        [1.5.99.904],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-input-synaptics])
 AC_CONFIG_SRCDIR([Makefile.am])
