@@ -2398,6 +2398,8 @@ HandleScrolling(SynapticsPrivate *priv, struct SynapticsHwState *hw,
     /* scroll detection */
     if (finger && priv->finger_state == FS_UNTOUCHED) {
 	stop_coasting(priv);
+        priv->scroll.delta_y = 0;
+        priv->scroll.delta_x = 0;
 	if (para->circular_scrolling) {
 	    if ((para->circular_trigger == 0 && edge) ||
 		(para->circular_trigger == 1 && edge & TOP_EDGE) ||
