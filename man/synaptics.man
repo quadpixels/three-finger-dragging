@@ -53,9 +53,6 @@ middle button events.
 Not all models implement this feature.)
 .IP \(bu 4
 Pressure dependent motion speed.
-.IP \(bu 4
-Run-time configuration using shared memory. This means you can change
-parameter settings without restarting the X server.
 .LP
 Note that depending on the touchpad firmware, some of these features
 might be available even without using the synaptics driver. Note also
