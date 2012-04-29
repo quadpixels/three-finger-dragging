@@ -52,7 +52,7 @@ middle button events.
 .
 Not all models implement this feature.)
 .IP \(bu 4
-Pressure dependent motion speed.
+Pressure-dependent motion speed.
 .LP
 Note that depending on the touchpad firmware, some of these features
 might be available even without using the synaptics driver. Note also
