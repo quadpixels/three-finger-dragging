@@ -1619,7 +1619,7 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
 
     priv->hwState->millis += now - priv->timer_time;
     SynapticsCopyHwState(hw, priv->hwState);
-    SynapticsResetTouchHwState(hw);
+    SynapticsResetTouchHwState(hw, FALSE);
     delay = HandleState(pInfo, hw, hw->millis, TRUE);
 
     priv->timer_time = now;
@@ -1659,7 +1659,7 @@ ReadInput(InputInfoPtr pInfo)
     int delay = 0;
     Bool newDelay = FALSE;
 
-    SynapticsResetTouchHwState(hw);
+    SynapticsResetTouchHwState(hw, FALSE);
 
     while (SynapticsGetHwState(pInfo, priv, hw)) {
 	/* Semi-mt device touch slots do not track touches. When there is a
@@ -3017,7 +3017,7 @@ UpdateTouchState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
         }
     }
 
-    SynapticsResetTouchHwState(hw);
+    SynapticsResetTouchHwState(hw, FALSE);
 #endif
 }
 

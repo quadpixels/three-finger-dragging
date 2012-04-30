@@ -153,11 +153,11 @@ SynapticsResetHwState(struct SynapticsHwState *hw)
     hw->middle = 0;
     memset(hw->multi, 0, sizeof(hw->multi));
 
-    SynapticsResetTouchHwState(hw);
+    SynapticsResetTouchHwState(hw, TRUE);
 }
 
 void
-SynapticsResetTouchHwState(struct SynapticsHwState *hw)
+SynapticsResetTouchHwState(struct SynapticsHwState *hw, Bool set_slot_empty)
 {
 #ifdef HAVE_MULTITOUCH
     int i;
@@ -175,7 +175,7 @@ SynapticsResetTouchHwState(struct SynapticsHwState *hw)
             case SLOTSTATE_OPEN:
             case SLOTSTATE_OPEN_EMPTY:
             case SLOTSTATE_UPDATE:
-                hw->slot_state[i] = SLOTSTATE_OPEN_EMPTY;
+                hw->slot_state[i] = set_slot_empty ? SLOTSTATE_EMPTY : SLOTSTATE_OPEN_EMPTY;
                 break;
 
             default:

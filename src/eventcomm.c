@@ -662,7 +662,7 @@ EventReadHwState(InputInfoPtr pInfo,
     SynapticsParameters *para = &priv->synpara;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
 
-    SynapticsResetTouchHwState(hw);
+    SynapticsResetTouchHwState(hw, FALSE);
 
     /* Reset cumulative values if buttons were not previously pressed */
     if (!hw->left && !hw->right && !hw->middle)
