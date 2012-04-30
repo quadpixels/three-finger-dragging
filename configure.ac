@@ -115,6 +115,10 @@ case "${host}" in
 	BUILD_PS2COMM="yes"
 	BUILD_PSMCOMM="yes"
 	;;
+*solaris*)
+	AC_MSG_RESULT([ps2comm alpscomm])
+	BUILD_PS2COMM="yes"
+	;;
 *)
 	AC_MSG_RESULT([none])
 	;;
