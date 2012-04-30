@@ -119,6 +119,7 @@ extern struct SynapticsHwState *SynapticsHwStateAlloc(SynapticsPrivate *priv);
 extern void SynapticsHwStateFree(struct SynapticsHwState **hw);
 extern void SynapticsCopyHwState(struct SynapticsHwState *dst,
                                  const struct SynapticsHwState *src);
+extern void SynapticsResetHwState(struct SynapticsHwState *hw);
 extern void SynapticsResetTouchHwState(struct SynapticsHwState *hw);
 
 extern Bool SynapticsIsSoftButtonAreasValid(int *values);
