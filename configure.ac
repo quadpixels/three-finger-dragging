@@ -120,7 +120,7 @@ case "${host}" in
 	BUILD_PS2COMM="yes"
 	;;
 *)
-	AC_MSG_RESULT([none])
+	AC_MSG_ERROR([Cannot find suitable backends for this platform.])
 	;;
 esac
 if test "x$BUILD_EVENTCOMM" = xyes; then
