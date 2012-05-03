@@ -21,14 +21,13 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-
 #include "synproto.h"
 #include "synaptics.h"
 #include "synapticsstr.h"
 
 #ifdef HAVE_MULTITOUCH
 static int
-HwStateAllocTouch(struct SynapticsHwState *hw, SynapticsPrivate *priv)
+HwStateAllocTouch(struct SynapticsHwState *hw, SynapticsPrivate * priv)
 {
     int num_vals;
     int i = 0;
@@ -38,12 +37,11 @@ HwStateAllocTouch(struct SynapticsHwState *hw, SynapticsPrivate *priv)
     if (!hw->mt_mask)
         goto fail;
 
-    num_vals = 2; /* x and y */
-    num_vals += 2; /* scroll axes */
+    num_vals = 2;               /* x and y */
+    num_vals += 2;              /* scroll axes */
     num_vals += priv->num_mt_axes;
 
-    for (; i < hw->num_mt_mask; i++)
-    {
+    for (; i < hw->num_mt_mask; i++) {
         hw->mt_mask[i] = valuator_mask_new(num_vals);
         if (!hw->mt_mask[i])
             goto fail;
@@ -55,7 +53,7 @@ HwStateAllocTouch(struct SynapticsHwState *hw, SynapticsPrivate *priv)
 
     return Success;
 
-fail:
+ fail:
     for (i--; i >= 0; i--)
         valuator_mask_free(&hw->mt_mask[i]);
     free(hw->mt_mask);
@@ -65,7 +63,7 @@ fail:
 #endif
 
 struct SynapticsHwState *
-SynapticsHwStateAlloc(SynapticsPrivate *priv)
+SynapticsHwStateAlloc(SynapticsPrivate * priv)
 {
     struct SynapticsHwState *hw;
 
@@ -74,8 +72,7 @@ SynapticsHwStateAlloc(SynapticsPrivate *priv)
         return NULL;
 
 #ifdef HAVE_MULTITOUCH
-    if (HwStateAllocTouch(hw, priv) != Success)
-    {
+    if (HwStateAllocTouch(hw, priv) != Success) {
         free(hw);
         return NULL;
     }
@@ -162,25 +159,24 @@ SynapticsResetTouchHwState(struct SynapticsHwState *hw, Bool set_slot_empty)
 #ifdef HAVE_MULTITOUCH
     int i;
 
-    for (i = 0; i < hw->num_mt_mask; i++)
-    {
+    for (i = 0; i < hw->num_mt_mask; i++) {
         int j;
 
         /* Leave x and y valuators in case we need to restart touch */
         for (j = 2; j < valuator_mask_num_valuators(hw->mt_mask[i]); j++)
             valuator_mask_unset(hw->mt_mask[i], j);
 
-        switch (hw->slot_state[i])
-        {
-            case SLOTSTATE_OPEN:
-            case SLOTSTATE_OPEN_EMPTY:
-            case SLOTSTATE_UPDATE:
-                hw->slot_state[i] = set_slot_empty ? SLOTSTATE_EMPTY : SLOTSTATE_OPEN_EMPTY;
-                break;
+        switch (hw->slot_state[i]) {
+        case SLOTSTATE_OPEN:
+        case SLOTSTATE_OPEN_EMPTY:
+        case SLOTSTATE_UPDATE:
+            hw->slot_state[i] =
+                set_slot_empty ? SLOTSTATE_EMPTY : SLOTSTATE_OPEN_EMPTY;
+            break;
 
-            default:
-                hw->slot_state[i] = SLOTSTATE_EMPTY;
-                break;
+        default:
+            hw->slot_state[i] = SLOTSTATE_EMPTY;
+            break;
         }
     }
 #endif

@@ -55,7 +55,7 @@ create_pipe_fd(void)
 
 static void
 reset_data(struct SynapticsHwState **hw, struct CommData *comm,
-           SynapticsPrivate *priv)
+           SynapticsPrivate * priv)
 {
     SynapticsHwStateFree(&comm->hwState);
     memset(comm, 0, sizeof(struct CommData));
@@ -74,15 +74,12 @@ write_event(int fd, struct input_event *ev, int n)
     write(fd, &syn, sizeof(syn));
 }
 
-
 static void
-test_buttons(int fd,
-             InputInfoPtr pInfo,
-             struct CommData *comm)
+test_buttons(int fd, InputInfoPtr pInfo, struct CommData *comm)
 {
-    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     struct SynapticsHwState *hw = NULL;
-    struct input_event ev = {{0, 0}, EV_KEY, 0, 0};
+    struct input_event ev = { {0, 0}, EV_KEY, 0, 0 };
 
     reset_data(&hw, comm, priv);
 
@@ -97,19 +94,19 @@ test_buttons(int fd,
         EventReadHwState(pInfo, comm, hw);      \
         assert(hw->field == 0);
 
-    _test_press_release(BTN_LEFT,       left);
-    _test_press_release(BTN_RIGHT,      right);
-    _test_press_release(BTN_MIDDLE,     middle);
-    _test_press_release(BTN_FORWARD,    up);
-    _test_press_release(BTN_BACK,       down);
-    _test_press_release(BTN_0,          multi[0]);
-    _test_press_release(BTN_1,          multi[1]);
-    _test_press_release(BTN_2,          multi[2]);
-    _test_press_release(BTN_3,          multi[3]);
-    _test_press_release(BTN_4,          multi[4]);
-    _test_press_release(BTN_5,          multi[5]);
-    _test_press_release(BTN_6,          multi[6]);
-    _test_press_release(BTN_7,          multi[7]);
+    _test_press_release(BTN_LEFT, left);
+    _test_press_release(BTN_RIGHT, right);
+    _test_press_release(BTN_MIDDLE, middle);
+    _test_press_release(BTN_FORWARD, up);
+    _test_press_release(BTN_BACK, down);
+    _test_press_release(BTN_0, multi[0]);
+    _test_press_release(BTN_1, multi[1]);
+    _test_press_release(BTN_2, multi[2]);
+    _test_press_release(BTN_3, multi[3]);
+    _test_press_release(BTN_4, multi[4]);
+    _test_press_release(BTN_5, multi[5]);
+    _test_press_release(BTN_6, multi[6]);
+    _test_press_release(BTN_7, multi[7]);
 
     SynapticsHwStateFree(&hw);
 }
@@ -122,19 +119,19 @@ test_buttons(int fd,
 static void
 test_read_hw_state(void)
 {
-    InputInfoRec                info    = {0};
-    SynapticsPrivate            private;
-    struct SynapticsHwState     *hw     = NULL;
-    struct CommData             comm    = {0};
+    InputInfoRec info = { 0 };
+    SynapticsPrivate private;
+    struct SynapticsHwState *hw = NULL;
+    struct CommData comm = { 0 };
 
     struct input_event ev[] = {
-	{ {0, 0}, EV_KEY, BTN_TOOL_FINGER, 1 },
-	{ {0, 0}, EV_KEY, BTN_TOOL_DOUBLETAP, 1 },
-	{ {0, 0}, EV_KEY, BTN_TOOL_TRIPLETAP, 1 },
-	{ {0, 0}, EV_ABS, ABS_X, 42 },
-	{ {0, 0}, EV_ABS, ABS_Y, 21 },
-	{ {0, 0}, EV_ABS, ABS_PRESSURE, 56 },
-	{ {0, 0}, EV_ABS, ABS_TOOL_WIDTH, 204 },
+        {{0, 0}, EV_KEY, BTN_TOOL_FINGER, 1},
+        {{0, 0}, EV_KEY, BTN_TOOL_DOUBLETAP, 1},
+        {{0, 0}, EV_KEY, BTN_TOOL_TRIPLETAP, 1},
+        {{0, 0}, EV_ABS, ABS_X, 42},
+        {{0, 0}, EV_ABS, ABS_Y, 21},
+        {{0, 0}, EV_ABS, ABS_PRESSURE, 56},
+        {{0, 0}, EV_ABS, ABS_TOOL_WIDTH, 204},
     };
 
     memset(&private, 0, sizeof(private));
@@ -199,7 +196,7 @@ static Bool
 compare_hw_state(const struct SynapticsHwState *a,
                  const struct SynapticsHwState *b)
 {
-    #define COMPARE(x) \
+#define COMPARE(x) \
         if (a->x != b->x) return a->x - b->x
 
     COMPARE(millis);
@@ -216,7 +213,7 @@ compare_hw_state(const struct SynapticsHwState *a,
         return memcmp(a->multi, b->multi, sizeof(a->multi));
     COMPARE(middle);
 
-    #undef COMPARE
+#undef COMPARE
 
     return 0;
 }
@@ -229,11 +226,11 @@ static void
 test_ignore_hw_state(void)
 {
     int i;
-    InputInfoRec                info     = {0};
-    SynapticsPrivate            private;
-    struct SynapticsHwState     *hw      = NULL;
-    struct SynapticsHwState     *hw_zero = NULL;
-    struct CommData             comm     = {0};
+    InputInfoRec info = { 0 };
+    SynapticsPrivate private;
+    struct SynapticsHwState *hw = NULL;
+    struct SynapticsHwState *hw_zero = NULL;
+    struct CommData comm = { 0 };
 
     int known_abs[] = {
         ABS_X,
@@ -262,7 +259,7 @@ test_ignore_hw_state(void)
         BTN_TOUCH
     };
 
-    struct input_event ev = {{0, 0}, 0, 0, 1};
+    struct input_event ev = { {0, 0}, 0, 0, 1 };
 
     memset(&private, 0, sizeof(private));
     info.private = &private;
@@ -281,9 +278,7 @@ test_ignore_hw_state(void)
         EventReadHwState(&info, &comm, hw);            \
         assert(compare_hw_state(hw, hw_zero) == 0);
 
-
-    for (i = ABS_X; i < ABS_MAX; i++)
-    {
+    for (i = ABS_X; i < ABS_MAX; i++) {
         int j, skip = 0;
 
         for (j = 0; j < ArrayLength(known_abs); j++) {
@@ -299,9 +294,9 @@ test_ignore_hw_state(void)
         _assert_no_change(EV_ABS, i);
     }
 
-    for (i = KEY_RESERVED; i < KEY_MAX; i++)
-    {
+    for (i = KEY_RESERVED; i < KEY_MAX; i++) {
         int j, skip = 0;
+
         for (j = 0; j < ArrayLength(known_keys); j++) {
             if (i == known_keys[j]) {
                 skip = 1;
@@ -321,7 +316,8 @@ test_ignore_hw_state(void)
     SynapticsHwStateFree(&comm.hwState);
 }
 
-int main (int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     create_pipe_fd();
 

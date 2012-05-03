@@ -37,8 +37,7 @@
 struct _SynapticsPrivateRec;
 typedef struct _SynapticsPrivateRec SynapticsPrivate;
 
-enum SynapticsSlotState
-{
+enum SynapticsSlotState {
     SLOTSTATE_EMPTY = 0,
     SLOTSTATE_OPEN,
     SLOTSTATE_CLOSE,
@@ -53,12 +52,12 @@ enum SynapticsSlotState
  * A structure to describe the state of the touchpad hardware (buttons and pad)
  */
 struct SynapticsHwState {
-    CARD32 millis;		/* Timestamp in milliseconds */
-    int x;			/* X position of finger */
-    int y;			/* Y position of finger */
-    int z;			/* Finger pressure */
-    int cumulative_dx;		/* Cumulative delta X for clickpad dragging */
-    int cumulative_dy;		/* Cumulative delta Y for clickpad dragging */
+    CARD32 millis;              /* Timestamp in milliseconds */
+    int x;                      /* X position of finger */
+    int y;                      /* Y position of finger */
+    int z;                      /* Finger pressure */
+    int cumulative_dx;          /* Cumulative delta X for clickpad dragging */
+    int cumulative_dy;          /* Cumulative delta Y for clickpad dragging */
     int numFingers;
     int fingerWidth;
 
@@ -68,7 +67,7 @@ struct SynapticsHwState {
     Bool down;
 
     Bool multi[8];
-    Bool middle;		/* Some ALPS touchpads have a middle button */
+    Bool middle;                /* Some ALPS touchpads have a middle button */
 
 #ifdef HAVE_MULTITOUCH
     int num_mt_mask;
@@ -79,10 +78,10 @@ struct SynapticsHwState {
 
 struct CommData {
     XISBuffer *buffer;
-    unsigned char protoBuf[6];		/* Buffer for Packet */
-    unsigned char lastByte;		/* Last read byte. Use for reset sequence detection. */
-    int outOfSync;			/* How many consecutive incorrect packets we
-					   have received */
+    unsigned char protoBuf[6];  /* Buffer for Packet */
+    unsigned char lastByte;     /* Last read byte. Use for reset sequence detection. */
+    int outOfSync;              /* How many consecutive incorrect packets we
+                                   have received */
     int protoBufTail;
 
     /* Used for keeping track of partial HwState updates. */
@@ -95,33 +94,36 @@ struct CommData {
 struct _SynapticsParameters;
 
 struct SynapticsProtocolOperations {
-    Bool (*DeviceOnHook)(InputInfoPtr pInfo, struct _SynapticsParameters *para);
-    Bool (*DeviceOffHook)(InputInfoPtr pInfo);
-    Bool (*QueryHardware)(InputInfoPtr pInfo);
-    Bool (*ReadHwState)(InputInfoPtr pInfo,
-			struct CommData *comm, struct SynapticsHwState *hwRet);
-    Bool (*AutoDevProbe)(InputInfoPtr pInfo, const char *device);
-    void (*ReadDevDimensions)(InputInfoPtr pInfo);
+    Bool (*DeviceOnHook) (InputInfoPtr pInfo,
+                          struct _SynapticsParameters * para);
+    Bool (*DeviceOffHook) (InputInfoPtr pInfo);
+    Bool (*QueryHardware) (InputInfoPtr pInfo);
+    Bool (*ReadHwState) (InputInfoPtr pInfo,
+                         struct CommData * comm,
+                         struct SynapticsHwState * hwRet);
+    Bool (*AutoDevProbe) (InputInfoPtr pInfo, const char *device);
+    void (*ReadDevDimensions) (InputInfoPtr pInfo);
 };
 
 #ifdef BUILD_PS2COMM
 extern struct SynapticsProtocolOperations psaux_proto_operations;
 extern struct SynapticsProtocolOperations alps_proto_operations;
-#endif /* BUILD_PS2COMM */
+#endif                          /* BUILD_PS2COMM */
 #ifdef BUILD_EVENTCOMM
 extern struct SynapticsProtocolOperations event_proto_operations;
-#endif /* BUILD_EVENTCOMM */
+#endif                          /* BUILD_EVENTCOMM */
 #ifdef BUILD_PSMCOMM
 extern struct SynapticsProtocolOperations psm_proto_operations;
-#endif /* BUILD_PSMCOMM */
+#endif                          /* BUILD_PSMCOMM */
 
-extern struct SynapticsHwState *SynapticsHwStateAlloc(SynapticsPrivate *priv);
+extern struct SynapticsHwState *SynapticsHwStateAlloc(SynapticsPrivate * priv);
 extern void SynapticsHwStateFree(struct SynapticsHwState **hw);
 extern void SynapticsCopyHwState(struct SynapticsHwState *dst,
                                  const struct SynapticsHwState *src);
 extern void SynapticsResetHwState(struct SynapticsHwState *hw);
-extern void SynapticsResetTouchHwState(struct SynapticsHwState *hw, Bool force_empty);
+extern void SynapticsResetTouchHwState(struct SynapticsHwState *hw,
+                                       Bool force_empty);
 
 extern Bool SynapticsIsSoftButtonAreasValid(int *values);
 
-#endif /* _SYNPROTO_H_ */
+#endif                          /* _SYNPROTO_H_ */
