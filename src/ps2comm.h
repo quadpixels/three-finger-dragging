@@ -27,7 +27,7 @@
 #include "xf86_OSproc.h"
 
 /* acknowledge for commands and parameter */
-#define PS2_ACK 			0xFA
+#define PS2_ACK				0xFA
 #define PS2_ERROR			0xFC
 
 /* standard PS/2 commands */
@@ -56,7 +56,7 @@
 #define SYN_BIT_W_MODE			(1 << 0)
 
 /* synaptics model ID bits */
-#define SYN_MODEL_ROT180(synhw) 	((synhw)->model_id & (1 << 23))
+#define SYN_MODEL_ROT180(synhw)		((synhw)->model_id & (1 << 23))
 #define SYN_MODEL_PORTRAIT(synhw)	((synhw)->model_id & (1 << 22))
 #define SYN_MODEL_SENSOR(synhw)		(((synhw)->model_id >> 16) & 0x3f)
 #define SYN_MODEL_HARDWARE(synhw)	(((synhw)->model_id >> 9) & 0x7f)
