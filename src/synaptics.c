@@ -2539,14 +2539,23 @@ update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
 
     /* If this is a clickpad and the user clicks in a soft button area, press
      * the soft button instead. */
-    if (para->clickpad && hw->left && !hw->right && !hw->middle) {
-        if (is_inside_rightbutton_area(para, hw->x, hw->y)) {
-            hw->left = 0;
-            hw->right = 1;
+    if (para->clickpad) {
+        /* hw->left is down, but no other buttons were already down */
+        if (!old->left && !old->right && !old->middle &&
+            hw->left && !hw->right && !hw->middle) {
+                if (is_inside_rightbutton_area(para, hw->x, hw->y)) {
+                    hw->left = 0;
+                    hw->right = 1;
+                }
+                else if (is_inside_middlebutton_area(para, hw->x, hw->y)) {
+                    hw->left = 0;
+                    hw->middle = 1;
+                }
         }
-        else if (is_inside_middlebutton_area(para, hw->x, hw->y)) {
-            hw->left = 0;
-            hw->middle = 1;
+        else if (hw->left) {
+            hw->left = old->left;
+            hw->right = old->right;
+            hw->middle = old->middle;
         }
     }
 
