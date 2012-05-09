@@ -169,7 +169,7 @@ typedef struct _SynapticsParameters {
     Bool palm_detect;           /* Enable Palm Detection */
     int palm_min_width;         /* Palm detection width */
     int palm_min_z;             /* Palm detection depth */
-    double coasting_speed;      /* Coasting threshold scrolling speed */
+    double coasting_speed;      /* Coasting threshold scrolling speed in scrolls/s */
     double coasting_friction;   /* Number of scrolls per second per second to change coasting speed */
     int press_motion_min_z;     /* finger pressure at which minimum pressure motion factor is applied */
     int press_motion_max_z;     /* finger pressure at which maximum pressure motion factor is applied */
@@ -213,8 +213,8 @@ struct _SynapticsPrivateRec {
         double delta_y;         /* accumulated vert scroll delta */
         double last_a;          /* last angle-scroll position */
         CARD32 last_millis;     /* time last scroll event posted */
-        double coast_speed_x;   /* Horizontal coasting speed */
-        double coast_speed_y;   /* Vertical coasting speed */
+        double coast_speed_x;   /* Horizontal coasting speed in scrolls/s */
+        double coast_speed_y;   /* Vertical coasting speed in scrolls/s */
         double coast_delta_x;   /* Accumulated horizontal coast delta */
         double coast_delta_y;   /* Accumulated vertical coast delta */
         int packets_this_scroll;        /* Events received for this scroll */

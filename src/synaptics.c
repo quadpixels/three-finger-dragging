@@ -2109,7 +2109,7 @@ start_coasting(SynapticsPrivate * priv, struct SynapticsHwState *hw,
             double dy =
                 estimate_delta(HIST(0).y, HIST(1).y, HIST(2).y, HIST(3).y);
             if (pkt_time > 0) {
-                double scrolls_per_sec = dy / pkt_time;
+                double scrolls_per_sec = (dy / abs(para->scroll_dist_vert)) / pkt_time;
 
                 if (fabs(scrolls_per_sec) >= para->coasting_speed) {
                     priv->scroll.coast_speed_y = scrolls_per_sec;
@@ -2121,7 +2121,7 @@ start_coasting(SynapticsPrivate * priv, struct SynapticsHwState *hw,
             double dx =
                 estimate_delta(HIST(0).x, HIST(1).x, HIST(2).x, HIST(3).x);
             if (pkt_time > 0) {
-                double scrolls_per_sec = dx / pkt_time;
+                double scrolls_per_sec = (dx / abs(para->scroll_dist_vert)) / pkt_time;
 
                 if (fabs(scrolls_per_sec) >= para->coasting_speed) {
                     priv->scroll.coast_speed_x = scrolls_per_sec;
@@ -2133,7 +2133,7 @@ start_coasting(SynapticsPrivate * priv, struct SynapticsHwState *hw,
             double da = estimate_delta_circ(priv);
 
             if (pkt_time > 0) {
-                double scrolls_per_sec = da / pkt_time;
+                double scrolls_per_sec = (da / para->scroll_dist_circ) / pkt_time;
 
                 if (fabs(scrolls_per_sec) >= para->coasting_speed) {
                     if (vert) {
@@ -2391,10 +2391,9 @@ HandleScrolling(SynapticsPrivate * priv, struct SynapticsHwState *hw,
 
     if (priv->scroll.coast_speed_y) {
         double dtime = (hw->millis - priv->scroll.last_millis) / 1000.0;
-        double ddy =
-            para->coasting_friction * dtime * abs(para->scroll_dist_vert);
+        double ddy = para->coasting_friction * dtime;
 
-        priv->scroll.delta_y += priv->scroll.coast_speed_y * dtime;
+        priv->scroll.delta_y += priv->scroll.coast_speed_y * dtime * para->scroll_dist_vert;
         delay = MIN(delay, POLL_MS);
         if (abs(priv->scroll.coast_speed_y) < ddy) {
             priv->scroll.coast_speed_y = 0;
@@ -2408,9 +2407,8 @@ HandleScrolling(SynapticsPrivate * priv, struct SynapticsHwState *hw,
 
     if (priv->scroll.coast_speed_x) {
         double dtime = (hw->millis - priv->scroll.last_millis) / 1000.0;
-        double ddx =
-            para->coasting_friction * dtime * abs(para->scroll_dist_horiz);
-        priv->scroll.delta_x += priv->scroll.coast_speed_x * dtime;
+        double ddx = para->coasting_friction * dtime;
+        priv->scroll.delta_x += priv->scroll.coast_speed_x * dtime * para->scroll_dist_vert;
         delay = MIN(delay, POLL_MS);
         if (abs(priv->scroll.coast_speed_x) < ddx) {
             priv->scroll.coast_speed_x = 0;
