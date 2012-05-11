@@ -2624,7 +2624,9 @@ UpdateTouchState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
                     priv->open_slots[j] = priv->open_slots[j + 1];
             }
 
-            priv->num_active_touches--;
+            BUG_WARN(priv->num_active_touches == 0);
+            if (priv->num_active_touches > 0)
+                priv->num_active_touches--;
         }
     }
 
