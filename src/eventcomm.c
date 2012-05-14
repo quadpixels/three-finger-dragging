@@ -545,8 +545,7 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
         if (slot_index < 0)
             return;
 
-        if (hw->slot_state[slot_index] == SLOTSTATE_EMPTY ||
-            hw->slot_state[slot_index] == SLOTSTATE_OPEN_EMPTY)
+        if (hw->slot_state[slot_index] == SLOTSTATE_OPEN_EMPTY)
             hw->slot_state[slot_index] = SLOTSTATE_UPDATE;
         if (ev->code == ABS_MT_TRACKING_ID) {
             if (ev->value >= 0) {
@@ -561,7 +560,7 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
                                 "Attempted to copy values from out-of-range "
                                 "slot, touch events may be incorrect.\n");
             }
-            else {
+            else if (hw->slot_state[slot_index] != SLOTSTATE_EMPTY) {
                 hw->slot_state[slot_index] = SLOTSTATE_CLOSE;
                 proto_data->num_touches--;
             }
