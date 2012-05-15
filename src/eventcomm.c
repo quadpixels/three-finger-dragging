@@ -608,10 +608,8 @@ count_fingers(InputInfoPtr pInfo, const struct CommData *comm)
     else if (comm->threeFingers)
         fingers = 3;
 
-#ifdef HAVE_MULTITOUCH
     if (priv->has_touch && proto_data->num_touches > fingers)
         fingers = proto_data->num_touches;
-#endif
 
     return fingers;
 }
