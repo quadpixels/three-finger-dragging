@@ -978,6 +978,7 @@ SynapticsReset(SynapticsPrivate * priv)
     priv->lastButtons = 0;
     priv->prev_z = 0;
     priv->prevFingers = 0;
+    memset(priv->open_slots, 0, priv->num_slots * sizeof(int));
 }
 
 static Bool
