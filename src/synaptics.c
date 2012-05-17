@@ -2767,6 +2767,19 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
         return delay;
     }
 
+    /* We need both and x/y, the driver can't handle just one of the two
+     * yet. But since it's possible to hit a phys button on non-clickpads
+     * without ever getting motion data first, we must continue with 0/0 for
+     * that case. */
+    if (hw->x == INT_MIN || hw->y == INT_MAX) {
+        if (para->clickpad)
+            return delay;
+        else if (hw->left || hw->right || hw->middle) {
+            hw->x = (hw->x == INT_MIN) ? 0 : hw->x;
+            hw->y = (hw->y == INT_MIN) ? 0 : hw->y;
+        }
+    }
+
     /* If a physical button is pressed on a clickpad, use cumulative relative
      * touch movements for motion */
     if (para->clickpad && (hw->left || hw->right || hw->middle)) {
