@@ -23,7 +23,6 @@
 #define _SYNAPTICSSTR_H_
 
 #include "synproto.h"
-#include <xserver-properties.h>
 
 #ifdef DBG
 #undef DBG

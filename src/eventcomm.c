@@ -30,6 +30,7 @@
 #endif
 
 #include <xorg-server.h>
+#include <xserver-properties.h>
 #include "eventcomm.h"
 #include <errno.h>
 #include <sys/types.h>
