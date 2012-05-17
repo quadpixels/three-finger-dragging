@@ -471,6 +471,9 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
             return BadMatch;
 
         dist = (INT32 *) prop->data;
+        if (dist[0] == 0 || dist[1] == 0)
+            return BadValue;
+
         if (para->scroll_dist_vert != dist[0]) {
             para->scroll_dist_vert = dist[0];
             SetScrollValuator(dev, priv->scroll_axis_vert, SCROLL_TYPE_VERTICAL,
@@ -589,6 +592,9 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
             return BadMatch;
 
         circdist = *(float *) prop->data;
+        if (circdist == 0)
+            return BadValue;
+
         para->scroll_dist_circ = circdist;
     }
     else if (property == prop_circscroll_trigger) {
