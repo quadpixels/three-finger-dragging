@@ -2839,10 +2839,8 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 
     dx = dy = 0;
 
-    if (!priv->absolute_events) {
-        timeleft = ComputeDeltas(priv, hw, edge, &dx, &dy, inside_active_area);
-        delay = MIN(delay, timeleft);
-    }
+    timeleft = ComputeDeltas(priv, hw, edge, &dx, &dy, inside_active_area);
+    delay = MIN(delay, timeleft);
 
     buttons = ((hw->left ? 0x01 : 0) |
                (hw->middle ? 0x02 : 0) |
@@ -2867,14 +2865,8 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     }
 
     /* Post events */
-    if (finger >= FS_TOUCHED) {
-        if (priv->absolute_events && inside_active_area) {
-            xf86PostMotionEvent(pInfo->dev, 1, 0, 2, hw->x, hw->y);
-        }
-        else if (dx || dy) {
-            xf86PostMotionEvent(pInfo->dev, 0, 0, 2, dx, dy);
-        }
-    }
+    if (finger >= FS_TOUCHED && (dx || dy))
+        xf86PostMotionEvent(pInfo->dev, 0, 0, 2, dx, dy);
 
     if (priv->mid_emu_state == MBE_LEFT_CLICK) {
         post_button_click(pInfo, 1);
@@ -2933,25 +2925,9 @@ ControlProc(InputInfoPtr pInfo, xDeviceCtl * control)
 static int
 SwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
 {
-    InputInfoPtr pInfo = (InputInfoPtr) dev->public.devicePrivate;
-    SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
-
     DBG(3, "SwitchMode called\n");
 
-    switch (mode) {
-    case Absolute:
-        priv->absolute_events = TRUE;
-        break;
-
-    case Relative:
-        priv->absolute_events = FALSE;
-        break;
-
-    default:
-        return XI_BadMode;
-    }
-
-    return Success;
+    return XI_BadMode;
 }
 
 static void
