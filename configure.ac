@@ -61,9 +61,6 @@ PKG_CHECK_MODULES(XORG, [inputproto >= 2.1.99.3] [xorg-server >= 1.12] xproto in
 sdkdir=`$PKG_CONFIG --variable=sdkdir xorg-server`
 AC_SUBST([sdkdir])
 
-DRIVER_NAME=synaptics
-AC_SUBST([DRIVER_NAME])
-
 # -----------------------------------------------------------------------------
 #			Configuration options
 # -----------------------------------------------------------------------------
