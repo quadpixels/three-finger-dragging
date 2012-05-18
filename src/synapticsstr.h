@@ -35,10 +35,6 @@
 #define DBG(verb, msg, ...)     /* */
 #endif
 
-#ifdef AXIS_LABEL_PROP_REL_VSCROLL
-#define HAVE_SMOOTH_SCROLL
-#endif
-
 /******************************************************************************
  *		Definitions
  *					structs, typedefs, #defines, enums
