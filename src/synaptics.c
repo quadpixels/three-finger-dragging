@@ -147,20 +147,16 @@ const static struct {
     struct SynapticsProtocolOperations *proto_ops;
 } protocols[] = {
 #ifdef BUILD_EVENTCOMM
-    {
-    "event", &event_proto_operations},
+    { "event", &event_proto_operations },
 #endif
 #ifdef BUILD_PSMCOMM
-    {
-    "psm", &psm_proto_operations},
+    { "psm", &psm_proto_operations },
 #endif
 #ifdef BUILD_PS2COMM
-    {
-    "psaux", &psaux_proto_operations}, {
-    "alps", &alps_proto_operations},
+    { "psaux", &psaux_proto_operations },
+    { "alps", &alps_proto_operations },
 #endif
-    {
-    NULL, NULL}
+    { NULL, NULL }
 };
 
 InputDriverRec SYNAPTICS = {
