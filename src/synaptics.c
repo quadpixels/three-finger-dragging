@@ -131,10 +131,10 @@ static int HandleState(InputInfoPtr, struct SynapticsHwState *, CARD32 now,
                        Bool from_timer);
 static int ControlProc(InputInfoPtr, xDeviceCtl *);
 static int SwitchMode(ClientPtr, DeviceIntPtr, int);
-static Bool DeviceInit(DeviceIntPtr);
-static Bool DeviceOn(DeviceIntPtr);
-static Bool DeviceOff(DeviceIntPtr);
-static Bool DeviceClose(DeviceIntPtr);
+static int DeviceInit(DeviceIntPtr);
+static int DeviceOn(DeviceIntPtr);
+static int DeviceOff(DeviceIntPtr);
+static int DeviceClose(DeviceIntPtr);
 static Bool QueryHardware(InputInfoPtr);
 static void ReadDevDimensions(InputInfoPtr);
 static void ScaleCoordinates(SynapticsPrivate * priv,
@@ -882,7 +882,7 @@ SynapticsCtrl(DeviceIntPtr device, PtrCtrl * ctrl)
 {
 }
 
-static Bool
+static int
 DeviceControl(DeviceIntPtr dev, int mode)
 {
     Bool RetValue;
@@ -907,7 +907,7 @@ DeviceControl(DeviceIntPtr dev, int mode)
     return RetValue;
 }
 
-static Bool
+static int
 DeviceOn(DeviceIntPtr dev)
 {
     InputInfoPtr pInfo = dev->public.devicePrivate;
@@ -981,7 +981,7 @@ SynapticsReset(SynapticsPrivate * priv)
     memset(priv->open_slots, 0, priv->num_slots * sizeof(int));
 }
 
-static Bool
+static int
 DeviceOff(DeviceIntPtr dev)
 {
     InputInfoPtr pInfo = dev->public.devicePrivate;
@@ -1009,7 +1009,7 @@ DeviceOff(DeviceIntPtr dev)
     return rc;
 }
 
-static Bool
+static int
 DeviceClose(DeviceIntPtr dev)
 {
     Bool RetValue;
@@ -1128,7 +1128,7 @@ DeviceInitTouch(DeviceIntPtr dev, Atom *axes_labels)
     }
 }
 
-static Bool
+static int
 DeviceInit(DeviceIntPtr dev)
 {
     InputInfoPtr pInfo = dev->public.devicePrivate;
