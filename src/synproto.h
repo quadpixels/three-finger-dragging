@@ -27,12 +27,14 @@
 #ifndef _SYNPROTO_H_
 #define _SYNPROTO_H_
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <xf86Xinput.h>
 #include <xisb.h>
-
-#include "config.h"
 
 struct _SynapticsPrivateRec;
 typedef struct _SynapticsPrivateRec SynapticsPrivate;
