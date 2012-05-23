@@ -48,7 +48,7 @@
 #define SYNAPTICS_MAX_TOUCHES	10
 #define SYN_MAX_BUTTONS 12      /* Max number of mouse buttons */
 
-typedef enum {
+enum TapEvent {
     RT_TAP = 0,                 /* Right top corner */
     RB_TAP,                     /* Right bottom corner */
     LT_TAP,                     /* Left top corner */
@@ -57,14 +57,14 @@ typedef enum {
     F2_TAP,                     /* Non-corner tap, two fingers */
     F3_TAP,                     /* Non-corner tap, three fingers */
     MAX_TAP
-} TapEvent;
+};
 
-typedef enum {
+enum ClickFingerEvent {
     F1_CLICK1 = 0,              /* Click left, one finger */
     F2_CLICK1,                  /* Click left, two fingers */
     F3_CLICK1,                  /* Click left, three fingers */
     MAX_CLICK
-} ClickFingerEvent;
+};
 
 
 typedef struct _SynapticsMoveHist {

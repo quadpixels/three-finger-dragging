@@ -77,7 +77,7 @@
 #include "synapticsstr.h"
 #include "synaptics-properties.h"
 
-typedef enum {
+enum EdgeType {
     NO_EDGE = 0,
     BOTTOM_EDGE = 1,
     TOP_EDGE = 2,
@@ -87,7 +87,7 @@ typedef enum {
     RIGHT_BOTTOM_EDGE = BOTTOM_EDGE | RIGHT_EDGE,
     RIGHT_TOP_EDGE = TOP_EDGE | RIGHT_EDGE,
     LEFT_TOP_EDGE = TOP_EDGE | LEFT_EDGE
-} edge_type;
+};
 
 /*
  * We expect to be receiving a steady 80 packets/sec (which gives 40
@@ -1307,10 +1307,10 @@ diffa(double a1, double a2)
     return da;
 }
 
-static edge_type
+static enum EdgeType
 edge_detection(SynapticsPrivate * priv, int x, int y)
 {
-    edge_type edge = NO_EDGE;
+    enum EdgeType edge = NO_EDGE;
 
     if (x > priv->synpara.right_edge)
         edge |= RIGHT_EDGE;
@@ -1621,9 +1621,9 @@ SynapticsDetectFinger(SynapticsPrivate * priv, struct SynapticsHwState *hw)
 }
 
 static void
-SelectTapButton(SynapticsPrivate * priv, edge_type edge)
+SelectTapButton(SynapticsPrivate * priv, enum EdgeType edge)
 {
-    TapEvent tap;
+    enum TapEvent tap;
 
     if (priv->synpara.touchpad_off == 2) {
         priv->tap_button = 0;
@@ -1746,7 +1746,7 @@ HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
     SynapticsParameters *para = &priv->synpara;
     Bool touch, release, is_timeout, move, press;
     int timeleft, timeout;
-    edge_type edge;
+    enum EdgeType edge;
     int delay = 1000000000;
 
     if (priv->finger_state == FS_BLOCKED)
@@ -1984,7 +1984,7 @@ hysteresis(int in, int center, int margin)
 
 static void
 get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
-          edge_type edge, double *dx, double *dy)
+          enum EdgeType edge, double *dx, double *dy)
 {
     double dtime = (hw->millis - HIST(0).millis) / 1000.0;
     double integral;
@@ -2018,7 +2018,7 @@ get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
  */
 static int
 ComputeDeltas(SynapticsPrivate * priv, const struct SynapticsHwState *hw,
-              edge_type edge, int *dxP, int *dyP, Bool inside_area)
+              enum EdgeType edge, int *dxP, int *dyP, Bool inside_area)
 {
     enum MovingState moving_state;
     double dx, dy;
@@ -2162,7 +2162,7 @@ stop_coasting(SynapticsPrivate * priv)
 
 static int
 HandleScrolling(SynapticsPrivate * priv, struct SynapticsHwState *hw,
-                edge_type edge, Bool finger)
+                enum EdgeType edge, Bool finger)
 {
     SynapticsParameters *para = &priv->synpara;
     int delay = 1000000000;
@@ -2750,7 +2750,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     SynapticsParameters *para = &priv->synpara;
     enum FingerState finger = FS_UNTOUCHED;
     int dx = 0, dy = 0, buttons, id;
-    edge_type edge = NO_EDGE;
+    enum EdgeType edge = NO_EDGE;
     int change;
     int double_click = FALSE;
     int delay = 1000000000;
