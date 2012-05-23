@@ -47,11 +47,11 @@
 
 #include "synaptics-properties.h"
 
-typedef enum {
+enum TouchpadState {
     TouchpadOn = 0,
     TouchpadOff = 1,
     TappingOff = 2
-} TouchpadState;
+};
 
 static Bool pad_disabled
     /* internal flag, this does not correspond to device state */ ;
@@ -62,8 +62,8 @@ static const char *pid_file;
 static Display *display;
 static XDevice *dev;
 static Atom touchpad_off_prop;
-static TouchpadState previous_state;
-static TouchpadState disable_state = TouchpadOff;
+static enum TouchpadState previous_state;
+static enum TouchpadState disable_state = TouchpadOff;
 static int verbose;
 
 #define KEYMAP_SIZE 32
