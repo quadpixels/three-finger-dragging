@@ -274,15 +274,16 @@ event_query_is_touchpad(int fd, BOOL test_grab)
     return (ret == TRUE);
 }
 
-typedef struct {
+#define PRODUCT_ANY 0x0000
+
+struct model_lookup_t {
     short vendor;
     short product;
     enum TouchpadModel model;
-} model_lookup_t;
+};
 
-#define PRODUCT_ANY 0x0000
 
-static model_lookup_t model_lookup_table[] = {
+static struct model_lookup_t model_lookup_table[] = {
     {0x0002, 0x0007, MODEL_SYNAPTICS},
     {0x0002, 0x0008, MODEL_ALPS},
     {0x05ac, PRODUCT_ANY, MODEL_APPLETOUCH},
@@ -306,7 +307,7 @@ event_query_model(int fd, enum TouchpadModel *model_out,
 {
     struct input_id id;
     int rc;
-    model_lookup_t *model_lookup;
+    struct model_lookup_t *model_lookup;
 
     SYSCALL(rc = ioctl(fd, EVIOCGID, &id));
     if (rc < 0)
