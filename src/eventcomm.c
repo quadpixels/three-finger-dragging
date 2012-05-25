@@ -508,13 +508,13 @@ SynapticsReadEvent(InputInfoPtr pInfo, struct input_event *ev)
     if (len <= 0) {
         /* We use X_NONE here because it doesn't alloc */
         if (errno != EAGAIN)
-            xf86MsgVerb(X_NONE, 0, "%s: Read error %s\n", pInfo->name,
-                        strerror(errno));
+            LogMessageVerbSigSafe(X_ERROR, 0, "%s: Read error %d\n", pInfo->name,
+                                  errno);
         rc = FALSE;
     }
     else if (len % sizeof(*ev)) {
-        xf86MsgVerb(X_NONE, 0, "%s: Read error, invalid number of bytes.",
-                    pInfo->name);
+        LogMessageVerbSigSafe(X_ERROR, 0, "%s: Read error, invalid number of bytes.",
+                              pInfo->name);
         rc = FALSE;
     }
     return rc;

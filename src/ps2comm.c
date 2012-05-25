@@ -480,8 +480,8 @@ ps2_synaptics_get_packet(InputInfoPtr pInfo, struct PS2SynapticsHwInfo *synhw,
 
         /* to avoid endless loops */
         if (count++ > 30) {
-            xf86IDrvMsg(pInfo, X_ERROR,
-                        "Synaptics driver lost sync... got gigantic packet!\n");
+            LogMessageVerbSigSafe(X_ERROR, 0,
+                                  "Synaptics driver lost sync... got gigantic packet!\n");
             return FALSE;
         }
 
@@ -534,8 +534,8 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
 
     synhw = (struct PS2SynapticsHwInfo *) priv->proto_data;
     if (!synhw) {
-        xf86IDrvMsg(pInfo, X_ERROR,
-                    "PS2ReadHwState, synhw is NULL. This is a bug.\n");
+        LogMessageVerbSigSafe(X_ERROR, 0,
+                              "PS2ReadHwState, synhw is NULL. This is a bug.\n");
         return FALSE;
     }
 
