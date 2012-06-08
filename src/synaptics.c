@@ -319,17 +319,23 @@ static void
 calculate_tap_hysteresis(SynapticsPrivate * priv, int range,
                          int *fingerLow, int *fingerHigh)
 {
-    if (priv->model == MODEL_ELANTECH) {
+    switch (priv->model) {
+    case MODEL_ELANTECH:
         /* All Elantech touchpads don't need the Z filtering to get the
          * number of fingers correctly. See Documentation/elantech.txt
          * in the kernel.
          */
         *fingerLow = priv->minp + 1;
         *fingerHigh = priv->minp + 1;
-    }
-    else {
+        break;
+    case MODEL_UNIBODY_MACBOOK:
+        *fingerLow = 70;
+        *fingerHigh = 75;
+        break;
+    default:
         *fingerLow = priv->minp + range * (25.0 / 256);
         *fingerHigh = priv->minp + range * (30.0 / 256);
+        break;
     }
 }
 
