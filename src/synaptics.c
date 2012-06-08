@@ -299,7 +299,8 @@ calculate_edge_widths(SynapticsPrivate * priv, int *l, int *r, int *t, int *b)
         ewidth = width * .15;
         eheight = height * .15;
     }
-    else if (priv->model == MODEL_APPLETOUCH) {
+    else if (priv->model == MODEL_APPLETOUCH ||
+             priv->model == MODEL_UNIBODY_MACBOOK) {
         ewidth = width * .085;
         eheight = height * .085;
     }

@@ -279,17 +279,19 @@ event_query_is_touchpad(int fd, BOOL test_grab)
 
 struct model_lookup_t {
     short vendor;
-    short product;
+    short product_start;
+    short product_end;
     enum TouchpadModel model;
 };
 
 
 static struct model_lookup_t model_lookup_table[] = {
-    {0x0002, 0x0007, MODEL_SYNAPTICS},
-    {0x0002, 0x0008, MODEL_ALPS},
-    {0x05ac, PRODUCT_ANY, MODEL_APPLETOUCH},
-    {0x0002, 0x000e, MODEL_ELANTECH},
-    {0x0, 0x0, 0x0}
+    {0x0002, 0x0007, 0x0007, MODEL_SYNAPTICS},
+    {0x0002, 0x0008, 0x0008, MODEL_ALPS},
+    {0x05ac, PRODUCT_ANY, 0x222, MODEL_APPLETOUCH},
+    {0x05ac, 0x223, PRODUCT_ANY, MODEL_UNIBODY_MACBOOK},
+    {0x0002, 0x000e, 0x000e, MODEL_ELANTECH},
+    {0x0, 0x0, 0x0, 0x0}
 };
 
 /**
@@ -317,8 +319,10 @@ event_query_model(int fd, enum TouchpadModel *model_out,
     for (model_lookup = model_lookup_table; model_lookup->vendor;
          model_lookup++) {
         if (model_lookup->vendor == id.vendor &&
-            (model_lookup->product == id.product ||
-             model_lookup->product == PRODUCT_ANY))
+            (model_lookup->product_start == PRODUCT_ANY ||
+             model_lookup->product_start <= id.product) &&
+            (model_lookup->product_end == PRODUCT_ANY ||
+             model_lookup->product_end >= id.product))
             *model_out = model_lookup->model;
     }
 
