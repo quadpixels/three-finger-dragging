@@ -872,7 +872,7 @@ EventReadDevDimensions(InputInfoPtr pInfo)
         proto_data->axis_map[i] = -1;
     proto_data->cur_slot = -1;
 
-    if (event_query_is_touchpad(pInfo->fd, (proto_data) ? proto_data->need_grab : TRUE)) {
+    if (event_query_is_touchpad(pInfo->fd, proto_data->need_grab)) {
         event_query_touch(pInfo);
         event_query_axis_ranges(pInfo);
     }
