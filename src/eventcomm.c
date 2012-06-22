@@ -557,14 +557,8 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
             if (ev->value >= 0) {
                 hw->slot_state[slot_index] = SLOTSTATE_OPEN;
                 proto_data->num_touches++;
-
-                if (slot_index >= 0)
-                    valuator_mask_copy(hw->mt_mask[slot_index],
-                                       proto_data->last_mt_vals[slot_index]);
-                else
-                    xf86IDrvMsg(pInfo, X_WARNING,
-                                "Attempted to copy values from out-of-range "
-                                "slot, touch events may be incorrect.\n");
+                valuator_mask_copy(hw->mt_mask[slot_index],
+                                   proto_data->last_mt_vals[slot_index]);
             }
             else if (hw->slot_state[slot_index] != SLOTSTATE_EMPTY) {
                 hw->slot_state[slot_index] = SLOTSTATE_CLOSE;
@@ -572,22 +566,19 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
             }
         }
         else {
+            ValuatorMask *mask = proto_data->last_mt_vals[slot_index];
             int map = proto_data->axis_map[ev->code - ABS_MT_TOUCH_MAJOR];
+            int last_val = valuator_mask_get(mask, map);
 
             valuator_mask_set(hw->mt_mask[slot_index], map, ev->value);
-            if (slot_index >= 0) {
-                ValuatorMask *mask = proto_data->last_mt_vals[slot_index];
-                int last_val = valuator_mask_get(mask, map);
-
-                if (EventTouchSlotPreviouslyOpen(priv, slot_index)) {
-                    if (ev->code == ABS_MT_POSITION_X)
-                        hw->cumulative_dx += ev->value - last_val;
-                    else if (ev->code == ABS_MT_POSITION_Y)
-                        hw->cumulative_dy += ev->value - last_val;
-                }
-
-                valuator_mask_set(mask, map, ev->value);
+            if (EventTouchSlotPreviouslyOpen(priv, slot_index)) {
+                if (ev->code == ABS_MT_POSITION_X)
+                    hw->cumulative_dx += ev->value - last_val;
+                else if (ev->code == ABS_MT_POSITION_Y)
+                    hw->cumulative_dy += ev->value - last_val;
             }
+
+            valuator_mask_set(mask, map, ev->value);
         }
     }
 }
