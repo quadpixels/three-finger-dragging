@@ -1199,9 +1199,9 @@ DeviceInit(DeviceIntPtr dev)
          * 100 packet/s by default. */
         pVel->corr_mul = 12.5f; /*1000[ms]/80[/s] = 12.5 */
 
-        xf86IDrvMsg(pInfo, X_CONFIG, "MaxSpeed is now %.2f\n",
+        xf86IDrvMsg(pInfo, X_CONFIG, "(accel) MaxSpeed is now %.2f\n",
                     priv->synpara.max_speed);
-        xf86IDrvMsg(pInfo, X_CONFIG, "AccelFactor is now %.3f\n",
+        xf86IDrvMsg(pInfo, X_CONFIG, "(accel) AccelFactor is now %.3f\n",
                     priv->synpara.accl);
 
         prop = XIGetKnownProperty(ACCEL_PROP_PROFILE_NUMBER);
