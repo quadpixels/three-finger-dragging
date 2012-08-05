@@ -30,6 +30,10 @@
 
 	For other possible options, check CONFIGURATION DETAILS in synaptics man page
         -->
+        <merge key="input.x11_options.SoftButtonAreas">50% 0 82% 0 0 0 0 0</merge>
+        <match key="info.product" contains="Apple|bcm5974">
+            <merge key="input.x11_options.SoftButtonAreas">0 0 0 0 0 0 0 0</merge>
+        </match>
     </match>
   </device>
 </deviceinfo>
