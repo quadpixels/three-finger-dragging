@@ -707,6 +707,16 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
     }
     else if (property == prop_product_id || property == prop_device_node)
         return BadValue;        /* read-only */
+    else { /* unknown property */
+        if (strcmp(SYNAPTICS_PROP_SOFTBUTTON_AREAS, NameForAtom(property)) == 0)
+        {
+            prop_softbutton_areas = property;
+            if (SetProperty(dev, property, prop, checkonly) != Success)
+                prop_softbutton_areas = 0;
+            else if (!checkonly)
+                XISetDevicePropertyDeletable(dev, property, FALSE);
+        }
+    }
 
     return Success;
 }
