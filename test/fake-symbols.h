@@ -15,7 +15,6 @@ extern XF86OptionPtr xf86AddNewOption(XF86OptionPtr head, const char *name,
 extern char *xf86OptionName(XF86OptionPtr opt);
 extern const char *xf86FindOptionValue(XF86OptionPtr options, const char *name);
 extern int xf86NameCmp(const char *s1, const char *s2);
-extern char *xf86CheckStrOption(XF86OptionPtr optlist, const char *name, char *deflt);
 
 extern char *xf86SetStrOption(XF86OptionPtr optlist, const char *name,
                               const char *deflt);
@@ -26,7 +25,6 @@ extern const char *xf86FindOptionValue(XF86OptionPtr options, const char *name);
 extern char *xf86OptionName(XF86OptionPtr opt);
 extern char *xf86OptionValue(XF86OptionPtr opt);
 extern int xf86NameCmp(const char *s1, const char *s2);
-extern char *xf86CheckStrOption(XF86OptionPtr optlist, const char *name, char *deflt);
 extern void xf86AddEnabledDevice(InputInfoPtr pInfo);
 extern void xf86RemoveEnabledDevice(InputInfoPtr pInfo);
 extern Atom XIGetKnownProperty(char *name);
