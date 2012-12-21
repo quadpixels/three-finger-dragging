@@ -2795,6 +2795,9 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 
     inside_active_area = is_inside_active_area(priv, hw->x, hw->y);
 
+    /* these two just update hw->left, right, etc. */
+    update_hw_button_state(pInfo, hw, priv->old_hw_state, now, &delay);
+
     /* now we know that these _coordinates_ aren't in the area.
        invalid are: x, y, z, numFingers, fingerWidth
        valid are: millis, left/right/middle/up/down/etc.
@@ -2805,9 +2808,6 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
         /* FIXME: if finger accidentally moves into the area and doesn't
          * really release, the finger should remain down. */
     }
-
-    /* these two just update hw->left, right, etc. */
-    update_hw_button_state(pInfo, hw, priv->old_hw_state, now, &delay);
 
     /* no edge or finger detection outside of area */
     if (inside_active_area) {
