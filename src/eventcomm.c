@@ -122,7 +122,7 @@ UninitializeTouch(InputInfoPtr pInfo)
         proto_data->last_mt_vals = NULL;
     }
 
-    mtdev_close(proto_data->mtdev);
+    mtdev_close_delete(proto_data->mtdev);
     proto_data->mtdev = NULL;
     proto_data->num_touches = 0;
 }
@@ -852,7 +852,7 @@ event_query_touch(InputInfoPtr pInfo)
     }
 
  out:
-    mtdev_close(mtdev);
+    mtdev_close_delete(mtdev);
 }
 
 /**
