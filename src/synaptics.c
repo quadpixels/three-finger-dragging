@@ -650,7 +650,7 @@ set_default_parameters(InputInfoPtr pInfo)
         xf86SetBoolOption(opts, "VertTwoFingerScroll", vertTwoFingerScroll);
     pars->scroll_twofinger_horiz =
         xf86SetBoolOption(opts, "HorizTwoFingerScroll", horizTwoFingerScroll);
-    pars->touchpad_off = xf86SetIntOption(opts, "TouchpadOff", 0);
+    pars->touchpad_off = xf86SetIntOption(opts, "TouchpadOff", TOUCHPAD_ON);
     pars->locked_drags = xf86SetBoolOption(opts, "LockedDrags", FALSE);
     pars->locked_drag_time = xf86SetIntOption(opts, "LockedDragTimeout", 5000);
     pars->tap_action[RT_TAP] = xf86SetIntOption(opts, "RTCornerButton", 0);
@@ -1629,7 +1629,7 @@ SelectTapButton(SynapticsPrivate * priv, enum EdgeType edge)
 {
     enum TapEvent tap;
 
-    if (priv->synpara.touchpad_off == 2) {
+    if (priv->synpara.touchpad_off == TOUCHPAD_TAP_OFF) {
         priv->tap_button = 0;
         return;
     }
@@ -2171,7 +2171,7 @@ HandleScrolling(SynapticsPrivate * priv, struct SynapticsHwState *hw,
     SynapticsParameters *para = &priv->synpara;
     int delay = 1000000000;
 
-    if ((priv->synpara.touchpad_off == 2) || (priv->finger_state == FS_BLOCKED)) {
+    if ((priv->synpara.touchpad_off == TOUCHPAD_TAP_OFF) || (priv->finger_state == FS_BLOCKED)) {
         stop_coasting(priv);
         priv->circ_scroll_on = FALSE;
         priv->vert_scroll_edge_on = FALSE;
@@ -2763,7 +2763,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     Bool inside_active_area;
 
     /* If touchpad is switched off, we skip the whole thing and return delay */
-    if (para->touchpad_off == 1) {
+    if (para->touchpad_off == TOUCHPAD_OFF) {
         UpdateTouchState(pInfo, hw);
         return delay;
     }

@@ -47,6 +47,12 @@
 #define SYNAPTICS_MAX_TOUCHES	10
 #define SYN_MAX_BUTTONS 12      /* Max number of mouse buttons */
 
+enum OffState {
+    TOUCHPAD_ON = 0,
+    TOUCHPAD_OFF = 1,
+    TOUCHPAD_TAP_OFF = 2,
+};
+
 enum TapEvent {
     RT_TAP = 0,                 /* Right top corner */
     RB_TAP,                     /* Right bottom corner */
