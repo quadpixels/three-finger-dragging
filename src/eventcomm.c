@@ -445,10 +445,10 @@ event_query_axis_ranges(InputInfoPtr pInfo)
     }
 
     /* Now print the device information */
-    xf86IDrvMsg(pInfo, X_PROBED, "x-axis range %d - %d\n",
-                priv->minx, priv->maxx);
-    xf86IDrvMsg(pInfo, X_PROBED, "y-axis range %d - %d\n",
-                priv->miny, priv->maxy);
+    xf86IDrvMsg(pInfo, X_PROBED, "x-axis range %d - %d (res %d)\n",
+                priv->minx, priv->maxx, priv->resx);
+    xf86IDrvMsg(pInfo, X_PROBED, "y-axis range %d - %d (res %d)\n",
+                priv->miny, priv->maxy, priv->resy);
     if (priv->has_pressure)
         xf86IDrvMsg(pInfo, X_PROBED, "pressure range %d - %d\n",
                     priv->minp, priv->maxp);
