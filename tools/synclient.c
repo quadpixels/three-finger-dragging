@@ -483,7 +483,7 @@ main(int argc, char *argv[])
         dump_settings = 1;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "lV")) != -1) {
+    while ((c = getopt(argc, argv, "lV?")) != -1) {
         switch (c) {
         case 'l':
             dump_settings = 1;
@@ -491,6 +491,7 @@ main(int argc, char *argv[])
         case 'V':
             printf("%s\n", VERSION);
             exit(0);
+        case '?':
         default:
             usage();
         }
