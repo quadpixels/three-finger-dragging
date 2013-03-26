@@ -461,7 +461,7 @@ dp_show_settings(Display * dpy, XDevice * dev)
 static void
 usage(void)
 {
-    fprintf(stderr, "Usage: synclient [-s] [-h] [-l] [-V] [-?] [var1=value1 [var2=value2] ...]\n");
+    fprintf(stderr, "Usage: synclient [-h] [-l] [-V] [-?] [var1=value1 [var2=value2] ...]\n");
     fprintf(stderr, "  -l List current user settings\n");
     fprintf(stderr, "  -V Print synclient version string and exit\n");
     fprintf(stderr, "  -? Show this help message\n");
@@ -483,7 +483,7 @@ main(int argc, char *argv[])
         dump_settings = 1;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, "sm:hlV")) != -1) {
+    while ((c = getopt(argc, argv, "m:hlV")) != -1) {
         switch (c) {
         case 'l':
             dump_settings = 1;
