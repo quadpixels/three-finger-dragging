@@ -88,6 +88,7 @@ usage(void)
     fprintf(stderr, "  -K Like -k but also ignore Modifier+Key combos.\n");
     fprintf(stderr, "  -R Use the XRecord extension.\n");
     fprintf(stderr, "  -v Print diagnostic messages.\n");
+    fprintf(stderr, "  -? Show this help message.\n");
     exit(1);
 }
 
@@ -576,6 +577,7 @@ main(int argc, char *argv[])
         case 'v':
             verbose = 1;
             break;
+        case '?':
         default:
             usage();
             break;
