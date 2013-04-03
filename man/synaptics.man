@@ -443,7 +443,8 @@ bottom edge of the middle button, respectively. Any of the values may be
 given as percentage of the touchpad width or height, whichever applies.
 If any edge is set to 0 (not 0%), the button is assumed to extend to
 infinity in the given direction. Setting all values to 0 (not 0%) disables
-soft button areas.
+soft button areas. Button areas may not overlap, however it is permitted for two
+buttons to share an edge value.
 Property: "Synaptics Soft Button Areas"
 .
 

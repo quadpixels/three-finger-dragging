@@ -421,13 +421,13 @@ SynapticsIsSoftButtonAreasValid(int *values)
         if ((right_bottom <= middle_bottom && right_bottom >= middle_top) ||
             (right_top <= middle_bottom && right_top >= middle_top)) {
             /* Check for overlapping left edges */
-            if ((right_left < middle_left && right_right >= middle_left) ||
-                (middle_left < right_left && middle_right >= right_left))
+            if ((right_left < middle_left && right_right > middle_left) ||
+                (middle_left < right_left && middle_right > right_left))
                 return FALSE;
 
             /* Check for overlapping right edges */
-            if ((right_right > middle_right && right_left <= middle_right) ||
-                (middle_right > right_right && middle_left <= right_right))
+            if ((right_right > middle_right && right_left < middle_right) ||
+                (middle_right > right_right && middle_left < right_right))
                 return FALSE;
         }
 
@@ -435,13 +435,13 @@ SynapticsIsSoftButtonAreasValid(int *values)
         if ((right_left >= middle_left && right_left <= middle_right) ||
             (right_right >= middle_left && right_right <= middle_right)) {
             /* Check for overlapping top edges */
-            if ((right_top < middle_top && right_bottom >= middle_top) ||
-                (middle_top < right_top && middle_bottom >= right_top))
+            if ((right_top < middle_top && right_bottom > middle_top) ||
+                (middle_top < right_top && middle_bottom > right_top))
                 return FALSE;
 
             /* Check for overlapping bottom edges */
-            if ((right_bottom > middle_bottom && right_top <= middle_bottom) ||
-                (middle_bottom > right_bottom && middle_top <= right_bottom))
+            if ((right_bottom > middle_bottom && right_top < middle_bottom) ||
+                (middle_bottom > right_bottom && middle_top < right_bottom))
                 return FALSE;
         }
     }
