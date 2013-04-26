@@ -2453,9 +2453,10 @@ clickpad_guess_clickfingers(SynapticsPrivate * priv,
                             struct SynapticsHwState *hw)
 {
     int nfingers = 0;
-    char close_point[SYNAPTICS_MAX_TOUCHES] = { 0 };    /* 1 for each point close
-                                                           to another one */
+    uint32_t close_point = 0; /* 1 bit for each point close to another one */
     int i, j;
+
+    BUG_RETURN_VAL(hw->num_mt_mask > sizeof(close_point) * 8, 0);
 
     for (i = 0; i < hw->num_mt_mask - 1; i++) {
         ValuatorMask *f1;
@@ -2488,14 +2489,16 @@ clickpad_guess_clickfingers(SynapticsPrivate * priv,
              * size. Good luck. */
             if (abs(x1 - x2) < (priv->maxx - priv->minx) * .3 &&
                 abs(y1 - y2) < (priv->maxy - priv->miny) * .3) {
-                close_point[j] = 1;
-                close_point[i] = 1;
+                close_point |= (1 << j);
+                close_point |= (1 << i);
             }
         }
     }
 
-    for (i = 0; i < SYNAPTICS_MAX_TOUCHES; i++)
-        nfingers += close_point[i];
+    while (close_point > 0) {
+        nfingers += close_point & 0x1;
+        close_point >>= 1;
+    }
 
     return nfingers;
 }
