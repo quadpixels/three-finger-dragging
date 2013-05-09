@@ -1035,6 +1035,8 @@ DeviceClose(DeviceIntPtr dev)
     RetValue = DeviceOff(dev);
     TimerFree(priv->timer);
     priv->timer = NULL;
+    free(priv->touch_axes);
+    priv->touch_axes = NULL;
     SynapticsHwStateFree(&priv->hwState);
     SynapticsHwStateFree(&priv->old_hw_state);
     SynapticsHwStateFree(&priv->local_hw_state);
