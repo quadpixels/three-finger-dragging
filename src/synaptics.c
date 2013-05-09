@@ -513,12 +513,15 @@ set_softbutton_areas_option(InputInfoPtr pInfo)
     memcpy(pars->softbutton_areas[0], values, 4 * sizeof(int));
     memcpy(pars->softbutton_areas[1], values + 4, 4 * sizeof(int));
 
+    free(option_string);
+
     return;
 
  fail:
     xf86IDrvMsg(pInfo, X_ERROR,
                 "invalid SoftButtonAreas value '%s', keeping defaults\n",
                 option_string);
+    free(option_string);
 }
 
 static void
