@@ -11,7 +11,8 @@ eventcomm_test_SOURCES = eventcomm-test.c\
 			 $(top_srcdir)/src/synproto.c \
 			 $(fake_syms)
 
-eventcomm_test_LDADD = $(MTDEV_LIBS)
+eventcomm_test_LDADD = $(MTDEV_LIBS) $(LIBEVDEV_LIBS)
+AM_CPPFLAGS += $(LIBEVDEV_CFLAGS)
 endif
 
 TESTS = $(noinst_PROGRAMS)

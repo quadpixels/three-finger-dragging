@@ -120,6 +120,7 @@ if test "x$BUILD_EVENTCOMM" = xyes; then
 
     # Obtain compiler/linker options for mtdev
     PKG_CHECK_MODULES(MTDEV, mtdev)
+    PKG_CHECK_MODULES(LIBEVDEV, [libevdev >= 0.4])
 fi
 if test "x$BUILD_PSMCOMM" = xyes; then
     AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])

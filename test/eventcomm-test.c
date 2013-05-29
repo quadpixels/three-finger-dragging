@@ -138,7 +138,7 @@ test_read_hw_state(void)
     info.private = &private;
     info.fd = fd_read;
 
-    private.proto_data = EventProtoDataAlloc();
+    private.proto_data = EventProtoDataAlloc(fd_read);
 
     /* just the syn event */
     reset_data(&hw, &comm, &private);
@@ -264,7 +264,7 @@ test_ignore_hw_state(void)
     info.private = &private;
     info.fd = fd_read;
 
-    private.proto_data = EventProtoDataAlloc();
+    private.proto_data = EventProtoDataAlloc(fd_read);
 
     reset_data(&hw_zero, &comm, &private);
 
