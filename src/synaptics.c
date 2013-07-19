@@ -133,9 +133,11 @@ static int DeviceOff(DeviceIntPtr);
 static int DeviceClose(DeviceIntPtr);
 static Bool QueryHardware(InputInfoPtr);
 static void ReadDevDimensions(InputInfoPtr);
+#ifndef NO_DRIVER_SCALING
 static void ScaleCoordinates(SynapticsPrivate * priv,
                              struct SynapticsHwState *hw);
 static void CalculateScalingCoeffs(SynapticsPrivate * priv);
+#endif
 static void SanitizeDimensions(InputInfoPtr pInfo);
 
 void InitDeviceProperties(InputInfoPtr pInfo);
@@ -829,7 +831,10 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
     set_default_parameters(pInfo);
 
+#ifndef NO_DRIVER_SCALING
     CalculateScalingCoeffs(priv);
+#endif
+
 
     priv->comm.buffer = XisbNew(pInfo->fd, INPUT_BUFFER_SIZE);
 
@@ -2863,7 +2868,9 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
          * calculations that require unadjusted coordinates, for example edge
          * detection.
          */
+#ifndef NO_DRIVER_SCALING
         ScaleCoordinates(priv, hw);
+#endif
     }
 
     dx = dy = 0;
@@ -2987,6 +2994,7 @@ QueryHardware(InputInfoPtr pInfo)
     return TRUE;
 }
 
+#ifndef NO_DRIVER_SCALING
 static void
 ScaleCoordinates(SynapticsPrivate * priv, struct SynapticsHwState *hw)
 {
@@ -3016,3 +3024,4 @@ CalculateScalingCoeffs(SynapticsPrivate * priv)
         priv->vert_coeff = 1;
     }
 }
+#endif
