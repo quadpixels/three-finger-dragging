@@ -2020,11 +2020,8 @@ static void
 get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
           enum EdgeType edge, double *dx, double *dy)
 {
-    double dtime = (hw->millis - HIST(0).millis) / 1000.0;
     double integral;
     double tmpf;
-    int x_edge_speed = 0;
-    int y_edge_speed = 0;
 
     *dx = hw->x - HIST(0).x;
     *dy = hw->y - HIST(0).y;
@@ -2039,10 +2036,10 @@ get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     if (isnan(priv->frac_y))
         priv->frac_y = 0;
 
-    tmpf = *dx + x_edge_speed * dtime + priv->frac_x;
+    tmpf = *dx + priv->frac_x;
     priv->frac_x = modf(tmpf, &integral);
     *dx = integral;
-    tmpf = *dy + y_edge_speed * dtime + priv->frac_y;
+    tmpf = *dy + priv->frac_y;
     priv->frac_y = modf(tmpf, &integral);
     *dy = integral;
 }
