@@ -233,7 +233,11 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
 static Bool
 EventDeviceOffHook(InputInfoPtr pInfo)
 {
+    SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
+    struct eventcomm_proto_data *proto_data = priv->proto_data;
+
     UninitializeTouch(pInfo);
+    libevdev_grab(proto_data->evdev, LIBEVDEV_UNGRAB);
 
     return Success;
 }
