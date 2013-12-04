@@ -650,6 +650,19 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
         para->press_motion_min_z = press[0];
         para->press_motion_max_z = press[1];
     }
+    else if (property == prop_pressuremotion_factor) {
+        float *press;
+
+        if (prop->size != 2 || prop->format != 32 || prop->type != float_type)
+            return BadMatch;
+
+        press = (float *) prop->data;
+        if (press[0] > press[1])
+            return BadValue;
+
+        para->press_motion_min_factor = press[0];
+        para->press_motion_max_factor = press[1];
+    }
     else if (property == prop_grab) {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
             return BadMatch;
