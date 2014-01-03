@@ -28,12 +28,12 @@
 #define LogMessageVerbSigSafe xf86MsgVerb
 #endif
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 19
-#if GET_ABI_MINOR(ABI_XINPUT_VERSION) >= 2
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) > 19
+#define NO_DRIVER_SCALING 1
+#elif GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 19 && GET_ABI_MINOR(ABI_XINPUT_VERSION) >= 2
 /* as of 19.2, the server takes device resolution into account when scaling
    relative events from abs device, so we must not scale in synaptics. */
 #define NO_DRIVER_SCALING 1
-#endif
 #endif
 
 #ifdef DBG
