@@ -55,6 +55,10 @@
 #define SYNAPTICS_MAX_TOUCHES	10
 #define SYN_MAX_BUTTONS 12      /* Max number of mouse buttons */
 
+/* Minimum and maximum values for scroll_button_repeat */
+#define SBR_MIN 10
+#define SBR_MAX 1000
+
 enum OffState {
     TOUCHPAD_ON = 0,
     TOUCHPAD_OFF = 1,
@@ -168,6 +172,12 @@ typedef struct _SynapticsParameters {
     Bool scroll_twofinger_horiz;        /* Enable/disable horizontal two-finger scrolling */
     double min_speed, max_speed, accl;  /* movement parameters */
 
+    Bool updown_button_scrolling;       /* Up/Down-Button scrolling or middle/double-click */
+    Bool leftright_button_scrolling;    /* Left/right-button scrolling, or two lots of middle button */
+    Bool updown_button_repeat;  /* If up/down button being used to scroll, auto-repeat? */
+    Bool leftright_button_repeat;       /* If left/right button being used to scroll, auto-repeat? */
+    int scroll_button_repeat;   /* time, in milliseconds, between scroll events being
+                                 * sent when holding down scroll buttons */
     int touchpad_off;           /* Switches the touchpad off
                                  * 0 : Not off
                                  * 1 : Off
@@ -209,7 +219,7 @@ struct _SynapticsPrivateRec {
 
     const char *device;         /* device node */
     CARD32 timer_time;          /* when timer last fired */
-    OsTimerPtr timer;           /* for tap processing, etc */
+    OsTimerPtr timer;           /* for up/down-button repeat, tap processing, etc */
 
     struct CommData comm;
 
@@ -254,6 +264,8 @@ struct _SynapticsPrivateRec {
                                    False: Generate horizontal events */
     double frac_x, frac_y;      /* absolute -> relative fraction */
     enum MidButtonEmulation mid_emu_state;      /* emulated 3rd button */
+    int repeatButtons;          /* buttons for repeat */
+    int nextRepeat;             /* Time when to trigger next auto repeat event */
     int lastButtons;            /* last state of the buttons */
     int prev_z;                 /* previous z value, for palm detection */
     int prevFingers;            /* previous numFingers, for transition detection */
