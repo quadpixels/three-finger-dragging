@@ -1,6 +1,0 @@
-#		Add & Override patterns for xf86-input-synaptics
-#
-#		Edit the following section as needed
-# For example, !report.pc overrides *.pc. See 'man gitignore'
-
-eventcomm-test
