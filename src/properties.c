@@ -295,6 +295,9 @@ InitDeviceProperties(InputInfoPtr pInfo)
     prop_circscroll_trigger =
         InitAtom(pInfo->dev, SYNAPTICS_PROP_CIRCULAR_SCROLLING_TRIGGER, 8, 1,
                  &para->circular_trigger);
+    prop_circpad =
+        InitAtom(pInfo->dev, SYNAPTICS_PROP_CIRCULAR_PAD, 8, 1,
+                 &para->circular_pad);
     prop_palm =
         InitAtom(pInfo->dev, SYNAPTICS_PROP_PALM_DETECT, 8, 1,
                  &para->palm_detect);
@@ -665,6 +668,12 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
 
         para->circular_trigger = trigger;
 
+    }
+    else if (property == prop_circpad) {
+        if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)
+            return BadMatch;
+
+        para->circular_pad = *(BOOL *) prop->data;
     }
     else if (property == prop_palm) {
         if (prop->size != 1 || prop->format != 8 || prop->type != XA_INTEGER)

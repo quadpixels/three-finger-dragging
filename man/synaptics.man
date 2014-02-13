@@ -351,6 +351,13 @@ l l.
 .TE
 Property: "Synaptics Circular Scrolling Trigger"
 .TP
+.BI "Option \*qCircularPad\*q \*q" boolean \*q
+.
+Instead of being a rectangle, the edge is the ellipse enclosed by the
+Left/Right/Top/BottomEdge parameters.
+.
+For circular touchpads. Property: "Synaptics Circular Pad"
+.TP
 .BI "Option \*qPalmDetect\*q \*q" boolean \*q
 If palm detection should be enabled.
 .
@@ -933,7 +940,6 @@ The following options are no longer part of the driver configuration:
 .TP
 .BI "Option \*qEdgeMotionUseAlways\*q \*q" boolean \*q
 .TP
-.BI "Option \*qCircularPad\*q \*q" boolean \*q
 
 .SH "AUTHORS"
 .LP

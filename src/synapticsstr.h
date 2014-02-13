@@ -190,6 +190,7 @@ typedef struct _SynapticsParameters {
     Bool circular_scrolling;    /* Enable circular scrolling */
     double scroll_dist_circ;    /* Scrolling angle radians */
     int circular_trigger;       /* Trigger area for circular scrolling */
+    Bool circular_pad;          /* Edge has an oval or circular shape */
     Bool palm_detect;           /* Enable Palm Detection */
     int palm_min_width;         /* Palm detection width */
     int palm_min_z;             /* Palm detection depth */
