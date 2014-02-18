@@ -585,9 +585,6 @@ effect on scrolling speed.
 Scrolling speed is determined solely from the VertScrollDelta and
 HorizScrollDelta parameters.
 .
-To disable vertical or horizontal scrolling, set VertScrollDelta or
-HorizScrollDelta to zero.
-.
 To invert the direction of vertical or horizontal scrolling, set
 VertScrollDelta or HorizScrollDelta to a negative value.
 .
