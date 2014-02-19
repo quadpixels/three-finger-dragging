@@ -1434,6 +1434,11 @@ is_inside_active_area(SynapticsPrivate * priv, int x, int y)
 {
     Bool inside_area = TRUE;
 
+    /* If a finger is down, then it must have started inside the active_area,
+       allow the motion to complete using the entire area */
+    if (priv->finger_state >= FS_TOUCHED)
+        return TRUE;
+
     if ((priv->synpara.area_left_edge != 0) &&
         (x < priv->synpara.area_left_edge))
         inside_area = FALSE;
@@ -3028,12 +3033,8 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
        invalid are: x, y, z, numFingers, fingerWidth
        valid are: millis, left/right/middle/up/down/etc.
      */
-    if (!inside_active_area) {
+    if (!inside_active_area)
         reset_hw_state(hw);
-
-        /* FIXME: if finger accidentally moves into the area and doesn't
-         * really release, the finger should remain down. */
-    }
 
     /* no edge or finger detection outside of area */
     if (inside_active_area) {
