@@ -205,7 +205,7 @@ typedef struct _SynapticsParameters {
     unsigned int resolution_horiz;      /* horizontal resolution of touchpad in units/mm */
     unsigned int resolution_vert;       /* vertical resolution of touchpad in units/mm */
     int area_left_edge, area_right_edge, area_top_edge, area_bottom_edge;       /* area coordinates absolute */
-    int softbutton_areas[2][4]; /* soft button area coordinates, 0 => right, 1 => middle button */
+    int softbutton_areas[4][4]; /* soft button area coordinates, 0 => right, 1 => middle , 2 => secondary right, 3 => secondary middle button */
     int hyst_x, hyst_y;         /* x and y width of hysteresis box */
 } SynapticsParameters;
 

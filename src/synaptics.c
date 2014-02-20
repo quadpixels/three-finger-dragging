@@ -452,7 +452,7 @@ SynapticsIsSoftButtonAreasValid(int *values)
 }
 
 static void
-set_softbutton_areas_option(InputInfoPtr pInfo)
+set_softbutton_areas_option(InputInfoPtr pInfo, char *option_name, int offset)
 {
     SynapticsPrivate *priv = pInfo->private;
     SynapticsParameters *pars = &priv->synpara;
@@ -467,7 +467,7 @@ set_softbutton_areas_option(InputInfoPtr pInfo)
     if (!pars->clickpad)
         return;
 
-    option_string = xf86SetStrOption(pInfo->options, "SoftButtonAreas", NULL);
+    option_string = xf86SetStrOption(pInfo->options, option_name, NULL);
     if (!option_string)
         return;
 
@@ -512,8 +512,8 @@ set_softbutton_areas_option(InputInfoPtr pInfo)
     if (!SynapticsIsSoftButtonAreasValid(values))
         goto fail;
 
-    memcpy(pars->softbutton_areas[0], values, 4 * sizeof(int));
-    memcpy(pars->softbutton_areas[1], values + 4, 4 * sizeof(int));
+    memcpy(pars->softbutton_areas[offset], values, 4 * sizeof(int));
+    memcpy(pars->softbutton_areas[offset + 1], values + 4, 4 * sizeof(int));
 
     free(option_string);
 
@@ -521,9 +521,21 @@ set_softbutton_areas_option(InputInfoPtr pInfo)
 
  fail:
     xf86IDrvMsg(pInfo, X_ERROR,
-                "invalid SoftButtonAreas value '%s', keeping defaults\n",
-                option_string);
+                "invalid %s value '%s', keeping defaults\n",
+                option_name, option_string);
     free(option_string);
+}
+
+static void
+set_primary_softbutton_areas_option(InputInfoPtr pInfo)
+{
+	set_softbutton_areas_option(pInfo, "SoftButtonAreas", 0);
+}
+
+static void
+set_secondary_softbutton_areas_option(InputInfoPtr pInfo)
+{
+	set_softbutton_areas_option(pInfo, "SecondarySoftButtonAreas", 2);
 }
 
 static void
@@ -739,7 +751,8 @@ set_default_parameters(InputInfoPtr pInfo)
                     "TopEdge is bigger than BottomEdge. Fixing.\n");
     }
 
-    set_softbutton_areas_option(pInfo);
+    set_primary_softbutton_areas_option(pInfo);
+    set_secondary_softbutton_areas_option(pInfo);
 }
 
 static double
@@ -1499,6 +1512,18 @@ static Bool
 is_inside_middlebutton_area(SynapticsParameters * para, int x, int y)
 {
     return is_inside_button_area(para, 1, x, y);
+}
+
+static Bool
+is_inside_sec_rightbutton_area(SynapticsParameters * para, int x, int y)
+{
+    return is_inside_button_area(para, 2, x, y);
+}
+
+static Bool
+is_inside_sec_middlebutton_area(SynapticsParameters * para, int x, int y)
+{
+    return is_inside_button_area(para, 3, x, y);
 }
 
 static CARD32
@@ -2715,7 +2740,15 @@ update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
                     hw->left = 0;
                     hw->right = 1;
                 }
+                else if (is_inside_sec_rightbutton_area(para, hw->x, hw->y)) {
+                    hw->left = 0;
+                    hw->right = 1;
+                }
                 else if (is_inside_middlebutton_area(para, hw->x, hw->y)) {
+                    hw->left = 0;
+                    hw->middle = 1;
+                }
+                else if (is_inside_sec_middlebutton_area(para, hw->x, hw->y)) {
                     hw->left = 0;
                     hw->middle = 1;
                 }

@@ -489,6 +489,18 @@ soft button areas. Button areas may not overlap, however it is permitted for two
 buttons to share an edge value.
 Property: "Synaptics Soft Button Areas"
 .
+.TP
+.BI "Option \*qSecondarySoftButtonAreas\*q \*q" "RBL RBR RBT RBB MBL MBR MBT MBB" \*q
+This option is only available on ClickPad devices.
+Enable secondary soft button click area support on ClickPad devices (usually on
+top of the device).
+For the allowed values for this option, see
+.B Option \*qSoftButtonAreas\*q.
+Primary and secondary soft button areas must not overlap each other. If they do,
+the behavior of the driver is undefined.
+No property associated, this option must be set in the
+__xconfigfile__(__filemansuffix__).
+.
 
 .SH CONFIGURATION DETAILS
 .SS Area handling
@@ -708,6 +720,12 @@ ClickPads provide software emulated buttons through
 These buttons enable areas on the touchpad to perform as right or middle
 mouse button. When the user performs a click within a defined soft button
 area, a right or middle click is performed.
+.LP
+Some laptops, most notably the Lenovo T440, T540 and x240 series, provide a
+pointing stick without physical buttons. On those laptops, the top of the
+touchpad acts as software-emulated button area. This area can be configured
+with
+.B Option SecondarySoftButtonAreas.
 
 .SH "DEVICE PROPERTIES"
 Synaptics 1.0 and higher support input device properties if the driver is
