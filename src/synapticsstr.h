@@ -249,6 +249,7 @@ struct _SynapticsPrivateRec {
     Bool prev_up;               /* Previous up button value, for double click emulation */
     enum FingerState finger_state;      /* previous finger state */
     CARD32 last_motion_millis;  /* time of the last motion */
+    Bool inside_button_area;    /* Inside button area (ignore motion) */
 
     enum TapState tap_state;    /* State of tap processing */
     int tap_max_fingers;        /* Max number of fingers seen since entering start state */

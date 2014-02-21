@@ -1031,6 +1031,7 @@ SynapticsReset(SynapticsPrivate * priv)
     priv->count_packet_finger = 0;
     priv->finger_state = FS_UNTOUCHED;
     priv->last_motion_millis = 0;
+    priv->inside_button_area = FALSE;
     priv->tap_state = TS_START;
     priv->tap_button = 0;
     priv->tap_button_state = TBS_BUTTON_UP;
@@ -1529,6 +1530,56 @@ static Bool
 is_inside_sec_middlebutton_area(SynapticsParameters * para, int x, int y)
 {
     return is_inside_button_area(para, TOP_MIDDLE_BUTTON_AREA, x, y);
+}
+
+static Bool
+is_inside_top_or_bottom_button_area(SynapticsParameters * para, int offset,
+                                    int x, int y)
+{
+    Bool inside_area = TRUE;
+    Bool right_valid, middle_valid;
+    int top, bottom;
+
+    /* We don't have a left button area, so we only check the y axis */
+    right_valid = para->softbutton_areas[offset][TOP] ||
+                  para->softbutton_areas[offset][BOTTOM];
+    middle_valid = para->softbutton_areas[offset + 1][TOP] ||
+                   para->softbutton_areas[offset + 1][BOTTOM];
+
+    if (!right_valid && !middle_valid)
+        return FALSE;
+
+    /* Check both buttons are horizontally aligned */
+    if (right_valid && middle_valid && (
+            para->softbutton_areas[offset][TOP] !=
+                para->softbutton_areas[offset + 1][TOP] ||
+            para->softbutton_areas[offset][BOTTOM] !=
+                para->softbutton_areas[offset + 1][BOTTOM]))
+        return FALSE;
+
+    if (right_valid) {
+        top    = para->softbutton_areas[offset][TOP];
+        bottom = para->softbutton_areas[offset][BOTTOM];
+    }
+    else {
+        top    = para->softbutton_areas[offset + 1][TOP];
+        bottom = para->softbutton_areas[offset + 1][BOTTOM];
+    }
+
+    if (top && y < top)
+        inside_area = FALSE;
+    else if (bottom && y > bottom)
+        inside_area = FALSE;
+
+    return inside_area;
+}
+
+static Bool
+is_inside_anybutton_area(SynapticsParameters * para, int x, int y)
+{
+    return
+        is_inside_top_or_bottom_button_area(para, BOTTOM_BUTTON_AREA, x, y) ||
+        is_inside_top_or_bottom_button_area(para, TOP_BUTTON_AREA, x, y);
 }
 
 static CARD32
@@ -3031,6 +3082,8 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     int delay = 1000000000;
     int timeleft;
     Bool inside_active_area;
+    Bool using_cumulative_coords = FALSE;
+    Bool ignore_motion;
 
     /* If touchpad is switched off, we skip the whole thing and return delay */
     if (para->touchpad_off == TOUCHPAD_OFF) {
@@ -3056,6 +3109,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     if (para->clickpad && (hw->left || hw->right || hw->middle)) {
         hw->x = hw->cumulative_dx;
         hw->y = hw->cumulative_dy;
+        using_cumulative_coords = TRUE;
     }
 
     /* apply hysteresis before doing anything serious. This cancels
@@ -3064,6 +3118,16 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     filter_jitter(priv, &hw->x, &hw->y);
 
     inside_active_area = is_inside_active_area(priv, hw->x, hw->y);
+
+    /* Ignore motion *starting* inside softbuttonareas */
+    if (priv->finger_state < FS_TOUCHED)
+        priv->inside_button_area = is_inside_anybutton_area(para, hw->x, hw->y);
+    /* If we already have a finger down, clear inside_button_area if it goes
+       outside of the softbuttonareas */
+    else if (priv->inside_button_area && !is_inside_anybutton_area(para, hw->x, hw->y))
+        priv->inside_button_area = FALSE;
+
+    ignore_motion = !using_cumulative_coords && priv->inside_button_area;
 
     /* these two just update hw->left, right, etc. */
     update_hw_button_state(pInfo, hw, now, &delay);
@@ -3136,8 +3200,8 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     }
 
     /* Post events */
-    if (finger >= FS_TOUCHED && (dx || dy) &&
-        (para->touchpad_off != TOUCHPAD_CLICK_ONLY))
+    if (finger >= FS_TOUCHED && (dx || dy) && !ignore_motion &&
+            (para->touchpad_off != TOUCHPAD_CLICK_ONLY))
         xf86PostMotionEvent(pInfo->dev, 0, 0, 2, dx, dy);
 
     if (priv->mid_emu_state == MBE_LEFT_CLICK) {
