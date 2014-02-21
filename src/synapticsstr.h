@@ -218,7 +218,6 @@ struct _SynapticsPrivateRec {
     void *proto_data;           /* protocol-specific data */
 
     struct SynapticsHwState *hwState;
-    struct SynapticsHwState *old_hw_state;      /* previous logical hw state */
 
     const char *device;         /* device node */
     CARD32 timer_time;          /* when timer last fired */

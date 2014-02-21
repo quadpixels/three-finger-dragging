@@ -1022,7 +1022,6 @@ SynapticsReset(SynapticsPrivate * priv)
 {
     SynapticsResetHwState(priv->hwState);
     SynapticsResetHwState(priv->local_hw_state);
-    SynapticsResetHwState(priv->old_hw_state);
     SynapticsResetHwState(priv->comm.hwState);
 
     memset(priv->move_hist, 0, sizeof(priv->move_hist));
@@ -1092,7 +1091,6 @@ DeviceClose(DeviceIntPtr dev)
     free(priv->touch_axes);
     priv->touch_axes = NULL;
     SynapticsHwStateFree(&priv->hwState);
-    SynapticsHwStateFree(&priv->old_hw_state);
     SynapticsHwStateFree(&priv->local_hw_state);
     SynapticsHwStateFree(&priv->comm.hwState);
     return RetValue;
@@ -1336,10 +1334,6 @@ DeviceInit(DeviceIntPtr dev)
 
     priv->hwState = SynapticsHwStateAlloc(priv);
     if (!priv->hwState)
-        goto fail;
-
-    priv->old_hw_state = SynapticsHwStateAlloc(priv);
-    if (!priv->old_hw_state)
         goto fail;
 
     priv->local_hw_state = SynapticsHwStateAlloc(priv);
@@ -2732,7 +2726,7 @@ adjust_state_from_scrollbuttons(const InputInfoPtr pInfo,
 
 static void
 update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
-                       struct SynapticsHwState *old, CARD32 now, int *delay)
+                       CARD32 now, int *delay)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters *para = &priv->synpara;
@@ -2748,39 +2742,36 @@ update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
      * the soft button instead. */
     if (para->clickpad) {
         /* hw->left is down, but no other buttons were already down */
-        if (!old->left && !old->right && !old->middle &&
-            hw->left && !hw->right && !hw->middle) {
-                if (is_inside_rightbutton_area(para, hw->x, hw->y)) {
-                    hw->left = 0;
-                    hw->right = 1;
-                }
-                else if (is_inside_sec_rightbutton_area(para, hw->x, hw->y)) {
-                    hw->left = 0;
-                    hw->right = 1;
-                }
-                else if (is_inside_middlebutton_area(para, hw->x, hw->y)) {
-                    hw->left = 0;
-                    hw->middle = 1;
-                }
-                else if (is_inside_sec_middlebutton_area(para, hw->x, hw->y)) {
-                    hw->left = 0;
-                    hw->middle = 1;
-                }
+        if (!(priv->lastButtons & 7) && hw->left && !hw->right && !hw->middle) {
+            if (is_inside_rightbutton_area(para, hw->x, hw->y)) {
+                hw->left = 0;
+                hw->right = 1;
+            }
+            else if (is_inside_sec_rightbutton_area(para, hw->x, hw->y)) {
+                hw->left = 0;
+                hw->right = 1;
+            }
+            else if (is_inside_middlebutton_area(para, hw->x, hw->y)) {
+                hw->left = 0;
+                hw->middle = 1;
+            }
+            else if (is_inside_sec_middlebutton_area(para, hw->x, hw->y)) {
+                hw->left = 0;
+                hw->middle = 1;
+            }
         }
         else if (hw->left) {
-            hw->left = old->left;
-            hw->right = old->right;
-            hw->middle = old->middle;
+            hw->left   = (priv->lastButtons & 1) ? 1 : 0;
+            hw->middle = (priv->lastButtons & 2) ? 1 : 0;
+            hw->right  = (priv->lastButtons & 4) ? 1 : 0;
         }
     }
 
     /* Fingers emulate other buttons. ClickFinger can only be
        triggered on transition, when left is pressed
      */
-    if (hw->left && !old->left && !old->middle && !old->right &&
-        hw->numFingers >= 1) {
+    if (hw->left && !(priv->lastButtons & 7) && hw->numFingers >= 1)
         handle_clickfinger(priv, hw);
-    }
 
     /* Two finger emulation */
     if (hw->numFingers == 1 && hw->z >= para->emulate_twofinger_z &&
@@ -3075,7 +3066,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     inside_active_area = is_inside_active_area(priv, hw->x, hw->y);
 
     /* these two just update hw->left, right, etc. */
-    update_hw_button_state(pInfo, hw, priv->old_hw_state, now, &delay);
+    update_hw_button_state(pInfo, hw, now, &delay);
     if (priv->has_scrollbuttons)
         double_click = adjust_state_from_scrollbuttons(pInfo, hw);
 
@@ -3192,9 +3183,6 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     /* generate a history of the absolute positions */
     if (inside_active_area)
         store_history(priv, hw->x, hw->y, hw->millis);
-
-    /* Save logical state for transition comparisons */
-    SynapticsCopyHwState(priv->old_hw_state, hw);
 
     return delay;
 }
