@@ -160,6 +160,7 @@ typedef struct _SynapticsParameters {
     int tap_time_2;             /* max. tapping time for double taps */
     int click_time;             /* The duration of a single click */
     Bool clickpad;              /* Device is a has integrated buttons */
+    int clickpad_ignore_motion_time; /* Ignore motion for X ms after a click */
     int emulate_mid_button_time;        /* Max time between left and right button presses to
                                            emulate a middle button press. */
     int emulate_twofinger_z;    /* pressure threshold to emulate two finger touch (for Alps) */
@@ -250,6 +251,7 @@ struct _SynapticsPrivateRec {
     enum FingerState finger_state;      /* previous finger state */
     CARD32 last_motion_millis;  /* time of the last motion */
     Bool inside_button_area;    /* Inside button area (ignore motion) */
+    int clickpad_click_millis;  /* Time of last clickpad click */
 
     enum TapState tap_state;    /* State of tap processing */
     int tap_max_fingers;        /* Max number of fingers seen since entering start state */

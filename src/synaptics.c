@@ -675,6 +675,7 @@ set_default_parameters(InputInfoPtr pInfo)
     pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 180);
     pars->click_time = xf86SetIntOption(opts, "ClickTime", 100);
     pars->clickpad = xf86SetBoolOption(opts, "ClickPad", pars->clickpad);       /* Probed */
+    pars->clickpad_ignore_motion_time = 100; /* ms */
     /* middle mouse button emulation on a clickpad? nah, you're joking */
     middle_button_timeout = pars->clickpad ? 0 : 75;
     pars->emulate_mid_button_time =
@@ -1031,6 +1032,7 @@ SynapticsReset(SynapticsPrivate * priv)
     priv->count_packet_finger = 0;
     priv->finger_state = FS_UNTOUCHED;
     priv->last_motion_millis = 0;
+    priv->clickpad_click_millis = 0;
     priv->inside_button_area = FALSE;
     priv->tap_state = TS_START;
     priv->tap_button = 0;
@@ -2810,6 +2812,7 @@ update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
                 hw->left = 0;
                 hw->middle = 1;
             }
+            priv->clickpad_click_millis = now;
         }
         else if (hw->left) {
             hw->left   = (priv->lastButtons & 1) ? 1 : 0;
@@ -3133,6 +3136,15 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     update_hw_button_state(pInfo, hw, now, &delay);
     if (priv->has_scrollbuttons)
         double_click = adjust_state_from_scrollbuttons(pInfo, hw);
+
+    /* Ignore motion the first X ms after a clickpad click */
+    if (priv->clickpad_click_millis) {
+        if(TIME_DIFF(priv->clickpad_click_millis +
+                     para->clickpad_ignore_motion_time, now) > 0)
+            ignore_motion = TRUE;
+        else
+            priv->clickpad_click_millis = 0;
+    }
 
     /* now we know that these _coordinates_ aren't in the area.
        invalid are: x, y, z, numFingers, fingerWidth
