@@ -660,6 +660,7 @@ EventReadHwState(InputInfoPtr pInfo,
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     SynapticsParameters *para = &priv->synpara;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
+    Bool sync_cumulative = FALSE;
 
     SynapticsResetTouchHwState(hw, FALSE);
 
@@ -667,6 +668,7 @@ EventReadHwState(InputInfoPtr pInfo,
     if (!hw->left && !hw->right && !hw->middle) {
         hw->cumulative_dx = hw->x;
         hw->cumulative_dy = hw->y;
+        sync_cumulative = TRUE;
     }
 
     while (SynapticsReadEvent(pInfo, &ev)) {
@@ -742,9 +744,13 @@ EventReadHwState(InputInfoPtr pInfo,
                 switch (ev.code) {
                 case ABS_X:
                     hw->x = apply_st_scaling(proto_data, ev.value, 0);
+                    if (sync_cumulative)
+                        hw->cumulative_dx = hw->x;
                     break;
                 case ABS_Y:
                     hw->y = apply_st_scaling(proto_data, ev.value, 1);
+                    if (sync_cumulative)
+                        hw->cumulative_dy = hw->y;
                     break;
                 case ABS_PRESSURE:
                     hw->z = ev.value;
