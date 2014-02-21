@@ -2796,6 +2796,12 @@ update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
     if (para->clickpad) {
         /* hw->left is down, but no other buttons were already down */
         if (!(priv->lastButtons & 7) && hw->left && !hw->right && !hw->middle) {
+            /* If the finger down event is delayed, the x and y
+             * coordinates are stale so we delay processing the click */
+            if (hw->z < para->finger_low) {
+                hw->left = 0;
+                goto out;
+            }
             if (is_inside_rightbutton_area(para, hw->x, hw->y)) {
                 hw->left = 0;
                 hw->right = 1;
@@ -2827,6 +2833,7 @@ update_hw_button_state(const InputInfoPtr pInfo, struct SynapticsHwState *hw,
     if (hw->left && !(priv->lastButtons & 7) && hw->numFingers >= 1)
         handle_clickfinger(priv, hw);
 
+out:
     /* Two finger emulation */
     if (hw->numFingers == 1 && hw->z >= para->emulate_twofinger_z &&
         hw->fingerWidth >= para->emulate_twofinger_w) {

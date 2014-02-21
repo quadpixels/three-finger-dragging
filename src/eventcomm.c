@@ -664,8 +664,9 @@ EventReadHwState(InputInfoPtr pInfo,
 
     SynapticsResetTouchHwState(hw, FALSE);
 
-    /* Reset cumulative values if buttons were not previously pressed */
-    if (!hw->left && !hw->right && !hw->middle) {
+    /* Reset cumulative values if buttons were not previously pressed,
+     * or no finger was previously present. */
+    if ((!hw->left && !hw->right && !hw->middle) || hw->z < para->finger_low) {
         hw->cumulative_dx = hw->x;
         hw->cumulative_dy = hw->y;
         sync_cumulative = TRUE;
