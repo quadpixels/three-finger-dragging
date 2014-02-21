@@ -89,6 +89,22 @@ enum EdgeType {
     LEFT_TOP_EDGE = TOP_EDGE | LEFT_EDGE
 };
 
+enum SoftButtonAreas {
+    BOTTOM_BUTTON_AREA = 0,
+    BOTTOM_RIGHT_BUTTON_AREA = 0,
+    BOTTOM_MIDDLE_BUTTON_AREA = 1,
+    TOP_BUTTON_AREA = 2,
+    TOP_RIGHT_BUTTON_AREA = 2,
+    TOP_MIDDLE_BUTTON_AREA = 3
+};
+
+enum SoftButtonAreaEdges {
+    LEFT = 0,
+    RIGHT = 1,
+    TOP = 2,
+    BOTTOM = 3
+};
+
 /*
  * We expect to be receiving a steady 80 packets/sec (which gives 40
  * reports/sec with more than one finger on the pad, as Advanced Gesture Mode
@@ -529,13 +545,13 @@ set_softbutton_areas_option(InputInfoPtr pInfo, char *option_name, int offset)
 static void
 set_primary_softbutton_areas_option(InputInfoPtr pInfo)
 {
-	set_softbutton_areas_option(pInfo, "SoftButtonAreas", 0);
+    set_softbutton_areas_option(pInfo, "SoftButtonAreas", BOTTOM_BUTTON_AREA);
 }
 
 static void
 set_secondary_softbutton_areas_option(InputInfoPtr pInfo)
 {
-	set_softbutton_areas_option(pInfo, "SecondarySoftButtonAreas", 2);
+    set_softbutton_areas_option(pInfo, "SecondarySoftButtonAreas", TOP_BUTTON_AREA);
 }
 
 static void
@@ -1475,13 +1491,6 @@ is_inside_button_area(SynapticsParameters * para, int which, int x, int y)
 {
     Bool inside_area = TRUE;
 
-    enum {
-        LEFT = 0,
-        RIGHT = 1,
-        TOP = 2,
-        BOTTOM = 3
-    };
-
     if (para->softbutton_areas[which][LEFT] == 0 &&
         para->softbutton_areas[which][RIGHT] == 0 &&
         para->softbutton_areas[which][TOP] == 0 &&
@@ -1507,25 +1516,25 @@ is_inside_button_area(SynapticsParameters * para, int which, int x, int y)
 static Bool
 is_inside_rightbutton_area(SynapticsParameters * para, int x, int y)
 {
-    return is_inside_button_area(para, 0, x, y);
+    return is_inside_button_area(para, BOTTOM_RIGHT_BUTTON_AREA, x, y);
 }
 
 static Bool
 is_inside_middlebutton_area(SynapticsParameters * para, int x, int y)
 {
-    return is_inside_button_area(para, 1, x, y);
+    return is_inside_button_area(para, BOTTOM_MIDDLE_BUTTON_AREA, x, y);
 }
 
 static Bool
 is_inside_sec_rightbutton_area(SynapticsParameters * para, int x, int y)
 {
-    return is_inside_button_area(para, 2, x, y);
+    return is_inside_button_area(para, TOP_RIGHT_BUTTON_AREA, x, y);
 }
 
 static Bool
 is_inside_sec_middlebutton_area(SynapticsParameters * para, int x, int y)
 {
-    return is_inside_button_area(para, 3, x, y);
+    return is_inside_button_area(para, TOP_MIDDLE_BUTTON_AREA, x, y);
 }
 
 static CARD32
