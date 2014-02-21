@@ -45,9 +45,11 @@ A pid file will only be created if the program is started in daemon
 mode.
 .LP
 .TP
-\fB\-t\fP
-Only disable tapping and scrolling, not mouse movements, in response
-to keyboard activity.
+\fB\-t\fP [off|tapping|click-only]
+ Disable state. "off" for disabling the touchpad entirely, "tapping" for
+ disabling tapping and scrolling only, "click-only" for disabling
+ everything but physical clicks. The default if this option is missing is
+ "off". If this option is given without a mode it defaults to "tapping".
 .LP
 .TP
 \fB\-k\fP

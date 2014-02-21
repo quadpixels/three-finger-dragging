@@ -105,7 +105,7 @@ static struct Parameter params[] = {
     {"UpDownScrollRepeat",    PT_BOOL,   0, 1,     SYNAPTICS_PROP_BUTTONSCROLLING_REPEAT,   8,	0},
     {"LeftRightScrollRepeat", PT_BOOL,   0, 1,     SYNAPTICS_PROP_BUTTONSCROLLING_REPEAT,   8,	1},
     {"ScrollButtonRepeat",    PT_INT,    SBR_MIN , SBR_MAX, SYNAPTICS_PROP_BUTTONSCROLLING_TIME, 32,	0},
-    {"TouchpadOff",           PT_INT,    0, 2,     SYNAPTICS_PROP_OFF,		8,	0},
+    {"TouchpadOff",           PT_INT,    0, 3,     SYNAPTICS_PROP_OFF,		8,	0},
     {"LockedDrags",           PT_BOOL,   0, 1,     SYNAPTICS_PROP_LOCKED_DRAGS,	8,	0},
     {"LockedDragTimeout",     PT_INT,    0, 30000, SYNAPTICS_PROP_LOCKED_DRAGS_TIMEOUT,	32,	0},
     {"RTCornerButton",        PT_INT,    0, SYN_MAX_BUTTONS, SYNAPTICS_PROP_TAP_ACTION,	8,	0},
