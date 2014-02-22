@@ -195,20 +195,6 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
     struct eventcomm_proto_data *proto_data =
         (struct eventcomm_proto_data *) priv->proto_data;
 
-    if (para->grab_event_device) {
-        /* Try to grab the event device so that data don't leak to /dev/input/mice */
-        int ret;
-
-        ret = libevdev_grab(proto_data->evdev, LIBEVDEV_GRAB);
-        if (ret < 0) {
-            xf86IDrvMsg(pInfo, X_WARNING, "can't grab event device, errno=%d\n",
-                        -ret);
-            return FALSE;
-        }
-    }
-
-    proto_data->need_grab = FALSE;
-
     if (libevdev_get_fd(proto_data->evdev) != -1) {
         struct input_event ev;
 
@@ -224,6 +210,20 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
     } else
         libevdev_set_fd(proto_data->evdev, pInfo->fd);
 
+
+    if (para->grab_event_device) {
+        /* Try to grab the event device so that data don't leak to /dev/input/mice */
+        int ret;
+
+        ret = libevdev_grab(proto_data->evdev, LIBEVDEV_GRAB);
+        if (ret < 0) {
+            xf86IDrvMsg(pInfo, X_WARNING, "can't grab event device, errno=%d\n",
+                        -ret);
+            return FALSE;
+        }
+    }
+
+    proto_data->need_grab = FALSE;
 
     InitializeTouch(pInfo);
 
