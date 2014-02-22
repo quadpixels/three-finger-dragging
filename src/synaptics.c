@@ -972,8 +972,10 @@ DeviceOn(DeviceIntPtr dev)
     }
 
     if (priv->proto_ops->DeviceOnHook &&
-        !priv->proto_ops->DeviceOnHook(pInfo, &priv->synpara))
+        !priv->proto_ops->DeviceOnHook(pInfo, &priv->synpara)) {
+        xf86CloseSerial(pInfo->fd);
         return !Success;
+    }
 
     priv->comm.buffer = XisbNew(pInfo->fd, INPUT_BUFFER_SIZE);
     if (!priv->comm.buffer) {
