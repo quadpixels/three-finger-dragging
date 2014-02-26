@@ -263,7 +263,7 @@ l l.
 0	Touchpad is enabled
 1	Touchpad is switched off
 2	Only tapping and scrolling is switched off
-3	Only cursor movement is switched off
+3	Only physical clicks are possible
 .TE
 Property: "Synaptics Off"
 .TP
