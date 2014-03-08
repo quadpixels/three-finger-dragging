@@ -184,6 +184,10 @@ InputDriverRec SYNAPTICS = {
     SynapticsPreInit,
     SynapticsUnInit,
     NULL,
+    NULL,
+#ifdef XI86_DRV_CAP_SERVER_FD
+    XI86_DRV_CAP_SERVER_FD
+#endif
 };
 
 static XF86ModuleVersionInfo VersionRec = {
@@ -215,6 +219,15 @@ _X_EXPORT XF86ModuleData synapticsModuleData = {
 /*****************************************************************************
  *	Function Definitions
  ****************************************************************************/
+static inline void
+SynapticsCloseFd(InputInfoPtr pInfo)
+{
+    if (pInfo->fd > -1 && !(pInfo->flags & XI86_SERVER_FD)) {
+        xf86CloseSerial(pInfo->fd);
+        pInfo->fd = -1;
+    }
+}
+
 /**
  * Fill in default dimensions for backends that cannot query the hardware.
  * Eventually, we want the edges to be 1900/5400 for x, 1900/4000 for y.
@@ -893,22 +906,16 @@ SynapticsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
     xf86ProcessCommonOptions(pInfo, pInfo->options);
 
-    if (pInfo->fd != -1) {
-        if (priv->comm.buffer) {
-            XisbFree(priv->comm.buffer);
-            priv->comm.buffer = NULL;
-        }
-        xf86CloseSerial(pInfo->fd);
+    if (priv->comm.buffer) {
+        XisbFree(priv->comm.buffer);
+        priv->comm.buffer = NULL;
     }
-    pInfo->fd = -1;
+    SynapticsCloseFd(pInfo);
 
     return Success;
 
  SetupProc_fail:
-    if (pInfo->fd >= 0) {
-        xf86CloseSerial(pInfo->fd);
-        pInfo->fd = -1;
-    }
+    SynapticsCloseFd(pInfo);
 
     if (priv->comm.buffer)
         XisbFree(priv->comm.buffer);
@@ -989,33 +996,31 @@ DeviceOn(DeviceIntPtr dev)
     }
 
     if (priv->proto_ops->DeviceOnHook &&
-        !priv->proto_ops->DeviceOnHook(pInfo, &priv->synpara)) {
-        xf86CloseSerial(pInfo->fd);
-        return !Success;
-    }
+        !priv->proto_ops->DeviceOnHook(pInfo, &priv->synpara))
+         goto error;
 
     priv->comm.buffer = XisbNew(pInfo->fd, INPUT_BUFFER_SIZE);
-    if (!priv->comm.buffer) {
-        xf86CloseSerial(pInfo->fd);
-        pInfo->fd = -1;
-        return !Success;
-    }
+    if (!priv->comm.buffer)
+        goto error;
 
     xf86FlushInput(pInfo->fd);
 
     /* reinit the pad */
-    if (!QueryHardware(pInfo)) {
-        XisbFree(priv->comm.buffer);
-        priv->comm.buffer = NULL;
-        xf86CloseSerial(pInfo->fd);
-        pInfo->fd = -1;
-        return !Success;
-    }
+    if (!QueryHardware(pInfo))
+        goto error;
 
     xf86AddEnabledDevice(pInfo);
     dev->public.on = TRUE;
 
     return Success;
+
+error:
+    if (priv->comm.buffer) {
+        XisbFree(priv->comm.buffer);
+        priv->comm.buffer = NULL;
+    }
+    SynapticsCloseFd(pInfo);
+    return !Success;
 }
 
 static void
@@ -1074,8 +1079,7 @@ DeviceOff(DeviceIntPtr dev)
             XisbFree(priv->comm.buffer);
             priv->comm.buffer = NULL;
         }
-        xf86CloseSerial(pInfo->fd);
-        pInfo->fd = -1;
+        SynapticsCloseFd(pInfo);
     }
     dev->public.on = FALSE;
     return rc;

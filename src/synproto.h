@@ -36,6 +36,10 @@
 #include <xf86Xinput.h>
 #include <xisb.h>
 
+#ifndef XI86_SERVER_FD
+#define XI86_SERVER_FD 0x20
+#endif
+
 struct _SynapticsPrivateRec;
 typedef struct _SynapticsPrivateRec SynapticsPrivate;
 
