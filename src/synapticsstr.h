@@ -150,6 +150,22 @@ enum TouchpadModel {
     MODEL_UNIBODY_MACBOOK
 };
 
+enum SoftButtonAreas {
+    BOTTOM_BUTTON_AREA = 0,
+    BOTTOM_RIGHT_BUTTON_AREA = 0,
+    BOTTOM_MIDDLE_BUTTON_AREA = 1,
+    TOP_BUTTON_AREA = 2,
+    TOP_RIGHT_BUTTON_AREA = 2,
+    TOP_MIDDLE_BUTTON_AREA = 3
+};
+
+enum SoftButtonAreaEdges {
+    LEFT = 0,
+    RIGHT = 1,
+    TOP = 2,
+    BOTTOM = 3
+};
+
 typedef struct _SynapticsParameters {
     /* Parameter data */
     int left_edge, right_edge, top_edge, bottom_edge;   /* edge coordinates absolute */

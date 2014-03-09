@@ -499,7 +499,8 @@ For the allowed values for this option, see
 .B Option \*qSoftButtonAreas\*q.
 Primary and secondary soft button areas must not overlap each other. If they do,
 the behavior of the driver is undefined.
-No property associated, this option must be set in the
+Property: "Synaptics Secondary Soft Button Areas". This property is only
+initialized if the option is set in the
 __xconfigfile__(__filemansuffix__).
 .
 

@@ -89,22 +89,6 @@ enum EdgeType {
     LEFT_TOP_EDGE = TOP_EDGE | LEFT_EDGE
 };
 
-enum SoftButtonAreas {
-    BOTTOM_BUTTON_AREA = 0,
-    BOTTOM_RIGHT_BUTTON_AREA = 0,
-    BOTTOM_MIDDLE_BUTTON_AREA = 1,
-    TOP_BUTTON_AREA = 2,
-    TOP_RIGHT_BUTTON_AREA = 2,
-    TOP_MIDDLE_BUTTON_AREA = 3
-};
-
-enum SoftButtonAreaEdges {
-    LEFT = 0,
-    RIGHT = 1,
-    TOP = 2,
-    BOTTOM = 3
-};
-
 /*
  * We expect to be receiving a steady 80 packets/sec (which gives 40
  * reports/sec with more than one finger on the pad, as Advanced Gesture Mode
