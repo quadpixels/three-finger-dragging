@@ -151,6 +151,7 @@ enum TouchpadModel {
 };
 
 enum SoftButtonAreas {
+    NO_BUTTON_AREA = -1,
     BOTTOM_BUTTON_AREA = 0,
     BOTTOM_RIGHT_BUTTON_AREA = 0,
     BOTTOM_MIDDLE_BUTTON_AREA = 1,
@@ -266,7 +267,7 @@ struct _SynapticsPrivateRec {
     Bool prev_up;               /* Previous up button value, for double click emulation */
     enum FingerState finger_state;      /* previous finger state */
     CARD32 last_motion_millis;  /* time of the last motion */
-    Bool inside_button_area;    /* Inside button area (ignore motion) */
+    enum SoftButtonAreas last_button_area;    /* Last button area we were in */
     int clickpad_click_millis;  /* Time of last clickpad click */
 
     enum TapState tap_state;    /* State of tap processing */

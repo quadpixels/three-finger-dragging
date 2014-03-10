@@ -1022,7 +1022,7 @@ SynapticsReset(SynapticsPrivate * priv)
     priv->finger_state = FS_UNTOUCHED;
     priv->last_motion_millis = 0;
     priv->clickpad_click_millis = 0;
-    priv->inside_button_area = FALSE;
+    priv->last_button_area = NO_BUTTON_AREA;
     priv->tap_state = TS_START;
     priv->tap_button = 0;
     priv->tap_button_state = TBS_BUTTON_UP;
@@ -1564,12 +1564,15 @@ is_inside_top_or_bottom_button_area(SynapticsParameters * para, int offset,
     return inside_area;
 }
 
-static Bool
-is_inside_anybutton_area(SynapticsParameters * para, int x, int y)
+static enum SoftButtonAreas
+current_button_area(SynapticsParameters * para, int x, int y)
 {
-    return
-        is_inside_top_or_bottom_button_area(para, BOTTOM_BUTTON_AREA, x, y) ||
-        is_inside_top_or_bottom_button_area(para, TOP_BUTTON_AREA, x, y);
+    if (is_inside_top_or_bottom_button_area(para, BOTTOM_BUTTON_AREA, x, y))
+        return BOTTOM_BUTTON_AREA;
+    else if (is_inside_top_or_bottom_button_area(para, TOP_BUTTON_AREA, x, y))
+        return TOP_BUTTON_AREA;
+    else
+        return NO_BUTTON_AREA;
 }
 
 static CARD32
@@ -3119,13 +3122,15 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 
     /* Ignore motion *starting* inside softbuttonareas */
     if (priv->finger_state < FS_TOUCHED)
-        priv->inside_button_area = is_inside_anybutton_area(para, hw->x, hw->y);
-    /* If we already have a finger down, clear inside_button_area if it goes
+        priv->last_button_area = current_button_area(para, hw->x, hw->y);
+    /* If we already have a finger down, clear last_button_area if it goes
        outside of the softbuttonareas */
-    else if (priv->inside_button_area && !is_inside_anybutton_area(para, hw->x, hw->y))
-        priv->inside_button_area = FALSE;
+    else if (priv->last_button_area != NO_BUTTON_AREA &&
+             current_button_area(para, hw->x, hw->y) == NO_BUTTON_AREA)
+        priv->last_button_area = NO_BUTTON_AREA;
 
-    ignore_motion = !using_cumulative_coords && priv->inside_button_area;
+    ignore_motion =
+        !using_cumulative_coords && priv->last_button_area != NO_BUTTON_AREA;
 
     /* these two just update hw->left, right, etc. */
     update_hw_button_state(pInfo, hw, now, &delay);
