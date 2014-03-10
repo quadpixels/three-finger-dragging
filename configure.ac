@@ -116,9 +116,6 @@ case "${host}" in
 esac
 if test "x$BUILD_EVENTCOMM" = xyes; then
     AC_DEFINE(BUILD_EVENTCOMM, 1, [Optional backend eventcomm enabled])
-
-    # Obtain compiler/linker options for mtdev
-    PKG_CHECK_MODULES(MTDEV, mtdev)
     PKG_CHECK_MODULES(LIBEVDEV, [libevdev >= 0.4])
 fi
 if test "x$BUILD_PSMCOMM" = xyes; then
