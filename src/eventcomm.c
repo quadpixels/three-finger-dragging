@@ -51,6 +51,9 @@
 #ifndef INPUT_PROP_SEMI_MT
 #define INPUT_PROP_SEMI_MT 0x03
 #endif
+#ifndef ABS_MT_TOOL_Y
+#define ABS_MT_TOOL_Y 0x3d
+#endif
 
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
@@ -59,6 +62,10 @@
 #define OFF(x)   ((x) % LONG_BITS)
 #define LONG(x)  ((x) / LONG_BITS)
 #define TEST_BIT(bit, array) ((array[LONG(bit)] >> OFF(bit)) & 1)
+
+#define ABS_MT_MIN ABS_MT_SLOT
+#define ABS_MT_MAX ABS_MT_TOOL_Y
+#define ABS_MT_CNT (ABS_MT_MAX - ABS_MT_MIN + 1)
 
 /**
  * Protocol-specific data.
@@ -73,7 +80,7 @@ struct eventcomm_proto_data {
     int st_to_mt_offset[2];
     double st_to_mt_scale[2];
     struct mtdev *mtdev;
-    int axis_map[MT_ABS_SIZE];
+    int axis_map[ABS_MT_CNT];
     int cur_slot;
     ValuatorMask **last_mt_vals;
     int num_touches;
@@ -782,47 +789,40 @@ event_query_touch(InputInfoPtr pInfo)
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     SynapticsParameters *para = &priv->synpara;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
-    struct mtdev *mtdev;
-    int i;
+    struct libevdev *dev = proto_data->evdev;
+    int axis;
 
     priv->max_touches = 0;
     priv->num_mt_axes = 0;
 
 #ifdef EVIOCGPROP
-    if (libevdev_has_property(proto_data->evdev, INPUT_PROP_SEMI_MT)) {
+    if (libevdev_has_property(dev, INPUT_PROP_SEMI_MT)) {
         xf86IDrvMsg(pInfo, X_INFO,
                     "ignoring touch events for semi-multitouch device\n");
         priv->has_semi_mt = TRUE;
     }
 
-    if (libevdev_has_property(proto_data->evdev, INPUT_PROP_BUTTONPAD)) {
+    if (libevdev_has_property(dev, INPUT_PROP_BUTTONPAD)) {
         xf86IDrvMsg(pInfo, X_INFO, "found clickpad property\n");
         para->clickpad = TRUE;
     }
 #endif
 
-    mtdev = mtdev_new_open(pInfo->fd);
-    if (!mtdev) {
-        xf86IDrvMsg(pInfo, X_WARNING,
-                    "failed to open mtdev when querying touch capabilities\n");
-        return;
-    }
 
-    for (i = 0; i < MT_ABS_SIZE; i++) {
-        if (mtdev->caps.has_abs[i]) {
-            switch (i) {
-                /* X and Y axis info is handed by synaptics already */
-            case ABS_MT_POSITION_X - ABS_MT_TOUCH_MAJOR:
-            case ABS_MT_POSITION_Y - ABS_MT_TOUCH_MAJOR:
-                /* Skip tracking ID info */
-            case ABS_MT_TRACKING_ID - ABS_MT_TOUCH_MAJOR:
-                break;
-            default:
-                priv->num_mt_axes++;
-                break;
-            }
-            priv->has_touch = TRUE;
-        }
+    for (axis = ABS_MT_SLOT + 1; axis <= ABS_MT_MAX; axis++) {
+        if (!libevdev_has_event_code(dev, EV_ABS, axis))
+            continue;
+
+        priv->has_touch = TRUE;
+
+        /* X and Y axis info is handled by synaptics already and we don't
+           expose the tracking ID */
+        if (axis == ABS_MT_POSITION_X ||
+            axis == ABS_MT_POSITION_Y ||
+            axis == ABS_MT_TRACKING_ID)
+            continue;
+
+        priv->num_mt_axes++;
     }
 
     if (priv->has_touch) {
@@ -842,53 +842,53 @@ event_query_touch(InputInfoPtr pInfo)
             AXIS_LABEL_PROP_ABS_MT_PRESSURE,
         };
 
-        if (mtdev->caps.slot.maximum > 0)
-            priv->max_touches = mtdev->caps.slot.maximum -
-                mtdev->caps.slot.minimum + 1;
+        if (libevdev_has_event_code(dev, EV_ABS, ABS_MT_SLOT))
+            priv->max_touches = libevdev_get_num_slots(dev);
+        else
+            priv->max_touches = SYNAPTICS_MAX_TOUCHES;
 
         priv->touch_axes = malloc(priv->num_mt_axes *
                                   sizeof(SynapticsTouchAxisRec));
         if (!priv->touch_axes) {
             priv->has_touch = FALSE;
-            goto out;
+            return;
         }
 
         axnum = 0;
-        for (i = 0; i < MT_ABS_SIZE; i++) {
-            if (mtdev->caps.has_abs[i]) {
-                switch (i) {
-                    /* X and Y axis info is handed by synaptics already, we just
-                     * need to map the evdev codes to the valuator numbers */
-                case ABS_MT_POSITION_X - ABS_MT_TOUCH_MAJOR:
-                    proto_data->axis_map[i] = 0;
+        for (axis = ABS_MT_SLOT + 1; axis <= ABS_MT_MAX; axis++) {
+            int axis_idx = axis - ABS_MT_TOUCH_MAJOR;
+
+            if (!libevdev_has_event_code(dev, EV_ABS, axis))
+                continue;
+
+            switch (axis) {
+                /* X and Y axis info is handled by synaptics already, we just
+                 * need to map the evdev codes to the valuator numbers */
+                case ABS_MT_POSITION_X:
+                    proto_data->axis_map[axis_idx] = 0;
                     break;
 
-                case ABS_MT_POSITION_Y - ABS_MT_TOUCH_MAJOR:
-                    proto_data->axis_map[i] = 1;
+                case ABS_MT_POSITION_Y:
+                    proto_data->axis_map[axis_idx] = 1;
                     break;
 
                     /* Skip tracking ID info */
-                case ABS_MT_TRACKING_ID - ABS_MT_TOUCH_MAJOR:
+                case ABS_MT_TRACKING_ID:
                     break;
 
                 default:
-                    priv->touch_axes[axnum].label = labels[i];
-                    priv->touch_axes[axnum].min = mtdev->caps.abs[i].minimum;
-                    priv->touch_axes[axnum].max = mtdev->caps.abs[i].maximum;
+                    priv->touch_axes[axnum].label = labels[axis_idx];
+                    priv->touch_axes[axnum].min = libevdev_get_abs_minimum(dev, axis);
+                    priv->touch_axes[axnum].max = libevdev_get_abs_maximum(dev, axis);
                     /* Kernel provides units/mm, X wants units/m */
-                    priv->touch_axes[axnum].res =
-                        mtdev->caps.abs[i].resolution * 1000;
+                    priv->touch_axes[axnum].res = libevdev_get_abs_resolution(dev, axis) * 1000;
                     /* Valuators 0-3 are used for X, Y, and scrolling */
-                    proto_data->axis_map[i] = 4 + axnum;
+                    proto_data->axis_map[axis_idx] = 4 + axnum;
                     axnum++;
                     break;
-                }
             }
         }
     }
-
- out:
-    mtdev_close_delete(mtdev);
 }
 
 /**
@@ -904,7 +904,7 @@ EventReadDevDimensions(InputInfoPtr pInfo)
     proto_data = EventProtoDataAlloc(pInfo->fd);
     priv->proto_data = proto_data;
 
-    for (i = 0; i < MT_ABS_SIZE; i++)
+    for (i = 0; i < ABS_MT_CNT; i++)
         proto_data->axis_map[i] = -1;
     proto_data->cur_slot = -1;
 
