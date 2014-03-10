@@ -110,7 +110,7 @@ last_mt_vals_slot(const SynapticsPrivate * priv)
 {
     struct eventcomm_proto_data *proto_data =
         (struct eventcomm_proto_data *) priv->proto_data;
-    int value = proto_data->cur_slot - proto_data->mtdev->caps.slot.minimum;
+    int value = proto_data->cur_slot;
 
     return value < priv->num_slots ? value : -1;
 }
