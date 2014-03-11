@@ -526,7 +526,7 @@ SynapticsReadEvent(InputInfoPtr pInfo, struct input_event *ev)
                 proto_data->read_flag == LIBEVDEV_READ_FLAG_NORMAL) {
                 proto_data->read_flag = LIBEVDEV_READ_FLAG_SYNC;
                 ev->type = EV_SYN;
-                ev->code = SYN_DROPPED;
+                ev->code = SYN_REPORT;
                 ev->value = 0;
                 ev->time = last_event_time;
             } else if (ev->type == EV_SYN)
