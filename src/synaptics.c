@@ -1810,8 +1810,7 @@ SelectTapButton(SynapticsPrivate * priv, enum EdgeType edge)
 {
     enum TapEvent tap;
 
-    if (priv->synpara.touchpad_off == TOUCHPAD_TAP_OFF ||
-        priv->synpara.touchpad_off == TOUCHPAD_CLICK_ONLY) {
+    if (priv->synpara.touchpad_off == TOUCHPAD_TAP_OFF) {
         priv->tap_button = 0;
         return;
     }
@@ -2350,9 +2349,7 @@ HandleScrolling(SynapticsPrivate * priv, struct SynapticsHwState *hw,
     SynapticsParameters *para = &priv->synpara;
     int delay = 1000000000;
 
-    if ((priv->synpara.touchpad_off == TOUCHPAD_TAP_OFF) ||
-        (priv->synpara.touchpad_off == TOUCHPAD_CLICK_ONLY) ||
-        (priv->finger_state == FS_BLOCKED)) {
+    if ((priv->synpara.touchpad_off == TOUCHPAD_TAP_OFF) || (priv->finger_state == FS_BLOCKED)) {
         stop_coasting(priv);
         priv->circ_scroll_on = FALSE;
         priv->vert_scroll_edge_on = FALSE;
@@ -2964,9 +2961,6 @@ HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
     Bool restart_touches = FALSE;
     int i;
 
-    if (para->touchpad_off == TOUCHPAD_CLICK_ONLY)
-        goto out;
-
     if (para->click_action[F3_CLICK1] || para->tap_action[F3_TAP])
         min_touches = 4;
     else if (para->click_action[F2_CLICK1] || para->tap_action[F2_TAP] ||
@@ -3213,8 +3207,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     }
 
     /* Post events */
-    if (finger >= FS_TOUCHED && (dx || dy) && !ignore_motion &&
-            (para->touchpad_off != TOUCHPAD_CLICK_ONLY))
+    if (finger >= FS_TOUCHED && (dx || dy) && !ignore_motion)
         xf86PostMotionEvent(pInfo->dev, 0, 0, 2, dx, dy);
 
     if (priv->mid_emu_state == MBE_LEFT_CLICK) {

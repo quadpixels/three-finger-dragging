@@ -50,8 +50,7 @@
 enum TouchpadState {
     TouchpadOn = 0,
     TouchpadOff = 1,
-    TappingOff = 2,
-    ClickOnly = 3
+    TappingOff = 2
 };
 
 static Bool pad_disabled
@@ -74,7 +73,7 @@ static void
 usage(void)
 {
     fprintf(stderr,
-            "Usage: syndaemon [-i idle-time] [-m poll-delay] [-d] [-t [off|tapping|click-only]] [-k]\n");
+            "Usage: syndaemon [-i idle-time] [-m poll-delay] [-d] [-t] [-k]\n");
     fprintf(stderr,
             "  -i How many seconds to wait after the last key press before\n");
     fprintf(stderr, "     enabling the touchpad. (default is 2.0s)\n");
@@ -83,10 +82,7 @@ usage(void)
     fprintf(stderr, "  -d Start as a daemon, i.e. in the background.\n");
     fprintf(stderr, "  -p Create a pid file with the specified name.\n");
     fprintf(stderr,
-            "  -t Disable state.\n"
-            "     'off' for disabling the touchpad entirely, \n"
-            "     'tapping' for disabling tapping and scrolling only,\n"
-            "     'click-only' for disabling everything but physical clicks.\n");
+            "  -t Only disable tapping and scrolling, not mouse movements.\n");
     fprintf(stderr,
             "  -k Ignore modifier keys when monitoring keyboard activity.\n");
     fprintf(stderr, "  -K Like -k but also ignore Modifier+Key combos.\n");
@@ -551,7 +547,7 @@ main(int argc, char *argv[])
     int use_xrecord = 0;
 
     /* Parse command line parameters */
-    while ((c = getopt(argc, argv, ":i:m:dp:kKR?v")) != EOF) {
+    while ((c = getopt(argc, argv, "i:m:dtp:kKR?v")) != EOF) {
         switch (c) {
         case 'i':
             idle_time = atof(optarg);
@@ -561,6 +557,9 @@ main(int argc, char *argv[])
             break;
         case 'd':
             background = 1;
+            break;
+        case 't':
+            disable_state = TappingOff;
             break;
         case 'p':
             pid_file = optarg;
@@ -579,24 +578,6 @@ main(int argc, char *argv[])
             verbose = 1;
             break;
         case '?':
-            if (optopt != 't')
-                usage();
-            else {
-                if (optind < argc) {
-                    if (argv[optind][0] == '-')
-                        disable_state = TappingOff;
-                    else if (strcmp(argv[optind], "off") == 0)
-                        disable_state = TouchpadOff;
-                    else if (strcmp(argv[optind], "tapping") == 0)
-                        disable_state = TappingOff;
-                    else if (strcmp(argv[optind], "click-only") == 0)
-                        disable_state = ClickOnly;
-                    else
-                        usage();
-                } else
-                    disable_state = TappingOff;
-            }
-            break;
         default:
             usage();
             break;

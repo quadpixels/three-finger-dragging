@@ -63,7 +63,6 @@ enum OffState {
     TOUCHPAD_ON = 0,
     TOUCHPAD_OFF = 1,
     TOUCHPAD_TAP_OFF = 2,
-    TOUCHPAD_CLICK_ONLY = 3
 };
 
 enum TapEvent {
@@ -201,7 +200,6 @@ typedef struct _SynapticsParameters {
                                  * 0 : Not off
                                  * 1 : Off
                                  * 2 : Only tapping and scrolling off
-                                 * 3 : All but physical clicks off
                                  */
     Bool locked_drags;          /* Enable locked drags */
     int locked_drag_time;       /* timeout for locked drags */

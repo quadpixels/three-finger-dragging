@@ -600,7 +600,7 @@ SetProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr prop,
 
         off = *(CARD8 *) prop->data;
 
-        if (off > 3)
+        if (off > 2)
             return BadValue;
 
         para->touchpad_off = off;
