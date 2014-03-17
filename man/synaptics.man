@@ -261,9 +261,14 @@ Valid values are:
 .TS
 l l.
 0	Touchpad is enabled
-1	Touchpad is switched off
+1	Touchpad is switched off (physical clicks still work)
 2	Only tapping and scrolling is switched off
 .TE
+When the touchpad is switched off, button events caused by a physical
+button press are still interpreted. On a ClickPad, this includes
+software-emulated middle and right buttons as defined by
+the SoftButtonAreas setting.
+.TP
 Property: "Synaptics Off"
 .TP
 .BI "Option \*qLockedDrags\*q \*q" boolean \*q

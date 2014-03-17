@@ -1934,7 +1934,8 @@ HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
     enum EdgeType edge;
     int delay = 1000000000;
 
-    if (priv->finger_state == FS_BLOCKED)
+    if (para->touchpad_off == TOUCHPAD_OFF ||
+        priv->finger_state == FS_BLOCKED)
         return delay;
 
     touch = finger >= FS_TOUCHED && priv->finger_state == FS_UNTOUCHED;
@@ -2349,7 +2350,9 @@ HandleScrolling(SynapticsPrivate * priv, struct SynapticsHwState *hw,
     SynapticsParameters *para = &priv->synpara;
     int delay = 1000000000;
 
-    if ((priv->synpara.touchpad_off == TOUCHPAD_TAP_OFF) || (priv->finger_state == FS_BLOCKED)) {
+    if (priv->synpara.touchpad_off == TOUCHPAD_TAP_OFF ||
+        priv->synpara.touchpad_off == TOUCHPAD_OFF ||
+        priv->finger_state == FS_BLOCKED) {
         stop_coasting(priv);
         priv->circ_scroll_on = FALSE;
         priv->vert_scroll_edge_on = FALSE;
@@ -3080,12 +3083,6 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     Bool using_cumulative_coords = FALSE;
     Bool ignore_motion;
 
-    /* If touchpad is switched off, we skip the whole thing and return delay */
-    if (para->touchpad_off == TOUCHPAD_OFF) {
-        UpdateTouchState(pInfo, hw);
-        return delay;
-    }
-
     /* We need both and x/y, the driver can't handle just one of the two
      * yet. But since it's possible to hit a phys button on non-clickpads
      * without ever getting motion data first, we must continue with 0/0 for
@@ -3124,8 +3121,8 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
              current_button_area(para, hw->x, hw->y) == NO_BUTTON_AREA)
         priv->last_button_area = NO_BUTTON_AREA;
 
-    ignore_motion =
-        !using_cumulative_coords && priv->last_button_area != NO_BUTTON_AREA;
+    ignore_motion = para->touchpad_off == TOUCHPAD_OFF ||
+        (!using_cumulative_coords && priv->last_button_area != NO_BUTTON_AREA);
 
     /* these two just update hw->left, right, etc. */
     update_hw_button_state(pInfo, hw, now, &delay);
