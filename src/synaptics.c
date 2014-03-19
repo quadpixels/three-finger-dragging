@@ -576,6 +576,8 @@ set_default_parameters(InputInfoPtr pInfo)
     int width, height, diag, range;
     int horizHyst, vertHyst;
     int middle_button_timeout;
+    int grab_event_device = 0;
+    const char *source;
 
     /* The synaptics specs specify typical edge widths of 4% on x, and 5.4% on
      * y (page 7) [Synaptics TouchPad Interfacing Guide, 510-000080 - A
@@ -747,7 +749,16 @@ set_default_parameters(InputInfoPtr pInfo)
         xf86SetRealOption(opts, "PressureMotionMinFactor", 1.0);
     pars->press_motion_max_factor =
         xf86SetRealOption(opts, "PressureMotionMaxFactor", 1.0);
-    pars->grab_event_device = xf86SetBoolOption(opts, "GrabEventDevice", TRUE);
+
+    /* Only grab the device by default if it's not coming from a config
+       backend. This way we avoid the device being added twice and sending
+       duplicate events.
+      */
+    source = xf86CheckStrOption(opts, "_source", NULL);
+    if (source == NULL || strncmp(source, "server/", 7) != 0)
+        grab_event_device = TRUE;
+    pars->grab_event_device = xf86SetBoolOption(opts, "GrabEventDevice", grab_event_device);
+
     pars->tap_and_drag_gesture =
         xf86SetBoolOption(opts, "TapAndDragGesture", TRUE);
     pars->resolution_horiz =
