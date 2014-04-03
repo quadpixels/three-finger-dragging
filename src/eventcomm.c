@@ -110,16 +110,6 @@ EventProtoDataAlloc(int fd)
     return proto_data;
 }
 
-static int
-last_mt_vals_slot(const SynapticsPrivate * priv)
-{
-    struct eventcomm_proto_data *proto_data =
-        (struct eventcomm_proto_data *) priv->proto_data;
-    int value = proto_data->cur_slot;
-
-    return value < priv->num_slots ? value : -1;
-}
-
 static void
 UninitializeTouch(InputInfoPtr pInfo)
 {
@@ -549,7 +539,7 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
         proto_data->cur_slot = ev->value;
     }
     else {
-        int slot_index = last_mt_vals_slot(priv);
+        int slot_index = proto_data->cur_slot;
 
         if (slot_index < 0)
             return;
