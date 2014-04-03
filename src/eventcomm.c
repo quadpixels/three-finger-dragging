@@ -491,8 +491,10 @@ SynapticsReadEvent(InputInfoPtr pInfo, struct input_event *ev)
         if (rc != -EAGAIN) {
             LogMessageVerbSigSafe(X_ERROR, 0, "%s: Read error %d\n", pInfo->name,
                     errno);
-        } else if (proto_data->read_flag == LIBEVDEV_READ_FLAG_SYNC)
+        } else if (proto_data->read_flag == LIBEVDEV_READ_FLAG_SYNC) {
             proto_data->read_flag = LIBEVDEV_READ_FLAG_NORMAL;
+            return SynapticsReadEvent(pInfo, ev);
+        }
 
         return FALSE;
     }
