@@ -87,11 +87,45 @@ struct eventcomm_proto_data {
     enum libevdev_read_flag read_flag;
 };
 
+static void
+libevdev_log_func(enum libevdev_log_priority priority,
+                  void *data,
+                  const char *file, int line, const char *func,
+                  const char *format, va_list args)
+_X_ATTRIBUTE_PRINTF(6, 0);
+
+static void
+libevdev_log_func(enum libevdev_log_priority priority,
+                  void *data,
+                  const char *file, int line, const char *func,
+                  const char *format, va_list args)
+{
+    int verbosity;
+
+    switch(priority) {
+        case LIBEVDEV_LOG_ERROR: verbosity = 0; break;
+        case LIBEVDEV_LOG_INFO: verbosity = 4; break;
+        case LIBEVDEV_LOG_DEBUG: verbosity = 10; break;
+    }
+
+    LogVMessageVerbSigSafe(X_NOTICE, verbosity, format, args);
+}
+
+static void
+set_libevdev_log_handler(void)
+{
+                              /* be quiet, gcc *handwave* */
+    libevdev_set_log_function((libevdev_log_func_t)libevdev_log_func, NULL);
+    libevdev_set_log_priority(LIBEVDEV_LOG_DEBUG);
+}
+
 struct eventcomm_proto_data *
 EventProtoDataAlloc(int fd)
 {
     struct eventcomm_proto_data *proto_data;
     int rc;
+
+    set_libevdev_log_handler();
 
     proto_data = calloc(1, sizeof(struct eventcomm_proto_data));
     if (!proto_data)
@@ -181,6 +215,8 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
     struct eventcomm_proto_data *proto_data =
         (struct eventcomm_proto_data *) priv->proto_data;
 
+    set_libevdev_log_handler();
+
     if (libevdev_get_fd(proto_data->evdev) != -1) {
         struct input_event ev;
 
@@ -224,6 +260,8 @@ EventDeviceOffHook(InputInfoPtr pInfo)
 
     UninitializeTouch(pInfo);
     libevdev_grab(proto_data->evdev, LIBEVDEV_UNGRAB);
+    libevdev_set_log_function(NULL, NULL);
+    libevdev_set_log_priority(LIBEVDEV_LOG_INFO); /* reset to default */
 
     return Success;
 }
@@ -624,6 +662,8 @@ EventReadHwState(InputInfoPtr pInfo,
     SynapticsParameters *para = &priv->synpara;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
     Bool sync_cumulative = FALSE;
+
+    set_libevdev_log_handler();
 
     SynapticsResetTouchHwState(hw, FALSE);
 
