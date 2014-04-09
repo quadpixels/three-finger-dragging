@@ -37,7 +37,8 @@
     </match>
 
     <match
-        key="/org/freedesktop/Hal/devices/computer:system.hardware.version" contains_outof="T440;X240;T540;Helix;S1Yoga">
+        key="/org/freedesktop/Hal/devices/computer:system.hardware.version"
+        contains_outof="ThinkPad T440;ThinkPad X240;ThinkPad T540;ThinkPad Helix;ThinkPad S1 Yoga;ThinkPad L440;ThinkPad X1 Carbon 2nd;ThinkPad T431;ThinkPad L540">
         <match key="input.product" contains="Synaptics">
             <merge key="input.x11_options.ClickPad" type="string">on</merge>
             <merge key="input.x11_options.SecondarySoftButtonAreas" type="string">58% 0 0 8% 42% 58% 0 8%</merge>
