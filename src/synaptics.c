@@ -2673,26 +2673,11 @@ clickpad_guess_clickfingers(SynapticsPrivate * priv,
     }
 
     /* Some trackpads touchpad only track two touchpoints but announce
-       BTN_TOOL_TRIPLETAP (which sets hw->numFingers to 3).
-       This can affect clickfingers, in the following ways:
-       * one finger down: normal click
-       * two fingers down, close together: 2 finger click
-       * two fingers down, apart: normal click
-       * three fingers down, close together: 3 finger click
-       * three fingers down, with two grouped next to each other: should be
-       * 2-finger click but we can't detect this.
-       * so: if two detected fingers are close together and HW says three
-       * fingers, make it three fingers.
-       * if two detected fingers are apart and HW says three fingers, make
-       * it a two-finger click, guessing that the third finger is somewhere
-       * close to another finger.
-       */
-    if (hw->numFingers >= 3 && nfingers < hw->numFingers) {
-        if (!nfingers) /* touchpoints too far apart */
-            nfingers = 2;
-        else
-            nfingers++;
-    }
+     * BTN_TOOL_TRIPLETAP (which sets hw->numFingers to 3), when this happens
+     * the user likely intents to do a 3 finger click, so handle it as such.
+     */
+    if (hw->numFingers >= 3 && hw->num_mt_mask < 3)
+        nfingers = 3;
 
     return nfingers;
 }
