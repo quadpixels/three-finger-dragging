@@ -50,6 +50,9 @@
 #ifndef INPUT_PROP_SEMI_MT
 #define INPUT_PROP_SEMI_MT 0x03
 #endif
+#ifndef INPUT_PROP_TOPBUTTONPAD
+#define INPUT_PROP_TOPBUTTONPAD 0x04
+#endif
 #ifndef ABS_MT_TOOL_Y
 #define ABS_MT_TOOL_Y 0x3d
 #endif
@@ -801,6 +804,11 @@ event_query_touch(InputInfoPtr pInfo)
     if (libevdev_has_property(dev, INPUT_PROP_BUTTONPAD)) {
         xf86IDrvMsg(pInfo, X_INFO, "found clickpad property\n");
         para->clickpad = TRUE;
+    }
+
+    if (libevdev_has_property(dev, INPUT_PROP_TOPBUTTONPAD)) {
+        xf86IDrvMsg(pInfo, X_INFO, "found top buttonpad property\n");
+        para->has_secondary_buttons = TRUE;
     }
 #endif
 

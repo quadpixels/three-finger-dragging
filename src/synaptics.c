@@ -674,6 +674,10 @@ set_default_parameters(InputInfoPtr pInfo)
     pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 180);
     pars->click_time = xf86SetIntOption(opts, "ClickTime", 100);
     pars->clickpad = xf86SetBoolOption(opts, "ClickPad", pars->clickpad);       /* Probed */
+    if (pars->clickpad)
+        pars->has_secondary_buttons = xf86SetBoolOption(opts,
+                                                        "HasSecondarySoftButtons",
+                                                        pars->has_secondary_buttons);
     pars->clickpad_ignore_motion_time = 100; /* ms */
     /* middle mouse button emulation on a clickpad? nah, you're joking */
     middle_button_timeout = pars->clickpad ? 0 : 75;
@@ -777,7 +781,8 @@ set_default_parameters(InputInfoPtr pInfo)
     }
 
     set_primary_softbutton_areas_option(pInfo);
-    set_secondary_softbutton_areas_option(pInfo);
+    if (pars->has_secondary_buttons)
+        set_secondary_softbutton_areas_option(pInfo);
 }
 
 static double

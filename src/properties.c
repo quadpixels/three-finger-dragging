@@ -176,6 +176,9 @@ InitSoftButtonProperty(InputInfoPtr pInfo)
     prop_softbutton_areas =
         InitAtom(pInfo->dev, SYNAPTICS_PROP_SOFTBUTTON_AREAS, 32, 8, values);
 
+    if (!para->has_secondary_buttons)
+        return;
+
     values[0] = para->softbutton_areas[TOP_RIGHT_BUTTON_AREA][LEFT];
     values[1] = para->softbutton_areas[TOP_RIGHT_BUTTON_AREA][RIGHT];
     values[2] = para->softbutton_areas[TOP_RIGHT_BUTTON_AREA][TOP];
