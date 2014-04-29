@@ -722,7 +722,7 @@ support at runime, the user must also set the middle mouse button timeout to
 driver.
 .LP
 ClickPads provide software emulated buttons through 
-.B Option SoftButtonAreas.
+.B Option \*qSoftButtonAreas\*q.
 These buttons enable areas on the touchpad to perform as right or middle
 mouse button. When the user performs a click within a defined soft button
 area, a right or middle click is performed.
