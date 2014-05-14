@@ -117,6 +117,13 @@ esac
 if test "x$BUILD_EVENTCOMM" = xyes; then
     AC_DEFINE(BUILD_EVENTCOMM, 1, [Optional backend eventcomm enabled])
     PKG_CHECK_MODULES(LIBEVDEV, [libevdev >= 0.4])
+    SAVE_LIBS="$LIBS"
+    LIBS="$LIBEVDEV_LIBS"
+    AC_CHECK_LIB(evdev, libevdev_set_device_log_function,
+                      [AC_DEFINE(HAVE_LIBEVDEV_DEVICE_LOG_FUNCS, 1,
+                       [libevdev supports per-device log functions])],
+                       [])
+    LIBS="$SAVE_LIBS"
 fi
 if test "x$BUILD_PSMCOMM" = xyes; then
     AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])

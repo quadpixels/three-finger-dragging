@@ -90,15 +90,18 @@ struct eventcomm_proto_data {
     enum libevdev_read_flag read_flag;
 };
 
+#ifdef HAVE_LIBEVDEV_DEVICE_LOG_FUNCS
 static void
-libevdev_log_func(enum libevdev_log_priority priority,
+libevdev_log_func(const struct libevdev *dev,
+                  enum libevdev_log_priority priority,
                   void *data,
                   const char *file, int line, const char *func,
                   const char *format, va_list args)
-_X_ATTRIBUTE_PRINTF(6, 0);
+_X_ATTRIBUTE_PRINTF(7, 0);
 
 static void
-libevdev_log_func(enum libevdev_log_priority priority,
+libevdev_log_func(const struct libevdev *dev,
+                  enum libevdev_log_priority priority,
                   void *data,
                   const char *file, int line, const char *func,
                   const char *format, va_list args)
@@ -113,14 +116,7 @@ libevdev_log_func(enum libevdev_log_priority priority,
 
     LogVMessageVerbSigSafe(X_NOTICE, verbosity, format, args);
 }
-
-static void
-set_libevdev_log_handler(void)
-{
-                              /* be quiet, gcc *handwave* */
-    libevdev_set_log_function((libevdev_log_func_t)libevdev_log_func, NULL);
-    libevdev_set_log_priority(LIBEVDEV_LOG_DEBUG);
-}
+#endif
 
 struct eventcomm_proto_data *
 EventProtoDataAlloc(int fd)
@@ -128,7 +124,6 @@ EventProtoDataAlloc(int fd)
     struct eventcomm_proto_data *proto_data;
     int rc;
 
-    set_libevdev_log_handler();
 
     proto_data = calloc(1, sizeof(struct eventcomm_proto_data));
     if (!proto_data)
@@ -137,12 +132,31 @@ EventProtoDataAlloc(int fd)
     proto_data->st_to_mt_scale[0] = 1;
     proto_data->st_to_mt_scale[1] = 1;
 
-    rc = libevdev_new_from_fd(fd, &proto_data->evdev);
+    proto_data->evdev = libevdev_new();
+    if (!proto_data->evdev) {
+        rc = -1;
+        goto out;
+    }
+
+#ifdef HAVE_LIBEVDEV_DEVICE_LOG_FUNCS
+    libevdev_set_device_log_function(proto_data->evdev, libevdev_log_func,
+                                     LIBEVDEV_LOG_DEBUG, NULL);
+#endif
+
+    rc = libevdev_set_fd(proto_data->evdev, fd);
     if (rc < 0) {
+        goto out;
+    }
+
+    proto_data->read_flag = LIBEVDEV_READ_FLAG_NORMAL;
+
+out:
+    if (rc < 0) {
+        if (proto_data && proto_data->evdev)
+            libevdev_free(proto_data->evdev);
         free(proto_data);
         proto_data = NULL;
-    } else
-        proto_data->read_flag = LIBEVDEV_READ_FLAG_NORMAL;
+    }
 
     return proto_data;
 }
@@ -217,8 +231,6 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     struct eventcomm_proto_data *proto_data =
         (struct eventcomm_proto_data *) priv->proto_data;
-
-    set_libevdev_log_handler();
 
     if (libevdev_get_fd(proto_data->evdev) != -1) {
         struct input_event ev;
@@ -650,8 +662,6 @@ EventReadHwState(InputInfoPtr pInfo,
     SynapticsParameters *para = &priv->synpara;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
     Bool sync_cumulative = FALSE;
-
-    set_libevdev_log_handler();
 
     SynapticsResetTouchHwState(hw, FALSE);
 
