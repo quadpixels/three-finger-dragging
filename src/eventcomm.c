@@ -278,49 +278,33 @@ EventDeviceOffHook(InputInfoPtr pInfo)
  * - BTN_TOOL_PEN is _not_ set
  *
  * @param evdev Libevdev handle
- * @param test_grab If true, test whether an EVIOCGRAB is possible on the
- * device. A failure to grab the event device returns in a failure.
  *
  * @return TRUE if the device is a touchpad or FALSE otherwise.
  */
 static Bool
-event_query_is_touchpad(struct libevdev *evdev, BOOL test_grab)
+event_query_is_touchpad(struct libevdev *evdev)
 {
-    int ret = FALSE, rc;
-
-    if (test_grab) {
-        rc = libevdev_grab(evdev, LIBEVDEV_GRAB);
-        if (rc < 0)
-            return FALSE;
-    }
-
     /* Check for ABS_X, ABS_Y, ABS_PRESSURE and BTN_TOOL_FINGER */
     if (!libevdev_has_event_type(evdev, EV_SYN) ||
         !libevdev_has_event_type(evdev, EV_ABS) ||
         !libevdev_has_event_type(evdev, EV_KEY))
-        goto unwind;
+        return FALSE;
 
     if (!libevdev_has_event_code(evdev, EV_ABS, ABS_X) ||
         !libevdev_has_event_code(evdev, EV_ABS, ABS_Y))
-        goto unwind;
+        return FALSE;
 
     /* we expect touchpad either report raw pressure or touches */
     if (!libevdev_has_event_code(evdev, EV_KEY, BTN_TOUCH) &&
         !libevdev_has_event_code(evdev, EV_ABS, ABS_PRESSURE))
-        goto unwind;
+        return FALSE;
 
     /* all Synaptics-like touchpad report BTN_TOOL_FINGER */
     if (!libevdev_has_event_code(evdev, EV_KEY, BTN_TOOL_FINGER) ||
         libevdev_has_event_code(evdev, EV_ABS, BTN_TOOL_PEN)) /* Don't match wacom tablets */
-        goto unwind;
+        return FALSE;
 
-    ret = TRUE;
-
- unwind:
-    if (test_grab)
-        libevdev_grab(evdev, LIBEVDEV_UNGRAB);
-
-    return (ret == TRUE);
+    return TRUE;
 }
 
 #define PRODUCT_ANY 0x0000
@@ -512,8 +496,7 @@ EventQueryHardware(InputInfoPtr pInfo)
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     struct eventcomm_proto_data *proto_data = priv->proto_data;
 
-    if (!event_query_is_touchpad(proto_data->evdev,
-                                 (proto_data) ? proto_data->need_grab : TRUE))
+    if (!event_query_is_touchpad(proto_data->evdev))
         return FALSE;
 
     xf86IDrvMsg(pInfo, X_PROBED, "touchpad found\n");
@@ -912,7 +895,7 @@ EventReadDevDimensions(InputInfoPtr pInfo)
         proto_data->axis_map[i] = -1;
     proto_data->cur_slot = -1;
 
-    if (event_query_is_touchpad(proto_data->evdev, proto_data->need_grab)) {
+    if (event_query_is_touchpad(proto_data->evdev)) {
         event_query_touch(pInfo);
         event_query_axis_ranges(pInfo);
     }
@@ -946,7 +929,7 @@ EventAutoDevProbe(InputInfoPtr pInfo, const char *device)
 
             rc = libevdev_new_from_fd(fd, &evdev);
             if (rc >= 0) {
-                touchpad_found = event_query_is_touchpad(evdev, TRUE);
+                touchpad_found = event_query_is_touchpad(evdev);
                 libevdev_free(evdev);
             }
 
@@ -988,7 +971,7 @@ EventAutoDevProbe(InputInfoPtr pInfo, const char *device)
 
             rc = libevdev_new_from_fd(fd, &evdev);
             if (rc >= 0) {
-                touchpad_found = event_query_is_touchpad(evdev, TRUE);
+                touchpad_found = event_query_is_touchpad(evdev);
                 libevdev_free(evdev);
                 if (touchpad_found) {
                     xf86IDrvMsg(pInfo, X_PROBED, "auto-dev sets device to %s\n",
