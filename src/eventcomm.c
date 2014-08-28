@@ -111,7 +111,10 @@ libevdev_log_func(const struct libevdev *dev,
     switch(priority) {
         case LIBEVDEV_LOG_ERROR: verbosity = 0; break;
         case LIBEVDEV_LOG_INFO: verbosity = 4; break;
-        case LIBEVDEV_LOG_DEBUG: verbosity = 10; break;
+        case LIBEVDEV_LOG_DEBUG:
+        default:
+            verbosity = 10;
+            break;
     }
 
     LogVMessageVerbSigSafe(X_NOTICE, verbosity, format, args);
