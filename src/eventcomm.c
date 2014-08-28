@@ -39,6 +39,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 #include "synproto.h"
 #include "synapticsstr.h"
 #include <xf86.h>
@@ -88,6 +89,8 @@ struct eventcomm_proto_data {
 
     struct libevdev *evdev;
     enum libevdev_read_flag read_flag;
+
+    int have_monotonic_clock;
 };
 
 #ifdef HAVE_LIBEVDEV_DEVICE_LOG_FUNCS
@@ -234,6 +237,7 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     struct eventcomm_proto_data *proto_data =
         (struct eventcomm_proto_data *) priv->proto_data;
+    int ret;
 
     if (libevdev_get_fd(proto_data->evdev) != -1) {
         struct input_event ev;
@@ -253,7 +257,6 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
 
     if (para->grab_event_device) {
         /* Try to grab the event device so that data don't leak to /dev/input/mice */
-        int ret;
 
         ret = libevdev_grab(proto_data->evdev, LIBEVDEV_GRAB);
         if (ret < 0) {
@@ -264,6 +267,9 @@ EventDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters * para)
     }
 
     proto_data->need_grab = FALSE;
+
+    ret = libevdev_set_clock_id(proto_data->evdev, CLOCK_MONOTONIC);
+    proto_data->have_monotonic_clock = (ret == 0);
 
     InitializeTouch(pInfo);
 
@@ -682,7 +688,10 @@ EventReadHwState(InputInfoPtr pInfo,
             switch (ev.code) {
             case SYN_REPORT:
                 hw->numFingers = count_fingers(pInfo, comm);
-                hw->millis = 1000 * ev.time.tv_sec + ev.time.tv_usec / 1000;
+                if (proto_data->have_monotonic_clock)
+                    hw->millis = 1000 * ev.time.tv_sec + ev.time.tv_usec / 1000;
+                else
+                    hw->millis = GetTimeInMillis();
                 SynapticsCopyHwState(hwRet, hw);
                 return TRUE;
             }
