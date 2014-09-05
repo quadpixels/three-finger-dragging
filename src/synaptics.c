@@ -495,7 +495,7 @@ set_softbutton_areas_option(InputInfoPtr pInfo, char *option_name, int offset)
         values[i] = value;
 
         if (next_num != end_str) {
-            if (end_str && *end_str == '%') {
+            if (*end_str == '%') {
                 in_percent |= 1 << i;
                 end_str++;
             }
