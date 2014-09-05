@@ -843,7 +843,7 @@ event_query_touch(InputInfoPtr pInfo)
     if (priv->has_touch) {
         int axnum;
 
-        static const char *labels[] = {
+        static const char *labels[ABS_MT_MAX] = {
             AXIS_LABEL_PROP_ABS_MT_TOUCH_MAJOR,
             AXIS_LABEL_PROP_ABS_MT_TOUCH_MINOR,
             AXIS_LABEL_PROP_ABS_MT_WIDTH_MAJOR,
@@ -855,6 +855,9 @@ event_query_touch(InputInfoPtr pInfo)
             AXIS_LABEL_PROP_ABS_MT_BLOB_ID,
             AXIS_LABEL_PROP_ABS_MT_TRACKING_ID,
             AXIS_LABEL_PROP_ABS_MT_PRESSURE,
+            AXIS_LABEL_PROP_ABS_MT_DISTANCE,
+            AXIS_LABEL_PROP_ABS_MT_TOOL_X,
+            AXIS_LABEL_PROP_ABS_MT_TOOL_Y,
         };
 
         priv->max_touches = libevdev_get_num_slots(dev);
@@ -888,7 +891,13 @@ event_query_touch(InputInfoPtr pInfo)
                     break;
 
                 default:
-                    priv->touch_axes[axnum].label = labels[axis_idx];
+                    if (axis_idx >= sizeof(labels)/sizeof(labels[0])) {
+                        xf86IDrvMsg(pInfo, X_ERROR,
+                                    "Axis %d out of label range. This is a bug\n",
+                                    axis);
+                        priv->touch_axes[axnum].label = NULL;
+                    } else
+                        priv->touch_axes[axnum].label = labels[axis_idx];
                     priv->touch_axes[axnum].min = libevdev_get_abs_minimum(dev, axis);
                     priv->touch_axes[axnum].max = libevdev_get_abs_maximum(dev, axis);
                     /* Kernel provides units/mm, X wants units/m */
