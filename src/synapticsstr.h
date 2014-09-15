@@ -226,6 +226,8 @@ typedef struct _SynapticsParameters {
     int area_left_edge, area_right_edge, area_top_edge, area_bottom_edge;       /* area coordinates absolute */
     int softbutton_areas[4][4]; /* soft button area coordinates, 0 => right, 1 => middle , 2 => secondary right, 3 => secondary middle button */
     int hyst_x, hyst_y;         /* x and y width of hysteresis box */
+
+    int maxDeltaMM;               /* maximum delta movement (vector length) in mm */
 } SynapticsParameters;
 
 struct _SynapticsPrivateRec {

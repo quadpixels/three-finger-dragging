@@ -780,6 +780,23 @@ set_default_parameters(InputInfoPtr pInfo)
         pars->resolution_vert = 1;
     }
 
+    /* Touchpad sampling rate is too low to detect all movements.
+       A user may lift one finger and put another one down within the same
+       EV_SYN or even between samplings so the driver doesn't notice at all.
+
+       We limit the movement to 20 mm within one event, that is more than
+       recordings showed is needed (17mm on a T440).
+      */
+    if (pars->resolution_horiz > 1 &&
+        pars->resolution_vert > 1)
+        pars->maxDeltaMM = 20;
+    else {
+        /* on devices without resolution set the vector length to 0.25 of
+           the touchpad diagonal */
+        pars->maxDeltaMM = diag * 0.25;
+    }
+
+
     /* Warn about (and fix) incorrectly configured TopEdge/BottomEdge parameters */
     if (pars->top_edge > pars->bottom_edge) {
         int tmp = pars->top_edge;
@@ -2229,6 +2246,13 @@ get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
     *dy = integral;
 }
 
+/* Vector length, but not sqrt'ed, we only need it for comparison */
+static inline double
+vlenpow2(double x, double y)
+{
+    return x * x + y * y;
+}
+
 /**
  * Compute relative motion ('deltas') including edge motion.
  */
@@ -2238,6 +2262,7 @@ ComputeDeltas(SynapticsPrivate * priv, const struct SynapticsHwState *hw,
 {
     enum MovingState moving_state;
     double dx, dy;
+    double vlen;
     int delay = 1000000000;
 
     dx = dy = 0;
@@ -2282,6 +2307,14 @@ ComputeDeltas(SynapticsPrivate * priv, const struct SynapticsHwState *hw,
 
  out:
     priv->prevFingers = hw->numFingers;
+
+    vlen = vlenpow2(dx/priv->synpara.resolution_horiz,
+                    dy/priv->synpara.resolution_vert);
+
+    if (vlen > priv->synpara.maxDeltaMM * priv->synpara.maxDeltaMM) {
+        dx = 0;
+        dy = 0;
+    }
 
     *dxP = dx;
     *dyP = dy;
