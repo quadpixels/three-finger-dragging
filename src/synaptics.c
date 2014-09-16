@@ -769,6 +769,16 @@ set_default_parameters(InputInfoPtr pInfo)
         xf86SetIntOption(opts, "HorizResolution", horizResolution);
     pars->resolution_vert =
         xf86SetIntOption(opts, "VertResolution", vertResolution);
+    if (pars->resolution_horiz <= 0) {
+        xf86IDrvMsg(pInfo, X_ERROR,
+                    "Invalid X resolution, using 1 instead.\n");
+        pars->resolution_horiz = 1;
+    }
+    if (pars->resolution_vert <= 0) {
+        xf86IDrvMsg(pInfo, X_ERROR,
+                    "Invalid Y resolution, using 1 instead.\n");
+        pars->resolution_vert = 1;
+    }
 
     /* Warn about (and fix) incorrectly configured TopEdge/BottomEdge parameters */
     if (pars->top_edge > pars->bottom_edge) {
