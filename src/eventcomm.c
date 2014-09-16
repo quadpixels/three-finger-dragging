@@ -606,6 +606,14 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
                 hw->slot_state[slot_index] = SLOTSTATE_CLOSE;
                 proto_data->num_touches--;
             }
+
+            /* When there are no fingers on the touchpad, set width and
+             * pressure to zero as ABS_MT_TOUCH_MAJOR and ABS_MT_PRESSURE
+             * are not zero when fingers are released. */
+            if (proto_data->num_touches == 0) {
+                hw->fingerWidth = 0;
+                hw->z = 0;
+            }
         }
         else {
             ValuatorMask *mask = proto_data->last_mt_vals[slot_index];
@@ -618,6 +626,10 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
                     hw->cumulative_dx += ev->value - last_val;
                 else if (ev->code == ABS_MT_POSITION_Y)
                     hw->cumulative_dy += ev->value - last_val;
+                else if (ev->code == ABS_MT_TOUCH_MAJOR)
+                    hw->fingerWidth = ev->value;
+                else if (ev->code == ABS_MT_PRESSURE)
+                    hw->z = ev->value;
             }
 
             valuator_mask_set(mask, map, ev->value);
