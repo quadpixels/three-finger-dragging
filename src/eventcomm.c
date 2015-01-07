@@ -626,9 +626,11 @@ EventProcessTouchEvent(InputInfoPtr pInfo, struct SynapticsHwState *hw,
                     hw->cumulative_dx += ev->value - last_val;
                 else if (ev->code == ABS_MT_POSITION_Y)
                     hw->cumulative_dy += ev->value - last_val;
-                else if (ev->code == ABS_MT_TOUCH_MAJOR)
+                else if (ev->code == ABS_MT_TOUCH_MAJOR &&
+                         priv->has_mt_palm_detect)
                     hw->fingerWidth = ev->value;
-                else if (ev->code == ABS_MT_PRESSURE)
+                else if (ev->code == ABS_MT_PRESSURE &&
+                         priv->has_mt_palm_detect)
                     hw->z = ev->value;
             }
 
@@ -879,6 +881,10 @@ event_query_touch(InputInfoPtr pInfo)
             priv->has_touch = FALSE;
             return;
         }
+
+        if (libevdev_has_event_code(dev, EV_ABS, ABS_MT_TOUCH_MAJOR) &&
+            libevdev_has_event_code(dev, EV_ABS, ABS_MT_PRESSURE))
+            priv->has_mt_palm_detect = TRUE;
 
         axnum = 0;
         for (axis = ABS_MT_SLOT + 1; axis <= ABS_MT_MAX; axis++) {

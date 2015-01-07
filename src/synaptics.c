@@ -1829,7 +1829,7 @@ SynapticsDetectFinger(SynapticsPrivate * priv, struct SynapticsHwState *hw)
     if ((hw->z > para->palm_min_z) && (hw->fingerWidth > para->palm_min_width))
         return FS_BLOCKED;
 
-    if (priv->has_touch)
+    if (priv->has_mt_palm_detect)
         return finger;
 
     if (hw->x == 0 || priv->finger_state == FS_UNTOUCHED)

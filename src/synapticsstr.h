@@ -310,6 +310,7 @@ struct _SynapticsPrivateRec {
     Bool has_width;             /* device reports finger width */
     Bool has_scrollbuttons;     /* device has physical scrollbuttons */
     Bool has_semi_mt;           /* device is only semi-multitouch capable */
+    Bool has_mt_palm_detect;    /* device reports per finger width and pressure */
 
     enum TouchpadModel model;   /* The detected model */
     unsigned short id_vendor;   /* vendor id */
