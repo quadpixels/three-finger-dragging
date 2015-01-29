@@ -518,6 +518,20 @@ initialized if
 .B Option \*qHasSecondarySoftButtons\*q 
 is enabled and this option is set in the __xconfigfile__(__filemansuffix__).
 .
+.TP
+.BI "Option \*qHasTrackpointButtons\*q \*q" boolean \*q
+This option is only available on selected devices. You should never need to
+set this option manually, your distribution should ship
+__xconfigfile__(__filemansuffix__) snippets to enable this option where
+required. Devices that require this option include the Lenovo X1 Carbon 3rd
+and the Lenovo *50 series (T450, T550, etc.).
+If enabled, the device is considered to have the trackpoint left, middle,
+right buttons wired to the touchpad. If set, this option disables scroll
+buttons, i.e.
+.B Option \*qUpDownScrolling\*q, \*qLeftRightScrolling\*q
+and the respective repeat options for scroll buttons.
+This options is considered a hardware property and is not exposed as
+configurable X Input device property.
 
 .SH CONFIGURATION DETAILS
 .SS Area handling

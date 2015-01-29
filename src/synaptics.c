@@ -703,6 +703,12 @@ set_default_parameters(InputInfoPtr pInfo)
     pars->touchpad_off = xf86SetIntOption(opts, "TouchpadOff", TOUCHPAD_ON);
 
     if (priv->has_scrollbuttons) {
+        priv->has_trackpoint_buttons = xf86SetBoolOption(opts, "HasTrackpointButtons", FALSE);
+        if (priv->has_trackpoint_buttons)
+            priv->has_scrollbuttons = FALSE;
+    }
+
+    if (priv->has_scrollbuttons) {
         pars->updown_button_scrolling =
             xf86SetBoolOption(opts, "UpDownScrolling", TRUE);
         pars->leftright_button_scrolling =
@@ -1081,6 +1087,7 @@ SynapticsReset(SynapticsPrivate * priv)
     priv->mid_emu_state = MBE_OFF;
     priv->nextRepeat = 0;
     priv->lastButtons = 0;
+    priv->lastTrackpointButtons = 0;
     priv->prev_z = 0;
     priv->prevFingers = 0;
     priv->num_active_touches = 0;
@@ -2782,6 +2789,34 @@ handle_clickfinger(SynapticsPrivate * priv, struct SynapticsHwState *hw)
     }
 }
 
+static void
+handle_trackpoint_buttons(const InputInfoPtr pInfo,
+                          struct SynapticsHwState *hw)
+{
+    SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
+    unsigned int buttons, change;
+    int id;
+
+   buttons = (hw->multi[0] ? 0x1 : 0) |
+             (hw->multi[1] ? 0x4 : 0) |
+             (hw->multi[2] ? 0x2 : 0);
+
+    change = buttons ^ priv->lastTrackpointButtons;
+    while (change) {
+        id = ffs(change);       /* number of first set bit 1..32 is returned */
+        change &= ~(1 << (id - 1));
+        xf86PostButtonEvent(pInfo->dev, FALSE, id,
+                            (buttons & (1 << (id - 1))),
+                            0, 0);
+    }
+
+    hw->multi[0] = FALSE;
+    hw->multi[1] = FALSE;
+    hw->multi[2] = FALSE;
+
+    priv->lastTrackpointButtons = buttons;
+}
+
 /* Adjust the hardware state according to the extra buttons (if the touchpad
  * has any and not many touchpads do these days). These buttons are up/down
  * tilt buttons and/or left/right buttons that then map into a specific
@@ -3136,6 +3171,13 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     Bool inside_active_area;
     Bool using_cumulative_coords = FALSE;
     Bool ignore_motion;
+
+    /* if we have phys. trackpoint buttons wired up to the touchpad, process
+     * them first. They belong to a different device so we don't care about
+     * sending out motion events before the trackpoint buttons. This makes
+     * the code a lot easier to slot in */
+    if (priv->has_trackpoint_buttons)
+        handle_trackpoint_buttons(pInfo, hw);
 
     /* We need both and x/y, the driver can't handle just one of the two
      * yet. But since it's possible to hit a phys button on non-clickpads
