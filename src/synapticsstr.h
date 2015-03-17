@@ -289,7 +289,6 @@ struct _SynapticsPrivateRec {
     int repeatButtons;          /* buttons for repeat */
     int nextRepeat;             /* Time when to trigger next auto repeat event */
     int lastButtons;            /* last state of the buttons */
-    int lastTrackpointButtons;  /* last state of the trackpoint buttons */
     int prev_z;                 /* previous z value, for palm detection */
     int prevFingers;            /* previous numFingers, for transition detection */
     int avg_width;              /* weighted average of previous fingerWidth values */
@@ -309,7 +308,6 @@ struct _SynapticsPrivateRec {
     Bool has_pressure;          /* device reports pressure */
     Bool has_width;             /* device reports finger width */
     Bool has_scrollbuttons;     /* device has physical scrollbuttons */
-    Bool has_trackpoint_buttons;/* device has trackpoint buttons wired to touchpad */
     Bool has_semi_mt;           /* device is only semi-multitouch capable */
     Bool has_mt_palm_detect;    /* device reports per finger width and pressure */
 

@@ -25,10 +25,3 @@ else
 fdidir = $(datadir)/hal/fdi/policy/20thirdparty
 dist_fdi_DATA = 11-x11-synaptics.fdi
 endif
-
-if HAVE_UDEV_RULES_DIR
-udevdir=$(UDEV_RULES_DIR)
-udev_DATA = 71-synaptics.rules
-endif
-
-EXTRA_DIST = 71-synaptics.rules

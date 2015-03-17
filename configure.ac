@@ -135,16 +135,6 @@ AM_CONDITIONAL([BUILD_EVENTCOMM], [test "x${BUILD_EVENTCOMM}" = "xyes"])
 AM_CONDITIONAL([BUILD_PSMCOMM], [test "x${BUILD_PSMCOMM}" = "xyes"])
 AM_CONDITIONAL([BUILD_PS2COMM], [test "x${BUILD_PS2COMM}" = "xyes"])
 
-AC_ARG_WITH(udev-rules-dir,
-            AS_HELP_STRING([--with-udev-rules-dir=DIR],
-                           [Directory where udev expects its rules files
-                           [[default=$libdir/udev/rules.d]]]),
-            [udevdir="$withval"],
-            [udevdir="$libdir/udev/rules.d"])
-UDEV_RULES_DIR=${udevdir}
-AC_SUBST(UDEV_RULES_DIR)
-AM_CONDITIONAL(HAVE_UDEV_RULES_DIR, [test "x$UDEV_RULES_DIR" != "xno"])
-
 # -----------------------------------------------------------------------------
 #			Dependencies for synclient and syndaemon
 # -----------------------------------------------------------------------------
