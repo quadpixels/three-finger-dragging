@@ -436,6 +436,11 @@ event_query_axis_ranges(InputInfoPtr pInfo)
     event_get_abs(proto_data->evdev, ABS_Y, &priv->miny, &priv->maxy,
                   &priv->synpara.hyst_y, &priv->resy);
 
+    if (priv->minx == priv->maxx || priv->miny == priv->maxy) {
+        xf86IDrvMsg(pInfo, X_ERROR, "Kernel bug: min == max on ABS_X/Y\n");
+        return;
+    }
+
     priv->has_pressure = libevdev_has_event_code(proto_data->evdev, EV_ABS, ABS_PRESSURE);
     priv->has_width = libevdev_has_event_code(proto_data->evdev, EV_ABS, ABS_TOOL_WIDTH);
 
@@ -457,6 +462,11 @@ event_query_axis_ranges(InputInfoPtr pInfo)
                       &priv->maxx, &priv->synpara.hyst_x, &priv->resx);
         event_get_abs(proto_data->evdev, ABS_MT_POSITION_Y, &priv->miny,
                       &priv->maxy, &priv->synpara.hyst_y, &priv->resy);
+
+        if (priv->minx == priv->maxx || priv->miny == priv->maxy) {
+            xf86IDrvMsg(pInfo, X_ERROR, "Kernel bug: min == max on ABS_MT_POSITION_X/Y\n");
+            return;
+        }
 
         proto_data->st_to_mt_offset[0] = priv->minx - st_minx;
         proto_data->st_to_mt_scale[0] =
