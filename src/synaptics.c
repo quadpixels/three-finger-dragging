@@ -1190,49 +1190,19 @@ DeviceInitTouch(DeviceIntPtr dev, Atom *axes_labels)
 {
     InputInfoPtr pInfo = dev->public.devicePrivate;
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
-    int i;
 
-    if (priv->has_touch) {
-        priv->num_slots =
-            priv->max_touches ? priv->max_touches : SYNAPTICS_MAX_TOUCHES;
+    if (!priv->has_touch)
+        return;
 
-        priv->open_slots = malloc(priv->num_slots * sizeof(int));
-        if (!priv->open_slots) {
-            xf86IDrvMsg(pInfo, X_ERROR,
-                        "failed to allocate open touch slots array\n");
-            priv->has_touch = 0;
-            priv->num_slots = 0;
-            return;
-        }
+    priv->num_slots =
+        priv->max_touches ? priv->max_touches : SYNAPTICS_MAX_TOUCHES;
 
-        /* x/y + whatever other MT axes we found */
-        if (!InitTouchClassDeviceStruct(dev, priv->max_touches,
-                                        XIDependentTouch,
-                                        2 + priv->num_mt_axes)) {
-            xf86IDrvMsg(pInfo, X_ERROR,
-                        "failed to initialize touch class device\n");
-            priv->has_touch = 0;
-            priv->num_slots = 0;
-            free(priv->open_slots);
-            priv->open_slots = NULL;
-            return;
-        }
-
-        for (i = 0; i < priv->num_mt_axes; i++) {
-            SynapticsTouchAxisRec *axis = &priv->touch_axes[i];
-            int axnum = 4 + i;  /* Skip x, y, and scroll axes */
-
-            if (!xf86InitValuatorAxisStruct(dev, axnum, axes_labels[axnum],
-                                            axis->min, axis->max, axis->res, 0,
-                                            axis->res, Absolute)) {
-                xf86IDrvMsg(pInfo, X_WARNING,
-                            "failed to initialize axis %s, skipping\n",
-                            axis->label);
-                continue;
-            }
-
-            xf86InitValuatorDefaults(dev, axnum);
-        }
+    priv->open_slots = malloc(priv->num_slots * sizeof(int));
+    if (!priv->open_slots) {
+        xf86IDrvMsg(pInfo, X_ERROR,
+                    "failed to allocate open touch slots array\n");
+        priv->has_touch = 0;
+        priv->num_slots = 0;
     }
 }
 
@@ -3009,17 +2979,8 @@ static void
 HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
-    SynapticsParameters *para = &priv->synpara;
     int new_active_touches = priv->num_active_touches;
-    int min_touches = 2;
-    Bool restart_touches = FALSE;
     int i;
-
-    if (para->click_action[F3_CLICK1] || para->tap_action[F3_TAP])
-        min_touches = 4;
-    else if (para->click_action[F2_CLICK1] || para->tap_action[F2_TAP] ||
-             para->scroll_twofinger_vert || para->scroll_twofinger_horiz)
-        min_touches = 3;
 
     /* Count new number of active touches */
     for (i = 0; i < hw->num_mt_mask; i++) {
@@ -3029,60 +2990,6 @@ HandleTouches(InputInfoPtr pInfo, struct SynapticsHwState *hw)
             new_active_touches--;
     }
 
-    if (priv->has_semi_mt)
-        goto out;
-
-    if (priv->num_active_touches < min_touches &&
-        new_active_touches < min_touches) {
-        /* We stayed below number of touches needed to send events */
-        goto out;
-    }
-    else if (priv->num_active_touches >= min_touches &&
-             new_active_touches < min_touches) {
-        /* We are transitioning to less than the number of touches needed to
-         * send events. End all currently open touches. */
-        for (i = 0; i < priv->num_active_touches; i++) {
-            int slot = priv->open_slots[i];
-
-            xf86PostTouchEvent(pInfo->dev, slot, XI_TouchEnd, 0,
-                               hw->mt_mask[slot]);
-        }
-
-        /* Don't send any more events */
-        goto out;
-    }
-    else if (priv->num_active_touches < min_touches &&
-             new_active_touches >= min_touches) {
-        /* We are transitioning to more than the number of touches needed to
-         * send events. Begin all already open touches. */
-        restart_touches = TRUE;
-        for (i = 0; i < priv->num_active_touches; i++) {
-            int slot = priv->open_slots[i];
-
-            xf86PostTouchEvent(pInfo->dev, slot, XI_TouchBegin, 0,
-                               hw->mt_mask[slot]);
-        }
-    }
-
-    /* Send touch begin events for all new touches */
-    for (i = 0; i < hw->num_mt_mask; i++)
-        if (hw->slot_state[i] == SLOTSTATE_OPEN)
-            xf86PostTouchEvent(pInfo->dev, i, XI_TouchBegin, 0, hw->mt_mask[i]);
-
-    /* Send touch update/end events for all the rest */
-    for (i = 0; i < priv->num_active_touches; i++) {
-        int slot = priv->open_slots[i];
-
-        /* Don't send update event if we just reopened the touch above */
-        if (hw->slot_state[slot] == SLOTSTATE_UPDATE && !restart_touches)
-            xf86PostTouchEvent(pInfo->dev, slot, XI_TouchUpdate, 0,
-                               hw->mt_mask[slot]);
-        else if (hw->slot_state[slot] == SLOTSTATE_CLOSE)
-            xf86PostTouchEvent(pInfo->dev, slot, XI_TouchEnd, 0,
-                               hw->mt_mask[slot]);
-    }
-
- out:
     UpdateTouchState(pInfo, hw);
 }
 
