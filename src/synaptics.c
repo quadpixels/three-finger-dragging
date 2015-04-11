@@ -728,6 +728,8 @@ set_default_parameters(InputInfoPtr pInfo)
         xf86SetIntOption(opts, "HorizResolution", horizResolution);
     pars->resolution_vert =
         xf86SetIntOption(opts, "VertResolution", vertResolution);
+	pars->three_finger_drag_delay = 
+		xf86SetIntOption(opts, "ThreeFingerDragDelay", 170);
 
     /* Warn about (and fix) incorrectly configured TopEdge/BottomEdge parameters */
     if (pars->top_edge > pars->bottom_edge) {
@@ -1024,6 +1026,8 @@ SynapticsReset(SynapticsPrivate * priv)
     priv->prevFingers = 0;
     priv->num_active_touches = 0;
     memset(priv->open_slots, 0, priv->num_slots * sizeof(int));
+
+	priv->three_finger_drag_on = FALSE;
 }
 
 static int
@@ -1846,7 +1850,7 @@ GetTimeOut(SynapticsPrivate * priv)
     case TS_4:
         return para->locked_drag_time;
 	case TS_3FINGER_START:
-		return 30;
+		return para->three_finger_drag_delay;
     default:
         return -1;              /* No timeout */
     }
@@ -1871,14 +1875,14 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
 	int is_scroll = (priv->horiz_scroll_twofinger_on || 
 					priv->vert_scroll_twofinger_on) && 
 					(priv->tap_max_fingers == 2);
+	int exceed_bounds = ((abs(hw->x - priv->touch_on.x) >= para->tap_move) ||
+             (abs(hw->y - priv->touch_on.y) >= para->tap_move));
     move = (finger >= FS_TOUCHED &&
 	/*
             (priv->tap_max_fingers <=
              ((priv->horiz_scroll_twofinger_on ||
                priv->vert_scroll_twofinger_on) ? 2 : 1)) && */
-			 (!is_scroll) &&
-            ((abs(hw->x - priv->touch_on.x) >= para->tap_move) ||
-             (abs(hw->y - priv->touch_on.y) >= para->tap_move)));
+			 (!is_scroll) && exceed_bounds);
     press = (hw->left || hw->right || hw->middle);
 
     if (touch) {
@@ -1905,24 +1909,27 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
 		}
         break;
 	case TS_3FINGER_START:
-		if (touch || move) {
-			if (is_timeout/* || move*/) {
-				// The user has touched for more than the threshold,
-				//    begin dragging
+        if (para->clickpad && press) {
+            SetTapState(priv, TS_CLICKPAD_MOVE, now);
+            goto restart;
+        }
+		if (is_timeout) {
+			// The user has touched for more than the threshold,
+			//    begin dragging
 
-				// To achieve 3-finger dragging, we must make up for all the
-				//   side effects that would have been caused by the usual
-				//   single-finger dragging execution path.
-				//
-				// The usual "drag" path is:
-				// TS_START ---> TS_1 ----> TS_2A ----> TS_3 ----> TS_DRAG
-				// 
-				SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
-				SetTapState(priv, TS_DRAG, now);
-				priv->tap_button_state = TBS_BUTTON_DOWN;
-				priv->tap_button = 1;  // to post a "Left Button pressed" event
-				break;
-			}
+			// To achieve 3-finger dragging, we must make up for all the
+			//   side effects that would have been caused by the usual
+			//   single-finger dragging execution path.
+			//
+			// The usual "drag" path is:
+			// TS_START ---> TS_1 ----> TS_2A ----> TS_3 ----> TS_DRAG
+			// 
+			SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+			SetTapState(priv, TS_DRAG, now);
+			priv->tap_button_state = TBS_BUTTON_DOWN;
+			priv->tap_button = 1;  // to post a "Left Button pressed" event
+			priv->three_finger_drag_on = TRUE;
+			break;
 		}
 		if (release) {
             edge = edge_detection(priv, priv->touch_on.x, priv->touch_on.y);
@@ -1940,7 +1947,16 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
             SetTapState(priv, TS_CLICKPAD_MOVE, now);
             goto restart;
         }
-        if (move) {
+		if (hw->numFingers == 2 && exceed_bounds) {
+			// This fixes the symptom that if you do a 2-finger scroll
+			//   very quickly and release your fingers, the trackpad
+			//   behaves as if you did a 2-finger tap,
+			//   because the state "TS_MOVE" will not be reached
+			//   when you do a 2-finger scroll.
+			SetTapState(priv, TS_START, now);
+			break;
+		}
+        if (move)  {
 			SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 			SetTapState(priv, TS_MOVE, now);
 			goto restart;
@@ -1956,7 +1972,8 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
             edge = edge_detection(priv, priv->touch_on.x, priv->touch_on.y);
             SelectTapButton(priv, edge);
             /* Disable taps outside of the active area */
-            if (!inside_active_area) {
+            if (!inside_active_area || 
+				(hw->numFingers == 2 && exceed_bounds)) {
                 priv->tap_button = 0;
             }
             SetTapState(priv, TS_2A, now);
@@ -1971,7 +1988,7 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
 			move = 1;
 			is_timeout = 1; // We don't have to differentiate between "3-finger tap"
 			                //    and "3-finger drag" if we are transitioning into
-							//    3-finger drag from here.
+							//    3-finger drag from a 1-finger move or 2-finger move.
 							// The timeout is only necessary if the user starts
 							//    a touch with 3 fingers.
 			goto restart;
@@ -2034,12 +2051,24 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
             SetTapState(priv, TS_CLICKPAD_MOVE, now);
             goto restart;
         }
-        if (move)
-            SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+        if (move) {
+			if (priv->three_finger_drag_on == TRUE &&
+				hw->numFingers < 3) { // 1 or 2 fingers left the trackpad
+									  //   during a 3-finger drag: finish the 
+									  //   drag
+				SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+				SetTapState(priv, TS_MOVE, now);
+				priv->three_finger_drag_on = FALSE;
+				priv->tap_button = 1;
+				priv->tap_button_state = TBS_BUTTON_UP;
+				break;
+			} else
+				SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+		}
         if (release) {
             SetMovingState(priv, MS_FALSE, now);
 
-			if (hw->numFingers == 3)  // To release button 1
+			if (priv->three_finger_drag_on == TRUE)  // To release button 1
 				priv->tap_button = 1;
 
             if (para->locked_drags) {
@@ -2061,7 +2090,6 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
     case TS_5:
         if (is_timeout || move) {
             SetTapState(priv, TS_DRAG, now);
-			xf86MsgVerb(X_INFO, 3, "to ts_drag 3\n");
             goto restart;
         }
         else if (release) {
@@ -2077,14 +2105,28 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
         priv->horiz_scroll_twofinger_on = FALSE;
 
         /* Assume one touch is only for holding the clickpad button down */
+		/* If we want to do a 3-finger clickpad drag, we have to set the
+		   numFingers to 1 in order to enable the moving after the click,
+		   otherwise numFingers will be 2 and the gesture will be
+		   considered as 2-finger scrolling, and the pointer will not 
+		   move. */
         if (hw->numFingers > 1)
-            hw->numFingers--;
+            hw->numFingers = 1; // --;
         SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
         if (!press) {
             SetMovingState(priv, MS_FALSE, now);
             SetTapState(priv, TS_MOVE, now);
             priv->count_packet_finger = 0;
         }
+
+		/* If we are in a three finger drag, finish it
+		   by setting the tap button to 1 and let the 
+		   outer code handle the "up" event of button 1 */
+		if(priv->three_finger_drag_on == TRUE) {
+			priv->three_finger_drag_on = FALSE;
+			priv->tap_button = 1;
+			priv->tap_button_state = TBS_BUTTON_UP;
+		}
         break;
     }
 

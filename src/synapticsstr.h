@@ -133,7 +133,7 @@ enum TapState {
     TS_5,                       /* After touch when "locked drags" enabled */
     TS_CLICKPAD_MOVE,           /* After left button press on a clickpad */
 
-	TS_3FINGER_START, 
+	TS_3FINGER_START,           /* After the first touch which is also a 3-finger touch */
 };
 
 enum TapButtonState {
@@ -209,6 +209,9 @@ typedef struct _SynapticsParameters {
     int area_left_edge, area_right_edge, area_top_edge, area_bottom_edge;       /* area coordinates absolute */
     int softbutton_areas[2][4]; /* soft button area coordinates, 0 => right, 1 => middle button */
     int hyst_x, hyst_y;         /* x and y width of hysteresis box */
+	int three_finger_drag_delay;   /* The time that must elapse before
+	                                  transitioning from a 3-finger touch
+									  to a 3-finger drag */
 } SynapticsParameters;
 
 struct _SynapticsPrivateRec {
@@ -265,6 +268,7 @@ struct _SynapticsPrivateRec {
     Bool circ_scroll_on;        /* Keeps track of currently active scroll modes */
     Bool circ_scroll_vert;      /* True: Generate vertical scroll events
                                    False: Generate horizontal events */
+	Bool three_finger_drag_on;  // Whether we're in the midst of a 3finger drag
     double frac_x, frac_y;      /* absolute -> relative fraction */
     enum MidButtonEmulation mid_emu_state;      /* emulated 3rd button */
     int repeatButtons;          /* buttons for repeat */

@@ -155,4 +155,9 @@
 /* 32 Bit Integer, 2 values, horizontal hysteresis, vertical hysteresis */
 #define SYNAPTICS_PROP_NOISE_CANCELLATION "Synaptics Noise Cancellation"
 
+/* 32 bit */
+#define SYNAPTICS_PROP_THREE_FINGER_LOCKED_DRAGS_DELAY "Synaptics Three-Finger Drags Delay"
+/* 32 bit */
+#define SYNAPTICS_PROP_THREE_FINGER_LOCKED_DRAGS_TIMEOUT "Synaptics Three-Finger Drags Timeout"
+
 #endif                          /* _SYNAPTICS_PROPERTIES_H_ */
