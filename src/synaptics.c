@@ -1845,13 +1845,15 @@ GetTimeOut(SynapticsPrivate * priv)
         return para->tap_time_2;
     case TS_4:
         return para->locked_drag_time;
+	case TS_3FINGER_START:
+		return 30;
     default:
         return -1;              /* No timeout */
     }
 }
 
 static int
-HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
+HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct SynapticsHwState *hw,
                     CARD32 now, enum FingerState finger,
                     Bool inside_active_area)
 {
@@ -1866,10 +1868,15 @@ HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
 
     touch = finger >= FS_TOUCHED && priv->finger_state == FS_UNTOUCHED;
     release = finger == FS_UNTOUCHED && priv->finger_state >= FS_TOUCHED;
+	int is_scroll = (priv->horiz_scroll_twofinger_on || 
+					priv->vert_scroll_twofinger_on) && 
+					(priv->tap_max_fingers == 2);
     move = (finger >= FS_TOUCHED &&
+	/*
             (priv->tap_max_fingers <=
              ((priv->horiz_scroll_twofinger_on ||
-               priv->vert_scroll_twofinger_on) ? 2 : 1)) &&
+               priv->vert_scroll_twofinger_on) ? 2 : 1)) && */
+			 (!is_scroll) &&
             ((abs(hw->x - priv->touch_on.x) >= para->tap_move) ||
              (abs(hw->y - priv->touch_on.y) >= para->tap_move)));
     press = (hw->left || hw->right || hw->middle);
@@ -1892,18 +1899,51 @@ HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
  restart:
     switch (priv->tap_state) {
     case TS_START:
-        if (touch)
-            SetTapState(priv, TS_1, now);
+        if (touch) {
+			if(hw->numFingers == 3) SetTapState(priv, TS_3FINGER_START, now);
+			else SetTapState(priv, TS_1, now);
+		}
         break;
+	case TS_3FINGER_START:
+		if (touch || move) {
+			if (is_timeout/* || move*/) {
+				// The user has touched for more than the threshold,
+				//    begin dragging
+
+				// To achieve 3-finger dragging, we must make up for all the
+				//   side effects that would have been caused by the usual
+				//   single-finger dragging execution path.
+				//
+				// The usual "drag" path is:
+				// TS_START ---> TS_1 ----> TS_2A ----> TS_3 ----> TS_DRAG
+				// 
+				SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+				SetTapState(priv, TS_DRAG, now);
+				priv->tap_button_state = TBS_BUTTON_DOWN;
+				priv->tap_button = 1;  // to post a "Left Button pressed" event
+				break;
+			}
+		}
+		if (release) {
+            edge = edge_detection(priv, priv->touch_on.x, priv->touch_on.y);
+            SelectTapButton(priv, edge);
+            /* Disable taps outside of the active area */
+            if (!inside_active_area) {
+                priv->tap_button = 0;
+            }
+            SetTapState(priv, TS_2A, now);
+			break;
+		}
+		break;
     case TS_1:
         if (para->clickpad && press) {
             SetTapState(priv, TS_CLICKPAD_MOVE, now);
             goto restart;
         }
         if (move) {
-            SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
-            SetTapState(priv, TS_MOVE, now);
-            goto restart;
+			SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+			SetTapState(priv, TS_MOVE, now);
+			goto restart;
         }
         else if (is_timeout) {
             if (finger == FS_TOUCHED) {
@@ -1926,7 +1966,16 @@ HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
         if (para->clickpad && press) {
             SetTapState(priv, TS_CLICKPAD_MOVE, now);
             goto restart;
-        }
+        } else if (hw->numFingers == 3) {
+			SetTapState(priv, TS_3FINGER_START, now);
+			move = 1;
+			is_timeout = 1; // We don't have to differentiate between "3-finger tap"
+			                //    and "3-finger drag" if we are transitioning into
+							//    3-finger drag from here.
+							// The timeout is only necessary if the user starts
+							//    a touch with 3 fingers.
+			goto restart;
+		}
         if (release) {
             SetMovingState(priv, MS_FALSE, now);
             SetTapState(priv, TS_START, now);
@@ -1958,7 +2007,6 @@ HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
             if (para->tap_and_drag_gesture) {
                 SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
                 SetTapState(priv, TS_DRAG, now);
-				xf86MsgVerb(X_INFO, 3, "to ts_drag 1\n");
             }
             else {
                 SetTapState(priv, TS_1, now);
@@ -1971,7 +2019,6 @@ HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
                     SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
                 }
                 SetTapState(priv, TS_DRAG, now);
-				xf86MsgVerb(X_INFO, 3, "to ts_drag 2\n");
             }
             else {
                 SetTapState(priv, TS_1, now);
@@ -1991,6 +2038,10 @@ HandleTapProcessing(SynapticsPrivate * priv, struct SynapticsHwState *hw,
             SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
         if (release) {
             SetMovingState(priv, MS_FALSE, now);
+
+			if (hw->numFingers == 3)  // To release button 1
+				priv->tap_button = 1;
+
             if (para->locked_drags) {
                 SetTapState(priv, TS_4, now);
             }
@@ -2180,6 +2231,7 @@ ComputeDeltas(InputInfoPtr pInfo, SynapticsPrivate * priv, struct SynapticsHwSta
         get_delta(priv, hw, edge, &dx, &dy);
 
  out:
+/*
  	if(hw->numFingers == 3) {
 		moving_state = MS_TOUCHPAD_RELATIVE;
 		priv->tap_state = TS_DRAG;
@@ -2189,6 +2241,7 @@ ComputeDeltas(InputInfoPtr pInfo, SynapticsPrivate * priv, struct SynapticsHwSta
 		priv->tap_button_state = TBS_BUTTON_DOWN_UP;
 		hw->left = 1;
 	}
+*/
 
     priv->prevFingers = hw->numFingers;
 
@@ -3046,7 +3099,7 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
 
     /* tap and drag detection. Needs to be performed even if the finger is in
      * the dead area to reset the state. */
-    timeleft = HandleTapProcessing(priv, hw, now, finger, inside_active_area);
+    timeleft = HandleTapProcessing(pInfo, priv, hw, now, finger, inside_active_area);
     if (timeleft > 0)
         delay = MIN(delay, timeleft);
 
