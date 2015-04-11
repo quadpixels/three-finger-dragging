@@ -1,0 +1,46 @@
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.TH synclient __appmansuffix__ __vendorversion__
+.SH NAME
+.LP
+synclient \- commandline utility to query and modify Synaptics driver
+options.
+.SH "SYNOPSIS"
+.br
+synclient [\fI\-lV?\fP] [var1=value1 [var2=value2] ...]
+.SH "DESCRIPTION"
+.LP
+This program lets you change your Synaptics TouchPad driver for
+XOrg/XFree86 server parameters while X is running. 
+
+.SH "OPTIONS"
+.LP
+.TP
+\fB\-l\fR
+List current user settings. This is the default if no option is given.
+.TP
+\fB\-V\fR
+Print version number and exit.
+.TP
+\fB\-?\fR
+Show the help message.
+.TP
+\fBvar=value\fR
+Set user parameter \fIvar\fR to \fIvalue\fR.
+
+.SH "FILES"
+.LP
+\fI/etc/X11/xorg.conf\fP
+.SH "EXAMPLES"
+.LP
+To disable EdgeMotionMinSpeed:
+.LP
+synclient EdgeMotionMinSpeed=0
+.SH "AUTHORS"
+.LP
+Peter Osterlund <petero2@telia.com> and many others.
+.TP
+This man page was written by Mattia Dongili <malattia@debian.org>
+.SH "SEE ALSO"
+.LP
+__xservername__(__appmansuffix__), syndaemon(__appmansuffix__), synaptics(__drivermansuffix__)
