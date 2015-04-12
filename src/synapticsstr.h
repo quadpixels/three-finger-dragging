@@ -269,6 +269,8 @@ struct _SynapticsPrivateRec {
     Bool circ_scroll_vert;      /* True: Generate vertical scroll events
                                    False: Generate horizontal events */
 	Bool three_finger_drag_on;  // Whether we're in the midst of a 3finger drag
+	Bool has_seen_two_finger_scroll; // Whether we've seen a two-finger scroll
+	                              //      in the current state transition loop
     double frac_x, frac_y;      /* absolute -> relative fraction */
     enum MidButtonEmulation mid_emu_state;      /* emulated 3rd button */
     int repeatButtons;          /* buttons for repeat */

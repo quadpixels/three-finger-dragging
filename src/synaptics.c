@@ -1028,6 +1028,7 @@ SynapticsReset(SynapticsPrivate * priv)
     memset(priv->open_slots, 0, priv->num_slots * sizeof(int));
 
 	priv->three_finger_drag_on = FALSE;
+	priv->has_seen_two_finger_scroll = FALSE;
 }
 
 static int
@@ -1811,7 +1812,7 @@ SetTapState(SynapticsPrivate * priv, enum TapState tap_state, CARD32 millis)
         priv->tap_button_state = TBS_BUTTON_DOWN;
         break;
     case TS_SINGLETAP:
-	priv->tap_button_state = TBS_BUTTON_DOWN;
+		priv->tap_button_state = TBS_BUTTON_DOWN;
         priv->touch_on.millis = millis;
         break;
     default:
@@ -1947,15 +1948,16 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
             SetTapState(priv, TS_CLICKPAD_MOVE, now);
             goto restart;
         }
-		if (hw->numFingers == 2 && exceed_bounds) {
-			// This fixes the symptom that if you do a 2-finger scroll
-			//   very quickly and release your fingers, the trackpad
-			//   behaves as if you did a 2-finger tap,
-			//   because the state "TS_MOVE" will not be reached
-			//   when you do a 2-finger scroll.
-			SetTapState(priv, TS_START, now);
-			break;
+	
+		// Two finger scolling: the deltas would be set to zero,
+		//    but it is better if we also prevent the state from
+		//    entering MOVE ?
+		if ((para->scroll_twofinger_vert || 
+		     para->scroll_twofinger_horiz ) &&
+			 exceed_bounds && priv->tap_max_fingers == 2) {
+			 priv->has_seen_two_finger_scroll = TRUE;
 		}
+
         if (move)  {
 			SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 			SetTapState(priv, TS_MOVE, now);
@@ -1973,8 +1975,9 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
             SelectTapButton(priv, edge);
             /* Disable taps outside of the active area */
             if (!inside_active_area || 
-				(hw->numFingers == 2 && exceed_bounds)) {
+				(priv->has_seen_two_finger_scroll == TRUE)) {
                 priv->tap_button = 0;
+				priv->has_seen_two_finger_scroll = FALSE;
             }
             SetTapState(priv, TS_2A, now);
         }
@@ -1984,14 +1987,19 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
             SetTapState(priv, TS_CLICKPAD_MOVE, now);
             goto restart;
         } else if (hw->numFingers == 3) {
-			SetTapState(priv, TS_3FINGER_START, now);
-			move = 1;
-			is_timeout = 1; // We don't have to differentiate between "3-finger tap"
-			                //    and "3-finger drag" if we are transitioning into
-							//    3-finger drag from a 1-finger move or 2-finger move.
-							// The timeout is only necessary if the user starts
-							//    a touch with 3 fingers.
-			goto restart;
+			// When the user suddenly touches with a finger
+			//   enter TS_DRAG immediately
+			SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+			SetTapState(priv, TS_DRAG, now);
+			if( priv->three_finger_drag_on == FALSE) {
+				priv->tap_button_state = TBS_BUTTON_DOWN;
+				priv->tap_button = 1;  // to post a "Left Button pressed" event
+				priv->three_finger_drag_on = TRUE;
+			}
+			priv->touch_on.millis = now; // Since touch will not be set to TRUE
+			                             //   in this case, we need to set it
+										 //   manually
+			break;
 		}
         if (release) {
             SetMovingState(priv, MS_FALSE, now);
@@ -2053,39 +2061,29 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
         }
         if (move) {
 			if (priv->three_finger_drag_on == TRUE &&
-				hw->numFingers < 3) { // 1 or 2 fingers left the trackpad
-									  //   during a 3-finger drag: finish the 
-									  //   drag
-				if (para->locked_drags) {
-					// If the user has 2 fingers on the trackpad
-					//   because s/he released one finger during
-					//   a 3-finger dragging, we should disable
-					//   2-finger scrolling until the next time
-					//   2-fingers touch the trackpad again
-					SetTapState(priv, TS_4, now);
-					priv->touch_on.millis = now; // And we must set this timestamp
-					break;
-				} else {
-					SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
-					SetTapState(priv, TS_MOVE, now);
-					priv->three_finger_drag_on = FALSE;
-					priv->tap_button = 1;
-					priv->tap_button_state = TBS_BUTTON_UP;
-					break;
-				}
+				hw->numFingers < 3 &&
+				!(para->locked_drags)) { // 1 or 2 fingers left the trackpad
+									  //   during a 3-finger drag
+									  //   when locked drags is not enabled:
+									  //   finish the drag
+				SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+				SetTapState(priv, TS_MOVE, now);
+				priv->three_finger_drag_on = FALSE;
+				priv->tap_button = 1;
+				priv->tap_button_state = TBS_BUTTON_UP;
+				break;
 			} else
 				SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 		}
         if (release) {
             SetMovingState(priv, MS_FALSE, now);
 
-			if (priv->three_finger_drag_on == TRUE)  // To release button 1
-				priv->tap_button = 1;
-
             if (para->locked_drags) {
                 SetTapState(priv, TS_4, now);
             }
             else {
+				if (priv->three_finger_drag_on == TRUE)  // To release button 1
+					priv->tap_button = 1;
                 SetTapState(priv, TS_START, now);
             }
         }
