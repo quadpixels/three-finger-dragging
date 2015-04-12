@@ -2059,10 +2059,24 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
             SetTapState(priv, TS_CLICKPAD_MOVE, now);
             goto restart;
         }
+		if (priv->three_finger_drag_on == TRUE &&
+			hw->numFingers == 3) {
+			priv->three_finger_last_millis = now;
+		}
         if (move) {
-			if (priv->three_finger_drag_on == TRUE &&
-				hw->numFingers < 3 &&
-				!(para->locked_drags)) { // 1 or 2 fingers left the trackpad
+			Bool should_stop = FALSE;
+
+			if (priv->three_finger_drag_on == TRUE && hw->numFingers < 3) {
+				if(para->locked_drags) {
+					if (priv->three_finger_last_millis +
+						para->locked_drag_time < now)
+						should_stop = TRUE;
+				} else { 
+					should_stop = TRUE;
+				}
+			}
+			
+			if (should_stop == TRUE) { // 1 or 2 fingers left the trackpad
 									  //   during a 3-finger drag
 									  //   when locked drags is not enabled:
 									  //   finish the drag
@@ -2089,8 +2103,8 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
         }
         break;
     case TS_4:
-        if (is_timeout) {
-            SetTapState(priv, TS_START, now);
+		if (is_timeout) {
+			SetTapState(priv, TS_START, now);
 			if (priv->three_finger_drag_on == TRUE) {
 				priv->three_finger_drag_on = FALSE; 
 			}

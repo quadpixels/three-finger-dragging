@@ -259,7 +259,15 @@ struct _SynapticsPrivateRec {
     int tap_button;             /* Which button started the tap processing */
     enum TapButtonState tap_button_state;       /* Current tap action */
     SynapticsMoveHistRec touch_on;      /* data when the touchpad is touched/released */
-
+	CARD32 three_finger_last_millis         ; /* Last timestamp when 3 fingers are on the trackpad
+	                                         in a 3-finger drag. It is possible to continue
+											 dragging using 1 or 2 fingers within the
+											 LockedDragTimeout limit after this time
+											 step for compatibility with the existing state
+											 transitions. However if we're in a 3-finger drag
+											 the user is only supposed to prolong the drag
+											 only with 3 fingers but not 1 or 2. 
+											 This is why we need to keep track of this timestamp. */
     enum MovingState moving_state;      /* previous moving state */
     Bool vert_scroll_edge_on;   /* Keeps track of currently active scroll modes */
     Bool horiz_scroll_edge_on;  /* Keeps track of currently active scroll modes */
