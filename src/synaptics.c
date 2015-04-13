@@ -2001,7 +2001,7 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
 										 //   manually
 			break;
 		}
-        if (release) {
+		if (release) {
             SetMovingState(priv, MS_FALSE, now);
             SetTapState(priv, TS_START, now);
         }
@@ -2063,31 +2063,34 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
 			hw->numFingers == 3) {
 			priv->three_finger_last_millis = now;
 		}
-        if (move) {
-			Bool should_stop = FALSE;
 
-			if (priv->three_finger_drag_on == TRUE && hw->numFingers < 3) {
-				if(para->locked_drags) {
-					if (priv->three_finger_last_millis +
-						para->locked_drag_time < now)
-						should_stop = TRUE;
-				} else { 
+		Bool should_stop = FALSE;
+
+		if (priv->three_finger_drag_on == TRUE && hw->numFingers < 3) {
+			if(para->locked_drags) { // Give users the chance to put 3
+									 //      fingers onto the trackpad
+				if (priv->three_finger_last_millis +
+					para->locked_drag_time < now)
 					should_stop = TRUE;
-				}
+			} else { 
+				should_stop = TRUE;
 			}
-			
-			if (should_stop == TRUE) { // 1 or 2 fingers left the trackpad
-									  //   during a 3-finger drag
-									  //   when locked drags is not enabled:
-									  //   finish the drag
-				SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
-				SetTapState(priv, TS_MOVE, now);
-				priv->three_finger_drag_on = FALSE;
-				priv->tap_button = 1;
-				priv->tap_button_state = TBS_BUTTON_UP;
-				break;
-			} else
-				SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+		}
+		
+		if (should_stop == TRUE) { // 1 or 2 fingers left the trackpad
+								  //   during a 3-finger drag
+								  //   when locked drags is not enabled:
+								  //   finish the drag
+			SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+			SetTapState(priv, TS_MOVE, now);
+			priv->three_finger_drag_on = FALSE;
+			priv->tap_button = 1;
+			priv->tap_button_state = TBS_BUTTON_UP;
+			break;
+		}
+
+        if (move) {
+			SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
 		}
         if (release) {
             SetMovingState(priv, MS_FALSE, now);
