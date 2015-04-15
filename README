@@ -8,13 +8,8 @@ Changes:
   across 2 monitors.
 
   The Locked Drag is activated when you release 1, 2 or 3 fingers
-  in the middle of a 3-finger dragging. This means you can start
-  the dragging with 3 fingers and continue with 1 or 2 with
-  LockedDrag set to 1.
-
-  A Locked 3-Finger Drag can only be continued by a 3-Finger Drag.
-  That means the user has to continue dragging using 3 fingers,
-  not just 1 or 2 fingers.
+  in the middle of a 3-finger dragging. A Locked 3-Finger Drag can 
+  only be continued by a 3-Finger Drag, not 1 or 2 fingers.
 
 ------------------------------>8---------------------------------
 ORIGINAL README BELOW
