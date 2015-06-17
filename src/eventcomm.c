@@ -732,6 +732,10 @@ EventReadHwState(InputInfoPtr pInfo,
             }
             break;
         case EV_KEY:
+            /* ignore hw repeat events */
+            if (ev.value > 1)
+                break;
+
             v = (ev.value ? TRUE : FALSE);
             switch (ev.code) {
             case BTN_LEFT:
