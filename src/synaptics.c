@@ -671,7 +671,7 @@ set_default_parameters(InputInfoPtr pInfo)
     pars->finger_high = xf86SetIntOption(opts, "FingerHigh", fingerHigh);
     pars->tap_time = xf86SetIntOption(opts, "MaxTapTime", 180);
     pars->tap_move = xf86SetIntOption(opts, "MaxTapMove", tapMove);
-    pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 100);
+    pars->tap_time_2 = xf86SetIntOption(opts, "MaxDoubleTapTime", 180);
     pars->click_time = xf86SetIntOption(opts, "ClickTime", 100);
     pars->clickpad = xf86SetBoolOption(opts, "ClickPad", pars->clickpad);       /* Probed */
     if (pars->clickpad)
