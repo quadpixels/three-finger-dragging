@@ -36,6 +36,10 @@
 #define NO_DRIVER_SCALING 1
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 23
+#define HAVE_THREADED_INPUT 1
+#endif
+
 #ifdef DBG
 #undef DBG
 #endif

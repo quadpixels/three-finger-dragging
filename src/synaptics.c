@@ -1601,9 +1601,11 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     struct SynapticsHwState *hw = priv->local_hw_state;
     int delay;
-    int sigstate;
-
-    sigstate = xf86BlockSIGIO();
+#if !HAVE_THREADED_INPUT
+    int sigstate = xf86BlockSIGIO();
+#else
+    input_lock();
+#endif
 
     priv->hwState->millis += now - priv->timer_time;
     SynapticsCopyHwState(hw, priv->hwState);
@@ -1613,7 +1615,11 @@ timerFunc(OsTimerPtr timer, CARD32 now, pointer arg)
     priv->timer_time = now;
     priv->timer = TimerSet(priv->timer, 0, delay, timerFunc, pInfo);
 
+#if !HAVE_THREADED_INPUT
     xf86UnblockSIGIO(sigstate);
+#else
+    input_unlock();
+#endif
 
     return 0;
 }
