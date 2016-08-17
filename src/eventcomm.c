@@ -1009,13 +1009,13 @@ EventAutoDevProbe(InputInfoPtr pInfo, const char *device)
 
             if (!(pInfo->flags & XI86_SERVER_FD))
                 SYSCALL(close(fd));
-
-            /* if a device is set and not a touchpad (or already grabbed),
-             * we must return FALSE.  Otherwise, we'll add a device that
-             * wasn't requested for and repeat
-             * f5687a6741a19ef3081e7fd83ac55f6df8bcd5c2. */
-            return touchpad_found;
         }
+
+        /* if a device is set and not a touchpad (or already grabbed),
+         * we must return FALSE.  Otherwise, we'll add a device that
+         * wasn't requested for and repeat
+         * f5687a6741a19ef3081e7fd83ac55f6df8bcd5c2. */
+        return touchpad_found;
     }
 
     i = scandir(DEV_INPUT_EVENT, &namelist, EventDevOnly, alphasort);
