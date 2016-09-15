@@ -288,7 +288,6 @@ struct _SynapticsPrivateRec {
     Bool circ_scroll_on;        /* Keeps track of currently active scroll modes */
     Bool circ_scroll_vert;      /* True: Generate vertical scroll events
                                    False: Generate horizontal events */
-    double frac_x, frac_y;      /* absolute -> relative fraction */
     enum MidButtonEmulation mid_emu_state;      /* emulated 3rd button */
     int repeatButtons;          /* buttons for repeat */
     int nextRepeat;             /* Time when to trigger next auto repeat event */

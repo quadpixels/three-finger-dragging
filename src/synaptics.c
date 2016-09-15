@@ -2198,28 +2198,8 @@ static void
 get_delta(SynapticsPrivate *priv, const struct SynapticsHwState *hw,
           enum EdgeType edge, double *dx, double *dy)
 {
-    double integral;
-    double tmpf;
-
     *dx = hw->x - HIST(0).x;
     *dy = hw->y - HIST(0).y;
-
-    /* report edge speed as synthetic motion. Of course, it would be
-     * cooler to report floats than to buffer, but anyway. */
-
-    /* FIXME: When these values go NaN, bad things happen. Root cause is unknown
-     * thus far though. */
-    if (isnan(priv->frac_x))
-        priv->frac_x = 0;
-    if (isnan(priv->frac_y))
-        priv->frac_y = 0;
-
-    tmpf = *dx + priv->frac_x;
-    priv->frac_x = modf(tmpf, &integral);
-    *dx = integral;
-    tmpf = *dy + priv->frac_y;
-    priv->frac_y = modf(tmpf, &integral);
-    *dy = integral;
 }
 
 /* Vector length, but not sqrt'ed, we only need it for comparison */
