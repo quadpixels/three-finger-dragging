@@ -683,8 +683,8 @@ set_default_parameters(InputInfoPtr pInfo)
     pars->scroll_button_repeat =
         xf86SetIntOption(opts, "ScrollButtonRepeat", 100);
 
-    pars->locked_drags = xf86SetBoolOption(opts, "LockedDrags", FALSE);
-    pars->locked_drag_time = xf86SetIntOption(opts, "LockedDragTimeout", 5000);
+    pars->locked_drags = xf86SetBoolOption(opts, "LockedDrags", TRUE);
+    pars->locked_drag_time = xf86SetIntOption(opts, "LockedDragTimeout", 500);
     pars->tap_action[RT_TAP] = xf86SetIntOption(opts, "RTCornerButton", 0);
     pars->tap_action[RB_TAP] = xf86SetIntOption(opts, "RBCornerButton", 0);
     pars->tap_action[LT_TAP] = xf86SetIntOption(opts, "LTCornerButton", 0);
@@ -2067,7 +2067,8 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
 		Bool should_stop = FALSE;
 
 		if (priv->three_finger_drag_on == TRUE && hw->numFingers < 3) {
-			if(para->locked_drags) { // Give users the chance to put 3
+			// 2017-03-17: Maybe this feels more comfortable
+			if(1 || para->locked_drags) { // Give users the chance to put 3
 									 //      fingers onto the trackpad
 				if (priv->three_finger_last_millis +
 					para->locked_drag_time < now)
