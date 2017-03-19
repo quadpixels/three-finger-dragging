@@ -36,6 +36,8 @@
 #define NO_DRIVER_SCALING 1
 #endif
 
+#define DEBUG
+
 #ifdef DBG
 #undef DBG
 #endif
@@ -133,7 +135,7 @@ enum TapState {
     TS_5,                       /* After touch when "locked drags" enabled */
     TS_CLICKPAD_MOVE,           /* After left button press on a clickpad */
 
-	TS_3FINGER_START,           /* After the first touch which is also a 3-finger touch */
+    TS_3FINGER_START,           /* After the first touch which is also a 3-finger touch */
 };
 
 enum TapButtonState {
@@ -259,7 +261,7 @@ struct _SynapticsPrivateRec {
     int tap_button;             /* Which button started the tap processing */
     enum TapButtonState tap_button_state;       /* Current tap action */
     SynapticsMoveHistRec touch_on;      /* data when the touchpad is touched/released */
-	CARD32 three_finger_last_millis         ; /* Last timestamp when 3 fingers are on the trackpad
+    CARD32 three_finger_last_millis         ; /* Last timestamp when 3 fingers are on the trackpad
 	                                         in a 3-finger drag. It is possible to continue
 											 dragging using 1 or 2 fingers within the
 											 LockedDragTimeout limit after this time

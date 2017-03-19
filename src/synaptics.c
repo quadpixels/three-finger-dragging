@@ -1907,9 +1907,10 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
     case TS_START:
         if (touch) {
 			if(hw->numFingers == 3) SetTapState(priv, TS_3FINGER_START, now);
-			else SetTapState(priv, TS_1, now);
+            else SetTapState(priv, TS_1, now);
 		}
         break;
+
 	case TS_3FINGER_START:
         if (para->clickpad && press) {
             SetTapState(priv, TS_CLICKPAD_MOVE, now);
@@ -1948,6 +1949,7 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
 			break;
 		}
 		break;
+
     case TS_1:
         if (para->clickpad && press) {
             SetTapState(priv, TS_CLICKPAD_MOVE, now);
@@ -2099,12 +2101,10 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
 			break;
 		}
 
-        if (move) {
+        if (move)
 			SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
-		}
         if (release) {
             SetMovingState(priv, MS_FALSE, now);
-
             if (para->locked_drags || priv->three_finger_drag_on == TRUE) {
                 SetTapState(priv, TS_4, now);
             }
