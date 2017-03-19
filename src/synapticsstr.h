@@ -40,6 +40,8 @@
 #define HAVE_THREADED_INPUT 1
 #endif
 
+#define DEBUG
+
 #ifdef DBG
 #undef DBG
 #endif
@@ -136,6 +138,8 @@ enum TapState {
     TS_4,                       /* After release when "locked drags" enabled */
     TS_5,                       /* After touch when "locked drags" enabled */
     TS_CLICKPAD_MOVE,           /* After left button press on a clickpad */
+
+    TS_3FINGER_START,           /* After the first touch which is also a 3-finger touch */
 };
 
 enum TapButtonState {
@@ -231,6 +235,10 @@ typedef struct _SynapticsParameters {
     int hyst_x, hyst_y;         /* x and y width of hysteresis box */
 
     int maxDeltaMM;               /* maximum delta movement (vector length) in mm */
+    int three_finger_drag_delay;   /* The time that must elapse before
+                                      transitioning from a 3-finger touch
+                                      to a 3-finger drag */
+
 } SynapticsParameters;
 
 struct _SynapticsPrivateRec {
@@ -279,7 +287,15 @@ struct _SynapticsPrivateRec {
     int tap_button;             /* Which button started the tap processing */
     enum TapButtonState tap_button_state;       /* Current tap action */
     SynapticsMoveHistRec touch_on;      /* data when the touchpad is touched/released */
-
+    CARD32 three_finger_last_millis         ; /* Last timestamp when 3 fingers are on the trackpad
+	                                         in a 3-finger drag. It is possible to continue
+											 dragging using 1 or 2 fingers within the
+											 LockedDragTimeout limit after this time
+											 step for compatibility with the existing state
+											 transitions. However if we're in a 3-finger drag
+											 the user is only supposed to prolong the drag
+											 only with 3 fingers but not 1 or 2. 
+											 This is why we need to keep track of this timestamp. */
     enum MovingState moving_state;      /* previous moving state */
     Bool vert_scroll_edge_on;   /* Keeps track of currently active scroll modes */
     Bool horiz_scroll_edge_on;  /* Keeps track of currently active scroll modes */
@@ -288,6 +304,10 @@ struct _SynapticsPrivateRec {
     Bool circ_scroll_on;        /* Keeps track of currently active scroll modes */
     Bool circ_scroll_vert;      /* True: Generate vertical scroll events
                                    False: Generate horizontal events */
+    Bool three_finger_drag_on;  // Whether we're in the midst of a 3finger drag
+    Bool has_seen_two_finger_scroll; // Whether we've seen a two-finger scroll
+                                     //      in the current state transition loop
+ 
     enum MidButtonEmulation mid_emu_state;      /* emulated 3rd button */
     int repeatButtons;          /* buttons for repeat */
     int nextRepeat;             /* Time when to trigger next auto repeat event */
