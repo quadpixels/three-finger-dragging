@@ -1915,7 +1915,20 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
             SetTapState(priv, TS_CLICKPAD_MOVE, now);
             goto restart;
         }
+		if (release) {
+			priv->has_seen_two_finger_scroll = FALSE;
+			priv->three_finger_drag_on = FALSE;
+			priv->tap_button = 2;
+            SetTapState(priv, TS_SINGLETAP, now);
+			break;
+		}
 		if (is_timeout) {
+	
+			// 2017-03-18:
+			// I think my understanding of timeout is incorrect ... !
+			// The timeout will cause the transition to SINGLETAP to never be executed
+			// TODO: Need to fix the timeout
+
 			// The user has touched for more than the threshold,
 			//    begin dragging
 
@@ -1934,9 +1947,6 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
 			priv->has_seen_two_finger_scroll = FALSE;
 			break;
 		}
-		if (release) {
-			goto HERE;
-		}
 		break;
     case TS_1:
         if (para->clickpad && press) {
@@ -1951,6 +1961,10 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
 		     para->scroll_twofinger_horiz ) &&
 			 exceed_bounds && priv->tap_max_fingers == 2) {
 			 priv->has_seen_two_finger_scroll = TRUE;
+		}
+		if (hw->numFingers == 3) {
+			SetTapState(priv, TS_3FINGER_START, now);
+			break;
 		}
 
         if (move)  {
