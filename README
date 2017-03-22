@@ -1,3 +1,31 @@
+Changes:
+
+2017-03-18
+  3 Finger Dragging does not respect LockedDrags; instead, 3FD will
+  always be locked drag (in the sense that it allows the user's
+  fingers to leave the touchpad for the period of time.) Double Tap
+  Dragging respects LockedDrags just like it originally does.
+
+  Accuracy in detecting the 3-finger tap (seen as middle click) is
+  enhanced by handling another status transition sequence (TS_1 ->
+  TS_3FINGER_START -> TS_SINGLETAP) in addition to the usual
+  transition sequence (TS_1 -> TS_2A -> TS_SINGLETAP).
+
+2015-04-12
+  Now the three-finger dragging respects the LockedDrags option.
+  I think it is very convenient also, because when you do a 3-finger
+  dragging you are very likely to run out of space, which makes a 
+  long-distance drag difficult, e.g. when you want to drag a window
+  across 2 monitors.
+
+  The Locked Drag is activated when you release 1, 2 or 3 fingers
+  in the middle of a 3-finger dragging. A Locked 3-Finger Drag can 
+  only be continued by a 3-Finger Drag, not 1 or 2 fingers.
+
+------------------------------>8---------------------------------
+ORIGINAL README BELOW
+------------------------------8<---------------------------------
+
 Synaptics touchpad driver for X.Org
 -----------------------------------
 
