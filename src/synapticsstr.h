@@ -40,6 +40,8 @@
 #undef DBG
 #endif
 
+//#define DEBUG
+
 #ifdef DEBUG
 #define DBG(verb, ...) \
     xf86MsgVerb(X_INFO, verb, __VA_ARGS__)

@@ -1,20 +1,20 @@
 /*
- * Copyright © 1999 Henry Davies
- * Copyright © 2001 Stefan Gmeiner
- * Copyright © 2002 S. Lehner
- * Copyright © 2002 Peter Osterlund
- * Copyright © 2002 Linuxcare Inc. David Kennedy
- * Copyright © 2003 Hartwig Felger
- * Copyright © 2003 Jörg Bösner
- * Copyright © 2003 Fred Hucht
- * Copyright © 2004 Alexei Gilchrist
- * Copyright © 2004 Matthias Ihmig
- * Copyright © 2006 Stefan Bethge
- * Copyright © 2006 Christian Thaeter
- * Copyright © 2007 Joseph P. Skudlarek
- * Copyright © 2008 Fedor P. Goncharov
- * Copyright © 2008-2012 Red Hat, Inc.
- * Copyright © 2011 The Chromium OS Authors
+ * Copyright Â© 1999 Henry Davies
+ * Copyright Â© 2001 Stefan Gmeiner
+ * Copyright Â© 2002 S. Lehner
+ * Copyright Â© 2002 Peter Osterlund
+ * Copyright Â© 2002 Linuxcare Inc. David Kennedy
+ * Copyright Â© 2003 Hartwig Felger
+ * Copyright Â© 2003 JÃ¶rg BÃ¶sner
+ * Copyright Â© 2003 Fred Hucht
+ * Copyright Â© 2004 Alexei Gilchrist
+ * Copyright Â© 2004 Matthias Ihmig
+ * Copyright Â© 2006 Stefan Bethge
+ * Copyright Â© 2006 Christian Thaeter
+ * Copyright Â© 2007 Joseph P. Skudlarek
+ * Copyright Â© 2008 Fedor P. Goncharov
+ * Copyright Â© 2008-2012 Red Hat, Inc.
+ * Copyright Â© 2011 The Chromium OS Authors
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -41,7 +41,7 @@
  *      Stefan Bethge <stefan.bethge@web.de>
  *      Matthias Ihmig <m.ihmig@gmx.net>
  *      Alexei Gilchrist <alexei@physics.uq.edu.au>
- *      Jörg Bösner <ich@joerg-boesner.de>
+ *      JÃ¶rg BÃ¶sner <ich@joerg-boesner.de>
  *      Hartwig Felger <hgfelger@hgfelger.de>
  *      Peter Osterlund <petero2@telia.com>
  *      S. Lehner <sam_x@bluemail.ch>
@@ -1751,33 +1751,33 @@ SelectTapButton(SynapticsPrivate * priv, enum EdgeType edge)
     case 1:
         switch (edge) {
         case RIGHT_TOP_EDGE:
-            DBG(7, "right top edge\n");
+            DBG(3, "right top edge\n");
             tap = RT_TAP;
             break;
         case RIGHT_BOTTOM_EDGE:
-            DBG(7, "right bottom edge\n");
+            DBG(3, "right bottom edge\n");
             tap = RB_TAP;
             break;
         case LEFT_TOP_EDGE:
-            DBG(7, "left top edge\n");
+            DBG(3, "left top edge\n");
             tap = LT_TAP;
             break;
         case LEFT_BOTTOM_EDGE:
-            DBG(7, "left bottom edge\n");
+            DBG(3, "left bottom edge\n");
             tap = LB_TAP;
             break;
         default:
-            DBG(7, "no edge\n");
+            DBG(3, "no edge\n");
             tap = F1_TAP;
             break;
         }
         break;
     case 2:
-        DBG(7, "two finger tap\n");
+        DBG(3, "two finger tap\n");
         tap = F2_TAP;
         break;
     case 3:
-        DBG(7, "three finger tap\n");
+        DBG(3, "three finger tap\n");
         tap = F3_TAP;
         break;
     default:
@@ -1798,19 +1798,20 @@ SetTapState(SynapticsPrivate * priv, enum TapState tap_state, CARD32 millis)
     case TS_START:
         priv->tap_button_state = TBS_BUTTON_UP;
         priv->tap_max_fingers = 0;
+		priv->three_finger_drag_on = FALSE;
 		priv->has_seen_two_finger_scroll = FALSE;
         break;
     case TS_1:
         priv->tap_button_state = TBS_BUTTON_UP;
         break;
     case TS_2A:
-	priv->tap_button_state = TBS_BUTTON_UP;
+		priv->tap_button_state = TBS_BUTTON_UP;
         break;
     case TS_2B:
         priv->tap_button_state = TBS_BUTTON_UP;
         break;
     case TS_3:
-        priv->tap_button_state = TBS_BUTTON_DOWN;
+//        priv->tap_button_state = TBS_BUTTON_DOWN; // defer to TS3->Drag transition to accommodate both 1 & 2 fingers
         break;
     case TS_SINGLETAP:
 		priv->tap_button_state = TBS_BUTTON_DOWN;
@@ -1959,8 +1960,10 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
 			 priv->has_seen_two_finger_scroll = TRUE;
 		}
 
-        if (move)  {
+        if (move && priv->tap_max_fingers <= 1)  { // Allows any delta time between fingers
+//        if (move)  { // Do NOT allow any delta time between fingers
 			SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+			DBG(3, "1->move reason 1\n");
 			SetTapState(priv, TS_MOVE, now);
 			goto restart;
         }
@@ -1969,6 +1972,7 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
                 SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
             }
             SetTapState(priv, TS_MOVE, now);
+			DBG(3, "1->move reason 2\n");
             goto restart;
         }
         else if (release) {
@@ -1981,6 +1985,9 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
             }
             SetTapState(priv, TS_2A, now);
         }
+		else if (touch && priv->tap_max_fingers >= 2 && (!exceed_bounds)) { // 2fg Double click or 3fg normal click
+            SetTapState(priv, TS_2A, now);
+		}
         break;
     case TS_MOVE:
         if (para->clickpad && press) {
@@ -2003,14 +2010,18 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
 		}
 		if (release) {
             SetMovingState(priv, MS_FALSE, now);
+			priv->has_seen_two_finger_scroll = FALSE;
             SetTapState(priv, TS_START, now);
         }
         break;
     case TS_2A:
         if (touch)
             SetTapState(priv, TS_3, now);
-        else if (is_timeout)
-            SetTapState(priv, TS_SINGLETAP, now);
+        else if (is_timeout) {
+			if ((!move) || (priv->three_finger_drag_on == TRUE))
+				SetTapState(priv, TS_SINGLETAP, now); // Swipe shouldn't be considered a click
+			else SetTapState(priv, TS_START, now);
+		}
         break;
     case TS_2B:
         if (touch) {
@@ -2024,13 +2035,20 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
     case TS_SINGLETAP:
         if (touch)
             SetTapState(priv, TS_1, now);
-        else if (is_timeout)
+        else if (is_timeout) {
+			SelectTapButton(priv, NO_EDGE);
+			DBG(3, "priv->tap_button=%d\n", priv->tap_button);
             SetTapState(priv, TS_START, now);
+		}
         break;
     case TS_3:
-        if (move) {
+		if (move) {
             if (para->tap_and_drag_gesture) {
                 SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
+				if (priv->tap_max_fingers == 2) {
+					SelectTapButton(priv, NO_EDGE); // 2fg drag
+				}
+				priv->tap_button_state = TBS_BUTTON_DOWN;
                 SetTapState(priv, TS_DRAG, now);
             }
             else {
@@ -2042,8 +2060,12 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
             if (para->tap_and_drag_gesture) {
                 if (finger == FS_TOUCHED) {
                     SetMovingState(priv, MS_TOUCHPAD_RELATIVE, now);
-                }
-                SetTapState(priv, TS_DRAG, now);
+					SelectTapButton(priv, NO_EDGE); // 2fg drag
+					priv->tap_button_state = TBS_BUTTON_DOWN;
+					SetTapState(priv, TS_DRAG, now);
+                } else {
+					SetTapState(priv, TS_1, now);
+				}
             }
             else {
                 SetTapState(priv, TS_1, now);
@@ -2051,7 +2073,10 @@ HandleTapProcessing(InputInfoPtr pInfo, SynapticsPrivate * priv, struct Synaptic
             goto restart;
         }
         else if (release) {
+			SelectTapButton(priv, NO_EDGE); // 2fg drag
+			priv->tap_button_state = TBS_BUTTON_DOWN_UP;
             SetTapState(priv, TS_2B, now);
+			goto restart;
         }
         break;
     case TS_DRAG:
@@ -2285,7 +2310,8 @@ ComputeDeltas(InputInfoPtr pInfo, SynapticsPrivate * priv, struct SynapticsHwSta
 
     if (!inside_area || !moving_state || priv->finger_state == FS_BLOCKED ||
         priv->vert_scroll_edge_on || priv->horiz_scroll_edge_on ||
-        priv->vert_scroll_twofinger_on || priv->horiz_scroll_twofinger_on ||
+        ((priv->vert_scroll_twofinger_on || priv->horiz_scroll_twofinger_on) && (priv->tap_state != TS_DRAG && priv->tap_state != TS_3))
+		||
         priv->circ_scroll_on || priv->prevFingers != hw->numFingers //||
         /*(moving_state == MS_TOUCHPAD_RELATIVE && hw->numFingers != 1)*/) {
         /* reset packet counter. */
@@ -2420,7 +2446,7 @@ HandleScrolling(SynapticsPrivate * priv, struct SynapticsHwState *hw,
     int delay = 1000000000;
 
     if ((priv->synpara.touchpad_off == TOUCHPAD_TAP_OFF) || (priv->finger_state == FS_BLOCKED)
-		|| (priv->three_finger_drag_on == TRUE)) {
+		|| (priv->three_finger_drag_on == TRUE) || (priv->tap_state == TS_3) || (priv->tap_state == TS_DRAG)) {
         stop_coasting(priv);
         priv->circ_scroll_on = FALSE;
         priv->vert_scroll_edge_on = FALSE;
@@ -3341,7 +3367,7 @@ CalculateScalingCoeffs(SynapticsPrivate * priv)
     }
     else if ((horizRes < vertRes) && (vertRes > 0)) {
         priv->horiz_coeff = 1;
-        priv->vert_coeff = horizRes / (double) vertRes;
+		priv->vert_coeff = horizRes / (double) vertRes;
     }
     else {
         priv->horiz_coeff = 1;
